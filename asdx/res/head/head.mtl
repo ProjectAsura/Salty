@@ -1,0 +1,10 @@
+# Created by Metasequoia
+
+newmtl defaultMat
+Ka 0.48000 0.48000 0.48000
+Kd 0.64000 0.64000 0.64000
+Ks 0.10000 0.10000 0.10000
+Ns 5.00000
+map_Kd textures\lambertian.jpg
+map_bump textures\bump-lowRes.png
+

@@ -81,10 +81,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\main.cpp" />
-    <ClCompile Include="..\src\SampleApp.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\include\SampleApp.h" />
+    <ClCompile Include="..\src\SaltyApp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\res\SimplePS.fx">
@@ -106,6 +103,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\res\SimpleDecl.fxh" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\SaltyApp.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

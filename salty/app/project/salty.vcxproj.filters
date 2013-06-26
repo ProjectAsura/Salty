@@ -25,10 +25,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="..\res\saltyRay.fx">
-      <Filter>リソースファイル</Filter>
-    </FxCompile>
-    <FxCompile Include="..\res\saltySphere.fx">
+    <FxCompile Include="..\res\saltyGeometry.fx">
       <Filter>リソースファイル</Filter>
     </FxCompile>
   </ItemGroup>

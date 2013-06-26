@@ -17,6 +17,16 @@
   <ItemGroup>
     <ClInclude Include="..\include\saltyApp.h" />
   </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="..\res\saltyRay.fx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="..\res\saltySphere.fx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </FxCompile>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1C2481BC-3D87-4C04-A4E2-BA37CB2A541C}</ProjectGuid>
     <RootNamespace>app</RootNamespace>

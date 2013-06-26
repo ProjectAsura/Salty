@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "asdx", "asdx.vcxproj", "{7D016A83-13ED-4E44-A5F6-4AE5F9EDA480}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "salty", "..\app\project\salty.vcxproj", "{1C2481BC-3D87-4C04-A4E2-BA37CB2A541C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7D016A83-13ED-4E44-A5F6-4AE5F9EDA480} = {7D016A83-13ED-4E44-A5F6-4AE5F9EDA480}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

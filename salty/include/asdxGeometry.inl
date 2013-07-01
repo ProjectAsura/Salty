@@ -45,14 +45,14 @@ Vector3x8::Vector3x8
     const Vector3& v7
 )
 {
-    p0 = v0;
-    p1 = v1;
-    p2 = v2;
-    p3 = v3;
-    p4 = v4;
-    p5 = v5;
-    p6 = v6;
-    p7 = v7;
+    points[0] = v0;
+    points[1] = v1;
+    points[2] = v2;
+    points[3] = v3;
+    points[4] = v4;
+    points[5] = v5;
+    points[6] = v6;
+    points[7] = v7;
 }
 
 ///------------------------------------------------------------------------------------
@@ -73,14 +73,8 @@ Vector3x8::Vector3x8( Vector3* pValues )
 ASDX_INLINE
 Vector3x8::Vector3x8( const Vector3x8 &value )
 {
-    p0 = value.p0;
-    p1 = value.p1;
-    p2 = value.p2;
-    p3 = value.p3;
-    p4 = value.p4;
-    p5 = value.p5;
-    p6 = value.p6;
-    p7 = value.p7;
+    for( u32 i=0; i<NUM_COUNT; ++i )
+    { points[ i ] = value.points[ i ]; }
 }
 
 ///------------------------------------------------------------------------------------
@@ -96,7 +90,7 @@ Vector3x8::~Vector3x8()
 ///------------------------------------------------------------------------------------
 ASDX_INLINE
 Vector3x8::operator Vector3* ()
-{ return &p0; }
+{ return &points[0]; }
 
 ///------------------------------------------------------------------------------------
 ///<summary>const Vector3*型へのキャストです.</summary>
@@ -104,7 +98,7 @@ Vector3x8::operator Vector3* ()
 ///------------------------------------------------------------------------------------
 ASDX_INLINE
 Vector3x8::operator const Vector3* () const
-{ return &p0; }
+{ return &points[0]; }
 
 ///------------------------------------------------------------------------------------
 ///<summary>インデクサです.</summary>
@@ -170,14 +164,8 @@ void    Vector3x8::SetAt( u32 index, const Vector3& value )
 ASDX_INLINE
 Vector3x8&  Vector3x8::operator = ( const Vector3x8& value )
 {
-    p0 = value.p0;
-    p1 = value.p1;
-    p2 = value.p2;
-    p3 = value.p3;
-    p4 = value.p4;
-    p5 = value.p5;
-    p6 = value.p6;
-    p7 = value.p7;
+    for( u32 i=0; i<NUM_COUNT; ++i )
+    { points[ i ] = value.points[ i ]; }
     return (*this);
 }
 
@@ -1071,7 +1059,7 @@ bool Ray::Intersects( const BoundingFrustum& value, f32& distance ) const
         }
         else
         {
-            if ( t < tnear );
+            if ( t < tnear )
             {
                 distance = 0.0f;
                 return false;
@@ -1101,31 +1089,40 @@ bool Ray::Intersects( const BoundingFrustum& value, f32& distance ) const
 ASDX_INLINE
 bool Ray::Intersects( const BoundingSphere& value, f32& distance ) const
 {
-    Vector3 temp( 
-        position.x - value.center.x,
-        position.y - value.center.y,
-        position.z - value.center.z );
+    Vector3 v( 
+        value.center.x - position.x,
+        value.center.y - position.y,
+        value.center.z - position.z );
 
-    register f32 b = ( temp.x * direction.x ) + ( temp.y * direction.y ) + ( temp.z * direction.z );
-    register f32 c = ( temp.x * temp.x ) + ( temp.y * temp.y ) + ( temp.z * temp.z ) - ( value.radius * value.radius );
 
-    if ( ( c > 0.0f ) && ( b > 0.0f ) )
+    register f32 b = Vector3::Dot( v, direction );
+    register f32 c = Vector3::Dot( v, v ) - ( value.radius * value.radius );
+    register f32 discrimiant = ( b * b ) - c;
+    
+    if ( discrimiant < 0.0f )
     {
         distance = 0.0f;
         return false;
     }
 
-    register f32 discriminant = ( b * b ) - c;
+    register f32 sqrtD4 = sqrtf( discrimiant );
+    register f32 t1 = b - sqrtD4;
+    register f32 t2 = b + sqrtD4;
 
-    if ( discriminant < 0.0f )
+    if ( t1 < F32_EPSILON && t2 < F32_EPSILON )
     {
         distance = 0.0f;
         return false;
     }
 
-    distance = -b - sqrtf( discriminant );
-    if ( distance < 0.0f )
-    { distance = 0.0f; }
+    if ( t1 > F32_EPSILON )
+    {
+        distance = t1;
+    }
+    else
+    {
+        distance = t2;
+    }
 
     return true;
 }
@@ -1198,7 +1195,7 @@ bool Ray::Intersects( const Vector3& p0, const Vector3& p1, const Vector3& p2, f
     f32 det = ( e0.x * u.x ) + ( e0.y * u.y ) + ( e0.z * u.z );
 
     // 小さすぎた場合は交差しない.
-    if ( ( det > -FLT_EPSILON ) && ( det < FLT_EPSILON ) )
+    if ( ( det > -F32_EPSILON ) && ( det < F32_EPSILON ) )
     {
         distance = 0.0f;
         return false;
@@ -1224,12 +1221,12 @@ bool Ray::Intersects( const Vector3& p0, const Vector3& p1, const Vector3& p2, f
     Vector3 v;
     v.x = ( diff.y * e0.z ) - ( diff.z * e0.y );
     v.y = ( diff.z * e0.x ) - ( diff.x * e0.z );
-    v.z = ( diff.z * e0.y ) - ( diff.y * e0.x );
+    v.z = ( diff.x * e0.y ) - ( diff.y * e0.x );
 
     f32 gamma = ( ( direction.x * v.x ) + ( direction.y * v.y ) ) + ( direction.z * v.z );
     gamma *= invDet;
 
-    if ( ( gamma < 0.0f ) || ( gamma > 1.0f ) )
+    if ( ( gamma < 0.0f ) || ( gamma + beta > 1.0f ) )
     {
         distance = 0.0f;
         return false;
@@ -1789,7 +1786,7 @@ BoundingBox     BoundingBox::CreateFromPoints( const u32 numPoints, const Vector
     Vector3 mini = pPoints[ offset ];
     Vector3 maxi = pPoints[ offset ];
 
-    for( int i=(offset+1); i<numPoints; ++i )
+    for( u32 i=(offset+1); i<numPoints; ++i )
     {
         mini = Vector3::Min( mini, pPoints[ i ] );
         maxi = Vector3::Max( maxi, pPoints[ i ] );
@@ -1814,7 +1811,7 @@ void    BoundingBox::CreateFromPoints( const u32 numPoints, const Vector3* pPoin
     Vector3 mini = pPoints[ offset ];
     Vector3 maxi = pPoints[ offset ];
 
-    for( int i=(offset+1); i<numPoints; ++i )
+    for( u32 i=(offset+1); i<numPoints; ++i )
     {
         mini = Vector3::Min( mini, pPoints[ i ] );
         maxi = Vector3::Max( maxi, pPoints[ i ] );
@@ -1920,6 +1917,7 @@ ContainmentType BoundingSphere::Contains( const Vector3& value ) const
 ///<param name="value">判定する境界箱</param>
 ///<return>境界球に境界箱が含まれているかどうかの判定結果を返却します.</return>
 ///------------------------------------------------------------------------------------
+ASDX_INLINE
 ContainmentType BoundingSphere::Contains( const BoundingBox& value ) const
 {
     Vector3 vec = Vector3::Clamp( center, value.min, value.max );
@@ -2020,7 +2018,7 @@ ContainmentType BoundingSphere::Contains( const BoundingFrustum& value ) const
 
     for( u32 i=0; i<6; i++ )
     {
-        pRet = value.plane[ i ].Intersects( this );
+        pRet = value.plane[ i ].Intersects( (*this) );
         switch( pRet )
         {
         case PlaneIntersectionType::BACK:
@@ -2083,7 +2081,7 @@ bool    BoundingSphere::Intersects( const BoundingFrustum& value ) const
 
     for( u32 i=0; i<6; i++ )
     {
-        pRet = value.plane[ i ].Intersects( this );
+        pRet = value.plane[ i ].Intersects( (*this) );
         switch( pRet )
         {
         case PlaneIntersectionType::BACK:
@@ -2127,29 +2125,38 @@ ASDX_INLINE
 bool    BoundingSphere::Intersects( const Ray& value, f32& distance ) const
 {
     Vector3 v( 
-        value.position.x - center.x,
-        value.position.y - center.y,
-        value.position.z - center.z );
+        center.x - value.position.x,
+        center.y - value.position.y,
+        center.z - value.position.z );
 
     register f32 b = Vector3::Dot( v, value.direction );
     register f32 c = Vector3::Dot( v, v ) - ( radius * radius );
-
-    if ( ( c > 0.0f ) && ( b > 0.0f ) )
-    {
-        distance = 0.0f;
-        return false;
-    }
-
     register f32 discrimiant = ( b * b ) - c;
+    
     if ( discrimiant < 0.0f )
     {
         distance = 0.0f;
         return false;
     }
 
-    distance = -b - sqrtf( discrimiant );
-    if ( distance < 0.0f )
-    { distance = 0.0f; }
+    register f32 sqrtD4 = sqrtf( discrimiant );
+    register f32 t1 = b - sqrtD4;
+    register f32 t2 = b + sqrtD4;
+
+    if ( t1 < F32_EPSILON && t2 < F32_EPSILON )
+    {
+        distance = 0.0f;
+        return false;
+    }
+
+    if ( t1 > F32_EPSILON )
+    {
+        distance = t1;
+    }
+    else
+    {
+        distance = t2;
+    }
 
     return true;
 }
@@ -2181,8 +2188,8 @@ BoundingSphere  BoundingSphere::CreateMerged( const BoundingSphere& a, const Bou
 
     assert( len != 0.0f );
     Vector3 v = dif * ( 1.0f / len );
-    register f32 fmin = asura::Min<f32>( -a.radius, len - b.radius );
-    register f32 fmax = asura::Max<f32>(  a.radius, len + b.radius ) * 0.5f;
+    register f32 fmin = asdx::Min<f32>( -a.radius, len - b.radius );
+    register f32 fmax = asdx::Max<f32>(  a.radius, len + b.radius ) * 0.5f;
 
     return BoundingSphere(
         Vector3( a.center.x + v.x * ( fmax + fmin ),
@@ -2226,8 +2233,8 @@ void    BoundingSphere::CreateMerged( const BoundingSphere& a, const BoundingSph
 
     assert( len != 0.0f );
     Vector3 v = dif * ( 1.0f / len );
-    register f32 fmin = asura::Min<f32>( -a.radius, len - b.radius );
-    register f32 fmax = asura::Max<f32>(  a.radius, len + b.radius ) * 0.5f;
+    register f32 fmin = asdx::Min<f32>( -a.radius, len - b.radius );
+    register f32 fmax = asdx::Max<f32>(  a.radius, len + b.radius ) * 0.5f;
 
     result.center = a.center + v * ( fmax + fmin );
     result.radius = fmax;
@@ -2360,7 +2367,7 @@ ASDX_INLINE
 BoundingFrustum::BoundingFrustum( const Matrix& value )
 : matrix( value )
 {
-    ComputePlanesFromMatrix( matrix, left, right, top, bottom, far, near );
+    ComputePlanesFromMatrix( matrix, plane[0], plane[1], plane[2], plane[3], plane[4], plane[5]  );
 }
 
 ///------------------------------------------------------------------------------------
@@ -2738,7 +2745,7 @@ bool    BoundingFrustum::Intersects( const Ray& value, f32& distance ) const
         }
         else
         {
-            if ( t < tnear );
+            if ( t < tnear )
             {
                 distance = 0.0f;
                 return false;
@@ -2792,14 +2799,14 @@ ASDX_INLINE
 Vector3x8   BoundingFrustum::GetCorners() const
 {
     Vector3x8 result;
-    result.SetAt( 0, IntersectionPoint( near, bottom, right ) );
-    result.SetAt( 1, IntersectionPoint( near, top,    right ) );
-    result.SetAt( 2, IntersectionPoint( near, top,    left  ) );
-    result.SetAt( 3, IntersectionPoint( near, bottom, left  ) );
-    result.SetAt( 4, IntersectionPoint( far,  bottom, right ) );
-    result.SetAt( 5, IntersectionPoint( far,  top,    right ) );
-    result.SetAt( 6, IntersectionPoint( far,  top,    left  ) );
-    result.SetAt( 7, IntersectionPoint( far,  bottom, left  ) );
+    result.SetAt( 0, IntersectionPoint( plane[NEAR], plane[BOTTOM], plane[RIGHT] ) );
+    result.SetAt( 1, IntersectionPoint( plane[NEAR], plane[TOP],    plane[RIGHT] ) );
+    result.SetAt( 2, IntersectionPoint( plane[NEAR], plane[TOP],    plane[LEFT]  ) );
+    result.SetAt( 3, IntersectionPoint( plane[NEAR], plane[BOTTOM], plane[LEFT]  ) );
+    result.SetAt( 4, IntersectionPoint( plane[FAR],  plane[BOTTOM], plane[RIGHT] ) );
+    result.SetAt( 5, IntersectionPoint( plane[FAR],  plane[TOP],    plane[RIGHT] ) );
+    result.SetAt( 6, IntersectionPoint( plane[FAR],  plane[TOP],    plane[LEFT]  ) );
+    result.SetAt( 7, IntersectionPoint( plane[FAR],  plane[BOTTOM], plane[LEFT]  ) );
 
     return result;
 }
@@ -2811,14 +2818,14 @@ Vector3x8   BoundingFrustum::GetCorners() const
 ASDX_INLINE
 void    BoundingFrustum::GetCorners( Vector3x8& result ) const
 {
-    result.SetAt( 0, IntersectionPoint( near, bottom, right ) );
-    result.SetAt( 1, IntersectionPoint( near, top,    right ) );
-    result.SetAt( 2, IntersectionPoint( near, top,    left  ) );
-    result.SetAt( 3, IntersectionPoint( near, bottom, left  ) );
-    result.SetAt( 4, IntersectionPoint( far,  bottom, right ) );
-    result.SetAt( 5, IntersectionPoint( far,  top,    right ) );
-    result.SetAt( 6, IntersectionPoint( far,  top,    left  ) );
-    result.SetAt( 7, IntersectionPoint( far,  bottom, left  ) );
+    result.SetAt( 0, IntersectionPoint( plane[NEAR], plane[BOTTOM], plane[RIGHT] ) );
+    result.SetAt( 1, IntersectionPoint( plane[NEAR], plane[TOP],    plane[RIGHT] ) );
+    result.SetAt( 2, IntersectionPoint( plane[NEAR], plane[TOP],    plane[LEFT]  ) );
+    result.SetAt( 3, IntersectionPoint( plane[NEAR], plane[BOTTOM], plane[LEFT]  ) );
+    result.SetAt( 4, IntersectionPoint( plane[FAR],  plane[BOTTOM], plane[RIGHT] ) );
+    result.SetAt( 5, IntersectionPoint( plane[FAR],  plane[TOP],    plane[RIGHT] ) );
+    result.SetAt( 6, IntersectionPoint( plane[FAR],  plane[TOP],    plane[LEFT]  ) );
+    result.SetAt( 7, IntersectionPoint( plane[FAR],  plane[BOTTOM], plane[LEFT]  ) );
 }
 
 

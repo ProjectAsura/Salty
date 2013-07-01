@@ -2378,5 +2378,200 @@ bool SaveTextureToTgaW
     return true;
 }
 
+//-------------------------------------------------------------------------------------------
+//          ピクセルをBMPファイルに保存します.
+//-------------------------------------------------------------------------------------------
+bool SaveTextureToBmpA
+(
+    const char*          filename,
+    const int            width,
+    const int            height,
+    const int            component,
+    const unsigned char* pPixels
+)
+{
+    TinyTexture image;
+    TinyTexture::FORMAT_TYPE format;
+    switch( component )
+    {
+    case 3:
+        format = TinyTexture::FORMAT_RGB;
+        break;
+
+    case 4:
+        format = TinyTexture::FORMAT_RGBA;
+        break;
+    }
+
+    if ( !image.Init( width, height, format ) )
+    {
+        image.Term();
+        return false;
+    }
+
+    memcpy( image.pPixels, pPixels, sizeof( unsigned char ) * width * height * component );
+
+    FILE* pFile;
+    errno_t err = fopen_s( &pFile, filename, "wb" );
+    if ( err != 0 )
+    {
+        image.Term();
+        return false;
+    }
+
+    WriteBmp( pFile, image );
+
+    fclose( pFile );
+    image.Term();
+
+    return true;
+}
+
+//-------------------------------------------------------------------------------------------
+//          ピクセルをBMPファイルに保存します.
+//-------------------------------------------------------------------------------------------
+bool SaveTextureToBmpW
+(
+    const wchar_t*       filename,
+    const int            width,
+    const int            height,
+    const int            component,
+    const unsigned char* pPixels
+)
+{
+    TinyTexture image;
+    TinyTexture::FORMAT_TYPE format;
+    switch( component )
+    {
+    case 3:
+        format = TinyTexture::FORMAT_RGB;
+        break;
+
+    case 4:
+        format = TinyTexture::FORMAT_RGBA;
+        break;
+    }
+
+    if ( !image.Init( width, height, format ) )
+    {
+        image.Term();
+        return false;
+    }
+
+    memcpy( image.pPixels, pPixels, sizeof( unsigned char ) * width * height * component );
+
+    FILE* pFile;
+    errno_t err = _wfopen_s( &pFile, filename, L"wb" );
+    if ( err != 0 )
+    {
+        image.Term();
+        return false;
+    }
+
+    WriteBmp( pFile, image );
+
+    fclose( pFile );
+    image.Term();
+
+    return true;
+}
+
+//-------------------------------------------------------------------------------------------
+//          ピクセルをTGAファイルに保存します.
+//-------------------------------------------------------------------------------------------
+bool SaveTextureToTgaA
+(
+    const char*          filename,
+    const int            width,
+    const int            height,
+    const int            component,
+    const unsigned char* pPixels
+)
+{
+    TinyTexture image;
+    TinyTexture::FORMAT_TYPE format;
+    switch( component )
+    {
+    case 3:
+        format = TinyTexture::FORMAT_RGB;
+        break;
+
+    case 4:
+        format = TinyTexture::FORMAT_RGBA;
+        break;
+    }
+
+    if ( !image.Init( width, height, format ) )
+    {
+        image.Term();
+        return false;
+    }
+
+    memcpy( image.pPixels, pPixels, sizeof( unsigned char ) * width * height * component );
+
+    FILE* pFile;
+    errno_t err = fopen_s( &pFile, filename, "wb" );
+    if ( err != 0 )
+    {
+        image.Term();
+        return false;
+    }
+
+    WriteTga( pFile, image );
+
+    fclose( pFile );
+    image.Term();
+
+    return true;
+}
+
+//-------------------------------------------------------------------------------------------
+//          ピクセルをTGAファイルに保存します.
+//-------------------------------------------------------------------------------------------
+bool SaveTextureToTgaW
+(
+    const wchar_t*       filename,
+    const int            width,
+    const int            height,
+    const int            component,
+    const unsigned char* pPixels
+)
+{
+    TinyTexture image;
+    TinyTexture::FORMAT_TYPE format;
+    switch( component )
+    {
+    case 3:
+        format = TinyTexture::FORMAT_RGB;
+        break;
+
+    case 4:
+        format = TinyTexture::FORMAT_RGBA;
+        break;
+    }
+
+    if ( !image.Init( width, height, format ) )
+    {
+        image.Term();
+        return false;
+    }
+
+    memcpy( image.pPixels, pPixels, sizeof( unsigned char ) * width * height * component );
+
+    FILE* pFile;
+    errno_t err = _wfopen_s( &pFile, filename, L"wb" );
+    if ( err != 0 )
+    {
+        image.Term();
+        return false;
+    }
+
+    WriteTga( pFile, image );
+
+    fclose( pFile );
+    image.Term();
+
+    return true;
+}
 
 } // namespace asdx

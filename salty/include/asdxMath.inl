@@ -167,6 +167,39 @@ u32     Comb( u32 n, u32 r )
 }
 
 //----------------------------------------------------------------------------
+///<summary>Schlickによるフレネルの近似式を計算します.</summary>
+///<param name="n1">入射側の屈折率</param>
+///<param name="n2">出射側の屈折率</param>
+///<param name="cosTheta">cosθの値.</param>
+///<return>フレネル項を計算した結果を返却します.</return>
+//----------------------------------------------------------------------------
+ASDX_INLINE
+f32     Fresnel( f32 n1, f32 n2, f32 cosTheta )
+{
+    register f32 a = n1 + n2;
+    register f32 b = n1 - n2;
+    register f32 R = ( a * a ) / ( b * b );
+    return R + ( 1.0f - R ) * powf( 1.0f - cosTheta, 5.0f );
+}
+
+//----------------------------------------------------------------------------
+///<summary>Schlickによるフレネルの近似式を計算します.</summary>
+///<param name="n1">入射側の屈折率</param>
+///<param name="n2">出射側の屈折率</param>
+///<param name="cosTheta">cosθの値.</param>
+///<return>フレネル項を計算した結果を返却します.</return>
+//----------------------------------------------------------------------------
+ASDX_INLINE
+f64     Fresnel( f64 n1, f64 n2, f64 cosTheta )
+{
+    register f64 a = n1 + n2;
+    register f64 b = n1 - n2;
+    register f64 R = ( a * a ) / ( b * b );
+    return R + ( 1.0 - R ) * pow( 1.0f - cosTheta, 5.0 );
+}
+
+
+//----------------------------------------------------------------------------
 ///<summary>f32型の値をビット列を変更することなくu32型に変更します.</summary>
 ///<param name="value">u32型にする値.</param>
 ///<return>valueと等しいビット列表現を持つu32型の値を返却します.</return>
@@ -1152,6 +1185,14 @@ Vector2&    Vector2::operator *= ( const f32 scalar )
     return (*this);
 }
 
+ASDX_INLINE
+Vector2&    Vector2::operator *= ( const Vector2& value )
+{
+    x *= value.x;
+    y *= value.y;
+    return (*this);
+}
+
 //----------------------------------------------------------------------------
 ///<summary>除算代入演算子です.</summary>
 ///<param name="scalar">除算するスカラー値</param>
@@ -1222,6 +1263,15 @@ Vector2     Vector2::operator * ( const f32 scalar ) const
     return Vector2(
         x * scalar,
         y * scalar
+    );
+}
+
+ASDX_INLINE
+Vector2     Vector2::operator * ( const Vector2& value ) const
+{
+    return Vector2(
+        x * value.x,
+        y * value.y 
     );
 }
 
@@ -2457,6 +2507,15 @@ Vector3&    Vector3::operator *= ( const f32 scalar )
     return (*this);
 }
 
+ASDX_INLINE
+Vector3&    Vector3::operator *= ( const Vector3& value )
+{
+    x *= value.x;
+    y *= value.y;
+    z *= value.z;
+    return (*this);
+}
+
 //----------------------------------------------------------------------------
 ///<summary>除算代入演算子です.</summary>
 ///<param name="scalar">除算するスカラー値</param>
@@ -2531,6 +2590,16 @@ Vector3     Vector3::operator * ( const f32 scalar ) const
         x * scalar,
         y * scalar,
         z * scalar
+    );
+}
+
+ASDX_INLINE
+Vector3     Vector3::operator * ( const Vector3& value ) const
+{
+    return Vector3(
+        x * value.x,
+        y * value.y,
+        z * value.z 
     );
 }
 
@@ -4135,6 +4204,16 @@ Vector4&    Vector4::operator *= ( const f32 scalar )
     return (*this);
 }
 
+ASDX_INLINE
+Vector4&    Vector4::operator *= ( const Vector4& value )
+{
+    x *= value.x;
+    y *= value.y;
+    z *= value.z;
+    w *= value.w;
+    return (*this);
+}
+
 //----------------------------------------------------------------------------
 ///<summary>除算代入演算子です.</summary>
 ///<param name="scalar">除算するスカラー値</param>
@@ -4213,6 +4292,17 @@ Vector4     Vector4::operator * ( const f32 scalar ) const
         y * scalar,
         z * scalar,
         w * scalar 
+    );
+}
+
+ASDX_INLINE
+Vector4     Vector4::operator * ( const Vector4& value ) const
+{
+    return Vector4(
+        x * value.x,
+        y * value.y,
+        z * value.z,
+        w * value.w 
     );
 }
 
@@ -7537,7 +7627,7 @@ Matrix  Matrix::CreateLookAt
     Vector3 xAxis = Vector3::Cross( upward, zAxis );
     xAxis.Normalize();
 
-    Vector3 yAxis = Vector3::Cross( xAxis, xAxis );
+    Vector3 yAxis = Vector3::Cross( zAxis, xAxis );
     yAxis.Normalize();
 
     return Matrix(
@@ -7587,7 +7677,7 @@ void    Matrix::CreateLookAt
     Vector3 xAxis = Vector3::Cross( upward, zAxis );
     xAxis.Normalize();
 
-    Vector3 yAxis = Vector3::Cross( xAxis, xAxis );
+    Vector3 yAxis = Vector3::Cross( zAxis, xAxis );
     yAxis.Normalize();
 
     result._11 = xAxis.x;

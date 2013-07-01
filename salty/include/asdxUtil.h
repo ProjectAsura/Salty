@@ -172,6 +172,55 @@ bool SaveTextureToTgaA( ID3D11DeviceContext* pDeviceContext, ID3D11Texture2D* pT
 //---------------------------------------------------------------------------------------
 bool SaveTextureToTgaW( ID3D11DeviceContext* pDeviceContext, ID3D11Texture2D* pTexture, const wchar_t* filename );
 
+//---------------------------------------------------------------------------------------
+//! @brief      テクスチャをBMPファイルとして保存します.
+//!
+//! @param [in]     fileName            出力ファイル名です.
+//! @param [in]     width               テクスチャの横幅です.
+//! @param [in]     height              テクスチャの縦幅です.
+//! @param [in]     component           ピクセルを構成するチャンネル数です(RGB=3, RGBA=4).
+//! @retval true    保存に成功.
+//! @retval false   保存に失敗.
+//---------------------------------------------------------------------------------------
+bool SaveTextureToBmpA( const char*    filename, const int width, const int height, const int component, const unsigned char* pPixels );
+
+//---------------------------------------------------------------------------------------
+//! @brief      テクスチャをBMPファイルとして保存します.
+//!
+//! @param [in]     fileName            出力ファイル名です.
+//! @param [in]     width               テクスチャの横幅です.
+//! @param [in]     height              テクスチャの縦幅です.
+//! @param [in]     component           ピクセルを構成するチャンネル数です(RGB=3, RGBA=4).
+//! @retval true    保存に成功.
+//! @retval false   保存に失敗.
+//---------------------------------------------------------------------------------------
+bool SaveTextureToBmpW( const wchar_t* filename, const int width, const int height, const int component, const unsigned char* pPixels );
+
+//---------------------------------------------------------------------------------------
+//! @brief      テクスチャをTGAファイルとして保存します.
+//!
+//! @param [in]     fileName            出力ファイル名です.
+//! @param [in]     width               テクスチャの横幅です.
+//! @param [in]     height              テクスチャの縦幅です.
+//! @param [in]     component           ピクセルを構成するチャンネル数です(RGB=3, RGBA=4).
+//! @retval true    保存に成功.
+//! @retval false   保存に失敗.
+//---------------------------------------------------------------------------------------
+bool SaveTextureToTgaA( const char*    filename, const int width, const int height, const int component, const unsigned char* pPixels );
+
+//---------------------------------------------------------------------------------------
+//! @brief      テクスチャをTGAファイルとして保存します.
+//!
+//! @param [in]     fileName            出力ファイル名です.
+//! @param [in]     width               テクスチャの横幅です.
+//! @param [in]     height              テクスチャの縦幅です.
+//! @param [in]     component           ピクセルを構成するチャンネル数です(RGB=3, RGBA=4).
+//! @retval true    保存に成功.
+//! @retval false   保存に失敗.
+//---------------------------------------------------------------------------------------
+bool SaveTextureToTgaW( const wchar_t* filename, const int width, const int height, const int component, const unsigned char* pPixels );
+
+
 
 
 

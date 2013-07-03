@@ -33,8 +33,8 @@ namespace /* anonymous */ {
 //------------------------------------------------------------------------------------------
 // Constant Values
 //------------------------------------------------------------------------------------------
-static const int    MIN_DEPTH = 3;                  // 増やしても大して綺麗にならないので, 3～5ぐらいで設定.
-static const int    MAX_DEPTH = 16;
+static const int    MIN_DEPTH = 8;
+static const int    MAX_DEPTH = 32;
 static const double MAX_P     = 0.99;               // ずっとループしてしまうので，1.0にならないように制限.
 static const COLOR  BG_COLOR( 0.0, 0.0, 0.0 );
 static const VEC3   UNIT_X  ( 1.0, 0.0, 0.0 );
@@ -424,7 +424,7 @@ inline COLOR Radiance( const RAY &inputRay )
     HITRECORD   record;
 
     // 反射回数を制限.
-    for ( int depth = 0; depth < MAX_DEPTH; ++depth ) 
+    for ( int depth = 0; /*depth < MAX_DEPTH*/; ++depth ) 
     {
         // シーンとの交差判定を行う.
         if ( !IntersectScene( ray, record ) )

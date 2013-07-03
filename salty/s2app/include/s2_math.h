@@ -20,8 +20,8 @@
 // Constant Values
 //---------------------------------------------------------------------------------------
 static const double PI  = 3.14159265358979323846;
-static const double INF = 1e20;
-static const double EPS = 1e-6;
+//static const double INF = 1e20;
+//static const double EPS = 1e-6;
 
 
 //---------------------------------------------------------------------------------------
@@ -35,6 +35,9 @@ template< typename T> inline T Max( T a, T b )
 
 template< typename T> inline T Min( T a, T b )
 { return ( a < b ) ? a : b; }
+
+template< typename T> inline T Clamp( T value, T a, T b )
+{ return ( value > b ) ? b : ( value < a ) ? a : value; }
 
 
 //---------------------------------------------------------------------------------------
@@ -183,6 +186,20 @@ struct VEC3
         y /= mag;
         z /= mag;
     }
+
+    bool operator == ( const VEC3& value ) const
+    {
+        return ( x == value.x )
+            && ( y == value.y )
+            && ( z == value.z );
+    }
+
+    bool operator != ( const VEC3& value ) const
+    {
+        return ( x != value.x )
+            || ( y != value.y )
+            || ( z != value.z );
+    }
 };
 typedef VEC3 COLOR;
 
@@ -254,6 +271,61 @@ struct RAY
     , dir(dir_)
     { /* DO_NOTHING */ }
 };
+
+
+inline bool IntersectTriangle
+(
+    const RAY&  ray,
+    const VEC3& v0,
+    const VEC3& v1,
+    const VEC3& v2,
+    double&     distance
+)
+{
+    VEC3 e0 = v1 - v0;
+    VEC3 e1 = v2 - v0;
+
+    VEC3 u = Cross( ray.dir, e1 );
+
+    double det = Dot( e0, u );
+
+    if ( det > -DBL_EPSILON && det < DBL_EPSILON )
+    {
+        return false;
+    }
+
+    VEC3 diff = ray.org - v0;
+    double beta = Dot( diff, u );
+    beta /= det;
+
+    if ( beta < 0.0 || beta > 1.0 )
+    {
+        return false;
+    }
+
+    VEC3 v;
+    v = Cross( diff, e0 );
+
+    double gamma = Dot( ray.dir, v );
+    gamma /= det;
+
+    if ( gamma < 0.0 || gamma + beta > 1.0 )
+    {
+        return false;
+    }
+
+    double dist = Dot( e1, v );
+    dist /= det;
+
+    if ( dist < 0.0 )
+    {
+        return false;
+    }
+
+    distance = dist;
+
+    return true;
+}
 
 
 //---------------------------------------------------------------------------------------

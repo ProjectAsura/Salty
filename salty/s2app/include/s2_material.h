@@ -9,13 +9,14 @@
 
 
 //---------------------------------------------------------------------------------------
-//! @brief      反射タイプ列挙子です.
+//! @brief      材質タイプ列挙子です.
 //---------------------------------------------------------------------------------------
-enum REFLECTION_TYPE
+enum MATERIAL_TYPE
 {
-    REFLECTION_DIFFUSE = 0,    // でぃふゅーず
-    REFLECTION_SPECULAR,       // すぺきゅら
-    REFLECTION_REFRACTION,     // がらす
+    MATERIAL_DIFFUSE = 0,    // でぃふゅーず
+    MATERIAL_MIRROR,         // みらー
+    MATERIAL_GLASS,          // がらす
+    MATERIAL_LIGHT,          // らいと.
 };
 
 //---------------------------------------------------------------------------------------
@@ -23,20 +24,17 @@ enum REFLECTION_TYPE
 //---------------------------------------------------------------------------------------
 struct MATERIAL
 {
-    COLOR           emission;
-    COLOR           color;
-    REFLECTION_TYPE type;
+    COLOR         color;
+    MATERIAL_TYPE type;
 
     MATERIAL()
     { /* DO_NOTHING */ }
 
     MATERIAL(
-        const COLOR&            emission_,
-        const COLOR&            color_,
-        const REFLECTION_TYPE   type_
+        const COLOR&          color_,
+        const MATERIAL_TYPE   type_
     )
-    : emission  ( emission_ )
-    , color     ( color_ )
+    : color     ( color_ )
     , type      ( type_ )
     { /* DO_NOTHING */ }
 

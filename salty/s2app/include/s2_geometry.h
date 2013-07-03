@@ -123,7 +123,9 @@ struct SPHERE : ISHAPE
     { return pMaterial; }
 };
 
-
+//--------------------------------------------------------------------------------------
+//! @brief      三角形構造体です.
+//--------------------------------------------------------------------------------------
 struct TRIANGLE : public ISHAPE
 {
     VEC3            vertex[3];
@@ -133,8 +135,7 @@ struct TRIANGLE : public ISHAPE
     TRIANGLE()
     : normal    ( 0.0, 0.0, 0.0 )
     , pMaterial ( nullptr )
-    {
-    }
+    { /* DO_NOTHING */ }
 
     TRIANGLE(
         VEC3 v0,
@@ -149,56 +150,22 @@ struct TRIANGLE : public ISHAPE
         vertex[2] = v2;
 
         normal = ComputeNormal( v0, v1, v2 );
+        normal.Normalize();
     }
 
     bool Intersect( const RAY& ray, HITRECORD& record )
     {
-        VEC3 e0 = vertex[1] - vertex[0];
-        VEC3 e1 = vertex[2] - vertex[0];
-
-        VEC3 u = Cross( ray.dir, e1 );
-
-        double det = Dot( e0, u );
-
-        if ( det > -DBL_EPSILON && det < DBL_EPSILON )
+        double dist;
+        if ( IntersectTriangle( ray, vertex[0], vertex[1], vertex[2], dist ) )
         {
-            return false;
+            record.distance = dist;
+            record.position = ray.org + ray.dir * dist;
+            record.normal   = normal;
+            record.pShape   = this;
+            return true;
         }
 
-        VEC3 diff = ray.org - vertex[0];
-        double beta = Dot( diff, u );
-        beta /= det;
-
-        if ( beta < 0.0 || beta > 1.0 )
-        {
-            return false;
-        }
-
-        VEC3 v;
-        v = Cross( diff, e0 );
-
-        double gamma = Dot( ray.dir, v );
-        gamma /= det;
-
-        if ( gamma < 0.0 || gamma + beta > 1.0 )
-        {
-            return false;
-        }
-
-        double dist = Dot( e1, v );
-        dist /= det;
-
-        if ( dist < 0.0 )
-        {
-            return false;
-        }
-
-        record.distance = dist;
-        record.position = ray.org + ray.dir * dist;
-        record.normal   = normal;
-        record.pShape   = this;
-
-        return true;
+        return false;
     }
 
     MATERIAL* GetMaterial()
@@ -206,6 +173,9 @@ struct TRIANGLE : public ISHAPE
 };
 
 
+//--------------------------------------------------------------------------------------
+//! @brief      四角形構造体です.
+//--------------------------------------------------------------------------------------
 struct QUAD : public ISHAPE
 {
     VEC3            vertex[4];
@@ -215,8 +185,7 @@ struct QUAD : public ISHAPE
     QUAD()
     : normal    ( 0.0, 0.0, 0.0 )
     , pMaterial ( nullptr )
-    {
-    }
+    { /* DO_NOTHING */ }
 
     QUAD(
         VEC3 v0,
@@ -233,66 +202,13 @@ struct QUAD : public ISHAPE
         vertex[3] = v3;
 
         normal = ComputeQuadNormal( v0, v1, v2, v3 );
-    }
-
-    bool Intersect
-    (
-        const RAY& ray,
-        const VEC3& v0,
-        const VEC3& v1,
-        const VEC3& v2,
-        double& distance
-    )
-    {
-        VEC3 e0 = v1 - v0;
-        VEC3 e1 = v2 - v0;
-
-        VEC3 u = Cross( ray.dir, e1 );
-
-        double det = Dot( e0, u );
-
-        if ( det > -DBL_EPSILON && det < DBL_EPSILON )
-        {
-            return false;
-        }
-
-        VEC3 diff = ray.org - v0;
-        double beta = Dot( diff, u );
-        beta /= det;
-
-        if ( beta < 0.0 || beta > 1.0 )
-        {
-            return false;
-        }
-
-        VEC3 v;
-        v = Cross( diff, e0 );
-
-        double gamma = Dot( ray.dir, v );
-        gamma /= det;
-
-        if ( gamma < 0.0 || gamma + beta > 1.0 )
-        {
-            return false;
-        }
-
-        double dist = Dot( e1, v );
-        dist /= det;
-
-        if ( dist < 0.0 )
-        {
-            return false;
-        }
-
-        distance = dist;
-
-        return true;
+        normal.Normalize();
     }
 
     bool Intersect( const RAY& ray, HITRECORD& record )
     {
         double distance = DBL_MAX;
-        if ( Intersect( ray, vertex[0], vertex[1], vertex[2], distance ) )
+        if ( IntersectTriangle( ray, vertex[0], vertex[1], vertex[2], distance ) )
         {
             record.distance = distance;
             record.normal   = normal;
@@ -300,7 +216,7 @@ struct QUAD : public ISHAPE
             record.pShape   = this;
             return true;
         }
-        else if ( Intersect( ray, vertex[2], vertex[3], vertex[0], distance ) )
+        else if ( IntersectTriangle( ray, vertex[2], vertex[3], vertex[0], distance ) )
         {
             record.distance = distance;
             record.normal   = normal;
@@ -314,6 +230,16 @@ struct QUAD : public ISHAPE
 
     MATERIAL* GetMaterial()
     { return pMaterial; }
+};
+
+
+struct MESH : public ISHAPE
+{
+    VEC3*       pVertices;
+    VEC3*       pNormals;
+    MATERIAL*   pMaterial;
+    unsigned int    numVertices;
+    unsigned int    numNormals;
 };
 
 

@@ -12,10 +12,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\main.cpp" />
+    <ClCompile Include="..\src\s2_bmp.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\s2_bmp.h" />
     <ClInclude Include="..\include\s2_geometry.h" />
-    <ClInclude Include="..\include\s2_hdr.h" />
     <ClInclude Include="..\include\s2_material.h" />
     <ClInclude Include="..\include\s2_math.h" />
     <ClInclude Include="..\include\s2_timer.h" />

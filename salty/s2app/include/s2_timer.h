@@ -74,7 +74,7 @@ public:
     //---------------------------------------------------------------------------------------
     //! @brief      計測を開始します.
     //---------------------------------------------------------------------------------------
-    void Start()
+    inline void Start()
     {
         LARGE_INTEGER qwTime = { 0 };
         QueryPerformanceCounter( &qwTime );
@@ -84,7 +84,7 @@ public:
     //---------------------------------------------------------------------------------------
     //! @brief      計測を終了します.
     //---------------------------------------------------------------------------------------
-    void End()
+    inline void End()
     {
         LARGE_INTEGER qwTime = { 0 };
         QueryPerformanceCounter( &qwTime );
@@ -96,7 +96,7 @@ public:
     //!
     //! @return     経過時間を秒単位で返却します.
     //---------------------------------------------------------------------------------------
-    double GetElapsedTimeSec()
+    inline double GetElapsedTimeSec()
     {
          return ( m_EndTime - m_StartTime ) * m_InvTicksPerSec;
     }
@@ -106,7 +106,7 @@ public:
     //!
     //! @return     経過時間をミリ秒単位で返却します.
     //---------------------------------------------------------------------------------------
-    double GetElapsedTimeMsec()
+    inline double GetElapsedTimeMsec()
     {
         return ( m_EndTime - m_StartTime ) * 1000.0 * m_InvTicksPerSec;
     }

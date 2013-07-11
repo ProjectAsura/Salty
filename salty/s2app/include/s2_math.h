@@ -440,7 +440,7 @@ inline MTX44 PerspectiveFov( const double fov, const double aspectRatio, const d
     return MTX44(
         xScale,     0.0f,       0.0f,       0.0f,
         0.0f,       yScale,     0.0f,       0.0f,
-        0.0f,       0.0f,       nearClip * invDiff, -1.0f,
+        0.0f,       0.0f,       farClip * invDiff, -1.0f,
         0.0f,       0.0f,       ( nearClip * farClip ) * invDiff,   0.0f  );
 }
 

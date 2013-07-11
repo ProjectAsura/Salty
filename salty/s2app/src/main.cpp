@@ -33,7 +33,7 @@ namespace /* anonymous */ {
 //------------------------------------------------------------------------------------------
 // Constant Values
 //------------------------------------------------------------------------------------------
-static const int    MIN_DEPTH = 8;
+//static const int    MIN_DEPTH = 8;
 static const int    MAX_DEPTH = 32;
 static const double MAX_P     = 0.99;               // ずっとループしてしまうので，1.0にならないように制限.
 static const COLOR  BG_COLOR( 0.0, 0.0, 0.0 );
@@ -48,7 +48,7 @@ static const VEC3   CAMERA_UPWARD   = VEC3(0.0, 1.0, 0.0);
 // 構成設定.
 static const int    WIDTH   = 320;
 static const int    HEIGHT  = 240;
-static const int    SAMPLES = 32;      // 増やせば積分の精度があがるけど，重くなる.
+static const int    SAMPLES = 4096;      // 増やせば積分の精度があがるけど，重くなる.
 static const double ASPECT_RATIO = (double)WIDTH / (double)HEIGHT;
 
 
@@ -282,7 +282,7 @@ bool ComputeReflectance
     const VEC3 normal = ( Dot( record.normal, ray.dir ) < 0.0 ) ? record.normal : -record.normal; // 交差位置の法線（物体からのレイの入出を考慮）
 
     // 一定以上レイを追跡したらロシアンルーレットを実行し追跡を打ち切るかどうかを判断する
-    if ( depth > MIN_DEPTH )
+    //if ( depth > MIN_DEPTH )
     {
         // 色の反射率最大のものを得る。ロシアンルーレットで使う。
         // ロシアンルーレットの閾値は任意だが色の反射率等を使うとより良い。

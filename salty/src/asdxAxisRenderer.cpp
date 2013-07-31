@@ -380,10 +380,10 @@ void AxisRenderer::Begin
 void AxisRenderer::Render( ID3D11DeviceContext* pDeviceContext, const asdx::Vector3 position, const f32 scale )
 {
     // 平行移動行列作成.
-    asdx::Matrix translateMtx = asdx::Matrix::CreateTranslation( position );
+    asdx::Matrix translateMtx = Matrix::CreateTranslation( position );
 
     // 拡大行列作成.
-    asdx::Matrix scaleMtx     = asdx::Matrix::CreateScale( scale );
+    asdx::Matrix scaleMtx     = Matrix::CreateScale( scale );
 
     // 変換パラメータ設定.
     CbPerObjVS param;

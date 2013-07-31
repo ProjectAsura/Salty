@@ -16,7 +16,7 @@
 #include <DirectXMath.h>
 #include <DirectXColors.h>
 #include <asdxRenderTarget.h>
-#include <asdxDepthBuffer.h>
+#include <asdxDepthStencilTarget.h>
 #include <asdxMath.h>
 #include <asdxTimer.h>
 
@@ -174,7 +174,7 @@ protected:
     ID3D11DeviceContext*        m_pDeviceContext;       //!< デバイスコンテキスト(イミディエイトコンテキスト)です.
     IDXGISwapChain*             m_pSwapChain;           //!< スワップチェインです.
     RenderTarget2D              m_RenderTarget2D;       //!< 描画ターゲットです.
-    DepthStencilBuffer          m_DepthStencilBuffer;   //!< 深度ステンシルバッファです.
+    DepthStencilTarget          m_DepthStencilTarget;   //!< 深度ステンシルバッファです.
     ID3D11RasterizerState*      m_pRasterizerState;     //!< ラスタライザーステートです.
     ID3D11DepthStencilState*    m_pDepthStencilState;   //!< 深度ステンシルステートです.
     ID3D11BlendState*           m_pBlendState;          //!< ブレンドステートです.

@@ -332,7 +332,7 @@ bool RenderTarget2D::Create( ID3D11Device* pDevice, const RenderTarget2D::Descri
     if ( desc.ArraySize == 1 )
     {
         // マルチサンプリング無しの場合.
-        if ( desc.SampleDesc.Count == 0 )
+        if ( desc.SampleDesc.Count <= 1 )
         {
             rtvd.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE2D;
             rtvd.Texture2D.MipSlice = 0;
@@ -347,7 +347,7 @@ bool RenderTarget2D::Create( ID3D11Device* pDevice, const RenderTarget2D::Descri
     else
     {
         // マルチサンプリング無しの場合.
-        if ( desc.SampleDesc.Count == 0 )
+        if ( desc.SampleDesc.Count <= 1 )
         {
             rtvd.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
             rtvd.Texture2DArray.ArraySize       = desc.ArraySize;
@@ -388,7 +388,7 @@ bool RenderTarget2D::Create( ID3D11Device* pDevice, const RenderTarget2D::Descri
     if ( desc.ArraySize == 1 )
     {
         // マルチサンプリング無しの場合.
-        if ( desc.SampleDesc.Count == 0 )
+        if ( desc.SampleDesc.Count <= 1 )
         {
             srvd.ViewDimension             = D3D11_SRV_DIMENSION_TEXTURE2D;
             srvd.Texture2D.MipLevels       = desc.MipLevels;
@@ -404,7 +404,7 @@ bool RenderTarget2D::Create( ID3D11Device* pDevice, const RenderTarget2D::Descri
     else
     {
         // マルチサンプリング無しの場合.
-        if ( desc.SampleDesc.Count == 0 )
+        if ( desc.SampleDesc.Count <= 1 )
         {
             srvd.ViewDimension                  = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
             srvd.Texture2DArray.ArraySize       = desc.ArraySize;

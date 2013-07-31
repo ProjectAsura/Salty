@@ -44,7 +44,7 @@ struct FntTextureHeader
 ////////////////////////////////////////////////////////////////////////////////////////////////
 struct FntDataHeader
 {
-    char8               FontName[ 32 ];     //!< フォント名です.
+    char                FontName[ 32 ];     //!< フォント名です.
     u32                 FontWidth;          //!< フォントの横幅です.
     u32                 FontHeight;         //!< フォントの縦幅です.
     FntTextureHeader    TextureHeader;      //!< テクスチャヘッダーです.
@@ -141,7 +141,7 @@ Font::~Font()
 bool Font::Init
 (
     ID3D11Device*   pDevice,
-    const char8*     filename,
+    const char*     filename,
     f32           screenWidth,
     f32           screenHeight
 )
@@ -690,7 +690,7 @@ void Font::Term()
         m_pRS = nullptr;
     }
 
-    memset( &m_FontName, 0, sizeof( char8 ) * 32 );
+    memset( &m_FontName, 0, sizeof( char ) * 32 );
     m_FontName[0]   = '\0';
     m_FontWidth     = 0;
     m_FontHeight    = 0;
@@ -811,7 +811,7 @@ void Font::Begin( ID3D11DeviceContext* pDeviceContext )
 //---------------------------------------------------------------------------------------------
 //          文字列を描画します.
 //---------------------------------------------------------------------------------------------
-void Font::DrawString( const int x, const int y, const char8* text )
+void Font::DrawString( const int x, const int y, const char* text )
 {
     DrawString( x, y, 0, text );
 }
@@ -819,7 +819,7 @@ void Font::DrawString( const int x, const int y, const char8* text )
 //---------------------------------------------------------------------------------------------
 //          文字列を描画します.
 //---------------------------------------------------------------------------------------------
-void Font::DrawString( const int x, const int y, const int layerDepth, const char8* text )
+void Font::DrawString( const int x, const int y, const int layerDepth, const char* text )
 {
     u32 stringsCount = (u32)strlen( text );
 
@@ -915,7 +915,7 @@ void Font::DrawString( const int x, const int y, const int layerDepth, const cha
 //---------------------------------------------------------------------------------------------
 //      書式指定して文字列を描画します.
 //---------------------------------------------------------------------------------------------
-void Font::DrawStringArg( const int x, const int y, const char8* format, ... )
+void Font::DrawStringArg( const s32 x, const s32 y, const char* format, ... )
 {
     int result = 0;
     va_list arg;
@@ -930,7 +930,7 @@ void Font::DrawStringArg( const int x, const int y, const char8* format, ... )
 //---------------------------------------------------------------------------------------------
 //      書式指定して文字列を描画します.
 //---------------------------------------------------------------------------------------------
-void Font::DrawStringArg( const int x, const int y, const int layerDepth, const char8* format, ... )
+void Font::DrawStringArg( const s32 x, const s32 y, const s32 layerDepth, const char* format, ... )
 {
     int result = 0;
     va_list arg;

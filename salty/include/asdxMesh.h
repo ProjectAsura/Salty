@@ -110,8 +110,8 @@ public:
         const asdx::ResMesh& mesh,
         const void*          pShaderBytecode,
         const u32            byteCodeLength,
-        const char8*         resFolderPath = "../res/",
-        const char8*         dummyFolderPath = "../res/"
+        const char*          resFolderPath = "../res/",
+        const char*          dummyFolderPath = "../res/"
     );
 
     //----------------------------------------------------------------------------------------

@@ -1489,8 +1489,8 @@ bool    BoundingBox::Intersects( const BoundingBox& value ) const
 ASDX_INLINE
 bool    BoundingBox::Intersects( const BoundingSphere& value ) const
 {
-    Vector3 vec = Vector3::Clamp( value.center, min, max );
-    register f32 dist = Vector3::DistanceSq( value.center, vec );
+    Vector3 vec = Clamp( value.center, min, max );
+    register f32 dist = DistanceSq( value.center, vec );
     return ( dist <= ( value.radius * value.radius ) );
 }
 
@@ -1549,12 +1549,12 @@ PlaneIntersectionType BoundingBox::Intersects( const Plane& value ) const
     mini.y = ( value.normal.y >= 0.0f ) ? max.y : min.y;
     mini.z = ( value.normal.z >= 0.0f ) ? max.z : min.z;
 
-    register f32 dist = Vector3::Dot( value.normal, maxi );
+    register f32 dist = Dot( value.normal, maxi );
 
     if ( dist + value.d > 0.0f )
     { return PlaneIntersectionType::FRONT; }
 
-    dist = Vector3::Dot( value.normal, mini );
+    dist = Dot( value.normal, mini );
 
     if ( dist + value.d < 0.0f )
     { return PlaneIntersectionType::BACK; }
@@ -1726,8 +1726,8 @@ ASDX_INLINE
 BoundingBox     BoundingBox::CreateMerged( const BoundingBox& a, const BoundingBox& b )
 {
     return BoundingBox(
-        Vector3::Min( a.min, b.min ),
-        Vector3::Max( a.max, b.max )
+        Min( a.min, b.min ),
+        Max( a.max, b.max )
     );
 }
 
@@ -1740,8 +1740,8 @@ BoundingBox     BoundingBox::CreateMerged( const BoundingBox& a, const BoundingB
 ASDX_INLINE
 void    BoundingBox::CreateMerged( const BoundingBox& a, const BoundingBox& b, BoundingBox& result )
 {
-    result.min = Vector3::Min( a.min, b.min );
-    result.max = Vector3::Max( a.max, b.max );
+    result.min = Min( a.min, b.min );
+    result.max = Max( a.max, b.max );
 }
 
 ///------------------------------------------------------------------------------------
@@ -1788,8 +1788,8 @@ BoundingBox     BoundingBox::CreateFromPoints( const u32 numPoints, const Vector
 
     for( u32 i=(offset+1); i<numPoints; ++i )
     {
-        mini = Vector3::Min( mini, pPoints[ i ] );
-        maxi = Vector3::Max( maxi, pPoints[ i ] );
+        mini = Min( mini, pPoints[ i ] );
+        maxi = Max( maxi, pPoints[ i ] );
     }
 
     return BoundingBox( mini, maxi );
@@ -1813,8 +1813,8 @@ void    BoundingBox::CreateFromPoints( const u32 numPoints, const Vector3* pPoin
 
     for( u32 i=(offset+1); i<numPoints; ++i )
     {
-        mini = Vector3::Min( mini, pPoints[ i ] );
-        maxi = Vector3::Max( maxi, pPoints[ i ] );
+        mini = Min( mini, pPoints[ i ] );
+        maxi = Max( maxi, pPoints[ i ] );
     }
 
     result.min = mini;
@@ -1906,7 +1906,7 @@ bool BoundingSphere::operator != ( const BoundingSphere& value ) const
 ASDX_INLINE
 ContainmentType BoundingSphere::Contains( const Vector3& value ) const
 {
-    if ( Vector3::DistanceSq( value, center ) <= radius * radius )
+    if ( DistanceSq( value, center ) <= radius * radius )
     { return ContainmentType::CONTAINS; }
 
     return ContainmentType::DISJOINT;
@@ -1920,8 +1920,8 @@ ContainmentType BoundingSphere::Contains( const Vector3& value ) const
 ASDX_INLINE
 ContainmentType BoundingSphere::Contains( const BoundingBox& value ) const
 {
-    Vector3 vec = Vector3::Clamp( center, value.min, value.max );
-    register f32 dist = Vector3::DistanceSq( center, vec );
+    Vector3 vec = Clamp( center, value.min, value.max );
+    register f32 dist = DistanceSq( center, vec );
     register f32 radiusSq = radius * radius;
 
     if ( dist <= radiusSq )
@@ -1994,7 +1994,7 @@ ContainmentType BoundingSphere::Contains( const BoundingBox& value ) const
 ASDX_INLINE
 ContainmentType BoundingSphere::Contains( const BoundingSphere& value ) const
 {
-    register f32 dist = Vector3::Distance( center, value.center );
+    register f32 dist = Distance( center, value.center );
 
     if ( radius + value.radius < dist )
     { return ContainmentType::DISJOINT; }
@@ -2048,8 +2048,8 @@ ContainmentType BoundingSphere::Contains( const BoundingFrustum& value ) const
 ASDX_INLINE
 bool    BoundingSphere::Intersects( const BoundingBox& value ) const
 {
-    Vector3 vec = Vector3::Clamp( center, value.min, value.max );
-    register f32 dist = Vector3::DistanceSq( center, vec );
+    Vector3 vec = Clamp( center, value.min, value.max );
+    register f32 dist = DistanceSq( center, vec );
     return ( dist <= ( radius * radius ) );
 }
 
@@ -2061,7 +2061,7 @@ bool    BoundingSphere::Intersects( const BoundingBox& value ) const
 ASDX_INLINE
 bool    BoundingSphere::Intersects( const BoundingSphere& value ) const
 {
-    register f32 distSq = Vector3::DistanceSq( center, value.center );
+    register f32 distSq = DistanceSq( center, value.center );
     if ( ( (( radius * radius ) + ( ( 2.0f * radius ) * value.radius )) + ( value.radius * value.radius ) ) <= distSq )
     { return false; }
 
@@ -2129,8 +2129,8 @@ bool    BoundingSphere::Intersects( const Ray& value, f32& distance ) const
         center.y - value.position.y,
         center.z - value.position.z );
 
-    register f32 b = Vector3::Dot( v, value.direction );
-    register f32 c = Vector3::Dot( v, v ) - ( radius * radius );
+    register f32 b = Dot( v, value.direction );
+    register f32 c = Dot( v, v ) - ( radius * radius );
     register f32 discrimiant = ( b * b ) - c;
     
     if ( discrimiant < 0.0f )
@@ -2300,11 +2300,11 @@ BoundingSphere  BoundingSphere::CreateFromPoints( const u32 numPoints, const Vec
 
     c /= static_cast<f32>( numPoints );
 
-    register f32 r = Vector3::DistanceSq( c, pPoints[ offset ] );
+    register f32 r = DistanceSq( c, pPoints[ offset ] );
 
     for( u32 i=(offset+1); i<numPoints; ++i )
     {
-        register f32 dist = Vector3::DistanceSq( c, pPoints[ i ] );
+        register f32 dist = DistanceSq( c, pPoints[ i ] );
         if ( dist > r )
         { r = dist; }
     }
@@ -2333,11 +2333,11 @@ void    BoundingSphere::CreateFromPoints( const u32 numPoints, const Vector3* pP
 
     c /= static_cast<f32>( numPoints );
 
-    register f32 r = Vector3::DistanceSq( c, pPoints[ offset ] );
+    register f32 r = DistanceSq( c, pPoints[ offset ] );
 
     for( u32 i=(offset+1); i<numPoints; ++i )
     {
-        register f32 dist = Vector3::DistanceSq( c, pPoints[ i ] );
+        register f32 dist = DistanceSq( c, pPoints[ i ] );
         if ( dist > r )
         { r = dist; }
     }
@@ -2776,13 +2776,13 @@ bool    BoundingFrustum::Intersects( const Ray& value, f32& distance ) const
 ASDX_INLINE
 Vector3 BoundingFrustum::IntersectionPoint( const Plane& a, const Plane& b, const Plane& c )
 {
-    register f32 f = -Vector3::Dot( a.normal, Vector3::Cross( b.normal, c.normal ) );
+    register f32 f = -Dot( a.normal, Cross( b.normal, c.normal ) );
     assert( f != 0.0f );
     register f32 invF = 1.0f / f;
 
-    Vector3 v1 = ( a.d * ( Vector3::Cross( b.normal, c.normal ) ) );
-    Vector3 v2 = ( b.d * ( Vector3::Cross( c.normal, a.normal ) ) );
-    Vector3 v3 = ( c.d * ( Vector3::Cross( a.normal, b.normal ) ) );
+    Vector3 v1 = ( a.d * Cross( b.normal, c.normal ) );
+    Vector3 v2 = ( b.d * Cross( c.normal, a.normal ) );
+    Vector3 v3 = ( c.d * Cross( a.normal, b.normal ) );
 
     return Vector3(
         ( v1.x + v2.x + v3.x ) * invF,
@@ -2928,9 +2928,9 @@ Vector2 ComputeCircumcircleCenter
    assert( S != 0.0f );
    register f32 inv16S2 = 1.0f / ( S * S * 16.0f );
 
-   register f32 len0 = Vector2::DistanceSq( p1, p2 );
-   register f32 len1 = Vector2::DistanceSq( p0, p2 );
-   register f32 len2 = Vector2::DistanceSq( p0, p1 );
+   register f32 len0 = DistanceSq( p1, p2 );
+   register f32 len1 = DistanceSq( p0, p2 );
+   register f32 len2 = DistanceSq( p0, p1 );
 
    register f32 term0 = inv16S2 * len0 * ( len1 + len2 - len0 );
    register f32 term1 = inv16S2 * len1 * ( len0 + len2 - len1 );
@@ -2962,9 +2962,9 @@ void ComputeCircumcircleCenter
    assert( S != 0.0f );
    register f32 inv16S2 = 1.0f / ( S * S * 16.0f );
 
-   register f32 len0 = Vector2::DistanceSq( p1, p2 );
-   register f32 len1 = Vector2::DistanceSq( p0, p2 );
-   register f32 len2 = Vector2::DistanceSq( p0, p1 );
+   register f32 len0 = DistanceSq( p1, p2 );
+   register f32 len1 = DistanceSq( p0, p2 );
+   register f32 len2 = DistanceSq( p0, p1 );
 
    register f32 term0 = inv16S2 * len0 * ( len1 + len2 - len0 );
    register f32 term1 = inv16S2 * len1 * ( len0 + len2 - len1 );
@@ -3042,7 +3042,6 @@ void IsDelaunayTriangle
 
    result = IsEqual( ret, 0.0f );
 }
-
 
 
 } // namespace asdx

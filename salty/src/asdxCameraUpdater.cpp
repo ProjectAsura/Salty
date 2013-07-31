@@ -161,7 +161,7 @@ CameraEvent CameraUpdater::MakeEventFromMouse( s32 wheelDelta )
         { dir.Normalize(); }
 
         // 右ベクトル算出.
-        asdx::Vector3 right = asdx::Vector3::Cross( m_Camera.GetUpward(), dir );
+        asdx::Vector3 right = Vector3::Cross( m_Camera.GetUpward(), dir );
         if ( right.LengthSq() != 0.0f )
         { right.Normalize(); }
 

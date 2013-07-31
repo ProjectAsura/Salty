@@ -73,13 +73,13 @@ protected:
     u32             m_SpriteCount;              //!< スプライト数です.
     u32             m_FontWidth;                //!< フォントの横幅です.
     u32             m_FontHeight;               //!< フォントの縦幅です.
-    char8           m_FontName[ 32 ];           //!< フォント名です.
+    char            m_FontName[ 32 ];           //!< フォント名です.
     f32             m_OffsetU;                  //!< U方向のオフセットです.
     f32             m_OffsetV;                  //!< V方向のオフセットです.
     asdx::Vector2   m_ScreenSize;               //!< スクリーンサイズです.
     asdx::Vector4   m_Color;                    //!< テキストカラーです.
     asdx::Matrix    m_Transform;                //!< 変換行列です.
-    char8           m_Buffer[ NUM_SPRITES ];    //!< 文字列バッファです.
+    char            m_Buffer[ NUM_SPRITES ];    //!< 文字列バッファです.
     Vertex          m_Vertices[ NUM_SPRITES * NUM_VERTEX_PER_SPRITE ];  //!< 頂点データです.
 
     //==========================================================================================
@@ -117,7 +117,7 @@ public:
     //! @retval true    初期化に成功.
     //! @retval false   初期化に失敗.
     //------------------------------------------------------------------------------------------
-    bool Init( ID3D11Device* pDevice, const char8* filename, f32 screenWidth, f32 screenHeight );
+    bool Init( ID3D11Device* pDevice, const char* filename, f32 screenWidth, f32 screenHeight );
 
     //------------------------------------------------------------------------------------------
     //! @brief      終了処理です.
@@ -168,7 +168,7 @@ public:
     //! @param [in]     y       描画開始Y座標.
     //! @param [in]     text    描画するテキスト.
     //------------------------------------------------------------------------------------------
-    void DrawString( const s32 x, const s32 y, const char8* text );
+    void DrawString( const s32 x, const s32 y, const char* text );
 
     //------------------------------------------------------------------------------------------
     //! @brief      文字列を描画します.
@@ -178,7 +178,7 @@ public:
     //! @param [in]     layerDepth  レイヤーの深さ.
     //! @param [in]     text        描画するテキスト.
     //------------------------------------------------------------------------------------------
-    void DrawString( const s32 x, const s32 y, const s32 layerDepth, const char8* text );
+    void DrawString( const s32 x, const s32 y, const s32 layerDepth, const char* text );
 
     //------------------------------------------------------------------------------------------
     //! @brief      文字列を描画します.
@@ -188,7 +188,7 @@ public:
     //! @param [in]     format      書式指定子.
     //! @param [in]     ...         可変引数.
     //------------------------------------------------------------------------------------------
-    void DrawStringArg( const s32 x, const s32 y, const char8* format, ... );
+    void DrawStringArg( const s32 x, const s32 y, const char* format, ... );
 
     //------------------------------------------------------------------------------------------
     //! @brief      文字列を描画します.
@@ -199,7 +199,7 @@ public:
     //! @param [in]     format      書式指定子.
     //! @param [in]     ...         可変引数.
     //------------------------------------------------------------------------------------------
-    void DrawStringArg( const s32 x, const s32 y, const s32 layerDepth, const char8* format, ... );
+    void DrawStringArg( const s32 x, const s32 y, const s32 layerDepth, const char* format, ... );
 
     //------------------------------------------------------------------------------------------
     //! @brief      描画終了処理です.
@@ -227,7 +227,7 @@ public:
     //!
     //! @return     フォント名を返却します.
     //------------------------------------------------------------------------------------------
-    char8*        GetFontName  () const;
+    char*        GetFontName  () const;
 
     //------------------------------------------------------------------------------------------
     //! @brief      設定されているスクリーンサイズを取得します.

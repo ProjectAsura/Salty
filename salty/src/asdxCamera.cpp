@@ -236,7 +236,7 @@ void Camera::ComputeAngle()
 void Camera::ClampDist()
 {
     // 距離を算出.
-    f32 dist = asdx::Vector3::Distance( m_Param.Position, m_Param.Target );
+    f32 dist = Vector3::Distance( m_Param.Position, m_Param.Target );
 
     // 方向ベクトル
     asdx::Vector3 dir = m_Param.Position - m_Param.Target;
@@ -278,14 +278,14 @@ void Camera::Update()
         { dir.Normalize(); }
 
         // 視線ベクトル軸とした回転行列を作成.
-        asdx::Matrix rotate = asdx::Matrix::CreateFromAxisAngleRad( dir, m_Param.Twist );
+        asdx::Matrix rotate = Matrix::CreateFromAxisAngle( dir, m_Param.Twist );
 
         // アップベクトルを回転.
-        upward = asdx::Vector3::Transform( upward, rotate );
+        upward = Vector3::Transform( upward, rotate );
     }
 
     // ビュー行列を更新.
-    m_View = asdx::Matrix::CreateLookAt( m_Param.Position, m_Param.Target, upward );
+    m_View = Matrix::CreateLookAt( m_Param.Position, m_Param.Target, upward );
 }
 
 //--------------------------------------------------------------------------------------------
@@ -300,7 +300,7 @@ void Camera::UpdateByEvent( const CameraEvent& camEvent )
         m_Param.Rotate += camEvent.Rotate;
 
         // ターゲットまでの距離を算出.
-        f32 dist = asdx::Vector3::Distance( m_Param.Position, m_Param.Target );
+        f32 dist = Vector3::Distance( m_Param.Position, m_Param.Target );
 
         // 位置ベクトルを更新.
         ToPosition( m_Param.Rotate, dist, m_Param.Target, m_Param.Position );
@@ -314,7 +314,7 @@ void Camera::UpdateByEvent( const CameraEvent& camEvent )
     {
         // 視線ベクトルを作成.
         asdx::Vector3 dir = m_Param.Position - m_Param.Target;
-        f32 dist = asdx::Vector3::Distance( m_Param.Position, m_Param.Target );
+        f32 dist = Vector3::Distance( m_Param.Position, m_Param.Target );
 
         // 正規化.
         if ( dist != 0.0f )
@@ -352,7 +352,7 @@ void Camera::UpdateByEvent( const CameraEvent& camEvent )
         m_Param.PanTilt += camEvent.PanTilt;
 
         // ターゲットとの距離を算出.
-        f32 dist = asdx::Vector3::Distance( m_Param.Target, m_Param.Position );
+        f32 dist = Vector3::Distance( m_Param.Target, m_Param.Position );
 
         // ターゲット位置を更新.
         ToPosition( m_Param.PanTilt, dist, m_Param.Position, m_Param.Target );

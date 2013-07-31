@@ -193,7 +193,7 @@ Application::Application()
 , m_pDeviceContext      ( nullptr )
 , m_pSwapChain          ( nullptr )
 , m_RenderTarget2D      ()
-, m_DepthStencilBuffer  ()
+, m_DepthStencilTarget  ()
 , m_pRasterizerState    ( nullptr )
 , m_pDepthStencilState  ( nullptr )
 , m_pBlendState         ( nullptr )
@@ -229,7 +229,7 @@ Application::Application( LPSTR title, UINT width, UINT height )
 , m_pDeviceContext      ( nullptr )
 , m_pSwapChain          ( nullptr )
 , m_RenderTarget2D      ()
-, m_DepthStencilBuffer  ()
+, m_DepthStencilTarget  ()
 , m_pRasterizerState    ( nullptr )
 , m_pDepthStencilState  ( nullptr )
 , m_pBlendState         ( nullptr )
@@ -553,7 +553,7 @@ bool Application::InitD3D()
     }
 
     // 深度ステンシルバッファの構成設定.
-    DepthStencilBuffer::Description desc;
+    DepthStencilTarget::Description desc;
     desc.Width              = w;
     desc.Height             = h;
     desc.MipLevels          = 1;
@@ -565,15 +565,15 @@ bool Application::InitD3D()
     desc.MiscFlags          = 0;
 
     // 深度ステンシルバッファを生成.
-    if ( !m_DepthStencilBuffer.Create( m_pDevice, desc ) )
+    if ( !m_DepthStencilTarget.Create( m_pDevice, desc ) )
     {
-        DLOG( "Error : DepthStencilBuffer::Create() Failed." );
+        DLOG( "Error : DepthStencilTarget::Create() Failed." );
         return false;
     }
 
     // デバイスコンテキストにレンダーターゲットを設定.
     ID3D11RenderTargetView* pRTV = m_RenderTarget2D.GetRTV();
-    ID3D11DepthStencilView* pDSV = m_DepthStencilBuffer.GetDSV();
+    ID3D11DepthStencilView* pDSV = m_DepthStencilTarget.GetDSV();
     m_pDeviceContext->OMSetRenderTargets( 1, &pRTV, pDSV );
 
     // ビューポートの設定.
@@ -654,7 +654,7 @@ void Application::TermD3D()
     m_RenderTarget2D.Release();
 
     // 深度ステンシルバッファを解放.
-    m_DepthStencilBuffer.Release();
+    m_DepthStencilTarget.Release();
 
     // ラスタライザーステートを解放.
     if ( m_pRasterizerState )
@@ -802,7 +802,7 @@ void Application::ResizeEvent( UINT width, UINT height )
         m_RenderTarget2D.Release();
 
         // 深度ステンシルバッファを解放.
-        m_DepthStencilBuffer.Release();
+        m_DepthStencilTarget.Release();
 
         HRESULT hr = S_OK;
 
@@ -815,7 +815,7 @@ void Application::ResizeEvent( UINT width, UINT height )
         if ( !m_RenderTarget2D.CreateFromBackBuffer( m_pDevice, m_pSwapChain ) )
         { DLOG( "Error : RenderTarget2D::CreateFromBackBuffer() Failed." ); }
 
-        DepthStencilBuffer::Description desc;
+        DepthStencilTarget::Description desc;
         desc.Width              = m_Width;
         desc.Height             = m_Height;
         desc.MipLevels          = 1;
@@ -826,12 +826,12 @@ void Application::ResizeEvent( UINT width, UINT height )
         desc.CPUAccessFlags     = 0;
         desc.MiscFlags          = 0;
 
-        if ( !m_DepthStencilBuffer.Create( m_pDevice, desc ) )
-        { DLOG( "Error : DepthStencilBuffer::Create() Failed." ); }
+        if ( !m_DepthStencilTarget.Create( m_pDevice, desc ) )
+        { DLOG( "Error : DepthStencilTarget::Create() Failed." ); }
 
         // デバイスコンテキストにレンダーターゲットを設定.
         ID3D11RenderTargetView* pRTV = m_RenderTarget2D.GetRTV();
-        ID3D11DepthStencilView* pDSV = m_DepthStencilBuffer.GetDSV();
+        ID3D11DepthStencilView* pDSV = m_DepthStencilTarget.GetDSV();
         m_pDeviceContext->OMSetRenderTargets( 1, &pRTV, pDSV );
 
         // ビューポートの設定.
@@ -1035,7 +1035,7 @@ void Application::OnFrameRender( double time, double elapsedTime )
 
     // レンダーターゲットビュー・深度ステンシルビューを取得.
     ID3D11RenderTargetView* pRTV = m_RenderTarget2D.GetRTV();
-    ID3D11DepthStencilView* pDSV = m_DepthStencilBuffer.GetDSV();
+    ID3D11DepthStencilView* pDSV = m_DepthStencilTarget.GetDSV();
 
     // NULLチェック.
     if ( pRTV == nullptr )

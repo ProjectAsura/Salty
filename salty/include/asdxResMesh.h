@@ -47,7 +47,7 @@ public:
         asdx::Vector3    Position;   //!< 位置座標です.
         asdx::Vector3    Normal;     //!< 法線ベクトルです.
         asdx::Vector3    Tangent;    //!< 接ベクトルです.
-        asdx::Vector3    TexCoord;   //!< テクスチャ座標です.
+        asdx::Vector2    TexCoord;   //!< テクスチャ座標です.
     };
 
     //////////////////////////////////////////////////////////////////////////////////////////
@@ -55,17 +55,17 @@ public:
     //////////////////////////////////////////////////////////////////////////////////////////
     struct Material
     {
-        asdx::Vector3    Ambient;                            //!< 環境色です.
-        asdx::Vector3    Diffuse;                            //!< 拡散反射色です.
-        asdx::Vector3    Specular;                           //!< 鏡面反射色です.
-        asdx::Vector3    Emissive;                           //!< 自己照明色です.
-        f32              Alpha;                              //!< 透過度です.
-        f32              Power;                              //!< 鏡面反射強度です.
-        char8            AmbientMap     [ NUM_FILENAME ];    //!< アンビエントマップです.
-        char8            DiffuseMap     [ NUM_FILENAME ];    //!< ディフューズマップです.
-        char8            SpecularMap    [ NUM_FILENAME ];    //!< スペキュラーマップです.
-        char8            BumpMap        [ NUM_FILENAME ];    //!< 凹凸マップです.
-        char8            DisplacementMap[ NUM_FILENAME ];    //!< 変位マップです.
+        asdx::Vector3   Ambient;                            //!< 環境色です.
+        asdx::Vector3   Diffuse;                            //!< 拡散反射色です.
+        asdx::Vector3   Specular;                           //!< 鏡面反射色です.
+        asdx::Vector3   Emissive;                           //!< 自己照明色です.
+        f32             Alpha;                              //!< 透過度です.
+        f32             Power;                              //!< 鏡面反射強度です.
+        char            AmbientMap     [ NUM_FILENAME ];    //!< アンビエントマップです.
+        char            DiffuseMap     [ NUM_FILENAME ];    //!< ディフューズマップです.
+        char            SpecularMap    [ NUM_FILENAME ];    //!< スペキュラーマップです.
+        char            BumpMap        [ NUM_FILENAME ];    //!< 凹凸マップです.
+        char            DisplacementMap[ NUM_FILENAME ];    //!< 変位マップです.
     };
 
     /////////////////////////////////////////////////////////////////////////////////////////

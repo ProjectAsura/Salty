@@ -120,10 +120,9 @@ call CompileShaders.bat</Command>
     <ClCompile Include="..\src\asdxAxisRenderer.cpp" />
     <ClCompile Include="..\src\asdxCameraUpdater.cpp" />
     <ClCompile Include="..\src\asdxConstantBuffer.cpp" />
-    <ClCompile Include="..\src\asdxDepthBuffer.cpp" />
+    <ClCompile Include="..\src\asdxDepthStencilTarget.cpp" />
     <ClCompile Include="..\src\asdxFont.cpp" />
     <ClCompile Include="..\src\asdxLog.cpp" />
-    <ClCompile Include="..\src\asdxMath.cpp" />
     <ClCompile Include="..\src\asdxMesh.cpp" />
     <ClCompile Include="..\src\asdxQuadRenderer.cpp" />
     <ClCompile Include="..\src\asdxRandom.cpp" />

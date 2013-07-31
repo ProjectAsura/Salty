@@ -91,9 +91,6 @@
     <ClCompile Include="..\src\asdxCamera.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\asdxDepthBuffer.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\asdxRenderTarget.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -130,10 +127,10 @@
     <ClCompile Include="..\src\asdxMesh.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\asdxMath.cpp">
+    <ClCompile Include="..\src\asdxRandom.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\asdxRandom.cpp">
+    <ClCompile Include="..\src\asdxDepthStencilTarget.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>

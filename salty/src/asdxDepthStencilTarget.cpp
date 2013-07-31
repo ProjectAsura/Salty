@@ -1,6 +1,6 @@
 ﻿//------------------------------------------------------------------------------------------
-// File : asdxDepthBuffer.cpp
-// Desc : Depth Stencil Buffer Module.
+// File : asdxDepthStencilTarget.cpp
+// Desc : Depth Stencil Target Module.
 // Copyright(c) Project Asura. All right reserved.
 //------------------------------------------------------------------------------------------
 
@@ -8,8 +8,9 @@
 // Includes
 //------------------------------------------------------------------------------------------
 #include <cassert>
-#include <asdxDepthBuffer.h>
+#include <asdxDepthStencilTarget.h>
 #include <asdxUtil.h>
+
 
 namespace /* anonymous */ {
 
@@ -70,13 +71,13 @@ void ConvertDepthFormat
 namespace asdx {
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-// DepthStencilBuffer class
+// DepthStencilTarget class
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 //---------------------------------------------------------------------------------------------
 //      コンストラクタです.
 //---------------------------------------------------------------------------------------------
-DepthStencilBuffer::DepthStencilBuffer()
+DepthStencilTarget::DepthStencilTarget()
 : m_pTexture( nullptr )
 , m_pSRV    ( nullptr )
 , m_pDSV    ( nullptr )
@@ -85,13 +86,13 @@ DepthStencilBuffer::DepthStencilBuffer()
 //---------------------------------------------------------------------------------------------
 //      デストラクタです.
 //---------------------------------------------------------------------------------------------
-DepthStencilBuffer::~DepthStencilBuffer()
+DepthStencilTarget::~DepthStencilTarget()
 { Release(); }
 
 //---------------------------------------------------------------------------------------------
 //      深度ステンシルバッファを生成します.
 //---------------------------------------------------------------------------------------------
-bool DepthStencilBuffer::Create( ID3D11Device* pDevice, const DepthStencilBuffer::Description& desc )
+bool DepthStencilTarget::Create( ID3D11Device* pDevice, const DepthStencilTarget::Description& desc )
 {
     assert( desc.ArraySize >= 1 );
     HRESULT hr = S_OK;
@@ -122,7 +123,7 @@ bool DepthStencilBuffer::Create( ID3D11Device* pDevice, const DepthStencilBuffer
     if ( FAILED( hr ) )
     {
         // エラーログを出力.
-        OutputDebugStringA( "Error : ID3D11Device::CreateTexture2D() Failed. call from DepthStencilBuffer::Create()" );
+        OutputDebugStringA( "Error : ID3D11Device::CreateTexture2D() Failed. call from DepthStencilTarget::Create()" );
 
         // 失敗.
         return false;
@@ -138,7 +139,7 @@ bool DepthStencilBuffer::Create( ID3D11Device* pDevice, const DepthStencilBuffer
     if ( desc.ArraySize == 1 )
     {
         // マルチサンプリング無しの場合.
-        if ( desc.SampleDesc.Count == 0 )
+        if ( desc.SampleDesc.Count <= 1 )
         {
             dsvd.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
             dsvd.Texture2D.MipSlice = 0;
@@ -153,7 +154,7 @@ bool DepthStencilBuffer::Create( ID3D11Device* pDevice, const DepthStencilBuffer
     else
     {
         // マルチサンプリング無しの場合.
-        if ( desc.SampleDesc.Count == 0 )
+        if ( desc.SampleDesc.Count <= 1 )
         {
             dsvd.ViewDimension                  = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
             dsvd.Texture2DArray.ArraySize       = desc.ArraySize;
@@ -178,7 +179,7 @@ bool DepthStencilBuffer::Create( ID3D11Device* pDevice, const DepthStencilBuffer
         m_pTexture = nullptr;
 
         // エラーログを出力.
-        OutputDebugStringA( "Error : ID3D11Device::CreateDepthStencilView() Failed. call from DepthStencilBuffer::Create()" );
+        OutputDebugStringA( "Error : ID3D11Device::CreateDepthStencilView() Failed. call from DepthStencilTarget::Create()" );
 
         // 失敗.
         return false;
@@ -194,7 +195,7 @@ bool DepthStencilBuffer::Create( ID3D11Device* pDevice, const DepthStencilBuffer
     if ( desc.ArraySize == 1 )
     {
         // マルチサンプリング無しの場合.
-        if ( desc.SampleDesc.Count == 0 )
+        if ( desc.SampleDesc.Count <= 1 )
         {
             srvd.ViewDimension             = D3D11_SRV_DIMENSION_TEXTURE2D;
             srvd.Texture2D.MipLevels       = desc.MipLevels;
@@ -210,7 +211,7 @@ bool DepthStencilBuffer::Create( ID3D11Device* pDevice, const DepthStencilBuffer
     else
     {
         // マルチサンプリング無しの場合.
-        if ( desc.SampleDesc.Count == 0 )
+        if ( desc.SampleDesc.Count <= 1 )
         {
             srvd.ViewDimension                  = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
             srvd.Texture2DArray.ArraySize       = desc.ArraySize;
@@ -240,7 +241,7 @@ bool DepthStencilBuffer::Create( ID3D11Device* pDevice, const DepthStencilBuffer
         m_pDSV = nullptr;
 
         // エラーログを出力.
-        OutputDebugStringA( "Error : ID3D11Device::CreateShaderResourceView() Failed. call from DepthStencilBuffer::Create()" );
+        OutputDebugStringA( "Error : ID3D11Device::CreateShaderResourceView() Failed. call from DepthStencilTarget::Create()" );
 
         // 失敗.
         return false;
@@ -254,7 +255,7 @@ bool DepthStencilBuffer::Create( ID3D11Device* pDevice, const DepthStencilBuffer
 //---------------------------------------------------------------------------------------------
 //      解放処理を行います.
 //---------------------------------------------------------------------------------------------
-void DepthStencilBuffer::Release()
+void DepthStencilTarget::Release()
 {
     // シェーダリソースビューを解放.
     if ( m_pSRV )
@@ -281,19 +282,19 @@ void DepthStencilBuffer::Release()
 //---------------------------------------------------------------------------------------------
 //      テクスチャを取得します.
 //---------------------------------------------------------------------------------------------
-ID3D11Texture2D* DepthStencilBuffer::GetTexture() const
+ID3D11Texture2D* DepthStencilTarget::GetTexture() const
 { return m_pTexture; }
 
 //---------------------------------------------------------------------------------------------
 //      シェーダリソースビューを取得します.
 //---------------------------------------------------------------------------------------------
-ID3D11ShaderResourceView* DepthStencilBuffer::GetSRV() const
+ID3D11ShaderResourceView* DepthStencilTarget::GetSRV() const
 { return m_pSRV; }
 
 //---------------------------------------------------------------------------------------------
 //      深度ステンシルビューを取得します.
 //---------------------------------------------------------------------------------------------
-ID3D11DepthStencilView* DepthStencilBuffer::GetDSV() const
+ID3D11DepthStencilView* DepthStencilTarget::GetDSV() const
 { return m_pDSV; }
 
 } // namespace asdx

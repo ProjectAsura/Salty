@@ -1,11 +1,11 @@
 ﻿//--------------------------------------------------------------------------------------------
-// File : asdxDepthBuffer.h
+// File : asdxDepthStencilTarget.h
 // Desc : Depth Stencil Buffer Module.
 // Copyright(c) Project Asura. All right reserved.
 //--------------------------------------------------------------------------------------------
 
-#ifndef __ASDX_DEPTH_BUFFER_H__
-#define __ASDX_DEPTH_BUFFER_H__
+#ifndef __ASDX_DEPTH_STENCIL_TARGET_H__
+#define __ASDX_DEPTH_STENCIL_TARGET_H__
 
 //--------------------------------------------------------------------------------------------
 // Includes
@@ -16,9 +16,9 @@
 namespace asdx {
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-// DepthStencilBuffer class
+// DepthStencilTarget class
 //////////////////////////////////////////////////////////////////////////////////////////////
-class DepthStencilBuffer
+class DepthStencilTarget
 {
 public:
     //////////////////////////////////////////////////////////////////////////////////////////
@@ -64,12 +64,12 @@ public:
     //---------------------------------------------------------------------------------------
     //! @brief      コンストラクタです.
     //---------------------------------------------------------------------------------------
-    DepthStencilBuffer();
+    DepthStencilTarget();
 
     //---------------------------------------------------------------------------------------
     //! @brief      デストラクタです.
     //---------------------------------------------------------------------------------------
-    virtual ~DepthStencilBuffer();
+    virtual ~DepthStencilTarget();
 
     //---------------------------------------------------------------------------------------
     //! @brief      深度ステンシルバッファを生成します.
@@ -129,11 +129,11 @@ private:
     //=======================================================================================
     // private methods.
     //=======================================================================================
-    DepthStencilBuffer( const DepthStencilBuffer& );    // アクセス禁止.
-    void operator =   ( const DepthStencilBuffer& );    // アクセス禁止.
+    DepthStencilTarget( const DepthStencilTarget& );    // アクセス禁止.
+    void operator =   ( const DepthStencilTarget& );    // アクセス禁止.
 };
 
 } // namespace asdx
 
 
-#endif//__ASDX_DEPTH_BUFFER_H__
+#endif//__ASDX_DEPTH_STENCIL_TARGET_H__

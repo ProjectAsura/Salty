@@ -1,7 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Express 2012 for Windows Desktop
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "asdx", "asdx.vcxproj", "{7D016A83-13ED-4E44-A5F6-4AE5F9EDA480}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "salty", "salty.vcxproj", "{1C2481BC-3D87-4C04-A4E2-BA37CB2A541C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "asdx", "..\..\asdx\project\asdx.vcxproj", "{7D016A83-13ED-4E44-A5F6-4AE5F9EDA480}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -9,6 +11,10 @@ Global
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1C2481BC-3D87-4C04-A4E2-BA37CB2A541C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1C2481BC-3D87-4C04-A4E2-BA37CB2A541C}.Debug|Win32.Build.0 = Debug|Win32
+		{1C2481BC-3D87-4C04-A4E2-BA37CB2A541C}.Release|Win32.ActiveCfg = Release|Win32
+		{1C2481BC-3D87-4C04-A4E2-BA37CB2A541C}.Release|Win32.Build.0 = Release|Win32
 		{7D016A83-13ED-4E44-A5F6-4AE5F9EDA480}.Debug|Win32.ActiveCfg = Debug|Win32
 		{7D016A83-13ED-4E44-A5F6-4AE5F9EDA480}.Debug|Win32.Build.0 = Debug|Win32
 		{7D016A83-13ED-4E44-A5F6-4AE5F9EDA480}.Release|Win32.ActiveCfg = Release|Win32

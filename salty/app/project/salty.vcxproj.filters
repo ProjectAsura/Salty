@@ -15,12 +15,15 @@
     <ClCompile Include="..\src\main.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\saltyApp.cpp">
+    <ClCompile Include="..\src\App.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\saltyApp.h">
+    <ClInclude Include="..\include\App.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\GBuffer.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
   </ItemGroup>

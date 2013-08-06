@@ -31,8 +31,28 @@ class App : public asdx::Application
     /* NOTHING */
 
 private:
+    asdx::Font              m_Font;
+    asdx::CameraUpdater     m_CameraUpdater;
+    asdx::Mesh              m_Dosei;
+    asdx::Mesh              m_Ground;
+    asdx::QuadRenderer      m_QuadRenderer;
+
+    ID3D11Buffer*           m_pVSB;
+    ID3D11VertexShader*     m_GeomertyVS;
+    ID3D11PixelShader*      m_GeometryPS;
+
+    ID3D11Buffer*           m_pRB;
+    ID3D11VertexShader*     m_pReflectionVS;
+    ID3D11PixelShader*      m_pReflectionPS;
 
 protected:
+    //==================================================================================
+    // protected varaibles
+    //==================================================================================
+    /* NOTHING */
+
+
+
 
 public:
 

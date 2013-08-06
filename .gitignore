@@ -1,2 +1,9 @@
 *.sdf
 *.pdb
+*.suo
+*.obj
+*.idb
+*.log
+*.tlog
+*.lastbuildstate
+*.cso

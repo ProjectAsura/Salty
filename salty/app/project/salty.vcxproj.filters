@@ -24,9 +24,4 @@
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
   </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="..\res\saltyGeometry.fx">
-      <Filter>リソースファイル</Filter>
-    </FxCompile>
-  </ItemGroup>
 </Project>

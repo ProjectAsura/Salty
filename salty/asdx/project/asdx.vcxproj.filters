@@ -27,9 +27,6 @@
     <ClInclude Include="..\include\asdxRenderTarget.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\asdxDepthBuffer.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\asdxShader.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -75,6 +72,9 @@
     <ClInclude Include="..\include\asdxRandom.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\asdxDepthStencilTarget.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\include\asdxMath.inl">
@@ -82,6 +82,9 @@
     </None>
     <None Include="..\res\shader\CompileShaders.bat">
       <Filter>リソース ファイル</Filter>
+    </None>
+    <None Include="..\include\asdxGeometry.inl">
+      <Filter>ヘッダー ファイル</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

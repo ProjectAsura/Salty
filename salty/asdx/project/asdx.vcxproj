@@ -94,6 +94,7 @@ call CompileShaders.bat</Command>
     <ClInclude Include="..\include\asdxAxisRenderer.h" />
     <ClInclude Include="..\include\asdxCameraUpdater.h" />
     <ClInclude Include="..\include\asdxConstantBuffer.h" />
+    <ClInclude Include="..\include\asdxDepthStencilTarget.h" />
     <ClInclude Include="..\include\asdxFont.h" />
     <ClInclude Include="..\include\asdxGeometry.h" />
     <ClInclude Include="..\include\asdxMesh.h" />
@@ -103,7 +104,6 @@ call CompileShaders.bat</Command>
     <ClInclude Include="..\include\asdxTexture.h" />
     <ClInclude Include="..\include\asdxTypedef.h" />
     <ClInclude Include="..\include\asdxUtil.h" />
-    <ClInclude Include="..\include\asdxDepthBuffer.h" />
     <ClInclude Include="..\include\asdxLog.h" />
     <ClInclude Include="..\include\asdxMath.h" />
     <ClInclude Include="..\include\asdxRenderTarget.h" />
@@ -111,6 +111,7 @@ call CompileShaders.bat</Command>
     <ClInclude Include="..\include\asdxTimer.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\include\asdxGeometry.inl" />
     <None Include="..\include\asdxMath.inl" />
     <None Include="..\res\shader\CompileShaders.bat" />
   </ItemGroup>

@@ -33,7 +33,6 @@ namespace /* anonymous */ {
 //------------------------------------------------------------------------------------------
 // Constant Values
 //------------------------------------------------------------------------------------------
-//static const int    MIN_DEPTH = 8;
 static const int    MAX_DEPTH = 32;
 static const double MAX_P     = 0.99;               // ずっとループしてしまうので，1.0にならないように制限.
 static const COLOR  BG_COLOR( 0.0, 0.0, 0.0 );
@@ -46,9 +45,10 @@ static const VEC3   CAMERA_TARGET   = VEC3(50.0, 50.0, 180.0);
 static const VEC3   CAMERA_UPWARD   = VEC3(0.0, 1.0, 0.0);
 
 // 構成設定.
-static const int    WIDTH   = 320;
-static const int    HEIGHT  = 240;
-static const int    SAMPLES = 4096;      // 増やせば積分の精度があがるけど，重くなる.
+static const int    WIDTH        = 200;
+static const int    HEIGHT       = 112;
+static const int    SAMPLES      = 1048;     // 増やせば積分の精度があがるけど，重くなる.
+static const int    SUB_SAMPLES  = 4;       // 増やせば積分の精度があがるけど，重くなる.
 static const double ASPECT_RATIO = (double)WIDTH / (double)HEIGHT;
 
 
@@ -297,6 +297,11 @@ bool ComputeReflectance
         }
     }
 
+    if ( depth > MAX_DEPTH )
+    {
+        return true;
+    }
+
     // ゼロ除算対策.
     assert( Probability != 0.0 );
 
@@ -514,27 +519,30 @@ int main( int argc, char **argv )
             // 1ピクセルあたりsamples回サンプリングする.
             for ( int s = 0; s < SAMPLES; ++s ) 
             {
-                // テントフィルターによってサンプリング
-                // ピクセル範囲で一様にサンプリングするのではなく、ピクセル中央付近にサンプルがたくさん集まるように偏りを生じさせる
-                const double r1 = 2.0 * g_Random.GetAsF64();
-                const double r2 = 2.0 * g_Random.GetAsF64();
+                for ( int t = 0; t < SUB_SAMPLES; ++t )
+                {
+                    // テントフィルターによってサンプリング
+                    // ピクセル範囲で一様にサンプリングするのではなく、ピクセル中央付近にサンプルがたくさん集まるように偏りを生じさせる
+                    const double r1 = 2.0 * g_Random.GetAsF64();
+                    const double r2 = 2.0 * g_Random.GetAsF64();
 
-                const double dx = ( r1 < 1.0 ) ? sqrt(r1) - 1.0 : 1.0 - sqrt(2.0 - r1);
-                const double dy = ( r2 < 1.0 ) ? sqrt(r2) - 1.0 : 1.0 - sqrt(2.0 - r2);
+                    const double dx = ( r1 < 1.0 ) ? sqrt(r1) - 1.0 : 1.0 - sqrt(2.0 - r1);
+                    const double dy = ( r2 < 1.0 ) ? sqrt(r2) - 1.0 : 1.0 - sqrt(2.0 - r2);
 
-                // 射影空間上でのピクセル位置.
-                projPos.x = -2.0f * ( (float)x + (float)dx ) / WIDTH  + 1.0f;
-                projPos.y = -2.0f * ( (float)y + (float)dy ) / HEIGHT + 1.0f;
+                    // 射影空間上でのピクセル位置.
+                    projPos.x = -2.0f * ( (float)x + (float)dx ) / WIDTH  + 1.0f;
+                    projPos.y = -2.0f * ( (float)y + (float)dy ) / HEIGHT + 1.0f;
 
-                // ワールド空間のスクリーン上のピクセル位置.
-                worldPos = TransformCoord( projPos, invViewProj );
+                    // ワールド空間のスクリーン上のピクセル位置.
+                    worldPos = TransformCoord( projPos, invViewProj );
 
-                // カメラ位置からスクリーン位置へレイを飛ばす.
-                ray.org = CAMERA_POSITION;
-                ray.dir = Normalize( worldPos - CAMERA_POSITION );
+                    // カメラ位置からスクリーン位置へレイを飛ばす.
+                    ray.org = CAMERA_POSITION;
+                    ray.dir = Normalize( worldPos - CAMERA_POSITION );
 
-                // 放射輝度を蓄積.
-                accRadiance += ( Radiance( ray ) / SAMPLES );
+                    // 放射輝度を蓄積.
+                    accRadiance += ( Radiance( ray ) / ( SAMPLES * SUB_SAMPLES) );
+                }
             }
 
             // ピクセルカラーを設定.

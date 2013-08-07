@@ -37,7 +37,7 @@ template< typename T> inline T Min( T a, T b )
 { return ( a < b ) ? a : b; }
 
 template< typename T> inline T Clamp( T value, T a, T b )
-{ return ( value > b ) ? b : ( value < a ) ? a : value; }
+{ return ( value > b ) ? b : (( value < a ) ? a : value); }
 
 
 //---------------------------------------------------------------------------------------
@@ -69,7 +69,7 @@ public:
 
     inline unsigned int GetAsU32()
     {
-        unsigned int t = x ^ ( x << 1 );
+        unsigned int t = x ^ ( x << 11 );
         x = y;
         y = z;
         z = w;

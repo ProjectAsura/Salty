@@ -51,10 +51,10 @@ public:
     f64     Length      () const;
     f64     LengthSq    () const;
 
-    static f64     Dot  ( const Vector3& a, const Vector3& b );
-    static Vector3 Cross( const Vector3& a, const Vector3& b );
-    static Vector3 Min  ( const Vector3& a, const Vector3& b );
-    static Vector3 Max  ( const Vector3& a, const Vector3& b );
+    static f64     Dot  ( const Vector3&, const Vector3& );
+    static Vector3 Cross( const Vector3&, const Vector3& );
+    static Vector3 Min  ( const Vector3&, const Vector3& );
+    static Vector3 Max  ( const Vector3&, const Vector3& );
 };
 
 

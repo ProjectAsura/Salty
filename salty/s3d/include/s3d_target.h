@@ -36,14 +36,18 @@ public:
     // public methods.
     //==========================================================================
     RenderTarget();
-    RenderTarget( const u32, const u32 );
-    RenderTarget( const u32, const u32 , const Color3& clearColor );
+    ~RenderTarget();
+
+    void    Init( const u32, const u32 );
+    void    Init( const u32, const u32 , const Color3& clearColor );
+    void    Term();
 
     void    Clear           ( const Color3& );
     void    SetPixel        ( const u32, const u32, const Color3& );
     Color3  GetPixel        ( const u32, const u32 );
-    void    GammaCorrection ( const f64 );
-    bool    SaveToBMP       ( const char* );
+    Color3* GetFrameBuffer  ();
+    u32     GetWidth        () const;
+    u32     GetHeight       () const;
 
 protected:
     //==========================================================================

@@ -65,13 +65,26 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\main.cpp" />
+    <ClCompile Include="..\src\s3d_app.cpp" />
+    <ClCompile Include="..\src\s3d_bmp.cpp" />
+    <ClCompile Include="..\src\s3d_onb.cpp" />
+    <ClCompile Include="..\src\s3d_sphere.cpp" />
     <ClCompile Include="..\src\s3d_target.cpp" />
+    <ClCompile Include="..\src\s3d_triangle.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\s3d_app.h" />
+    <ClInclude Include="..\include\s3d_bmp.h" />
+    <ClInclude Include="..\include\s3d_box.h" />
     <ClInclude Include="..\include\s3d_color3.h" />
     <ClInclude Include="..\include\s3d_matrix.h" />
+    <ClInclude Include="..\include\s3d_onb.h" />
+    <ClInclude Include="..\include\s3d_rand.h" />
     <ClInclude Include="..\include\s3d_ray.h" />
+    <ClInclude Include="..\include\s3d_shape.h" />
+    <ClInclude Include="..\include\s3d_sphere.h" />
     <ClInclude Include="..\include\s3d_target.h" />
+    <ClInclude Include="..\include\s3d_triangle.h" />
     <ClInclude Include="..\include\s3d_typedef.h" />
     <ClInclude Include="..\include\s3d_vector3.h" />
   </ItemGroup>

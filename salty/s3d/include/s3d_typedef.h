@@ -1,11 +1,12 @@
-//------------------------------------------------------------------------------
-// File : Typedef.h
+﻿//------------------------------------------------------------------------------
+// File : s3d_ypedef.h
 // Desc : Type Definitions.
 // Copyright(c) Project Asura. All right reserved.
 //------------------------------------------------------------------------------
 
-#ifndef __TYPEDEF_H__
-#define __TYPEDEF_H__
+#ifndef __S3D_TYPEDEF_H__
+#define __S3D_TYPEDEF_H__
+
 
 typedef char                s8;
 typedef short               s16;
@@ -38,4 +39,4 @@ typedef double              f64;
 #endif//S3D_INLINE
 
 
-#endif//__TYPEDEF_H__
+#endif//__S3D_TYPEDEF_H__

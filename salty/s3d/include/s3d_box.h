@@ -24,6 +24,7 @@ public:
     Vector3 min;
     Vector3 max;
 
+    BoundingBox();
     BoundingBox( const Vector3&, const Vector3& );
     BoundingBox( const BoundingBox& );
 

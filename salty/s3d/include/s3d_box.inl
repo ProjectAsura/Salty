@@ -10,6 +10,12 @@
 namespace s3d {
 
 S3D_INLINE
+BoundingBox::BoundingBox()
+: min( 1.7976931348623158e+308, 1.7976931348623158e+308, 1.7976931348623158e+308 )
+, max( 2.2250738585072014e-308, 2.2250738585072014e-308, 2.2250738585072014e-308 )
+{ /* DO_NOTHING */ }
+
+S3D_INLINE
 BoundingBox::BoundingBox( const Vector3& mini, const Vector3& maxi )
 : min( mini )
 , max( maxi )

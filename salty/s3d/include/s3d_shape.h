@@ -12,6 +12,7 @@
 //-----------------------------------------------------------------------------------
 #include <s3d_color3.h>
 #include <s3d_ray.h>
+#include <s3d_box.h>
 
 
 namespace s3d {
@@ -34,6 +35,7 @@ struct IShape
 {
 public:
     virtual bool IsHit( const Ray&, const f64, const f64, ShadeRec& ) const = 0;
+    virtual BoundingBox GetAABB() const = 0;
 };
 
 

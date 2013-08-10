@@ -22,9 +22,16 @@ namespace s3d {
 struct Vector3
 {
 public:
-    f64     x;
-    f64     y;
-    f64     z;
+    union
+    {
+        struct 
+        {
+            f64     x;
+            f64     y;
+            f64     z;
+        };
+        f64 v[3];
+    };
 
     Vector3();
     Vector3( const f64, const f64, const f64 );

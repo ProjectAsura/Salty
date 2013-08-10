@@ -41,7 +41,8 @@ public:
     Triangle( const Vector3&, const Vector3&, const Vector3&, const Color3& );
     Triangle( const Triangle& );
 
-    bool IsHit      ( const Ray&, const f64, const f64, ShadeRec& );
+    bool        IsHit   ( const Ray&, const f64, const f64, ShadeRec& );
+    BoundingBox GetAABB () const;
 
 protected:
     //==========================================================================

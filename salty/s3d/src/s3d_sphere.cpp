@@ -63,4 +63,15 @@ bool Sphere::IsHit( const Ray& ray, const f64 mini, const f64 maxi, ShadeRec& sh
     return true;
 }
 
+//-----------------------------------------------------------------------------
+//      軸平衡境界箱を取得します.
+//-----------------------------------------------------------------------------
+BoundingBox Sphere::GetAABB() const
+{
+    Vector3 min( center.x + radius, center.y + radius, center.z + radius );
+    Vector3 max( center.y - radius, center.y - radius, center.z - radius );
+
+    return BoundingBox( min, max );
+}
+
 } // namespace s3d

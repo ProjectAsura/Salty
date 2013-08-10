@@ -38,7 +38,8 @@ public:
     Sphere( const Vector3&, const f64, const Color3& );
     Sphere( const Sphere& );
 
-    bool IsHit( const Ray&, const f64, const f64, ShadeRec& );
+    bool        IsHit   ( const Ray&, const f64, const f64, ShadeRec& );
+    BoundingBox GetAABB () const;
 
 protected:
     //==========================================================================

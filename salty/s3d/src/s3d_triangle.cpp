@@ -93,6 +93,20 @@ bool Triangle::IsHit( const Ray& ray, const f64 mini, const f64 maxi, ShadeRec& 
     return true;
 }
 
+//-----------------------------------------------------------------------------
+//      軸平衡境界箱を取得します.
+//-----------------------------------------------------------------------------
+BoundingBox Triangle::GetAABB() const
+{
+    Vector3 min = Vector3::Min( p0, p1 );
+    min = Vector3::Min( min, p2 );
+
+    Vector3 max = Vector3::Max( p0, p1 );
+    max = Vector3::Max( max, p2 );
+
+    return BoundingBox( min, max );
+}
+
 
 } // namespace s3d
 

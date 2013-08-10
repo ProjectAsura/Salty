@@ -47,7 +47,6 @@ public:
     bool operator !=    ( const Vector3& ) const;
 
     void    Normalize   ();
-    Vector3 UnitVector  () const;
     f64     Length      () const;
     f64     LengthSq    () const;
 
@@ -55,6 +54,7 @@ public:
     static Vector3 Cross( const Vector3&, const Vector3& );
     static Vector3 Min  ( const Vector3&, const Vector3& );
     static Vector3 Max  ( const Vector3&, const Vector3& );
+    static Vector3 UnitVector( const Vector3& );
 };
 
 

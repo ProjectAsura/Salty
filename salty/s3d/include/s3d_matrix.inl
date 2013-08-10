@@ -381,9 +381,9 @@ Matrix Matrix::Rotate( const f64 x, const f64 y, const f64 z, const f64 rad )
 S3D_INLINE
 Matrix Matrix::LookAt( const Vector3& position, const Vector3& target, const Vector3& upward )
 {
-    Vector3 zaxis = ( target - position ).UnitVector();
-    Vector3 xaxis = Vector3::Cross( upward, zaxis ).UnitVector();
-    Vector3 yaxis = Vector3::Cross( zaxis, xaxis ).UnitVector();
+    Vector3 zaxis = Vector3::UnitVector( target - position );
+    Vector3 xaxis = Vector3::UnitVector( Vector3::Cross( upward, zaxis ) );
+    Vector3 yaxis = Vector3::UnitVector( Vector3::Cross( zaxis, xaxis ) );
 
     return Matrix(
         xaxis.x, yaxis.x, zaxis.x, 0.0,

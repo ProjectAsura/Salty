@@ -10,6 +10,12 @@
 namespace s3d {
 
 S3D_INLINE
+Random::Random()
+{
+    SetSeed( 17320508 );
+}
+
+S3D_INLINE
 Random::Random( const u32 seed )
 {
     SetSeed( seed );
@@ -26,7 +32,7 @@ void Random::SetSeed( const u32 seed )
 }
 
 S3D_INLINE
-u32 GetAsU32()
+u32 Random::GetAsU32()
 {
     u32 t = m_X ^ ( m_X << 11 );
     m_X   = m_Y;
@@ -34,13 +40,13 @@ u32 GetAsU32()
     m_Z   = m_W;
     m_W   = ( m_W ^ ( m_W >> 19 ) ) ^ ( t ^ ( t >> 8 ) );
 
-    return m_W
+    return m_W;
 }
 
 S3D_INLINE
-f64 GetAsF64()
+f64 Random::GetAsF64()
 {
-    return static_cast<f64>( GetAsU32() ) / 0xffffffffui32; }
+    return static_cast<f64>( GetAsU32() ) / 0xffffffffui32;
 }
 
 } // namespace s3d

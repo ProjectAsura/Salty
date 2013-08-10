@@ -32,7 +32,17 @@ public:
     void InitFromV( const Vector3& );
     void InitFromW( const Vector3& );
 
-    bool operator == ( const Vector3& ) const;
+    void InitFromUV( const Vector3&, const Vector3& );
+    void InitFromVU( const Vector3&, const Vector3& );
+
+    void InitFromUW( const Vector3&, const Vector3& );
+    void InitFromWU( const Vector3&, const Vector3& );
+
+    void InitFromVW( const Vector3&, const Vector3& );
+    void InitFromWV( const Vector3&, const Vector3& );
+
+    bool operator == ( const OrthonormalBasis& ) const;
+    bool operator != ( const OrthonormalBasis& ) const;
 };
 
 } // namespace s3d

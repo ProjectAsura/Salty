@@ -123,12 +123,6 @@ void Vector3::Normalize()
     z /= mag;
 }
 
-S3D_INLINE
-Vector3 Vector3::UnitVector() const
-{
-    register f64 mag = sqrt( x * x + y * y + z * z );
-    return Vector3( x / mag, y / mag, z / mag );
-}
 
 S3D_INLINE
 f64 Vector3::Length() const
@@ -168,6 +162,14 @@ Vector3 Vector3::Max( const Vector3& a, const Vector3& b )
         ( a.y > b.y ) ? a.y : b.y,
         ( a.z > b.z ) ? a.z : b.z );
 }
+
+S3D_INLINE
+Vector3 Vector3::UnitVector( const Vector3& value )
+{
+    register f64 mag = sqrt( value.x * value.x + value.y * value.y + value.z * value.z );
+    return Vector3( value.x / mag, value.y / mag, value.z / mag );
+}
+
 
 } // namespace s3d
 

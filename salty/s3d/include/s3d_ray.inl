@@ -70,6 +70,17 @@ S3D_INLINE
 Vector3 Ray::Step( const f64 dist ) const
 { return pos + dir * dist; }
 
+S3D_INLINE
+Ray& Ray::operator = ( const Ray& value )
+{
+    pos    = value.pos;
+    dir    = value.dir;
+    invDir = value.invDir;
+    signX  = value.signX;
+    signY  = value.signY;
+    signZ  = value.signZ;
+    return (*this);
+}
 
 } // namespace s3d
 

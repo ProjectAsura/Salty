@@ -67,6 +67,7 @@
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\s3d_app.cpp" />
     <ClCompile Include="..\src\s3d_bmp.cpp" />
+    <ClCompile Include="..\src\s3d_mutex.cpp" />
     <ClCompile Include="..\src\s3d_onb.cpp" />
     <ClCompile Include="..\src\s3d_sphere.cpp" />
     <ClCompile Include="..\src\s3d_target.cpp" />
@@ -78,6 +79,7 @@
     <ClInclude Include="..\include\s3d_box.h" />
     <ClInclude Include="..\include\s3d_color3.h" />
     <ClInclude Include="..\include\s3d_matrix.h" />
+    <ClInclude Include="..\include\s3d_mutex.h" />
     <ClInclude Include="..\include\s3d_onb.h" />
     <ClInclude Include="..\include\s3d_rand.h" />
     <ClInclude Include="..\include\s3d_ray.h" />

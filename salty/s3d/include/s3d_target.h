@@ -66,13 +66,13 @@ private:
     //==========================================================================
     u32      m_Width;
     u32      m_Height;
-    Color3*  m_pFrameBuffer;
+    Color3*  m_pFB;
 
     //==========================================================================
     // private methods.
     //==========================================================================
-    RenderTarget    ( const RenderTarget& );
-    void operator = ( const RenderTarget& );
+    RenderTarget    ( const RenderTarget& );    // アクセス禁止.
+    void operator = ( const RenderTarget& );    // アクセス禁止.
 };
 
 

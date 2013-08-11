@@ -106,7 +106,8 @@ struct SPHERE : ISHAPE
                 record.pShape   = this;
                 return true;
             }
-            else if( t2 > EPS )
+            
+            if( t2 > EPS )
             {
                 record.position = ray.org + t2 * ray.dir;
                 record.distance = t2;
@@ -159,8 +160,8 @@ struct TRIANGLE : public ISHAPE
         if ( IntersectTriangle( ray, vertex[0], vertex[1], vertex[2], dist ) )
         {
             record.distance = dist;
-            record.position = ray.org + ray.dir * dist;
-            record.normal   = normal;
+            record.position = ray.org + Normalize( ray.dir ) * dist;
+            record.normal   = Normalize( normal );
             record.pShape   = this;
             return true;
         }
@@ -211,16 +212,17 @@ struct QUAD : public ISHAPE
         if ( IntersectTriangle( ray, vertex[0], vertex[1], vertex[2], distance ) )
         {
             record.distance = distance;
-            record.normal   = normal;
-            record.position = ray.org + ray.dir * distance;
+            record.normal   = Normalize( normal );
+            record.position = ray.org + Normalize( ray.dir ) * distance;
             record.pShape   = this;
             return true;
         }
-        else if ( IntersectTriangle( ray, vertex[2], vertex[3], vertex[0], distance ) )
+        
+        if ( IntersectTriangle( ray, vertex[0], vertex[2], vertex[3], distance ) )
         {
             record.distance = distance;
-            record.normal   = normal;
-            record.position = ray.org + ray.dir * distance;
+            record.normal   = Normalize( normal );
+            record.position = ray.org + Normalize( ray.dir ) * distance;
             record.pShape   = this;
             return true;
         }

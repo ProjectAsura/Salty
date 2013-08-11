@@ -33,7 +33,7 @@ namespace /* anonymous */ {
 //------------------------------------------------------------------------------------------
 // Constant Values
 //------------------------------------------------------------------------------------------
-static const int    MAX_DEPTH = 32;
+static const int    MAX_DEPTH = 5;
 static const double MAX_P     = 0.99;               // ずっとループしてしまうので，1.0にならないように制限.
 static const COLOR  BG_COLOR( 0.0, 0.0, 0.0 );
 static const VEC3   UNIT_X  ( 1.0, 0.0, 0.0 );
@@ -45,10 +45,10 @@ static const VEC3   CAMERA_TARGET   = VEC3(50.0, 50.0, 180.0);
 static const VEC3   CAMERA_UPWARD   = VEC3(0.0, 1.0, 0.0);
 
 // 構成設定.
-static const int    WIDTH        = 200;
-static const int    HEIGHT       = 112;
-static const int    SAMPLES      = 1048;     // 増やせば積分の精度があがるけど，重くなる.
-static const int    SUB_SAMPLES  = 4;       // 増やせば積分の精度があがるけど，重くなる.
+static const int    WIDTH        = 320;
+static const int    HEIGHT       = 180;
+static const int    SAMPLES      = 4096;     // 増やせば積分の精度があがるけど，重くなる.
+static const int    SUB_SAMPLES  = 16;       // 増やせば積分の精度があがるけど，重くなる.
 static const double ASPECT_RATIO = (double)WIDTH / (double)HEIGHT;
 
 
@@ -77,26 +77,26 @@ static double size = 200.0;
 static QUAD     g_Quads[] = {
     // 左.
     QUAD(
-        VEC3( 1,  0,  0 ),
-        VEC3( 1,  82, 0 ),
-        VEC3( 1,  82, 250 ),
-        VEC3( 1,  0,  250 ),
+        VEC3( 1,  82,  250 ),
+        VEC3( 1,  0,   250 ),
+        VEC3( 1,  0,   0 ),
+        VEC3( 1,  82,  0 ),
         &g_Material[0]
     ),
     // 右.
     QUAD( 
         VEC3( 99, 82,  0 ),
         VEC3( 99, 0, 0 ),
-        VEC3( 99, 0, 250 ),
+        VEC3( 99, 0,   250 ),
         VEC3( 99, 82,  250 ),
         &g_Material[1]
     ),
     // 奥.
     QUAD( 
-        VEC3(  100,    0, 0 ),
-        VEC3(  100,   82, 0 ),
-        VEC3(  0, 82, 0 ),
-        VEC3(  0, 0,  0 ),
+        VEC3(  100, 82, 0 ),
+        VEC3(  100, 0,  0 ),
+        VEC3(  0,   0,  0 ),
+        VEC3(  0,   82, 0 ),
         &g_Material[2]
     ),
     // 手前
@@ -125,10 +125,10 @@ static QUAD     g_Quads[] = {
     ),
     // 照明.
     QUAD(
-        VEC3( 70.0, 82, 62.0 ),
-        VEC3( 70.0, 82, 102.0 ),
-        VEC3( 30.0, 82, 102.0 ),
-        VEC3( 30.0, 82, 62.0 ),
+        VEC3( 40.0, 82, 72.0 ),
+        VEC3( 40.0, 82, 92.0 ),
+        VEC3( 60.0, 82, 92.0 ),
+        VEC3( 60.0, 82, 72.0 ),
         &g_Material[8]
     ),
 };
@@ -192,7 +192,7 @@ inline VEC3 NextRayDirection( const VEC3& normal )
     VEC3 v;
 
     // normalの方向を基準とした正規直交基底(w, u, v)を作る。この基底に対する半球内で次のレイを飛ばす。
-    if ( fabs( w.x ) > DBL_EPSILON )
+    if ( fabs( w.x ) > 0.01 )
     {
         u = Cross( UNIT_Y, w );
         u.Normalize();
@@ -202,7 +202,7 @@ inline VEC3 NextRayDirection( const VEC3& normal )
         u = Cross( UNIT_X, w );
         u.Normalize();
     }
-                    
+
     v = Cross( w, u );
     v.Normalize();
 
@@ -213,8 +213,8 @@ inline VEC3 NextRayDirection( const VEC3& normal )
 
     // 方向ベクトル算出.
     VEC3 dir = u * cos( r1 ) * r2s
-                + v * sin( r1 ) * r2s
-                + w * sqrt( 1.0 - r2 );
+             + v * sin( r1 ) * r2s
+             + w * sqrt( 1.0 - r2 );
     dir.Normalize();
 
     return dir;
@@ -278,8 +278,10 @@ bool ComputeReflectance
     // 衝突物体のマテリアル.
     MATERIAL* pMaterial = record.pShape->GetMaterial();
 
-    // 物体からのレイの入出を考慮した法線ベクトル.
-    const VEC3 normal = ( Dot( record.normal, ray.dir ) < 0.0 ) ? record.normal : -record.normal; // 交差位置の法線（物体からのレイの入出を考慮）
+    if ( depth > MAX_DEPTH )
+    {
+        Probability = pow( 0.5, depth - MAX_DEPTH );
+    }
 
     // 一定以上レイを追跡したらロシアンルーレットを実行し追跡を打ち切るかどうかを判断する
     //if ( depth > MIN_DEPTH )
@@ -297,11 +299,6 @@ bool ComputeReflectance
         }
     }
 
-    if ( depth > MAX_DEPTH )
-    {
-        return true;
-    }
-
     // ゼロ除算対策.
     assert( Probability != 0.0 );
 
@@ -310,6 +307,9 @@ bool ComputeReflectance
     {
     case MATERIAL_DIFFUSE:
         {
+            // 物体からのレイの入出を考慮した法線ベクトル.
+            const VEC3 normal = ( Dot( record.normal, ray.dir ) < 0.0 ) ? record.normal : -record.normal; // 交差位置の法線（物体からのレイの入出を考慮）
+
             // レイを更新.
             ray.org = record.position;
             ray.dir = NextRayDirection( normal );
@@ -325,17 +325,20 @@ bool ComputeReflectance
             ray.org = record.position;
 
             // 反射ベクトル.
-            ray.dir = ray.dir - normal * 2.0 * Dot(normal, ray.dir);
+            ray.dir = ray.dir - record.normal * 2.0 * Dot(record.normal, ray.dir);
         }
         break;
 
     case MATERIAL_GLASS:
         {
+            // 物体からのレイの入出を考慮した法線ベクトル.
+            const VEC3 normal = ( Dot( record.normal, ray.dir ) < 0.0 ) ? record.normal : -record.normal; // 交差位置の法線（物体からのレイの入出を考慮）
+
             RAY reflect;
             reflect.org = record.position;
 
             // 反射ベクトル.
-            reflect.dir = ray.dir - record.normal * 2.0 * Dot( record.normal, ray.dir );
+            reflect.dir = Normalize( ray.dir - record.normal * 2.0 * Dot( record.normal, ray.dir ) );
 
             // レイがオブジェクトから出るのか、入るのかを判定.
             bool into = ( Dot( record.normal, normal) > 0.0 ); 
@@ -365,9 +368,11 @@ bool ComputeReflectance
             const double a    = nt - nc;
             const double b    = nt + nc;
             const double R0   = (a * a) / (b * b);
-            const double c    = 1.0 - ( (into) ? -ddn : Dot(refract, record.normal) );
+
+            const double c    = 1.0 - ( (into) ? -ddn : Dot(refract, -normal) );
             const double Re   = R0 + (1.0 - R0) * pow(c, 5.0);
-            const double Tr   = 1.0 - Re; // 屈折光の運ぶ光の量
+            const double nnt2 = pow( into ? ( nc / nt ) : ( nt / nc ), 2.0 );
+            const double Tr   = ( 1.0 - Re ) * nnt2; // 屈折光の運ぶ光の量
             const double prob = 0.25 + 0.5 * Re;
 
             // ゼロ除算対策.
@@ -398,6 +403,9 @@ bool ComputeReflectance
 
     case MATERIAL_LIGHT:
         {
+            // 物体からのレイの入出を考慮した法線ベクトル.
+            const VEC3 normal = ( Dot( record.normal, ray.dir ) < 0.0 ) ? record.normal : -record.normal; // 交差位置の法線（物体からのレイの入出を考慮）
+
             // カラー計算
             accColor += ( accReflectance * pMaterial->color );
 
@@ -494,18 +502,27 @@ int main( int argc, char **argv )
     }
     clearTime.End();
 
+    int count = 0;
     ILOG( "Start Rendering." );
     renderingTime.Start();
     stopWatch.Start();
     for ( int y=0; y<HEIGHT; ++y ) 
     {
+        //g_Random.SetSeed( y );
+
         // 10秒ごとに表示させる.
         stopWatch.End();
         rapTime = stopWatch.GetElapsedTimeSec();
-        if ( rapTime > 9.9f )
+        if ( rapTime > 59.0f )
         {
-            ILOG( "Rendering ( %d sample ) %lf%%", SAMPLES, 100.0 * y / (HEIGHT - 1) );
+            ILOG( "Rendering ( %d sample ) %lf%% LapTime = %f", SAMPLES, 100.0 * y / (HEIGHT - 1), rapTime );
             stopWatch.Start();
+
+            char name[256];
+            sprintf_s( name, "result_%04d.bmp", count );
+            count++;
+
+            SaveToBMP( name, WIDTH, HEIGHT, pImage );
         }
 
     #ifdef _OPENMP
@@ -516,38 +533,37 @@ int main( int argc, char **argv )
             // ゼロクリア.
             COLOR accRadiance( 0.0, 0.0, 0.0 );
 
-            // 1ピクセルあたりsamples回サンプリングする.
-            for ( int s = 0; s < SAMPLES; ++s ) 
+            for ( int sy = 0; sy < SUB_SAMPLES; ++sy )
             {
-                for ( int t = 0; t < SUB_SAMPLES; ++t )
+                for( int sx = 0; sx < SUB_SAMPLES; ++sx )
                 {
-                    // テントフィルターによってサンプリング
-                    // ピクセル範囲で一様にサンプリングするのではなく、ピクセル中央付近にサンプルがたくさん集まるように偏りを生じさせる
-                    const double r1 = 2.0 * g_Random.GetAsF64();
-                    const double r2 = 2.0 * g_Random.GetAsF64();
+                    // 1ピクセルあたりsamples回サンプリングする.
+                    for ( int s = 0; s < SAMPLES; ++s ) 
+                    {
+                        const double rate = ( 1.0 / SUB_SAMPLES );
+                        const double r1 = (g_Random.GetAsF64() - 0.5f) * (rate * sx);
+                        const double r2 = (g_Random.GetAsF64() - 0.5f) * (rate * sy);
 
-                    const double dx = ( r1 < 1.0 ) ? sqrt(r1) - 1.0 : 1.0 - sqrt(2.0 - r1);
-                    const double dy = ( r2 < 1.0 ) ? sqrt(r2) - 1.0 : 1.0 - sqrt(2.0 - r2);
+                        // 射影空間上でのピクセル位置.
+                        projPos.x = -2.0f * ( r1 + x ) / WIDTH  + 1.0f;
+                        projPos.y = -2.0f * ( r2 + y ) / HEIGHT + 1.0f;
 
-                    // 射影空間上でのピクセル位置.
-                    projPos.x = -2.0f * ( (float)x + (float)dx ) / WIDTH  + 1.0f;
-                    projPos.y = -2.0f * ( (float)y + (float)dy ) / HEIGHT + 1.0f;
+                        // ワールド空間のスクリーン上のピクセル位置.
+                        worldPos = TransformCoord( projPos, invViewProj );
 
-                    // ワールド空間のスクリーン上のピクセル位置.
-                    worldPos = TransformCoord( projPos, invViewProj );
+                        // カメラ位置からスクリーン位置へレイを飛ばす.
+                        ray.org = CAMERA_POSITION;
+                        ray.dir = Normalize( worldPos - CAMERA_POSITION );
 
-                    // カメラ位置からスクリーン位置へレイを飛ばす.
-                    ray.org = CAMERA_POSITION;
-                    ray.dir = Normalize( worldPos - CAMERA_POSITION );
+                        // 放射輝度を蓄積.
+                        accRadiance += ( Radiance( ray ) / ( SAMPLES * SUB_SAMPLES * SUB_SAMPLES ) );
+                    }
 
-                    // 放射輝度を蓄積.
-                    accRadiance += ( Radiance( ray ) / ( SAMPLES * SUB_SAMPLES) );
+                    // ピクセルカラーを設定.
+                    int idx = ( WIDTH * y ) + x;
+                    pImage[ idx ] += accRadiance;
                 }
             }
-
-            // ピクセルカラーを設定.
-            int idx = ( WIDTH * y ) + x;
-            pImage[ idx ] += accRadiance;
         }
     }
     renderingTime.End();
@@ -555,7 +571,7 @@ int main( int argc, char **argv )
 
 
     // BMPファイルに保存する.
-    if ( !SaveToBMP( "result.bmp", WIDTH, HEIGHT, pImage ) )
+    if ( !SaveToBMP( "final_result.bmp", WIDTH, HEIGHT, pImage ) )
     {
         // 異常終了.
         return -1;
@@ -572,6 +588,14 @@ int main( int argc, char **argv )
 
     fprintf_s( fp, "Clear Time     = %lf(sec)\n", clearTime.GetElapsedTimeSec() );
     fprintf_s( fp, "Rendering Time = %lf(sec)\n", renderingTime.GetElapsedTimeSec() );
+    if ( renderingTime.GetElapsedTimeSec() > 60.0 )
+    {
+        fprintf_s( fp, "Rendering Time = %lf(min)\n", renderingTime.GetElapsedTimeSec() / 60.0 );
+    }
+    if ( renderingTime.GetElapsedTimeSec() > 3600.0 )
+    {
+        fprintf_s( fp, "Rendering Time = %lf(hour)\n", renderingTime.GetElapsedTimeSec() / 3600.0 );
+    }
     fprintf_s( fp, "Per Pixel Time = %lf(sec)\n", renderingTime.GetElapsedTimeSec() / ( WIDTH * HEIGHT ) );
 
     fclose( fp );

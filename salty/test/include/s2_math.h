@@ -61,6 +61,11 @@ public:
     //===================================================================================
     XORSHIFT( const unsigned int seed )
     {
+        SetSeed( seed );
+    }
+
+    inline void SetSeed( const unsigned int seed )
+    {
         x = 123456789;
         y = 362436069;
         z = 521288629;
@@ -226,9 +231,9 @@ inline const VEC3 Cross( const VEC3 &v1, const VEC3 &v2 )
 
 inline VEC3 ComputeNormal( const VEC3& v0, const VEC3& v1, const VEC3& v2 )
 {
-    VEC3 e0 = v1 - v0;
-    VEC3 e1 = v2 - v0;
-    return Cross( e0, e1 );
+    VEC3 e0 = Normalize( v1 - v0 );
+    VEC3 e1 = Normalize( v2 - v0 );
+    return Normalize( Cross( e0, e1 ) );
 }
 
 inline VEC3 ComputeQuadNormal( const VEC3& v0, const VEC3& v1, const VEC3& v2, const VEC3& v3 )
@@ -284,40 +289,32 @@ inline bool IntersectTriangle
 {
     VEC3 e0 = v1 - v0;
     VEC3 e1 = v2 - v0;
+    VEC3 u  = Cross( ray.dir, e1 );
 
-    VEC3 u = Cross( ray.dir, e1 );
+    double div = Dot( e0, u );
 
-    double det = Dot( e0, u );
-
-    if ( det > -DBL_EPSILON && det < DBL_EPSILON )
-    {
-        return false;
-    }
+    if ( div == 0.0 )
+    { return false; }
 
     VEC3 diff = ray.org - v0;
-    double beta = Dot( diff, u );
-    beta /= det;
+    double beta = Dot( diff, u ) / div;
 
-    if ( beta < 0.0 || beta > 1.0 )
+    if ( beta <= 0.0 || beta >= 1.0 )
     {
         return false;
     }
 
-    VEC3 v;
-    v = Cross( diff, e0 );
+    VEC3 v = Cross( diff, e0 );
+    double gamma = Dot( ray.dir, v ) / div;
 
-    double gamma = Dot( ray.dir, v );
-    gamma /= det;
-
-    if ( gamma < 0.0 || gamma + beta > 1.0 )
+    if ( gamma <= 0.0 || gamma + beta >= 1.0 )
     {
         return false;
     }
 
-    double dist = Dot( e1, v );
-    dist /= det;
+    double dist = Dot( e1, v ) / div;
 
-    if ( dist < 0.0 )
+    if ( dist <= 0.0 )
     {
         return false;
     }

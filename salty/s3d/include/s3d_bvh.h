@@ -32,7 +32,7 @@ public:
     BVH( IShape*, IShape*, const BoundingBox& );
 
     void Init   ( IShape**, const s32 );
-    bool IsHit  ( const Ray&, const f64, const f64, ShadeRec& ) const;
+    bool IsHit  ( const Ray&, const f64, const f64, ShadeRec& );
 
     BoundingBox GetAABB    () const;
     IShape*     BuildBranch( IShape**, const s32, const s32 axis = 0 );

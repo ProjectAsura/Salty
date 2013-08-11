@@ -89,8 +89,8 @@ void RenderTarget::Clear( const Color3& clearColor )
 //-----------------------------------------------------------------------------
 void RenderTarget::SetPixel( const u32 x, const u32 y, const Color3& value )
 {
-    assert( x >= m_Width );
-    assert( y >= m_Height);
+    assert( x <= m_Width );
+    assert( y <= m_Height);
     assert( m_pFB != nullptr );
 
     m_pFB[ y * m_Width + x ] = value;
@@ -101,8 +101,8 @@ void RenderTarget::SetPixel( const u32 x, const u32 y, const Color3& value )
 //-----------------------------------------------------------------------------
 Color3 RenderTarget::GetPixel( const u32 x, const u32 y )
 {
-    assert( x >= m_Width );
-    assert( y >= m_Height );
+    assert( x <= m_Width );
+    assert( y <= m_Height );
     assert( m_pFB != nullptr );
 
     return m_pFB[ y * m_Width + x ];

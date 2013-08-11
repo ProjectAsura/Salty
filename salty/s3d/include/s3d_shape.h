@@ -34,7 +34,7 @@ struct ShadeRec
 struct IShape
 {
 public:
-    virtual bool IsHit( const Ray&, const f64, const f64, ShadeRec& ) const = 0;
+    virtual bool IsHit( const Ray&, const f64, const f64, ShadeRec& ) = 0;
     virtual BoundingBox GetAABB() const = 0;
 };
 

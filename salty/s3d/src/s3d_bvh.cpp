@@ -108,7 +108,7 @@ void BVH::Init( IShape** ppShapes, const s32 numShapes )
 //--------------------------------------------------------------------------
 //      衝突判定を行います.
 //--------------------------------------------------------------------------
-bool BVH::IsHit( const Ray& ray, const f64 mini, const f64 maxi, ShadeRec& shadeRec ) const
+bool BVH::IsHit( const Ray& ray, const f64 mini, const f64 maxi, ShadeRec& shadeRec )
 {
     if ( !aabb.IsHit( ray, mini, maxi ) )
     { return false; }

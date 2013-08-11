@@ -18,7 +18,17 @@
 #include <s3d_triangle.h>
 #include <s3d_sphere.h>
 #include <s3d_rand.h>
+#include <s3d_camera.h>
 #include <vector>
+
+
+
+namespace /* anonymous */ {
+
+static const f64 D_PI      = 3.1415926535897932384626433832795;
+static const f64 D_PIDIV4  = 0.78539816339744830961566084581988;
+
+} // namespace /* anonymous */
 
 
 namespace s3d {
@@ -43,6 +53,7 @@ private:
     RenderTarget            m_RT;
     std::vector<IShape*>    m_Shapes;
     Random                  m_Random;
+    Camera                  m_Camera;
 
     //===========================================================================
     // private methods.
@@ -57,8 +68,8 @@ protected:
     //===========================================================================
     // protected methods.
     //===========================================================================
-    void Trace();
-    void Shade();
+    Color3 Trace( const Ray& );
+    Color3 Shade();
 
     void PathTrace();
 
@@ -88,7 +99,7 @@ public:
 
 
 //-----------------------------------------------------------------------------
-//
+//      初期化処理です.
 //-----------------------------------------------------------------------------
 bool App::Impl::Init()
 {
@@ -96,22 +107,76 @@ bool App::Impl::Init()
     m_Height     = 150;
     m_NumSamples = 512;
 
+    // 乱数の種を設定.
     m_Random.SetSeed( 314159265 );
 
-    m_RT.Init( 200, 150 );
+    // レンダーターゲットを初期化.
+    m_RT.Init( m_Width, m_Height );
 
-    return false;
+    f64 aspectRatio = static_cast<f64>( m_Width ) / static_cast<f64>( m_Height );
+
+    // カメラ更新.
+    m_Camera.Update( 
+        Vector3( 50.0, 50.0, 250.0 ),
+        Vector3( 50.0, 50.0, 180.0 ),
+        Vector3( 0.0, 1.0, 0.0 ),
+        D_PIDIV4, 
+        aspectRatio,
+        1.0,
+        10000.0 );
+
+    // シェイプリストに追加.
+    m_Shapes.push_back( new Sphere( Vector3( 1e5 + 1, 40.8,  81.6    ), 1e5,  Color3( 1.0,  0.15, 0.15 ) ) );
+    m_Shapes.push_back( new Sphere( Vector3( -1e5+99, 40.8,  81.6    ), 1e5,  Color3( 0.15, 0.15, 1.0  ) ) );
+    m_Shapes.push_back( new Sphere( Vector3( 50,      40.8,  1e5     ), 1e5,  Color3( 0.15, 1.0,  0.15 ) ) );
+    m_Shapes.push_back( new Sphere( Vector3( 50,      40.8, -1e5+250 ), 1e5,  Color3( 0.0,  0.0,  0.15 ) ) );
+    m_Shapes.push_back( new Sphere( Vector3( 50,      1e5,  81.6     ), 1e5,  Color3( 1.0,  1.0,  0.15 ) ) );
+    m_Shapes.push_back( new Sphere( Vector3( 50, -1e5+81.6, 81.6     ), 1e5,  Color3( 1.0, 0.15,  1.0  ) ) );
+    m_Shapes.push_back( new Sphere( Vector3( 27,      16.5, 47       ), 16.5, Color3( 1.0, 1.0,   1.0  ) ) );
+    m_Shapes.push_back( new Sphere( Vector3( 73,      16.5, 78       ), 16.5, Color3( 1.0, 1.0,   1.0  ) ) );
+    m_Shapes.push_back( new Sphere( Vector3( 50.0,    75.0, 81.6     ), 5.0,  Color3( 1.0, 1.0,   1.0  ) ) );
+
+    return true;
+}
+
+//-----------------------------------------------------------------------------
+//      終了処理です.
+//-----------------------------------------------------------------------------
+void App::Impl::Term()
+{
+    // 最終結果をBMPファイルに出力.
+    SaveToBMP( "FinalResult.bmp", m_RT.GetWidth(), m_RT.GetHeight(), m_RT.GetFrameBuffer() );
+
+    // レンダーターゲットの終了処理.
+    m_RT.Term();
+
+    // シェイプリストのクリア.
+    m_Shapes.clear();
 }
 
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-void App::Impl::Term()
+Color3 App::Impl::Trace( const Ray& ray )
 {
-    SaveToBMP( "FinalResult.bmp", m_RT.GetWidth(), m_RT.GetHeight(), m_RT.GetFrameBuffer() );
-    m_RT.Term();
+    ShadeRec record;
+    for( u32 i=0; i<m_Shapes.size(); ++i )
+    {
+        if ( m_Shapes[i]->IsHit( ray, 0.0001, 10000.0, record ) )
+        {
+            return record.color;
+        }
+    }
 
-    m_Shapes.clear();
+    return Color3( 0.0, 0.0, 0.0 );
+}
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+Color3 App::Impl::Shade()
+{
+    return Color3( 0.0, 0.0, 0.0 );
 }
 
 //-----------------------------------------------------------------------------
@@ -123,6 +188,19 @@ void App::Impl::PathTrace()
     {
         for( u32 j=0; j<m_Width; ++j )
         {
+            register f64 r1 = 2.0 * m_Random.GetAsF64();
+            register f64 r2 = 2.0 * m_Random.GetAsF64();
+
+            const f64 dx = ( r1 < 1.0 ) ? sqrt( r1 ) - 1.0 : 1.0 - sqrt( 2.0 - r1 );
+            const f64 dy = ( r2 < 1.0 ) ? sqrt( r2 ) - 1.0 : 1.0 - sqrt( 2.0 - r2 );
+
+            const f64 x = -2.0 * ( static_cast<f64>( i ) + dx ) / m_Width  + 1.0;
+            const f64 y = -2.0 * ( static_cast<f64>( j ) + dy ) / m_Height + 1.0;
+
+            Ray ray = m_Camera.GetRay( x, y );
+            Color3 color = Trace( ray );
+
+            m_RT.SetPixel( j, i, color );
         }
     }
 }

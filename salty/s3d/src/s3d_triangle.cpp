@@ -24,12 +24,12 @@ Triangle::Triangle
     const Vector3& pt0,
     const Vector3& pt1,
     const Vector3& pt2,
-    const Color3& col
+    IMaterial* mat
 )
 : p0( pt0 )
 , p1( pt1 )
 , p2( pt2 )
-, color( col )
+, pMaterial( mat )
 { 
     ComputeNormal();
 }
@@ -41,7 +41,7 @@ Triangle::Triangle( const Triangle& value )
 : p0( value.p0 )
 , p1( value.p1 )
 , p2( value.p2 )
-, color( value.color )
+, pMaterial( value.pMaterial )
 {
     ComputeNormal();
 }
@@ -97,7 +97,7 @@ bool Triangle::IsHit( const Ray& ray, const f64 mini, const f64 maxi, ShadeRec& 
         // 表面と衝突した場合は，法線ベクトルをそのまま使用.
         shadeRec.normal = normal;
     }
-    shadeRec.color  = color;
+    shadeRec.pMaterial = pMaterial;
 
     return true;
 }

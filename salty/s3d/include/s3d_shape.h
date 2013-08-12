@@ -10,21 +10,23 @@
 //-----------------------------------------------------------------------------------
 // Includes
 //-----------------------------------------------------------------------------------
-#include <s3d_color3.h>
 #include <s3d_ray.h>
 #include <s3d_box.h>
+#include <s3d_color3.h>
 
 
 namespace s3d {
+
+struct IMaterial;
 
 ////////////////////////////////////////////////////////////////////////////////////
 // ShadeRec structure
 ////////////////////////////////////////////////////////////////////////////////////
 struct ShadeRec
 {
-    f64     dist;
-    Vector3 normal;
-    Color3  color;
+    f64         dist;
+    Vector3     normal;
+    IMaterial*  pMaterial;
 };
 
 

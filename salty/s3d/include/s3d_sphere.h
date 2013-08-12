@@ -28,14 +28,14 @@ public:
     //==========================================================================
     // public variables.
     //==========================================================================
-    Vector3 center;
-    f64     radius;
-    Color3  color;
+    Vector3     center;
+    f64         radius;
+    IMaterial*  pMaterial;
 
     //==========================================================================
     // public methods.
     //==========================================================================
-    Sphere( const Vector3&, const f64, const Color3& );
+    Sphere( const Vector3&, const f64, IMaterial* pMaterial );
     Sphere( const Sphere& );
 
     bool IsHit   ( const Ray&, const f64, const f64, ShadeRec& );

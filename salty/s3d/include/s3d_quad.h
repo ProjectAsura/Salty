@@ -29,17 +29,17 @@ public:
     //=======================================================================
     // public variables.
     //=======================================================================
-    Vector3 p0;
-    Vector3 p1;
-    Vector3 p2;
-    Vector3 p3;
-    Vector3 normal;
-    Color3  color;
+    Vector3     p0;
+    Vector3     p1;
+    Vector3     p2;
+    Vector3     p3;
+    Vector3     normal;
+    IMaterial*  pMaterial;
 
     //=======================================================================
     // public methods.
     //=======================================================================
-    Quad( const Vector3&, const Vector3&, const Vector3&, const Vector3&, const Color3& );
+    Quad( const Vector3&, const Vector3&, const Vector3&, const Vector3&, IMaterial* );
     Quad( const Quad& );
 
     bool        IsHit  ( const Ray&, const f64, const f64, ShadeRec& );

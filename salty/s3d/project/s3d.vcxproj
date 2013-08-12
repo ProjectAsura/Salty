@@ -68,6 +68,7 @@
     <ClCompile Include="..\src\s3d_app.cpp" />
     <ClCompile Include="..\src\s3d_bmp.cpp" />
     <ClCompile Include="..\src\s3d_bvh.cpp" />
+    <ClCompile Include="..\src\s3d_material.cpp" />
     <ClCompile Include="..\src\s3d_mutex.cpp" />
     <ClCompile Include="..\src\s3d_onb.cpp" />
     <ClCompile Include="..\src\s3d_quad.cpp" />
@@ -82,6 +83,7 @@
     <ClInclude Include="..\include\s3d_bvh.h" />
     <ClInclude Include="..\include\s3d_camera.h" />
     <ClInclude Include="..\include\s3d_color3.h" />
+    <ClInclude Include="..\include\s3d_material.h" />
     <ClInclude Include="..\include\s3d_matrix.h" />
     <ClInclude Include="..\include\s3d_mutex.h" />
     <ClInclude Include="..\include\s3d_onb.h" />

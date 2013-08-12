@@ -20,6 +20,7 @@
 #include <s3d_quad.h>
 #include <s3d_rand.h>
 #include <s3d_camera.h>
+#include <s3d_material.h>
 #include <vector>
 
 
@@ -53,6 +54,7 @@ private:
     u32                     m_NumSamples;
     RenderTarget            m_RT;
     std::vector<IShape*>    m_Shapes;
+    std::vector<IMaterial*> m_Materials;
     Random                  m_Random;
     Camera                  m_Camera;
 
@@ -104,8 +106,8 @@ public:
 //-----------------------------------------------------------------------------
 bool App::Impl::Init()
 {
-    m_Width      = 200;
-    m_Height     = 150;
+    m_Width      = 1280;
+    m_Height     = 720;
     m_NumSamples = 512;
 
     // 乱数の種を設定.
@@ -114,6 +116,7 @@ bool App::Impl::Init()
     // レンダーターゲットを初期化.
     m_RT.Init( m_Width, m_Height );
 
+    // アスペクト比を算出.
     f64 aspectRatio = static_cast<f64>( m_Width ) / static_cast<f64>( m_Height );
 
     // カメラ更新.
@@ -126,6 +129,7 @@ bool App::Impl::Init()
         1.0,
         10000.0 );
 
+    m_Materials.push_back( new Matte( Color3( 1.0, 1.0, 0.0 ) ) );
     //// シェイプリストに追加.
     //m_Shapes.push_back( new Sphere( Vector3( 1e5 + 1, 40.8,  81.6    ), 1e5,  Color3( 1.0,  0.15, 0.15 ) ) );
     //m_Shapes.push_back( new Sphere( Vector3( -1e5+99, 40.8,  81.6    ), 1e5,  Color3( 0.15, 0.15, 1.0  ) ) );
@@ -146,7 +150,7 @@ bool App::Impl::Init()
         Vector3( -20.0, 20.0, 0.0 ),
         Vector3( 20.0, 20.0, 0.0 ),
         Vector3( 20.0, -20.0, 0.0 ),
-        Color3( 0.0, 1.0, 1.0 ) ) );
+        m_Materials[0] ) );
 
     return true;
 }
@@ -176,7 +180,9 @@ Color3 App::Impl::Trace( const Ray& ray )
     {
         if ( m_Shapes[i]->IsHit( ray, 0.0001, 10000.0, record ) )
         {
-            return record.color;
+            Vector3 dir;
+            Color3 result = record.pMaterial->Shade( ray.GetDir(), record.normal, dir );
+            return result;
         }
     }
 
@@ -188,7 +194,7 @@ Color3 App::Impl::Trace( const Ray& ray )
 //-----------------------------------------------------------------------------
 Color3 App::Impl::Shade()
 {
-    return Color3( 0.0, 0.0, 0.0 );
+    return Color3( 0.0, 1.0, 0.0 );
 }
 
 //-----------------------------------------------------------------------------

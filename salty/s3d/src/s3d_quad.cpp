@@ -25,13 +25,13 @@ Quad::Quad
     const Vector3& b,
     const Vector3& c,
     const Vector3& d,
-    const Color3& col
+    IMaterial* mat
 )
 : p0    ( a )
 , p1    ( b )
 , p2    ( c )
 , p3    ( d )
-, color ( col )
+, pMaterial( mat )
 {
     ComputeQuadNormal();
 }
@@ -45,7 +45,7 @@ Quad::Quad( const Quad& value )
 , p2    ( value.p2 )
 , p3    ( value.p3 )
 , normal( value.normal )
-, color ( value.color )
+, pMaterial( value.pMaterial )
 { /* DO_NOTHING */ }
 
 //--------------------------------------------------------------------------------
@@ -131,8 +131,8 @@ bool Quad::IsHitTriangle
         // 表面と衝突した場合は，法線ベクトルをそのまま使用.
         shadeRec.normal = normal;
     }
-    shadeRec.dist   = dist;
-    shadeRec.color  = color;
+    shadeRec.dist      = dist;
+    shadeRec.pMaterial = pMaterial;
 
     return true;
 }
@@ -144,8 +144,7 @@ bool Quad::IsHit( const Ray& ray, const f64 mini, const f64 maxi, ShadeRec& shad
 {
     if ( IsHitTriangle( ray, p0, p1, p2, mini, maxi, shadeRec ) )
     { return true; }
-
-    if ( IsHitTriangle( ray, p0, p2, p3, mini, maxi, shadeRec ) )
+    else if ( IsHitTriangle( ray, p0, p2, p3, mini, maxi, shadeRec ) )
     { return true; }
 
     return false;

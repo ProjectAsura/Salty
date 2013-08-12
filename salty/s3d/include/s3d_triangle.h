@@ -29,16 +29,16 @@ public:
     //==========================================================================
     // public variables.
     //==========================================================================
-    Vector3 p0;
-    Vector3 p1;
-    Vector3 p2;
-    Vector3 normal;
-    Color3  color;
+    Vector3     p0;
+    Vector3     p1;
+    Vector3     p2;
+    Vector3     normal;
+    IMaterial*  pMaterial;
 
     //==========================================================================
     // public methods.
     //==========================================================================
-    Triangle( const Vector3&, const Vector3&, const Vector3&, const Color3& );
+    Triangle( const Vector3&, const Vector3&, const Vector3&, IMaterial* );
     Triangle( const Triangle& );
 
     bool        IsHit   ( const Ray&, const f64, const f64, ShadeRec& );

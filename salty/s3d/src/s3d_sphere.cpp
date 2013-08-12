@@ -19,10 +19,10 @@ namespace s3d {
 //-----------------------------------------------------------------------------
 //      引数付きコンストラクタです.
 //-----------------------------------------------------------------------------
-Sphere::Sphere( const Vector3& cent, const f64 rad, const Color3& col )
+Sphere::Sphere( const Vector3& cent, const f64 rad, IMaterial* mat )
 : center( cent )
 , radius( rad )
-, color ( col )
+, pMaterial( mat )
 { /* DO_NOTHING */ }
 
 //-----------------------------------------------------------------------------
@@ -31,7 +31,7 @@ Sphere::Sphere( const Vector3& cent, const f64 rad, const Color3& col )
 Sphere::Sphere( const Sphere& value )
 : center( value.center )
 , radius( value.radius )
-, color ( value.color )
+, pMaterial( value.pMaterial )
 { /* DO_NOTHING */ }
 
 //-----------------------------------------------------------------------------
@@ -56,9 +56,9 @@ bool Sphere::IsHit( const Ray& ray, const f64 mini, const f64 maxi, ShadeRec& sh
         { return false; }
     }
     
-    shadeRec.dist   = dist;
-    shadeRec.normal = Vector3::UnitVector( ray.Step(dist) - center );
-    shadeRec.color  = color;
+    shadeRec.dist      = dist;
+    shadeRec.normal    = Vector3::UnitVector( ray.Step(dist) - center );
+    shadeRec.pMaterial = pMaterial;
 
     return true;
 }

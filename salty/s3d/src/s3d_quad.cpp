@@ -75,13 +75,11 @@ void Quad::ComputeQuadNormal()
     Vector3 n2b = ComputeNormal( p1, p3, p2 );
     if ( Vector3::Dot( n1a, n1b ) > Vector3::Dot( n2a, n2b ) )
     {
-        Vector3 normal = n1a + n1b;
-        normal.Normalize();
+        normal = Vector3::UnitVector( n1a + n1b );
     }
     else
     {
-        Vector3 normal = n2a + n2b;
-        normal.Normalize();
+        normal = Vector3::UnitVector( n2a + n2b );
     }
 }
 
@@ -122,8 +120,7 @@ bool Quad::IsHitTriangle
     
     if ( dist < mini || dist > maxi )
     { return false; }
-    
-    shadeRec.dist   = dist;
+
     if ( Vector3::Dot( ray.GetDir(), normal ) > 0.0 )
     {
         // 裏面と衝突した場合は，法線ベクトルは逆向きにする.
@@ -134,6 +131,7 @@ bool Quad::IsHitTriangle
         // 表面と衝突した場合は，法線ベクトルをそのまま使用.
         shadeRec.normal = normal;
     }
+    shadeRec.dist   = dist;
     shadeRec.color  = color;
 
     return true;

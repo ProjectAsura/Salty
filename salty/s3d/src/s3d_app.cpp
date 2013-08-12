@@ -17,6 +17,7 @@
 #include <s3d_shape.h>
 #include <s3d_triangle.h>
 #include <s3d_sphere.h>
+#include <s3d_quad.h>
 #include <s3d_rand.h>
 #include <s3d_camera.h>
 #include <vector>
@@ -135,11 +136,17 @@ bool App::Impl::Init()
     //m_Shapes.push_back( new Sphere( Vector3( 0,      0.0, 0.0       ), 16.5, Color3( 1.0, 1.0,   1.0  ) ) );
     //m_Shapes.push_back( new Sphere( Vector3( 73,      16.5, 78       ), 16.5, Color3( 1.0, 1.0,   1.0  ) ) );
     //m_Shapes.push_back( new Sphere( Vector3( 50.0,    75.0, 81.6     ), 5.0,  Color3( 1.0, 1.0,   1.0  ) ) );
-    m_Shapes.push_back( new Triangle( 
+    //m_Shapes.push_back( new Triangle( 
+    //    Vector3( -20.0, -20.0, 0.0 ),
+    //    Vector3( 0.0, 20.0, 0.0 ),
+    //    Vector3( 20.0, -20.0, 0.0 ),
+    //    Color3( 0.0, 0.0, 1.0 ) ) );
+    m_Shapes.push_back( new Quad(
         Vector3( -20.0, -20.0, 0.0 ),
-        Vector3( 0.0, 20.0, 0.0 ),
+        Vector3( -20.0, 20.0, 0.0 ),
+        Vector3( 20.0, 20.0, 0.0 ),
         Vector3( 20.0, -20.0, 0.0 ),
-        Color3( 0.0, 0.0, 1.0 ) ) );
+        Color3( 0.0, 1.0, 1.0 ) ) );
 
     return true;
 }

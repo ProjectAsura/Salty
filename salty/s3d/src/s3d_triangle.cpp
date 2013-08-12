@@ -87,14 +87,23 @@ bool Triangle::IsHit( const Ray& ray, const f64 mini, const f64 maxi, ShadeRec& 
     { return false; }
     
     shadeRec.dist   = dist;
-    shadeRec.normal = ( Vector3::Dot( ray.GetDir(), normal ) > 0.0 ) ? -normal : normal;    // 裏面ならマイナスつける, 表面なら法線そのまま返す.
+    if ( Vector3::Dot( ray.GetDir(), normal ) > 0.0 )
+    {
+        // 裏面と衝突した場合は，法線ベクトルは逆向きにする.
+        shadeRec.normal = -normal;
+    }
+    else
+    {
+        // 表面と衝突した場合は，法線ベクトルをそのまま使用.
+        shadeRec.normal = normal;
+    }
     shadeRec.color  = color;
 
     return true;
 }
 
 //-----------------------------------------------------------------------------
-//      軸平衡境界箱を取得します.
+//      軸平行境界箱を取得します.
 //-----------------------------------------------------------------------------
 BoundingBox Triangle::GetAABB() const
 {

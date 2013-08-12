@@ -87,7 +87,7 @@ bool Triangle::IsHit( const Ray& ray, const f64 mini, const f64 maxi, ShadeRec& 
     { return false; }
     
     shadeRec.dist   = dist;
-    shadeRec.normal = normal;
+    shadeRec.normal = ( Vector3::Dot( ray.GetDir(), normal ) > 0.0 ) ? -normal : normal;    // 裏面ならマイナスつける, 表面なら法線そのまま返す.
     shadeRec.color  = color;
 
     return true;

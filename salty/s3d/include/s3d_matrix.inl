@@ -460,7 +460,7 @@ Matrix Matrix::Rotate( const f64 x, const f64 y, const f64 z, const f64 rad )
 S3D_INLINE
 Matrix Matrix::LookAt( const Vector3& position, const Vector3& target, const Vector3& upward )
 {
-    Vector3 zaxis = Vector3::UnitVector( position - target );
+    Vector3 zaxis = Vector3::UnitVector( target - position );
     Vector3 xaxis = Vector3::UnitVector( Vector3::Cross( upward, zaxis ) );
     Vector3 yaxis = Vector3::UnitVector( Vector3::Cross( zaxis, xaxis ) );
 
@@ -481,8 +481,8 @@ Matrix Matrix::LookAt( const Vector3& position, const Vector3& target, const Vec
 S3D_INLINE
 Matrix Matrix::PersFov( const f64 fieldOfView, const f64 aspectRatio, const f64 nearClip, const f64 farClip )
 {
-    register f64 diff = nearClip - farClip;
-    register f64 yScale = 1.0 / tan( fieldOfView / 2.0 );
+    register f64 diff = farClip - nearClip;
+    register f64 yScale = 1.0 / tan( fieldOfView * 0.5 );
     register f64 xScale = yScale / aspectRatio;
 
     Matrix result;
@@ -503,7 +503,7 @@ Matrix Matrix::PersFov( const f64 fieldOfView, const f64 aspectRatio, const f64 
 
     result._41 = 0.0;
     result._42 = 0.0;
-    result._43 = (nearClip * farClip) / diff;
+    result._43 = - (nearClip * farClip) / diff;
     result._44 = 0.0;
 
     return result;

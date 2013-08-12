@@ -120,9 +120,9 @@ void WriteBmp( FILE* pFile, const int width, const int height, const Color3* pPi
     WriteBmpFileHeader( fileHeader, pFile );
     WriteBmpInfoHeader( infoHeader, pFile );
 
-    for ( int i=0; i<height; ++i )
+    for ( int i=height-1; i>=0; --i )
     {
-        for( int j=0; j<width; ++j )
+        for( int j=width-1; j>=0; --j )
         {
             int index = ( i * width ) + j;
 

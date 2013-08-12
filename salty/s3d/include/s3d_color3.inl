@@ -26,7 +26,7 @@ Color3::Color3()
 S3D_INLINE
 Color3::Color3( const f64 nr, const f64 ng, const f64 nb )
 : r( nr )
-, g( nb )
+, g( ng )
 , b( nb )
 { /* DO_NOTHING */ }
 

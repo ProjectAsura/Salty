@@ -117,24 +117,29 @@ bool App::Impl::Init()
 
     // カメラ更新.
     m_Camera.Update( 
-        Vector3( 50.0, 50.0, 250.0 ),
-        Vector3( 50.0, 50.0, 180.0 ),
+        Vector3( 0.0, 0.0, -250.0 ),
+        Vector3( 0.0, 0.0, 0.0 ),
         Vector3( 0.0, 1.0, 0.0 ),
         D_PIDIV4, 
         aspectRatio,
         1.0,
         10000.0 );
 
-    // シェイプリストに追加.
-    m_Shapes.push_back( new Sphere( Vector3( 1e5 + 1, 40.8,  81.6    ), 1e5,  Color3( 1.0,  0.15, 0.15 ) ) );
-    m_Shapes.push_back( new Sphere( Vector3( -1e5+99, 40.8,  81.6    ), 1e5,  Color3( 0.15, 0.15, 1.0  ) ) );
-    m_Shapes.push_back( new Sphere( Vector3( 50,      40.8,  1e5     ), 1e5,  Color3( 0.15, 1.0,  0.15 ) ) );
-    m_Shapes.push_back( new Sphere( Vector3( 50,      40.8, -1e5+250 ), 1e5,  Color3( 0.0,  0.0,  0.15 ) ) );
-    m_Shapes.push_back( new Sphere( Vector3( 50,      1e5,  81.6     ), 1e5,  Color3( 1.0,  1.0,  0.15 ) ) );
-    m_Shapes.push_back( new Sphere( Vector3( 50, -1e5+81.6, 81.6     ), 1e5,  Color3( 1.0, 0.15,  1.0  ) ) );
-    m_Shapes.push_back( new Sphere( Vector3( 27,      16.5, 47       ), 16.5, Color3( 1.0, 1.0,   1.0  ) ) );
-    m_Shapes.push_back( new Sphere( Vector3( 73,      16.5, 78       ), 16.5, Color3( 1.0, 1.0,   1.0  ) ) );
-    m_Shapes.push_back( new Sphere( Vector3( 50.0,    75.0, 81.6     ), 5.0,  Color3( 1.0, 1.0,   1.0  ) ) );
+    //// シェイプリストに追加.
+    //m_Shapes.push_back( new Sphere( Vector3( 1e5 + 1, 40.8,  81.6    ), 1e5,  Color3( 1.0,  0.15, 0.15 ) ) );
+    //m_Shapes.push_back( new Sphere( Vector3( -1e5+99, 40.8,  81.6    ), 1e5,  Color3( 0.15, 0.15, 1.0  ) ) );
+    //m_Shapes.push_back( new Sphere( Vector3( 50,      40.8,  1e5     ), 1e5,  Color3( 0.15, 1.0,  0.15 ) ) );
+    //m_Shapes.push_back( new Sphere( Vector3( 50,      40.8, -1e5+250 ), 1e5,  Color3( 0.0,  0.0,  0.15 ) ) );
+    //m_Shapes.push_back( new Sphere( Vector3( 50,      1e5,  81.6     ), 1e5,  Color3( 1.0,  1.0,  0.15 ) ) );
+    //m_Shapes.push_back( new Sphere( Vector3( 50, -1e5+81.6, 81.6     ), 1e5,  Color3( 1.0, 0.15,  1.0  ) ) );
+    //m_Shapes.push_back( new Sphere( Vector3( 0,      0.0, 0.0       ), 16.5, Color3( 1.0, 1.0,   1.0  ) ) );
+    //m_Shapes.push_back( new Sphere( Vector3( 73,      16.5, 78       ), 16.5, Color3( 1.0, 1.0,   1.0  ) ) );
+    //m_Shapes.push_back( new Sphere( Vector3( 50.0,    75.0, 81.6     ), 5.0,  Color3( 1.0, 1.0,   1.0  ) ) );
+    m_Shapes.push_back( new Triangle( 
+        Vector3( -20.0, -20.0, 0.0 ),
+        Vector3( 0.0, 20.0, 0.0 ),
+        Vector3( 20.0, -20.0, 0.0 ),
+        Color3( 0.0, 0.0, 1.0 ) ) );
 
     return true;
 }
@@ -188,14 +193,11 @@ void App::Impl::PathTrace()
     {
         for( u32 j=0; j<m_Width; ++j )
         {
-            register f64 r1 = 2.0 * m_Random.GetAsF64();
-            register f64 r2 = 2.0 * m_Random.GetAsF64();
+            const f64 dx = 0.0;
+            const f64 dy = 0.0;
 
-            const f64 dx = ( r1 < 1.0 ) ? sqrt( r1 ) - 1.0 : 1.0 - sqrt( 2.0 - r1 );
-            const f64 dy = ( r2 < 1.0 ) ? sqrt( r2 ) - 1.0 : 1.0 - sqrt( 2.0 - r2 );
-
-            const f64 x = -2.0 * ( static_cast<f64>( i ) + dx ) / m_Width  + 1.0;
-            const f64 y = -2.0 * ( static_cast<f64>( j ) + dy ) / m_Height + 1.0;
+            const f64 x = 2.0 * ( static_cast<f64>( j ) + dx ) / m_Width  - 1.0;
+            const f64 y = 2.0 * ( static_cast<f64>( i ) + dy ) / m_Height - 1.0;
 
             Ray ray = m_Camera.GetRay( x, y );
             Color3 color = Trace( ray );

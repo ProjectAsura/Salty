@@ -31,7 +31,7 @@ public:
     BVH( IShape*, IShape* );
     BVH( IShape*, IShape*, const BoundingBox& );
 
-    void Init   ( IShape**, const s32 );
+    void Init   ( IShape**, const u32 );
     bool IsHit  ( const Ray&, const f64, const f64, ShadeRec& );
 
     BoundingBox GetAABB    () const;

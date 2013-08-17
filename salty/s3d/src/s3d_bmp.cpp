@@ -126,17 +126,12 @@ void WriteBmp( FILE* pFile, const int width, const int height, const Color3* pPi
         {
             int index = ( i * width ) + j;
 
-            Color3 pixel = pPixel[index];
-
-            pixel.r = pow( pixel.r, 1.0 / 2.2 );
-            pixel.g = pow( pixel.g, 1.0 / 2.2 );
-            pixel.b = pow( pixel.b, 1.0 / 2.2 );
-
+            Color3 pixel = Color3::GammaCorrection( pPixel[index], 2.2 );
             pixel.Clamp();
 
-            unsigned char r = (unsigned char)( pixel.r * 255.0 );
-            unsigned char g = (unsigned char)( pixel.g * 255.0 );
-            unsigned char b = (unsigned char)( pixel.b * 255.0 );
+            unsigned char r = (unsigned char)( pixel.r * 255.0 + 0.5 );
+            unsigned char g = (unsigned char)( pixel.g * 255.0 + 0.5 );
+            unsigned char b = (unsigned char)( pixel.b * 255.0 + 0.5 );
 
             {
                 fwrite( &b, sizeof(unsigned char), 1, pFile );

@@ -62,6 +62,10 @@ void Triangle::ComputeNormal()
 //-----------------------------------------------------------------------------
 bool Triangle::IsHit( const Ray& ray, const f64 mini, const f64 maxi, ShadeRec& shadeRec )
 {
+    // 背面カリングをするため，裏面にヒットした場合は衝突していないとみなす.
+    if ( Vector3::Dot( ray.GetDir(), normal ) > 0.0 )
+    { return false; }
+
     Vector3 e1 = p1 - p0;
     Vector3 e2 = p2 - p0;
     Vector3 dir = ray.GetDir();
@@ -73,31 +77,22 @@ bool Triangle::IsHit( const Ray& ray, const f64 mini, const f64 maxi, ShadeRec& 
         
     Vector3 d = ray.GetPos() - p0;
     register f64 b1 = Vector3::Dot( d, s1 ) / div;
-    if ( b1 < 0.0 || b1 > 1.0 )
+    if ( b1 <= 0.0 || b1 >= 1.0 )
     { return false; }
     
     Vector3 s2 = Vector3::Cross( d, e1 );
     register f64 b2 = Vector3::Dot( dir, s2 ) / div;
-    if ( b2 < 0.0 || ( b1 + b2 ) > 1.0 )
+    if ( b2 <= 0.0 || ( b1 + b2 ) >= 1.0 )
     { return false; }
     
     register f64 dist = Vector3::Dot( e2, s2 ) / div;
     
     if ( dist < mini || dist > maxi )
     { return false; }
-    
-    shadeRec.dist   = dist;
-    if ( Vector3::Dot( ray.GetDir(), normal ) > 0.0 )
-    {
-        // 裏面と衝突した場合は，法線ベクトルは逆向きにする.
-        shadeRec.normal = -normal;
-    }
-    else
-    {
-        // 表面と衝突した場合は，法線ベクトルをそのまま使用.
-        shadeRec.normal = normal;
-    }
-    shadeRec.pMaterial = pMaterial;
+
+    shadeRec.normal     = normal;
+    shadeRec.dist       = dist;
+    shadeRec.pMaterial  = pMaterial;
 
     return true;
 }

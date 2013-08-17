@@ -73,14 +73,11 @@ void Quad::ComputeQuadNormal()
     Vector3 n1b = ComputeNormal( p0, p2, p3 );
     Vector3 n2a = ComputeNormal( p1, p2, p3 );
     Vector3 n2b = ComputeNormal( p1, p3, p2 );
+
     if ( Vector3::Dot( n1a, n1b ) > Vector3::Dot( n2a, n2b ) )
-    {
-        normal = Vector3::UnitVector( n1a + n1b );
-    }
+    { normal = Vector3::UnitVector( n1a + n1b ); }
     else
-    {
-        normal = Vector3::UnitVector( n2a + n2b );
-    }
+    { normal = Vector3::UnitVector( n2a + n2b ); }
 }
 
 //--------------------------------------------------------------------------------
@@ -97,6 +94,10 @@ bool Quad::IsHitTriangle
     ShadeRec& shadeRec
 )
 {
+    // 裏面と衝突した場合は，カリングするため衝突していないとみなす.
+    if ( Vector3::Dot( ray.GetDir(), normal ) > 0.0 )
+    { return false; }
+
     Vector3 e1 = b - a;
     Vector3 e2 = c - a;
     Vector3 dir = ray.GetDir();
@@ -121,18 +122,9 @@ bool Quad::IsHitTriangle
     if ( dist < mini || dist > maxi )
     { return false; }
 
-    if ( Vector3::Dot( ray.GetDir(), normal ) > 0.0 )
-    {
-        // 裏面と衝突した場合は，法線ベクトルは逆向きにする.
-        shadeRec.normal = -normal;
-    }
-    else
-    {
-        // 表面と衝突した場合は，法線ベクトルをそのまま使用.
-        shadeRec.normal = normal;
-    }
-    shadeRec.dist      = dist;
-    shadeRec.pMaterial = pMaterial;
+    shadeRec.normal     = normal;
+    shadeRec.dist       = dist;
+    shadeRec.pMaterial  = pMaterial;
 
     return true;
 }
@@ -144,7 +136,7 @@ bool Quad::IsHit( const Ray& ray, const f64 mini, const f64 maxi, ShadeRec& shad
 {
     if ( IsHitTriangle( ray, p0, p1, p2, mini, maxi, shadeRec ) )
     { return true; }
-    else if ( IsHitTriangle( ray, p0, p2, p3, mini, maxi, shadeRec ) )
+    else if ( IsHitTriangle( ray, p2, p3, p0, mini, maxi, shadeRec ) )
     { return true; }
 
     return false;

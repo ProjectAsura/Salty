@@ -1,26 +1,25 @@
-﻿//-----------------------------------------------------------------------------
-// File : s3d_camera.h
-// Desc : Camera Module.
+﻿//------------------------------------------------------------------------------
+// File : s3d_timer.h
+// Desc : Timer Module.
 // Copyright(c) Project Asura. All right reserved.
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
-#ifndef __S3D_CAMERA_H__
-#define __S3D_CAMERA_H__
+#ifndef __S3D_TIMER_H__
+#define __S3D_TIMER_H__
 
 //------------------------------------------------------------------------------
 // Includes
 //------------------------------------------------------------------------------
-#include <s3d_vector3.h>
-#include <s3d_matrix.h>
-#include <s3d_ray.h>
+#include <s3d_typedef.h>
+#include <Windows.h>
 
 
 namespace s3d {
 
 ////////////////////////////////////////////////////////////////////////////////
-// Camera class
+// Timer class
 ////////////////////////////////////////////////////////////////////////////////
-class Camera
+class Timer
 {
     //==========================================================================
     // list of friend classes and methods.
@@ -29,26 +28,20 @@ class Camera
 
 public:
     //==========================================================================
-    // public variables.
+    // pubic variables.
     //==========================================================================
     /* NOTHING */
 
     //==========================================================================
-    // public methods.
+    // public methods
     //==========================================================================
-    Camera();
-    Camera( const Camera& );
-
-    void Update( 
-        const Vector3&,
-        const Vector3&,
-        const Vector3&,
-        const f64,
-        const f64,
-        const f64,
-        const f64 );
-
-    Ray GetRay( const f64, const f64 ) const;
+    Timer();
+    void Start();
+    void Stop ();
+    f64  GetElapsedTimeMsec() const;
+    f64  GetElapsedTimeSec () const;
+    f64  GetElapsedTimeMin () const;
+    f64  GetElapsedTimeHour() const;
 
 protected:
     //==========================================================================
@@ -65,23 +58,16 @@ private:
     //==========================================================================
     // private variables.
     //==========================================================================
-    Vector3 m_Position;
-    Vector3 m_Target;
-    Vector3 m_Upward;
-    f64     m_FieldOfView;
-    f64     m_AspectRatio;
-    f64     m_NearClip;
-    f64     m_FarClip;
-    Matrix  m_View;
-    Matrix  m_Proj;
-    Matrix  m_InvViewProj;
+    s64 m_StartTime;
+    s64 m_StopTime;
+    f64 m_InvTicksPerSec;
 
     //==========================================================================
-    // private methods.
+    // private methods
     //==========================================================================
-    /* NOTHING */
+    Timer           ( const Timer& );
+    void operator = ( const Timer& );
 };
-
 
 } // namespace s3d
 
@@ -89,6 +75,7 @@ private:
 //------------------------------------------------------------------------------
 // Inlines
 //------------------------------------------------------------------------------
-#include <s3d_camera.inl>
+#include <s3d_timer.inl>
 
-#endif//__S3D_CAMERA_H__
+
+#endif//__S3D_TIMER_H__

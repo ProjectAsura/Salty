@@ -84,7 +84,10 @@ void OrthonormalBasis::InitFromW( const Vector3& value )
     u = Vector3::Cross( w, n );
     if ( u.Length() < ONB_EPSILON )
     { u = Vector3::Cross( w, m ); }
+    u.Normalize();
+
     v = Vector3::Cross( w, u );
+    v.Normalize();
 }
 
 //----------------------------------------------------------------------------------

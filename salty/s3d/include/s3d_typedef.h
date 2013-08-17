@@ -42,4 +42,15 @@ typedef double              f64;
 #endif//S3D_INLINE
 
 
+#ifndef S3D_UNUSED_VAR
+#define S3D_UNUSED_VAR(x)       ((void*)&x)
+#endif//S3D_UNUSED_VAR
+
+#if defined(DEBUG) || defined(_DEBUG)
+#define S3D_DEBUG  1
+#else
+#define S3D_DEBUG  0
+#endif
+
+
 #endif//__S3D_TYPEDEF_H__

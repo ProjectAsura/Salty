@@ -12,6 +12,7 @@
 //--------------------------------------------------------------------------------
 #include <s3d_typedef.h>
 #include <cmath>
+#include <cassert>
 
 
 namespace s3d {
@@ -62,6 +63,8 @@ public:
     static Vector3 Min  ( const Vector3&, const Vector3& );
     static Vector3 Max  ( const Vector3&, const Vector3& );
     static Vector3 UnitVector( const Vector3& );
+    static Vector3 Reflect( const Vector3&, const Vector3& );
+    static Vector3 Refract( const Vector3&, const Vector3&, const f64 );
 };
 
 

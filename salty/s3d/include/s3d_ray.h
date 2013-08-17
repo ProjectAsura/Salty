@@ -46,7 +46,9 @@ public:
     s32     GetSignX    ( void ) const;
     s32     GetSignY    ( void ) const;
     s32     GetSignZ    ( void ) const;
-    Vector3 Step        ( const f64 ) const;
+    void    Step        ( const f64 );
+
+    static Vector3 Step ( const Ray&, const f64 );
 
     Ray& operator =  ( const Ray& );
 

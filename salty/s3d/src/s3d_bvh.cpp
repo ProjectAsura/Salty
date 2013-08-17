@@ -86,7 +86,7 @@ BVH::BVH( IShape* pShape1, IShape* pShape2 )
 //--------------------------------------------------------------------------
 //      初期化処理を行います.
 //--------------------------------------------------------------------------
-void BVH::Init( IShape** ppShapes, const s32 numShapes )
+void BVH::Init( IShape** ppShapes, const u32 numShapes )
 {
     if ( numShapes == 1 )
     { (*this) = BVH( ppShapes[0], ppShapes[0] ); }
@@ -94,7 +94,7 @@ void BVH::Init( IShape** ppShapes, const s32 numShapes )
     { (*this) = BVH( ppShapes[0], ppShapes[1] ); }
 
     aabb = ppShapes[0]->GetAABB();
-    for( s32 i=1; i<numShapes; ++i )
+    for( u32 i=1; i<numShapes; ++i )
     { aabb = BoundingBox::Merge( aabb, ppShapes[i]->GetAABB() ); }
 
     Vector3 pivot = ( aabb.max + aabb.min ) / 2.0;

@@ -11,6 +11,7 @@
 // Includes
 //-------------------------------------------------------------------------------------------
 #include <s3d_typedef.h>
+#include <cmath>
 
 
 namespace s3d {
@@ -48,6 +49,8 @@ public:
     Color3 operator /   ( const f64 )       const;
 
     void Clamp();
+
+    static Color3 GammaCorrection( const Color3&, const f64 );
 };
 
 

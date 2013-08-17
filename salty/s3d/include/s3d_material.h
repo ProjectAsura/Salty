@@ -12,9 +12,23 @@
 //----------------------------------------------------------------------------------
 #include <s3d_shape.h>
 #include <s3d_color3.h>
+#include <s3d_rand.h>
 
 
 namespace s3d {
+
+/////////////////////////////////////////////////////////////////////////////////////
+// ShadeArg structure
+/////////////////////////////////////////////////////////////////////////////////////
+struct ShadeArg
+{
+    Vector3     input;          //!< 入射方向.
+    Vector3     normal;         //!< 法線ベクトル.
+    Vector3     output;         //!< 出射方向.
+    Random      random;         //!< 乱数.
+    f64         probability;    //!< 確率.
+};
+
 
 /////////////////////////////////////////////////////////////////////////////////////
 // IMaterial interface
@@ -22,13 +36,18 @@ namespace s3d {
 struct IMaterial
 {
 public:
-    virtual Color3 Shade( const Vector3&, const Vector3&, Vector3& ) = 0;
+    virtual f64     GetThreshold() const = 0;
+    virtual Color3  Le( ShadeArg& ) = 0;
+    virtual Color3  Wr( ShadeArg& ) = 0;
+#if S3D_DEBUG
+    virtual Color3  GetColor() const = 0;
+#endif//S3D_DEBUG
 };
 
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Matte class
-// (Lambert)
+// (Lambert Model)
 /////////////////////////////////////////////////////////////////////////////////////
 class Matte : public IMaterial
 {
@@ -46,10 +65,16 @@ public:
     //==============================================================================
     // public methods.
     //==============================================================================
-    Matte( const Color3& );
+    Matte( const Color3&, const Color3& = Color3(0.0, 0.0, 0.0) );
     Matte( const Matte& );
 
-    Color3 Shade( const Vector3&, const Vector3&, Vector3& );
+    f64     GetThreshold() const;
+    Color3  Le( ShadeArg& );
+    Color3  Wr( ShadeArg& );
+
+#if S3D_DEBUG
+    Color3   GetColor() const;
+#endif//S3D_DEBUG
 
 protected:
     //==============================================================================
@@ -66,7 +91,9 @@ private:
     //==============================================================================
     // private variables.
     //==============================================================================
-    Color3  m_Color;
+    Color3  m_Diffuse;
+    Color3  m_Emissive;
+    f64     m_Threshold;
 
     //==============================================================================
     // private methods.
@@ -77,7 +104,7 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Clay class
-// (Oren-Nayer)
+// (Oren-Nayer Model)
 /////////////////////////////////////////////////////////////////////////////////////
 class Clay : public IMaterial
 {
@@ -95,10 +122,16 @@ public:
     //==============================================================================
     // public methods.
     //==============================================================================
-    Clay( const Color3&, const f64 );
+    Clay( const Color3&, const f64, const Color3& = Color3( 0.0, 0.0, 0.0 ) );
     Clay( const Clay& );
 
-    Color3 Shade( const Vector3&, const Vector3&, Vector3& );
+    f64     GetThreshold() const;
+    Color3  Le( ShadeArg& );
+    Color3  Wr( ShadeArg& );
+
+#if S3D_DEBUG
+    Color3   GetColor() const;
+#endif//S3D_DEBUG
 
 protected:
     //==============================================================================
@@ -115,8 +148,10 @@ private:
     //==============================================================================
     // private variables.
     //==============================================================================
-    Color3  m_Color;
+    Color3  m_Diffuse;
+    Color3  m_Emissive;
     f64     m_Roughness;
+    f64     m_Threshold;
 
     //==============================================================================
     // private methods.
@@ -127,7 +162,7 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Plastic class
-// (Phong)
+// (Phong Model)
 /////////////////////////////////////////////////////////////////////////////////////
 class Plastic : public IMaterial
 {
@@ -148,7 +183,9 @@ public:
     Plastic( const Color3&, const f64, IMaterial* );
     Plastic( const Plastic& );
 
-    Color3 Shade( const Vector3&, const Vector3&, Vector3& );
+    f64     GetThreshold() const;
+    Color3  Le( ShadeArg& );
+    Color3  Wr( ShadeArg& );
 
 protected:
     //==============================================================================
@@ -168,6 +205,7 @@ private:
     Color3      m_Color;
     f64         m_Power;
     IMaterial*  m_pDiffuse;
+    f64         m_Threshold;
 
     //==============================================================================
     // private methods.
@@ -178,7 +216,7 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Metal class
-// (Cook-Torrance)
+// (Cook-Torrance Model)
 /////////////////////////////////////////////////////////////////////////////////////
 class Metal : public IMaterial
 {
@@ -199,7 +237,9 @@ public:
     Metal( const Color3&, const f64, const f64, IMaterial* );
     Metal( const Metal& );
 
-    Color3 Shade( const Vector3&, const Vector3&, Vector3& );
+    f64     GetThreshold() const;
+    Color3  Le( ShadeArg& );
+    Color3  Wr( ShadeArg& );
 
 protected:
     //==============================================================================
@@ -220,6 +260,7 @@ private:
     f64         m_Roughness;
     f64         m_Fresnel;
     IMaterial*  m_pDiffuse;
+    f64         m_Threshold;
 
     //==============================================================================
     // private methods.
@@ -247,10 +288,16 @@ public:
     //==============================================================================
     // public methods.
     //==============================================================================
-    Mirror( const Color3&, const f64 );
+    Mirror( const Color3&, const Color3& = Color3(0.0, 0.0, 0.0) );
     Mirror( const Mirror& );
 
-    Color3 Shade( const Vector3&, const Vector3&, Vector3& );
+    f64     GetThreshold() const;
+    Color3  Le( ShadeArg& );
+    Color3  Wr( ShadeArg& );
+
+#if S3D_DEBUG
+    Color3   GetColor() const;
+#endif//S3D_DEBUG
 
 protected:
     //==============================================================================
@@ -267,8 +314,9 @@ private:
     //==============================================================================
     // private variables.
     //==============================================================================
-    Color3  m_Color;
-    f64     m_Reflectivity;
+    Color3  m_Specular;
+    Color3  m_Emissive;
+    f64     m_Threshold;
 
     //==============================================================================
     // private methods.
@@ -296,10 +344,16 @@ public:
     //==============================================================================
     // public methods.
     //==============================================================================
-    Glass( const Color3&, const f64 );
+    Glass( const Color3&, const f64, const Color3& = Color3(0.0, 0.0, 0.0) );
     Glass( const Glass& );
 
-    Color3 Shade( const Vector3&, const Vector3&, Vector3& );
+    f64     GetThreshold() const;
+    Color3  Le( ShadeArg& );
+    Color3  Wr( ShadeArg& );
+
+#if S3D_DEBUG
+    Color3   GetColor() const;
+#endif//S3D_DEBUG
 
 protected:
     //==============================================================================
@@ -316,8 +370,10 @@ private:
     //==============================================================================
     // private variables.
     //==============================================================================
-    Color3  m_Color;
+    Color3  m_Specular;
+    Color3  m_Emissive;
     f64     m_Refractivity;
+    f64     m_Threshold;
 
     //==============================================================================
     // private methods.

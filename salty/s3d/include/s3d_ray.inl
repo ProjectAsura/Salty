@@ -110,8 +110,12 @@ s32 Ray::GetSignZ() const
 //      レイを進めます.
 //------------------------------------------------------------------------------
 S3D_INLINE
-Vector3 Ray::Step( const f64 dist ) const
-{ return pos + dir * dist; }
+void Ray::Step( const f64 dist )
+{ 
+    pos.x = pos.x + dir.x * dist;
+    pos.y = pos.y + dir.y * dist;
+    pos.z = pos.z + dir.z * dist;
+}
 
 //------------------------------------------------------------------------------
 //      代入演算子です.
@@ -126,6 +130,18 @@ Ray& Ray::operator = ( const Ray& value )
     signY  = value.signY;
     signZ  = value.signZ;
     return (*this);
+}
+
+//------------------------------------------------------------------------------
+//      レイを進めます.
+//------------------------------------------------------------------------------
+S3D_INLINE
+Vector3 Ray::Step( const Ray& value, const f64 dist )
+{
+    return Vector3(
+        value.pos.x + value.dir.x * dist,
+        value.pos.y + value.dir.y * dist,
+        value.pos.z + value.dir.z * dist );
 }
 
 } // namespace s3d

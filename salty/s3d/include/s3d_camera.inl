@@ -69,7 +69,7 @@ void Camera::Update
 //      レイを取得します.
 //------------------------------------------------------------------------------
 S3D_INLINE
-Ray Camera::GetRay( const f64 x, const f64 y )
+Ray Camera::GetRay( const f64 x, const f64 y ) const
 {
     register f64 X = ( x * m_InvViewProj._11 ) + ( y * m_InvViewProj._21 ) + m_InvViewProj._41;
     register f64 Y = ( x * m_InvViewProj._12 ) + ( y * m_InvViewProj._22 ) + m_InvViewProj._42;
@@ -77,7 +77,7 @@ Ray Camera::GetRay( const f64 x, const f64 y )
     register f64 W = ( x * m_InvViewProj._14 ) + ( y * m_InvViewProj._24 ) + m_InvViewProj._44;
 
     Vector3 pos( X / W, Y / W, Z / W );
-    Vector3 dir = Vector3::UnitVector( pos - m_Position);
+    Vector3 dir = Vector3::UnitVector( pos - m_Position );
 
     return Ray( m_Position, dir );
 }

@@ -195,6 +195,18 @@ void Color3::Clamp()
     if ( b < 0.0f )    { b = 0.0f; }
 }
 
+//------------------------------------------------------------------------------
+//      ガンマ補正します.
+//------------------------------------------------------------------------------
+S3D_INLINE
+Color3 Color3::GammaCorrection( const Color3& value, const f64 gamma )
+{
+    return Color3(
+        pow( value.r, 1.0 / gamma ),
+        pow( value.g, 1.0 / gamma ),
+        pow( value.b, 1.0 / gamma ) );
+}
+
 } // namespace s3d
 
 

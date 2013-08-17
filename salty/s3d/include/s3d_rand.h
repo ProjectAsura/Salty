@@ -36,10 +36,13 @@ public:
     //==========================================================================
     Random();
     Random( const u32 );
+    Random( const Random& );
 
     void SetSeed( const u32 );
     u32  GetAsU32();
     f64  GetAsF64();
+
+    Random& operator = ( const Random& );
 
 protected:
     //==========================================================================

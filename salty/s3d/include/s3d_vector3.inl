@@ -94,6 +94,7 @@ Vector3& Vector3::operator *= ( const f64 value )
 S3D_INLINE
 Vector3& Vector3::operator /= ( const f64 value )
 {
+    assert( value != 0.0 );
     x /= value;
     y /= value;
     z /= value;
@@ -142,7 +143,10 @@ Vector3 Vector3::operator * ( const f64 value ) const
 //------------------------------------------------------------------------------
 S3D_INLINE
 Vector3 Vector3::operator / ( const f64 value ) const
-{ return Vector3( x / value, y / value, z / value ); }
+{
+    assert( value != 0.0 );
+    return Vector3( x / value, y / value, z / value );
+}
 
 //------------------------------------------------------------------------------
 //      等価演算子です.
@@ -173,9 +177,12 @@ S3D_INLINE
 void Vector3::Normalize()
 {
     register f64 mag = sqrt( x * x + y * y + z * z );
-    x /= mag;
-    y /= mag;
-    z /= mag;
+    //if ( mag != 0.0 )
+    {
+        x /= mag;
+        y /= mag;
+        z /= mag;
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -242,9 +249,54 @@ S3D_INLINE
 Vector3 Vector3::UnitVector( const Vector3& value )
 {
     register f64 mag = sqrt( value.x * value.x + value.y * value.y + value.z * value.z );
-    return Vector3( value.x / mag, value.y / mag, value.z / mag );
+    //if ( mag != 0.0 )
+    {
+        return Vector3( 
+            value.x / mag, 
+            value.y / mag,
+            value.z / mag );
+    }
+    //else
+    //{
+    //    return Vector3(
+    //        value.x,
+    //        value.y,
+    //        value.z );
+    //}
 }
 
+//------------------------------------------------------------------------------
+//      反射ベクトルを求めます.
+//------------------------------------------------------------------------------
+S3D_INLINE
+Vector3 Vector3::Reflect( const Vector3& i, const Vector3& n )
+{
+    register f64 dot = ( n.x * i.x ) + ( n.y * i.y ) + ( n.z * i.z );
+    register f64 _2dot = 2.0 * dot;
+
+    return Vector3(
+        i.x - ( _2dot * n.x ),
+        i.y - ( _2dot * n.y ),
+        i.z - ( _2dot * n.z ) );
+}
+
+//------------------------------------------------------------------------------
+//      屈折ベクトルを求めます.
+//------------------------------------------------------------------------------
+S3D_INLINE
+Vector3 Vector3::Refract( const Vector3& i, const Vector3&n, const f64 eta )
+{
+    register f64 dot     = ( i.x * n.x ) + ( i.y * n.y ) + ( i.z * n.z );
+    register f64 cos2t   = 1.0 - eta * eta * ( 1.0 - dot * dot );
+    register f64 sign    = ( cos2t > 0.0 ) ? 1.0 : -1.0;
+    register f64 sqrt_c2 = sqrt( fabs( cos2t ) );
+    register f64 coeff   = eta * dot - sqrt_c2;
+
+    return Vector3(
+        sign * ( eta * -i.x + coeff * n.x ),
+        sign * ( eta * -i.y + coeff * n.y ),
+        sign * ( eta * -i.z + coeff * n.z ) );
+}
 
 } // namespace s3d
 

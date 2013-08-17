@@ -43,22 +43,49 @@ bool Sphere::IsHit( const Ray& ray, const f64 mini, const f64 maxi, ShadeRec& sh
     register f64 b = Vector3::Dot( d, ray.GetDir() );
     register f64 det = ( b * b ) - Vector3::Dot( d, d ) + ( radius * radius );
 
-    if ( det <= 0.0 )
+    if ( det < 0.0 )
     { return false; }
     
     det = sqrt( det );
     
+#if 1
     register f64 dist = b - det;
-    if ( dist < mini || dist > maxi)
+    if ( dist < mini || dist > maxi )
     {
         dist = b + det;
         if ( dist < mini || dist > maxi )
         { return false; }
     }
+#else
+    register f64 t1 = b - det;
+    register f64 t2 = b + det;
+
+    if ( t1 < mini && t2 < mini )
+    { return false; }
+
+    f64 dist = 0.0;
+    //f64 dist = -1.0;
+    if ( t1 > mini )
+    { dist = t1; }
+    else
+    { dist = t2; }
+
+    //if ( dist < mini || dist > maxi )
+    //{ return false; }
+#endif
+
+    Vector3 pos = Ray::Step( ray, dist );
+    Vector3 nrm = Vector3::UnitVector( pos - center );
+
+#if 0
+    /* 球は，屈折により物体内部を進む場合があるので背面カリングしちゃだめ! */
+    //if ( Vector3::Dot( ray.GetDir(), nrm ) > 0.0 )
+    //{ return false; }
+#endif
     
-    shadeRec.dist      = dist;
-    shadeRec.normal    = Vector3::UnitVector( ray.Step(dist) - center );
-    shadeRec.pMaterial = pMaterial;
+    shadeRec.normal     = nrm;
+    shadeRec.dist       = dist;
+    shadeRec.pMaterial  = pMaterial;
 
     return true;
 }

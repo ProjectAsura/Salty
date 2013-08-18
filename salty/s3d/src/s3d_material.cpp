@@ -337,6 +337,44 @@ Color3 Glass::Le( ShadeArg& arg )
 
 Color3 Glass::Wr( ShadeArg& arg )
 {
+    //Vector3 normalOrg = arg.normal;
+    //Vector3 normalMod = ( Vector3::Dot( arg.input, arg.normal ) < 0.0 ) ? arg.normal : -arg.normal;
+
+    //OrthonormalBasis onb;
+    //onb.w = normalMod;
+    //if ( fabs( normalMod.x ) > 1e-6 )
+    //{
+    //    onb.u = Vector3::Cross( Vector3( 0.0, 1.0, 0.0 ), onb.w );
+    //    onb.u.Normalize();
+    //}
+    //else
+    //{
+    //    onb.u = Vector3::Cross( Vector3( 1.0, 0.0, 0.0 ), onb.w );
+    //    onb.u.Normalize();
+    //}
+    //onb.v = Vector3::Cross( onb.w, onb.u );
+    //onb.v.Normalize();
+
+    //// サンプリング方向についての確率密度関数 pdf(ω) = ( cosθ / π )とする.
+    //const f64 r1  = D_2PI * arg.random.GetAsF64();
+    //const f64 r2  = arg.random.GetAsF64();
+    //const f64 r2s = sqrt( r2 );
+    //const f64  x  = r2s * cos( r1 );
+    //const f64  y  = r2s * sin( r1 );
+    //const f64  z  = sqrt( 1.0 - r2 );
+
+    ////const f64 r = sqrt( arg.random.GetAsF64() );
+    ////const f64 x = r * cos( r1 );
+    ////const f64 y = r * sin( r1 );
+    ////const f64 z = sqrt( 1.0 - x * x - y * y );
+
+    //// 出射方向を決定.
+    //arg.output = Vector3::UnitVector(
+    //    onb.u * x + onb.v * y + onb.w * z );
+    //return m_Specular / arg.probability;
+
+
+
     Vector3 normalOrg = arg.normal;
     Vector3 normalMod = ( Vector3::Dot( arg.input, arg.normal ) < 0.0 ) ? arg.normal : -arg.normal;
 
@@ -352,9 +390,12 @@ Color3 Glass::Wr( ShadeArg& arg )
 
     if (cos2t < 0.0)
     {
+        Color3 result = m_Specular / arg.probability;
+
         // 全反射
         arg.output = reflect;
-        return m_Specular / arg.probability;
+        //return result;
+        return Color3( 0.0, 1.0, 0.0 );
     }
 
     // 屈折の方向
@@ -365,24 +406,32 @@ Color3 Glass::Wr( ShadeArg& arg )
     const double b = nt + nc;
     const double R0 = (a * a) / (b * b);
 
-    const double c = 1.0 - (into ? -ddn : Vector3::Dot(refract, normalOrg));
+    const double c  = 1.0 - (into ? -ddn : Vector3::Dot(refract, normalOrg));
     const double Re = R0 + (1.0 - R0) * pow(c, 5.0); // 反射方向の光が反射してray.dirの方向に運ぶ割合。同時に屈折方向の光が反射する方向に運ぶ割合。
     const double Tr = ( 1.0 - Re );
 
     // 一定以上レイを追跡したら屈折と反射のどちらか一方を追跡する
     // ロシアンルーレットで決定する。
     const double P = 0.25 + 0.5 * Re;
-    if (arg.random.GetAsF64() < P)
+
+    f64 rnd = arg.random.GetAsF64();
+    if (arg.random.GetAsF64() > P)
     {
+        Color3 result = m_Specular * Re / ( P * arg.probability );
+
         // 反射
         arg.output = reflect;
-        return m_Specular * Re / ( P * arg.probability );
+        //return result;
+        return Color3( 0.0, 0.0, 1.0 );
     }
     else
     {
+        Color3 result = m_Specular * Tr / (( 1.0 - P ) * arg.probability );
+
         // 屈折
         arg.output = refract;
-        return m_Specular * Tr / (( 1.0 - P ) * arg.probability );
+//        return result;
+        return Color3( 1.0, 0.0, 0.0 );
     }
 }
 

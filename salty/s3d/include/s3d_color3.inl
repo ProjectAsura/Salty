@@ -180,6 +180,22 @@ S3D_INLINE
 Color3 Color3::operator / ( const f64 value ) const
 { return Color3( r / value, g / value, b / value ); }
 
+S3D_INLINE
+bool Color3::operator == ( const Color3& value ) const
+{
+    return ( r == value.r )
+        && ( g == value.g )
+        && ( b == value.b );
+}
+
+S3D_INLINE
+bool Color3::operator != ( const Color3& value ) const
+{
+    return ( r != value.r )
+        || ( g != value.g )
+        || ( b != value.b );
+}
+
 //------------------------------------------------------------------------------
 //      値を0.0~1.0に制限します.
 //------------------------------------------------------------------------------
@@ -205,6 +221,12 @@ Color3 Color3::GammaCorrection( const Color3& value, const f64 gamma )
         pow( value.r, 1.0 / gamma ),
         pow( value.g, 1.0 / gamma ),
         pow( value.b, 1.0 / gamma ) );
+}
+
+S3D_INLINE
+f64 Color3::Dot( const Color3& a, const Color3& b )
+{
+    return ( a.r * b.r ) + ( a.g * b.g ) + ( a.b * b.b ); 
 }
 
 } // namespace s3d

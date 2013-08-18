@@ -48,7 +48,7 @@ bool Sphere::IsHit( const Ray& ray, const f64 mini, const f64 maxi, ShadeRec& sh
     
     det = sqrt( det );
     
-#if 1
+#if 0
     register f64 dist = b - det;
     if ( dist < mini || dist > maxi )
     {

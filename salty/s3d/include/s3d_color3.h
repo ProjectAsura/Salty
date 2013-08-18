@@ -50,7 +50,11 @@ public:
 
     void Clamp();
 
+    bool operator == ( const Color3& ) const;
+    bool operator != ( const Color3& ) const;
+
     static Color3 GammaCorrection( const Color3&, const f64 );
+    static f64    Dot            ( const Color3&, const Color3& );
 };
 
 

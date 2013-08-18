@@ -47,7 +47,7 @@ private:
     //==========================================================================
     // private variables.
     //==========================================================================
-    static const s32 MAX_DEPTH = 32;
+    static const s32 MAX_DEPTH = 64;
     u32                     m_Width;
     u32                     m_Height;
     u32                     m_NumSamples;
@@ -246,7 +246,7 @@ bool App::Impl::Init()
 
     //// ミラーボール.
     //m_ppShapes[7] = new Sphere(
-    //    Vector3( -20.0, -30.0, 10.0 ),
+    //    Vector3( 20.0, -30.0, 10.0 ),
     //    16.5,
     //    m_ppMaterials[6] );
 
@@ -347,7 +347,7 @@ bool App::Impl::Intersect( const Ray& ray, ShadeRec& record )
     {
         if ( m_ppShapes[i]->IsHit( ray, DBL_EPSILON, DBL_MAX, temp ) )
         {
-            if ( temp.dist < record.dist )
+            if ( temp.dist > 0.0 && temp.dist < record.dist )
             { record = temp; }
         }
     }
@@ -411,14 +411,14 @@ Color3 App::Impl::Trace( const Ray& inputRay )
     Color3 L( 0.0, 0.0, 0.0 );
     Color3 W( 1.0, 1.0, 1.0 );
 
-    for( s32 depth = 0; /* NOTHING */ ; ++depth )
+    for( s32 depth = 0; /*depth < 4*/; ++depth )
     {
         // 交差判定.
         if ( !Intersect( ray, record ) )
-        { return L; }
+        { break; }
 
         // ロシアンルーレットで使用する値.
-        f64 probability = record.pMaterial->GetThreshold();
+        f64 probability = Max( record.pMaterial->GetThreshold(), 0.99 );
 
         // 引数設定.
         arg.input       = ray.GetDir();
@@ -427,17 +427,25 @@ Color3 App::Impl::Trace( const Ray& inputRay )
         arg.random      = m_Random;
 
         // Lだけはロシアンルーレットの前に実行する必要あり!
-        L += ( W * record.pMaterial->Le( arg ) );
+        Color3 Ke = record.pMaterial->Le( arg );
+        Color3 Lr = W * Ke;
+        //printf_s( "depth = %d, Lr = %lf, %lf, %lf\n", depth, Lr.r, Lr.g, Lr.b );
+        //printf_s( "depth = %d, L = %lf, %lf, %lf\n", depth, L.r, L.g, L.b );
+//        L += ( W * record.pMaterial->Le( arg ) );
+        L += Lr;
 
-        //// 最大深度以上になったら，打ち切るために閾値を急激に下げる.
-        //if ( depth > MAX_DEPTH )
-        //{ arg.probability *= pow( 0.5, depth - MAX_DEPTH ); }
+        if ( Color3::Dot( W, W ) <= 0.0 )
+        { break; }
 
-        if ( depth > 2 )
+        // 最大深度以上になったら，打ち切るために閾値を急激に下げる.
+        if ( depth > MAX_DEPTH )
+        { arg.probability *= pow( 0.5, depth - MAX_DEPTH ); }
+
+        if ( depth > 3 )
         {
             // ロシアンルーレット.
             if ( m_Random.GetAsF64() >= arg.probability )
-            { return L; }
+            { break; }
         }
         else
         {
@@ -448,6 +456,7 @@ Color3 App::Impl::Trace( const Ray& inputRay )
 
         // 重みを更新.
         W *= record.pMaterial->Wr( arg );
+        //printf_s( "depth = %d, W = %lf, %lf, %lf\n", depth, W.r, W.g, W.b );
 
         // レイを更新.
         ray.Step( record.dist );        // 衝突点まで移動.
@@ -478,6 +487,9 @@ void App::Impl::PathTrace()
     {
         printf_s( "process %lf%% completed.\n", 100.0 * i / ( m_Height - 1 ) );
 
+        m_Random.SetSeed( m_Height - 1 );
+
+
     #ifdef _OPENMP
         #pragma omp parallel for schedule(dynamic, 1) num_threads(8)
     #endif
@@ -488,8 +500,8 @@ void App::Impl::PathTrace()
             for( s32 s=0; s<(s32)m_NumSamples; ++s )
             {
                 // サブサンプリング.
-                for ( s32 sy=0; sy<(s32)m_NumSubSamples; ++sy )
-                for ( s32 sx=0; sx<(s32)m_NumSubSamples; ++sx )
+                //for ( s32 sy=0; sy<(s32)m_NumSubSamples; ++sy )
+                //for ( s32 sx=0; sx<(s32)m_NumSubSamples; ++sx )
                 {
                     // Jitterサンプル.
                     const f64 dx = ( m_Random.GetAsF64() * -0.5 ) * amountX;

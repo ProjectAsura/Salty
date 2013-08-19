@@ -13,11 +13,15 @@
   <ItemGroup>
     <ClInclude Include="..\include\s3d_app.h" />
     <ClInclude Include="..\include\s3d_bmp.h" />
+    <ClInclude Include="..\include\s3d_box.h" />
+    <ClInclude Include="..\include\s3d_bvh.h" />
     <ClInclude Include="..\include\s3d_camera.h" />
     <ClInclude Include="..\include\s3d_math.h" />
     <ClInclude Include="..\include\s3d_mutex.h" />
+    <ClInclude Include="..\include\s3d_onb.h" />
     <ClInclude Include="..\include\s3d_rand.h" />
     <ClInclude Include="..\include\s3d_shape.h" />
+    <ClInclude Include="..\include\s3d_texture.h" />
     <ClInclude Include="..\include\s3d_timer.h" />
     <ClInclude Include="..\include\s3d_typedef.h" />
   </ItemGroup>
@@ -25,8 +29,11 @@
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\s3d_app.cpp" />
     <ClCompile Include="..\src\s3d_bmp.cpp" />
+    <ClCompile Include="..\src\s3d_bvh.cpp" />
     <ClCompile Include="..\src\s3d_mutex.cpp" />
+    <ClCompile Include="..\src\s3d_onb.cpp" />
     <ClCompile Include="..\src\s3d_shape.cpp" />
+    <ClCompile Include="..\src\s3d_texture.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{EE16073B-323B-4695-9041-9C08B21626E2}</ProjectGuid>

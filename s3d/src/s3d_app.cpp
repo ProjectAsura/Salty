@@ -15,6 +15,7 @@
 #include <s3d_shape.h>
 #include <s3d_timer.h>
 #include <s3d_mutex.h>
+#include <s3d_onb.h>
 
 #include <iostream>
 #include <direct.h>
@@ -50,18 +51,40 @@ namespace s3d {
 // Global Varaibles.
 //----------------------------------------------------------------------------------
 
+MaterialBase g_Materials[] = {
+    MaterialBase( Color(0, 0, 0),  Color(0.75, 0.25, 0.25), MATERIAL_TYPE_MATTE ),
+    MaterialBase( Color(0, 0, 0),  Color(0.25, 0.25, 0.75), MATERIAL_TYPE_MATTE ),
+    MaterialBase( Color(0, 0, 0),  Color(0.75, 0.75, 0.75), MATERIAL_TYPE_MATTE ),
+    MaterialBase( Color(0, 0, 0),  Color(0.75, 0.25, 0.75), MATERIAL_TYPE_MATTE ),
+    MaterialBase( Color(0, 0, 0),  Color(0.75, 0.75, 0.75), MATERIAL_TYPE_MATTE ),
+    MaterialBase( Color(0, 0 ,0),  Color(0.75, 0.75, 0.75), MATERIAL_TYPE_MATTE ),
+    MaterialBase( Color(0, 0, 0),  Color(0.25, 0.75, 0.25), MATERIAL_TYPE_MATTE, "../res/texture/test.bmp" ),
+    MaterialBase( Color(0, 0, 0),  Color(0.99, 0.99, 0.99), MATERIAL_TYPE_MIRROR ),
+    MaterialBase( Color(0, 0, 0),  Color(0.99, 0.99, 0.99), MATERIAL_TYPE_CRYSTAL ),
+    MaterialBase( Color(36,36,36), Color(0.0,  0.0,  0.0 ), MATERIAL_TYPE_MATTE ),
+    MaterialBase( Color(0, 0, 0),  Color(0.75, 0.75, 0.25), MATERIAL_TYPE_MIRROR )
+};
+
 // レンダリングするシーンデータ
 Sphere g_Spheres[10] = {
-    Sphere( 1e5, Vector3(  1e5+1, 40.8, 81.6 ), Color(0, 0, 0),  Color(0.75, 0.25, 0.25), MATERIAL_TYPE_MATTE  ),    // 左
-    Sphere( 1e5, Vector3( -1e5+99, 40.8, 81.6 ),Color(0, 0, 0),  Color(0.25, 0.25, 0.75), MATERIAL_TYPE_MATTE  ),    // 右
-    Sphere( 1e5, Vector3( 50, 40.8, 1e5 ),      Color(0, 0, 0),  Color(0.75, 0.75, 0.75), MATERIAL_TYPE_MATTE  ),    // 奥
-    Sphere( 1e5, Vector3( 50, 40.8, -1e5+250 ), Color(0, 0, 0),  Color(0.0,  0.0,  0.0 ), MATERIAL_TYPE_MATTE  ),    // 手前
-    Sphere( 1e5, Vector3( 50, 1e5, 81.6 ),      Color(0, 0, 0),  Color(0.75, 0.75, 0.75), MATERIAL_TYPE_MATTE  ),    // 床
-    Sphere( 1e5, Vector3( 50, -1e5+81.6, 81.6 ),Color(0, 0 ,0),  Color(0.75, 0.75, 0.75), MATERIAL_TYPE_MATTE  ),    // 天井
-    Sphere( 20,  Vector3( 65, 20, 20 ),         Color(0, 0, 0),  Color(0.25, 0.75, 0.25), MATERIAL_TYPE_MATTE  ),    // 緑球
-    Sphere( 16.5,Vector3( 27, 16.5, 27 ),       Color(0, 0, 0),  Color(0.99, 0.99, 0.99), MATERIAL_TYPE_MIRROR ),    // 鏡
-    Sphere( 16.5,Vector3( 77, 16.5, 78 ),       Color(0, 0, 0),  Color(0.99, 0.99, 0.99), MATERIAL_TYPE_CRYSTAL ),   // 水晶.
-    Sphere( 15.0,Vector3( 50.0, 90.0, 81.6 ),   Color(36,36,36), Color(0.0,  0.0,  0.0 ), MATERIAL_TYPE_MATTE  ),    // 照明
+    Sphere( 1e5, Vector3(  1e5+1, 40.8, 81.6 ),  &g_Materials[0] ),    // 左
+    Sphere( 1e5, Vector3( -1e5+99, 40.8, 81.6 ), &g_Materials[1] ),    // 右
+    Sphere( 1e5, Vector3( 50, 40.8, 1e5 ),       &g_Materials[2] ),    // 奥
+    Sphere( 1e5, Vector3( 50, 40.8, -1e5+250 ),  &g_Materials[3] ),    // 手前
+    Sphere( 1e5, Vector3( 50, 1e5, 81.6 ),       &g_Materials[4] ),    // 床
+    Sphere( 1e5, Vector3( 50, -1e5+81.6, 81.6 ), &g_Materials[5] ),    // 天井
+    Sphere( 20,  Vector3( 65, 20, 20 ),          &g_Materials[6] ),    // 緑球
+    Sphere( 16.5,Vector3( 27, 16.5, 27 ),        &g_Materials[7] ),    // 鏡
+    Sphere( 16.5,Vector3( 77, 16.5, 78 ),        &g_Materials[8] ),    // 水晶.
+    Sphere( 15.0,Vector3( 50.0, 90.0, 81.6 ),    &g_Materials[9] ),    // 照明
+};
+
+Triangle g_Triangles[] = {
+    Triangle( Vector3( 70.0, 30.0, 20.0 ), Vector3( 50.0, 70.0, 10.0 ), Vector3( 30.0, 30.0, 20.0 ), &g_Materials[10] ), 
+};
+
+Quad g_Quads[] = {
+    Quad( Vector3( 70.0, 30.0, 20.0 ), Vector3( 70.0, 70.0, 10.0 ), Vector3( 30.0, 70.0, 10.0 ), Vector3( 30.0, 30.0, 20.0 ), &g_Materials[8] ), 
 };
 
 // シェイプリスト.
@@ -75,7 +98,8 @@ IShape* g_pShapes[] = {
     &g_Spheres[6],
     &g_Spheres[7],
     &g_Spheres[8],
-    &g_Spheres[9]
+    &g_Spheres[9],
+    &g_Triangles[0],
 };
 
 //----------------------------------------------------------------------------------
@@ -196,6 +220,9 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
         // 衝突物体へのポインタ.
         IShape* pShape = record.pShape;
 
+        // マテリアルへのポインタ.
+        IMaterial* pMaterial = pShape->GetMaterial();
+
         // 無補正法線データ.
         const Vector3 normalOrg = record.normal;
 
@@ -203,20 +230,20 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
         const Vector3 normalMod = ( Vector3::Dot ( normalOrg, ray.dir ) < 0.0 ) ? normalOrg : -normalOrg;
 
         // 自己発光による放射輝度.
-        L += Vector3::Mul( W, pShape->GetEmissive() );
+        L += Vector3::Mul( W, pMaterial->GetEmissive() );
 
         // 色の反射率最大のものを得る。ロシアンルーレットで使う。
         // ロシアンルーレットの閾値は任意だが色の反射率等を使うとより良い ... らしい。
         // Memo : 閾値を平均とかにすると，うまい具合にばらけず偏ったりしたので上記を守るのが一番良さげ.
-        const f64 prob = ComputeThreshold( pShape->GetColor() );
+        const f64 prob = ComputeThreshold( pMaterial->GetColor() );
 
         // ロシアンルーレット!
         if ( rnd.GetAsF64() >= prob )
         { break; }
 
         // マテリアル計算.
-        // TODO : マテリアルインタフェース化して，分岐処理をなくして，コードをすっきりさせる.
-        switch ( pShape->GetMaterialType() )
+        // TODO : 関数化で分岐処理をなくして，コードをすっきりさせる.
+        switch ( pMaterial->GetType() )
         {
             // 完全拡散面
             case MATERIAL_TYPE_MATTE: 
@@ -225,33 +252,17 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
 
                 // normalModの方向を基準とした正規直交基底(w, u, v)を作る。
                 // この基底に対する半球内で次のレイを飛ばす。
-                Vector3 w;
-                Vector3 u;
-                Vector3 v;
-                w = normalMod;
-
-                // ベクトルwと直交するベクトルを作る。w.xが0に近い場合とそうでない場合とで使うベクトルを変える。
-                if ( fabs(w.x) > D_EPS )
-                {
-                    u = Vector3::Cross(Vector3(0.0, 1.0, 0.0), w);
-                    u.Normalize();
-                }
-                else
-                {
-                    u = Vector3::Cross(Vector3(1.0, 0.0, 0.0), w);
-                    u.Normalize();
-                }
-                v = Vector3::Cross(w, u);
-                v.Normalize();
+                OrthonormalBasis onb;
+                onb.InitFromW( normalMod );
 
                 // コサイン項を使った重点的サンプリング
                 const f64 r1  = D_2PI * rnd.GetAsF64();
                 const f64 r2  = rnd.GetAsF64();
                 const f64 r2s = sqrt(r2);
                 Vector3 dir = Vector3::UnitVector(
-                    u * cos(r1) * r2s
-                  + v * sin(r1) * r2s
-                  + w * sqrt(1.0 - r2) );
+                    onb.u * cos(r1) * r2s
+                  + onb.v * sin(r1) * r2s
+                  + onb.w * sqrt(1.0 - r2) );
 
                 //====================================================================
                 // レンダリング方程式に対するモンテカルロ積分を考えると、
@@ -265,7 +276,7 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
                 //=====================================================================
 
                 // 重み更新.
-                Color weight = pShape->GetColor() / prob;
+                Color weight = Vector3::Mul( pMaterial->GetColor(), pMaterial->GetTextureColor( record.texcoord ) ) / prob;
                 W = Vector3::Mul( W, weight );
 
                 // レイを更新.
@@ -290,7 +301,7 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
                 reflect.Normalize();
 
                 // 重み更新.
-                Color weight = pShape->GetColor() / prob;
+                Color weight = Vector3::Mul( pMaterial->GetColor(), pMaterial->GetTextureColor( record.texcoord ) );
                 W = Vector3::Mul( W, weight );
 
                 // レイを更新.
@@ -324,7 +335,7 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
                 if ( cos2t < 0.0 )
                 {
                     // 重み更新.
-                    Color weight = pShape->GetColor() / prob;
+                    Color weight = Vector3::Mul( pMaterial->GetColor(), pMaterial->GetTextureColor( record.texcoord ) );
                     W = Vector3::Mul( W, weight );
 
                     // レイを更新.
@@ -356,7 +367,7 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
                 if ( rnd.GetAsF64() < P )
                 {
                     // 重み更新.
-                    Color weight = pShape->GetColor() * Re / ( P * prob );
+                    Color weight = Vector3::Mul( pMaterial->GetColor(), pMaterial->GetTextureColor( record.texcoord ) ) * Re / ( P * prob );
                     W = Vector3::Mul( W, weight );
 
                     // レイを更新.
@@ -367,7 +378,7 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
                 else
                 {
                     // 重み更新.
-                    Color weight = pShape->GetColor() * Tr / ( ( 1.0 - P ) * prob );
+                    Color weight = Vector3::Mul( pMaterial->GetColor(), pMaterial->GetTextureColor( record.texcoord ) ) * Tr / ( ( 1.0 - P ) * prob );
                     W = Vector3::Mul( W, weight );
 
                     // レイを更新.
@@ -410,6 +421,10 @@ void PathTrace
 
     // レンダーターゲットのメモリを確保.
     Color* pRT = new Color[ width * height ];
+
+    // レンダーターゲットをクリア.
+    for( s32 i=0; i<width * height; ++i )
+    { pRT[i] = Color( 0.0, 0.0, 0.0 ); }
 
     // 全サンプル数.
     const s32 numSamples = samples * supersamples * supersamples;

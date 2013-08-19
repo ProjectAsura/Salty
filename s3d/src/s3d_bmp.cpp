@@ -7,9 +7,11 @@
 //----------------------------------------------------------------------------------------
 // Includes
 //----------------------------------------------------------------------------------------
+#include <s3d_bmp.h>
+
 #include <cstdio>
 #include <cmath>
-#include "s3d_bmp.h"
+#include <cassert>
 
 
 namespace s3d {
@@ -167,6 +169,61 @@ bool SaveToBMP( const char* filename, const int width, const int height, const d
     WriteBmp( pFile, width, height, pPixel, gamma );
 
     fclose( pFile );
+    return true;
+}
+
+//------------------------------------------------------------------------------------------
+//      BMPファイルから読み込みます.
+//------------------------------------------------------------------------------------------
+bool LoadFromBMP( const char* filename, int& width, int& height, double** ppPixels )
+{
+    FILE* pFile;
+    errno_t err = fopen_s( &pFile, filename, "rb" );
+    if ( err != 0 )
+    {
+        return false;
+    }
+
+    BMP_FILE_HEADER fileHeader;
+    
+    fread( &fileHeader, sizeof(fileHeader), 1, pFile );
+    if ( fileHeader.Type != 'MB' )
+    {
+        fclose( pFile );
+        return false;
+    }
+
+    BMP_INFO_HEADER infoHeader;
+    fread( &infoHeader, sizeof(infoHeader), 1, pFile );
+
+    if ( infoHeader.BitCount != 24 )
+    {
+        fclose( pFile );
+        return false;
+    }
+
+    width  = static_cast<int>( infoHeader.Width );
+    height = static_cast<int>( infoHeader.Height );
+
+    int size = width * height * 3;
+    unsigned char* pTexels = new unsigned char [ size ];
+    assert( pTexels != nullptr );
+
+    fread( pTexels, sizeof(unsigned char), size, pFile );
+
+    fclose( pFile );
+
+    (*ppPixels) = new double [ size ];
+    for( int i=0; i<size-3; i+=3)
+    {
+        (*ppPixels)[ i + 0 ] = static_cast<double>( pTexels[ i + 2 ] ) / 255.0;
+        (*ppPixels)[ i + 1 ] = static_cast<double>( pTexels[ i + 1 ] ) / 255.0;
+        (*ppPixels)[ i + 2 ] = static_cast<double>( pTexels[ i + 0 ] ) / 255.0;
+    }
+
+    delete [] pTexels;
+    pTexels = nullptr;
+
     return true;
 }
 

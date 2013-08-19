@@ -23,15 +23,11 @@ Sphere::Sphere
 (
     const f64           _radius,
     const Vector3&      _position,
-    const Color&        _emissive,
-    const Color&        _color,
-    const MATERIAL_TYPE _material
+    IMaterial*          _pMaterial
 )
 : radius    ( _radius )
 , position  ( _position )
-, emissive  ( _emissive )
-, color     ( _color )
-, material  ( _material )
+, pMaterial ( _pMaterial )
 { /* DO_NOTHING */ }
 
 
@@ -63,27 +59,33 @@ bool Sphere::IsHit(const Ray &ray, HitRecord& record )
     record.normal    = Vector3::UnitVector(record.position - position);
     record.pShape    = this;
 
+    f64 theta = acos( record.normal.z );
+    f64 phi   = atan2( record.normal.y, record.normal.x );
+    if ( phi < 0.0 )
+    { phi += D_2PI; }
+
+    record.texcoord = Vector2( phi * D_1DIV2PI, ( D_PI - theta ) * D_1DIVPI );
+
     // 交差した.
     return true;
 }
 
 //-------------------------------------------------------------------------------------
-//      マテリアルタイプを取得します.
+//      マテリアルを取得します.
 //-------------------------------------------------------------------------------------
-MATERIAL_TYPE Sphere::GetMaterialType()
-{ return material; }
+IMaterial* Sphere::GetMaterial()
+{ return pMaterial; }
 
 //-------------------------------------------------------------------------------------
-//      マテリアルカラーを取得します.
+//      バウンディングボックスを取得します.
 //-------------------------------------------------------------------------------------
-Color Sphere::GetColor()
-{ return color; }
+BoundingBox Sphere::GetBox()
+{
+    Vector3 min( position.x + radius, position.y + radius, position.z + radius );
+    Vector3 max( position.y - radius, position.y - radius, position.z - radius );
 
-//-------------------------------------------------------------------------------------
-//      自己発行カラーを取得します.
-//-------------------------------------------------------------------------------------
-Color Sphere::GetEmissive()
-{ return emissive; }
+    return BoundingBox( min, max );
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -98,16 +100,18 @@ Triangle::Triangle
     const Vector3&      _p0,
     const Vector3&      _p1,
     const Vector3&      _p2,
-    const Color&        _color,
-    const Color&        _emissive,
-    const MATERIAL_TYPE _material
+    IMaterial*          _pMaterial,
+    const Vector2&      _uv0,
+    const Vector2&      _uv1,
+    const Vector2&      _uv2
 )
 : p0        ( _p0 )
 , p1        ( _p1 )
 , p2        ( _p2 )
-, color     ( _color )
-, emissive  ( _emissive )
-, material  ( _material )
+, pMaterial ( _pMaterial )
+, uv0       ( _uv0 )
+, uv1       ( _uv1 )
+, uv2       ( _uv2 )
 {
     normal = Vector3::ComputeNormal( p0, p1, p2 );
 }
@@ -117,33 +121,27 @@ Triangle::Triangle
 //-------------------------------------------------------------------------------------
 bool Triangle::IsHit( const Ray& ray, HitRecord& record )
 {
-#if 0
-    // 背面カリング.
-    if ( Vector3::Dot( ray.dir, normal ) > 0.0 )
-    { return false; }
-#endif
-
-    Vector3 e1 = p1 - p0;
-    Vector3 e2 = p2 - p0;
+    Vector3 e1  = p1 - p0;
+    Vector3 e2  = p2 - p0;
     Vector3 dir = ray.dir;
-    Vector3 s1 = Vector3::Cross( dir, e2 );
+    Vector3 s1  = Vector3::Cross( dir, e2 );
     register f64 div = Vector3::Dot( s1, e1 );
     
     if ( div == 0.0 )
     { return false; }
-        
+
     Vector3 d = ray.pos - p0;
-    register f64 b1 = Vector3::Dot( d, s1 ) / div;
-    if ( b1 <= 0.0 || b1 >= 1.0 )
+    register f64 beta = Vector3::Dot( d, s1 ) / div;
+    if ( beta <= 0.0 || beta >= 1.0 )
     { return false; }
     
     Vector3 s2 = Vector3::Cross( d, e1 );
-    register f64 b2 = Vector3::Dot( dir, s2 ) / div;
-    if ( b2 <= 0.0 || ( b1 + b2 ) >= 1.0 )
+    register f64 gamma = Vector3::Dot( dir, s2 ) / div;
+    if ( gamma <= 0.0 || ( beta + gamma ) >= 1.0 )
     { return false; }
-    
+
     register f64 dist = Vector3::Dot( e2, s2 ) / div;
-    
+
     if ( dist < D_EPS || dist > D_INF )
     { return false; }
 
@@ -152,26 +150,33 @@ bool Triangle::IsHit( const Ray& ray, HitRecord& record )
     record.normal   = normal;
     record.pShape   = this;
 
+    f64 alpha = 1.0 - beta - gamma;
+    record.texcoord = Vector2(
+        uv0.x * alpha + uv1.x * beta + uv2.x * gamma,
+        uv0.y * alpha + uv1.y * beta + uv2.y * gamma );
+
     return true;
 }
 
 //-------------------------------------------------------------------------------------
-//      マテリアルタイプを取得します.
+//! @brief      マテリアルを取得します.
 //-------------------------------------------------------------------------------------
-MATERIAL_TYPE Triangle::GetMaterialType()
-{ return material; }
+IMaterial* Triangle::GetMaterial()
+{ return pMaterial; }
 
 //-------------------------------------------------------------------------------------
-//      自己発光カラーを取得します.
+//      バウンディングボックスを取得します.
 //-------------------------------------------------------------------------------------
-Color Triangle::GetEmissive()
-{ return emissive; }
+BoundingBox Triangle::GetBox()
+{
+    Vector3 min = Vector3::Min( p0, p1 );
+    min = Vector3::Min( min, p2 );
 
-//-------------------------------------------------------------------------------------
-//      マテリアルカラーを取得します.
-//-------------------------------------------------------------------------------------
-Color Triangle::GetColor()
-{ return color; }
+    Vector3 max = Vector3::Max( p0, p1 );
+    max = Vector3::Max( max, p2 );
+
+    return BoundingBox( min, max );
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -187,17 +192,21 @@ Quad::Quad
     const Vector3&      _p1,
     const Vector3&      _p2,
     const Vector3&      _p3,
-    const Color&        _color,
-    const Color&        _emissive,
-    const MATERIAL_TYPE _material
+    IMaterial*          _pMaterial,
+    const Vector2&      _uv0,
+    const Vector2&      _uv1,
+    const Vector2&      _uv2,
+    const Vector2&      _uv3
 )
 : p0        ( _p0 )
 , p1        ( _p1 )
 , p2        ( _p2 )
 , p3        ( _p3 )
-, color     ( _color )
-, emissive  ( _emissive )
-, material  ( _material )
+, pMaterial ( _pMaterial )
+, uv0       ( _uv0 )
+, uv1       ( _uv1 )
+, uv2       ( _uv2 )
+, uv3       ( _uv3 )
 {
     normal = Vector3::ComputeQuadNormal( p0, p1, p2, p3 );
 }
@@ -207,19 +216,16 @@ Quad::Quad
 //--------------------------------------------------------------------------------
 bool Quad::IsHitTriangle
 (
-    const Ray& ray, 
-    const Vector3& a,
-    const Vector3& b,
-    const Vector3& c,
-    HitRecord& record
+    const Ray&      ray,
+    const Vector3&  a,
+    const Vector3&  b,
+    const Vector3&  c,
+    const Vector2&  st0,
+    const Vector2&  st1,
+    const Vector2&  st2,
+    HitRecord&      record
 )
 {
-#if 0
-    // 背面カリング.
-    if ( Vector3::Dot( ray.dir, normal ) > 0.0 )
-    { return false; }
-#endif
-
     Vector3 e1 = b - a;
     Vector3 e2 = c - a;
     Vector3 dir = ray.dir;
@@ -230,13 +236,13 @@ bool Quad::IsHitTriangle
     { return false; }
         
     Vector3 d = ray.pos - a;
-    register f64 b1 = Vector3::Dot( d, s1 ) / div;
-    if ( b1 < 0.0 || b1 > 1.0 )
+    register f64 beta = Vector3::Dot( d, s1 ) / div;
+    if ( beta <= 0.0 || beta >= 1.0 )
     { return false; }
     
     Vector3 s2 = Vector3::Cross( d, e1 );
-    register f64 b2 = Vector3::Dot( dir, s2 ) / div;
-    if ( b2 < 0.0 || ( b1 + b2 ) > 1.0 )
+    register f64 gamma = Vector3::Dot( dir, s2 ) / div;
+    if ( gamma <= 0.0 || ( beta + gamma ) >= 1.0 )
     { return false; }
     
     register f64 dist = Vector3::Dot( e2, s2 ) / div;
@@ -249,6 +255,11 @@ bool Quad::IsHitTriangle
     record.normal   = normal;
     record.pShape   = this;
 
+    f64 alpha = 1.0 - beta - gamma;
+    record.texcoord = Vector2(
+        st0.x * alpha + st1.x * beta + st2.x * gamma,
+        st0.y * alpha + st1.y * beta + st2.y * gamma );
+
     return true;
 }
 
@@ -257,32 +268,35 @@ bool Quad::IsHitTriangle
 //-------------------------------------------------------------------------------------
 bool Quad::IsHit( const Ray& ray, HitRecord& record )
 {
-    if ( IsHitTriangle( ray, p0, p1, p2, record ) )
+    if ( IsHitTriangle( ray, p0, p1, p2,  uv0, uv1, uv2, record ) )
     { return true; }
-    else if ( IsHitTriangle( ray, p2, p3, p0, record ) )
+    else if ( IsHitTriangle( ray, p2, p3, p0, uv2, uv3, uv0, record ) )
     { return true; }
 
     return false;
 }
 
 //-------------------------------------------------------------------------------------
-//      マテリアルタイプを取得します.
+//      マテリアルを取得します.
 //-------------------------------------------------------------------------------------
-MATERIAL_TYPE Quad::GetMaterialType()
-{ return material; }
+IMaterial* Quad::GetMaterial()
+{ return pMaterial; }
 
 //-------------------------------------------------------------------------------------
-//      自己発光カラーを取得します.
+//      バウンディングボックスを取得します.
 //-------------------------------------------------------------------------------------
-Color Quad::GetEmissive()
-{ return emissive; }
+BoundingBox Quad::GetBox()
+{
+    Vector3 min = Vector3::Min( p0, p1 );
+    min = Vector3::Min( min, p2 );
+    min = Vector3::Min( min, p3 );
 
-//-------------------------------------------------------------------------------------
-//      マテリアルカラーを主特区します.
-//-------------------------------------------------------------------------------------
-Color Quad::GetColor()
-{ return color; }
+    Vector3 max = Vector3::Max( p0, p1 );
+    max = Vector3::Max( max, p2 );
+    max = Vector3::Max( max, p3 );
 
+    return BoundingBox( min, max );
+}
 
 } // namespace s3d
 

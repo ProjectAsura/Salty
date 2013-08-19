@@ -19,6 +19,8 @@
 
 #include <iostream>
 #include <direct.h>
+#include <ctime>
+#include <process.h>
 
 
 namespace s3d {
@@ -48,8 +50,20 @@ namespace s3d {
 
 
 //----------------------------------------------------------------------------------
+// Forward Declarations.
+//----------------------------------------------------------------------------------
+void TimeWatch( void* );
+
+
+//----------------------------------------------------------------------------------
 // Global Varaibles.
 //----------------------------------------------------------------------------------
+bool    g_WatcherEnd = false;
+bool    g_IsFinished = false;
+u32     g_Width      = 0;
+u32     g_Height     = 0;
+Color*  g_pRT        = nullptr;
+Mutex   g_Mutex;
 
 MaterialBase g_Materials[] = {
     MaterialBase( Color(0, 0, 0),  Color(0.75, 0.25, 0.25), MATERIAL_TYPE_MATTE ),
@@ -58,7 +72,7 @@ MaterialBase g_Materials[] = {
     MaterialBase( Color(0, 0, 0),  Color(0.75, 0.25, 0.75), MATERIAL_TYPE_MATTE ),
     MaterialBase( Color(0, 0, 0),  Color(0.75, 0.75, 0.75), MATERIAL_TYPE_MATTE ),
     MaterialBase( Color(0, 0 ,0),  Color(0.75, 0.75, 0.75), MATERIAL_TYPE_MATTE ),
-    MaterialBase( Color(0, 0, 0),  Color(0.25, 0.75, 0.25), MATERIAL_TYPE_MATTE, "../res/texture/test.bmp" ),
+    MaterialBase( Color(0, 0, 0),  Color(0.25, 0.75, 0.25), MATERIAL_TYPE_MATTE, "./res/texture/test.bmp" ),
     MaterialBase( Color(0, 0, 0),  Color(0.99, 0.99, 0.99), MATERIAL_TYPE_MIRROR ),
     MaterialBase( Color(0, 0, 0),  Color(0.99, 0.99, 0.99), MATERIAL_TYPE_CRYSTAL ),
     MaterialBase( Color(36,36,36), Color(0.0,  0.0,  0.0 ), MATERIAL_TYPE_MATTE ),
@@ -420,11 +434,11 @@ void PathTrace
         1.0 );
 
     // レンダーターゲットのメモリを確保.
-    Color* pRT = new Color[ width * height ];
+    g_pRT = new Color[ width * height ];
 
     // レンダーターゲットをクリア.
     for( s32 i=0; i<width * height; ++i )
-    { pRT[i] = Color( 0.0, 0.0, 0.0 ); }
+    { g_pRT[i] = Color( 0.0, 0.0, 0.0 ); }
 
     // 全サンプル数.
     const s32 numSamples = samples * supersamples * supersamples;
@@ -432,9 +446,11 @@ void PathTrace
     // 1サブサンプルあたり.
     const f64 rate = (1.0 / supersamples);
 
-#if _OPENMP
-  #pragma omp parallel for schedule(dynamic, 1) num_threads(8)
-#endif
+    // 時間監視スレッドを走らせる.
+    uintptr_t ret = _beginthread( TimeWatch, 0, nullptr );
+    assert( ret != -1 );    // 失敗しちゃだめよ.
+
+
     for (s32 y = 0; y < height; y ++) 
     {
         // 乱数
@@ -443,6 +459,9 @@ void PathTrace
         // 何%完了したか表示する.
         printf_s( "process %lf completed.\n", (100.0 * y / (height - 1)) );
 
+    #if _OPENMP
+        #pragma omp parallel for schedule(dynamic, 1) num_threads(8)
+    #endif
         for (s32 x = 0; x < width; x ++) 
         {
             // ピクセルインデックス.
@@ -471,21 +490,160 @@ void PathTrace
             }
 
             // ピクセルカラーを加算.
-            pRT[ idx ] += accRadiance;
+            g_pRT[ idx ] += accRadiance;
         }
     }
 
-    // 最終結果を出力.
-    s3d::SaveToBMP( "img/final_result.bmp", width, height, &pRT[0].x );
+    g_Mutex.Lock();
+    {
+        // 終了フラグを立てる.
+        g_IsFinished = true;
+    }
+    g_Mutex.Unlock();
+
+    // スレッドの終了を待機する.
+    while( !g_WatcherEnd )
+    { Sleep( 10 ); }
+
+    char filename[256];
+    time_t t = time( nullptr );
+    tm local_time;
+    errno_t err = localtime_s( &local_time, &t );
+
+    if ( err == 0 )
+    {
+        // output_yyyymmdd_hhmmss.bmpという形式の名前にする.
+        // ex) output_20130805_153034.bmp →　2013/08/05 15:30 34sec
+        sprintf_s( filename, "img/output_%04d%02d%02d_%02d%02d%02d.bmp",
+            local_time.tm_year + 1900,
+            local_time.tm_mon + 1,
+            local_time.tm_mday,
+            local_time.tm_hour,
+            local_time.tm_min,
+            local_time.tm_sec );
+
+        // 最終結果をBMPファイルに出力.
+        SaveToBMP( filename, width, height, &g_pRT[0].x );
+    }
+    else
+    {
+        // 最終結果をBMPファイルに出力.
+        SaveToBMP( "img/output.bmp", width, height, &g_pRT[0].x );
+    }
 
     // メモリ解放.
-    if ( pRT )
+    if ( g_pRT )
     {
-        delete[] pRT;
-        pRT = nullptr;
+        delete[] g_pRT;
+        g_pRT = nullptr;
     }
 }
 
+//-----------------------------------------------------------------------------
+//      時間監視メソッド.
+//-----------------------------------------------------------------------------
+void TimeWatch( void* )
+{
+    // レンダリング開始時刻を記録.
+    Timer timer;
+    timer.Start();
+
+    // 定期監視を開始.
+    Timer captureTimer;
+    captureTimer.Start();
+
+    // 1時間以上経過するか, レンダリングが先に終了するまでループ.
+    while( 1 )
+    {
+        // 経過時間を取得.
+        captureTimer.Stop();
+        f64 sec  = captureTimer.GetElapsedTimeSec();
+
+        // 59.9秒以上立ったらキャプチャー.
+        if ( sec > 59.9 )
+        {
+            char filename[256];
+            time_t t = time( nullptr );
+            tm local_time;
+            errno_t err = localtime_s( &local_time, &t );
+
+            if ( err == 0 )
+            {
+                // frame_yyyymmdd_hhmmss.bmpという形式の名前にする.
+                // ex) result_20130805_153034.bmp →　2013/08/05 15:30 34sec
+                sprintf_s( filename, "img/frame/frame_%04d%02d%02d_%02d%02d%02d.bmp",
+                    local_time.tm_year + 1900,
+                    local_time.tm_mon + 1,
+                    local_time.tm_mday,
+                    local_time.tm_hour,
+                    local_time.tm_min,
+                    local_time.tm_sec );
+
+                // 結果をBMPファイルに出力.
+                SaveToBMP( filename, g_Width, g_Height, &g_pRT[0].x );
+            }
+            else
+            {
+                // 最終結果をBMPファイルに出力.
+                SaveToBMP( "img/frame/frame.bmp", g_Width, g_Height, &g_pRT[0].x );
+            }
+
+            // タイマーを再スタート.
+            captureTimer.Start();
+        }
+
+        // レンダリング開始してからの時間を取得.
+        timer.Stop();
+        f64 hour = timer.GetElapsedTimeHour();
+
+        // 1時間以上たった
+        if ( hour >= 1.0 )
+        {
+            // 最後のフレームをキャプチャー.
+            SaveToBMP( "img/final_frame.bmp", g_Width, g_Height, &g_pRT[0].x );
+
+            g_Mutex.Lock();
+            {
+                g_WatcherEnd = true;
+            }
+            g_Mutex.Unlock();
+
+            // ループ脱出.
+            break;
+        }
+
+        // レンダリングが正常終了している場合.
+        if ( g_IsFinished )
+        {
+            printf_s( "Finished Rendering!!\n" );
+
+            FILE* pFile;
+            errno_t err = fopen_s( &pFile, "result.txt", "w" );
+
+            if ( err == 0 )
+            {
+                fprintf( pFile, "Rendering Time %lf (sec)\n", timer.GetElapsedTimeSec() );
+                fprintf( pFile, "               %lf (min)\n", timer.GetElapsedTimeMin() );
+                fprintf( pFile, "               %lf (hour)\n", timer.GetElapsedTimeHour() );
+                fprintf( pFile, "Per Pixel      %lf (msec)\n", timer.GetElapsedTimeMsec() / ( g_Width * g_Height ) );
+
+                fclose( pFile );
+            }
+
+            g_Mutex.Lock();
+            {
+                g_WatcherEnd = true;
+            }
+            g_Mutex.Unlock();
+
+            // ループ脱出.
+            break;
+        }
+
+        // 100 msec 寝かせる.
+        Sleep( 100 );
+    }
+}
 
 //////////////////////////////////////////////////////////////////////////////////
 // App class
@@ -524,6 +682,9 @@ void App::Run( Config& config )
     // 画像出力用ディレクトリ作成.
     _mkdir( "./img" );
     _mkdir( "./img/frame" );
+
+    g_Width  = config.width;
+    g_Height = config.height;
 
     // レイトレ！
     PathTrace( config.width, config.height, config.numSamples, config.numSubSamples );

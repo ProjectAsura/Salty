@@ -606,6 +606,7 @@ void TimeWatch( void* )
         timer.Stop();
         f64 hour = timer.GetElapsedTimeHour();
 
+#if 0
         // 1時間以上たった
         if ( hour >= 1.0 )
         {
@@ -621,6 +622,7 @@ void TimeWatch( void* )
             // ループ脱出.
             break;
         }
+#endif
 
         // レンダリングが正常終了している場合.
         if ( g_IsFinished )

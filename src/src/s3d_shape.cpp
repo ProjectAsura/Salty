@@ -59,8 +59,8 @@ bool Sphere::IsHit(const Ray &ray, HitRecord& record )
     record.normal    = Vector3::UnitVector(record.position - position);
     record.pShape    = this;
 
-    f64 theta = acos( record.normal.z );
-    f64 phi   = atan2( record.normal.y, record.normal.x );
+    f64 theta = acos( record.normal.y );
+    f64 phi   = atan2( record.normal.x, record.normal.z );
     if ( phi < 0.0 )
     { phi += D_2PI; }
 

@@ -100,7 +100,7 @@ Sphere g_Spheres[10] = {
 };
 
 Triangle g_Triangles[] = {
-    Triangle( Vector3( 70.0, 30.0, 20.0 ), Vector3( 50.0, 70.0, 10.0 ), Vector3( 30.0, 30.0, 20.0 ), &g_Materials[10] ), 
+    Triangle( Vector3( 70.0, 30.0, 20.0 ), Vector3( 50.0, 70.0, 10.0 ), Vector3( 30.0, 30.0, 20.0 ), &g_Materials[6], Vector2( 0.0, 0.0 ), Vector2( 0.5, 1.0 ), Vector2( 1.0, 0.0 ) ), 
 };
 
 Quad g_Quads[] = {

@@ -108,13 +108,78 @@ void Texture2D::Release()
 //--------------------------------------------------------------------------------------
 //      テクスチャフェッチします.
 //--------------------------------------------------------------------------------------
-Color Texture2D::Sample( const Vector2& texcoord ) const
+Color Texture2D::Sample( const TextureSampler& sampler, const Vector2& location ) const
 {
     if ( m_pPixels == nullptr )
     { return Color( 1.0, 1.0, 1.0 ); }
 
-    u32 x = static_cast<u32>( texcoord.x * m_Width );
-    u32 y = static_cast<u32>( texcoord.y * m_Height );
+    Vector2 uv = location;
+
+    switch( sampler.addressU )
+    {
+    case TEXTURE_ADDRESS_WRAP:
+        {
+            while ( uv.x > 1.0 ) 
+            { uv.x -= 1.0; }
+            while ( uv.x < 0.0 )
+            { uv.x += 1.0; }
+        }
+        break;
+
+    case TEXTURE_ADDRESS_CLAMP:
+        {
+            if ( uv.x > 1.0 )
+            { uv.x = 1.0; }
+            if ( uv.x < 0.0 )
+            { uv.x = 0.0; }
+        }
+        break;
+
+    case TEXTURE_ADDRESS_BORADER:
+        {
+            if ( uv.x > 1.0 )
+            { return sampler.boarderColor; }
+            if ( uv.x < 0.0 )
+            { return sampler.boarderColor; }
+        }
+        break;
+    }
+
+    switch( sampler.addressV )
+    {
+    case TEXTURE_ADDRESS_WRAP:
+        {
+            while ( uv.y > 1.0 ) 
+            { uv.y -= 1.0; }
+            while ( uv.y < 0.0 )
+            { uv.y += 1.0; }
+        }
+        break;
+
+    case TEXTURE_ADDRESS_CLAMP:
+        {
+            if ( uv.y > 1.0 )
+            { uv.y = 1.0; }
+            if ( uv.y < 0.0 )
+            { uv.y = 0.0; }
+        }
+        break;
+
+    case TEXTURE_ADDRESS_BORADER:
+        {
+            if ( uv.y > 1.0 )
+            { return sampler.boarderColor; }
+            if ( uv.y < 0.0 )
+            { return sampler.boarderColor; }
+        }
+        break;
+    }
+
+    assert( 0.0 <= uv.x && uv.x <= 1.0 );
+    assert( 0.0 <= uv.y && uv.y <= 1.0 );
+
+    u32 x = static_cast<u32>( uv.x * ( m_Width - 1 ) );
+    u32 y = static_cast<u32>( uv.y * ( m_Height -1 ) );
 
     u32 idx = ( m_Width * 3 * y ) + ( x * 3 );
     assert( idx < m_Size );

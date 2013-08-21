@@ -125,6 +125,7 @@ struct MaterialBase : public IMaterial
     Color           color;          //!< マテリアルカラーです.
     MATERIAL_TYPE   type;           //!< マテリアルタイプです.
     Texture2D       texture;        //!< 2次元テクスチャです.
+    TextureSampler  sampler;        //!< テクスチャサンプラーです.
 
     //---------------------------------------------------------------------------------
     //! @brief      コンストラクタです.
@@ -134,6 +135,7 @@ struct MaterialBase : public IMaterial
     , color     ( 0.0, 0.0, 0.0 )
     , type      ( MATERIAL_TYPE_MATTE )
     , texture   ()
+    , sampler   ()
     { /* DO_NOTHING */ }
 
     //---------------------------------------------------------------------------------
@@ -144,16 +146,18 @@ struct MaterialBase : public IMaterial
     , color     ( _color )
     , type      ( _type )
     , texture   ()
+    , sampler   ()
     { /* DO_NOTHING */ }
 
     //---------------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです.
     //---------------------------------------------------------------------------------
-    MaterialBase( const Color& _emissive, const Color& _color, const MATERIAL_TYPE _type, const char* filename )
+    MaterialBase( const Color& _emissive, const Color& _color, const MATERIAL_TYPE _type, const char* filename, const TextureSampler& _sampler = TextureSampler() )
     : emissive  ( _emissive )
     , color     ( _color )
     , type      ( _type )
     , texture   ( filename )
+    , sampler   ( _sampler )
     { /* DO_NOTHING */ }
 
     //--------------------------------------------------------------------------------
@@ -186,7 +190,7 @@ struct MaterialBase : public IMaterial
     //! @brief      テクスチャカラーを取得します.
     //--------------------------------------------------------------------------------
     virtual Color GetTextureColor( const Vector2& texcoord ) const
-    { return texture.Sample( texcoord );  }
+    { return texture.Sample( sampler, texcoord );  }
 };
 
 

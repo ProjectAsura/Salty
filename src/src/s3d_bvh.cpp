@@ -108,7 +108,7 @@ void BVH::Init( IShape** ppShapes, const u32 numShapes )
 //--------------------------------------------------------------------------
 //      衝突判定を行います.
 //--------------------------------------------------------------------------
-bool BVH::IsHit( const Ray& ray, HitRecord& record )
+bool BVH::IsHit( const Ray& ray, HitRecord& record ) const
 {
     if ( !box.IsHit( ray ) )
     { return false; }
@@ -126,13 +126,13 @@ bool BVH::IsHit( const Ray& ray, HitRecord& record )
 //--------------------------------------------------------------------------
 //      マテリアルを取得します.
 //--------------------------------------------------------------------------
-IMaterial* BVH::GetMaterial()
+IMaterial* BVH::GetMaterial() const
 { return nullptr; }
 
 //--------------------------------------------------------------------------
 //      バウンディングボックスを取得します.
 //--------------------------------------------------------------------------
-BoundingBox BVH::GetBox()
+BoundingBox BVH::GetBox() const
 { return box; }
 
 //--------------------------------------------------------------------------

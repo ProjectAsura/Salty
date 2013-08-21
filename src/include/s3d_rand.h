@@ -41,6 +41,7 @@ public:
     void SetSeed( const u32 );
     u32  GetAsU32();
     f64  GetAsF64();
+    f32  GetAsF32();
 
     Random& operator = ( const Random& );
 

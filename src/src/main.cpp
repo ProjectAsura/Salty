@@ -18,11 +18,11 @@ int main( int argc, char **argv )
     // アプリケーションの構成設定.
     s3d::App::Config config;
 
-#if 0
+#if 1
     // 本番用.
-    config.width         = 1280;
-    config.height        = 720;
-    config.numSamples    = 1024;
+    config.width         = 640;
+    config.height        = 360;
+    config.numSamples    = 2048;
     config.numSubSamples = 4;
 #else
     // デバッグ用.
@@ -30,7 +30,6 @@ int main( int argc, char **argv )
     config.height        = 180;
     config.numSamples    = 512;
     config.numSubSamples = 2;
-
 #endif
 
     s3d::App app;

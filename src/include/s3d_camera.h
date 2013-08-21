@@ -71,12 +71,11 @@ public:
         m_Fov      = fov;
         m_NearClip = nearClip;
 
-
         // 視線ベクトルを求める.
         m_Direction = Vector3::UnitVector( m_Target - m_Position );
 
         // スクリーンを張るベクトル.
-        m_CX = Vector3::UnitVector( Vector3::Cross( m_Upward, m_Direction ) ) * m_Fov * m_Width / m_Height;
+        m_CX = Vector3::UnitVector( Vector3::Cross( m_Direction, m_Upward ) ) * m_Fov * m_Width / m_Height;
         m_CY = Vector3::UnitVector( Vector3::Cross( m_CX, m_Direction ) ) * m_Fov;
 
         // スクリーンの中心へのベクトル.

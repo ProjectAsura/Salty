@@ -48,11 +48,11 @@ enum MATERIAL_TYPE
 /////////////////////////////////////////////////////////////////////////////////////
 struct HitRecord
 {
-    f64         distance;       //!< 衝突点までの距離.
-    Vector3     position;       //!< 衝突点の位置座標.
-    Vector3     normal;         //!< 法線ベクトル.
-    Vector2     texcoord;       //!< 衝突点のテクスチャ座標です.
-    IShape*     pShape;         //!< オブジェクトへのポインタ.
+    f64             distance;       //!< 衝突点までの距離.
+    Vector3         position;       //!< 衝突点の位置座標.
+    Vector3         normal;         //!< 法線ベクトル.
+    Vector2         texcoord;       //!< 衝突点のテクスチャ座標です.
+    const IShape*   pShape;         //!< オブジェクトへのポインタ.
 
     //-------------------------------------------------------------------------------
     //! @brief      コンストラクタです.
@@ -75,22 +75,22 @@ struct IMaterial
     //-------------------------------------------------------------------------------
     //! @brief      マテリアルタイプを取得します.
     //-------------------------------------------------------------------------------
-    virtual MATERIAL_TYPE GetType() = 0;
+    virtual MATERIAL_TYPE GetType() const = 0;
 
     //-------------------------------------------------------------------------------
     //! @brief      自己発光カラーを取得します.
     //-------------------------------------------------------------------------------
-    virtual Color GetEmissive() = 0;
+    virtual Color GetEmissive() const = 0;
 
     //-------------------------------------------------------------------------------
     //! @brief      マテリアルカラーを取得します.
     //-------------------------------------------------------------------------------
-    virtual Color GetColor() = 0;
+    virtual Color GetColor() const = 0;
 
     //-------------------------------------------------------------------------------
     //! @brief      テクスチャカラーを取得します.
     //-------------------------------------------------------------------------------
-    virtual Color GetTextureColor( const Vector2& ) = 0;
+    virtual Color GetTextureColor( const Vector2& ) const = 0;
 };
 
 
@@ -102,17 +102,17 @@ struct IShape
     //-------------------------------------------------------------------------------
     //! @brief      交差判定します.
     //-------------------------------------------------------------------------------
-    virtual bool IsHit( const Ray&, HitRecord& record ) = 0;
+    virtual bool IsHit( const Ray&, HitRecord& record ) const = 0;
 
     //-------------------------------------------------------------------------------
     //! @brief      マテリアルを取得します.
     //-------------------------------------------------------------------------------
-    virtual IMaterial* GetMaterial() = 0;
+    virtual const IMaterial* GetMaterial() const = 0;
 
     //-------------------------------------------------------------------------------
     //! @brief      バウンディングボックスを取得します.
     //-------------------------------------------------------------------------------
-    virtual BoundingBox GetBox() = 0;
+    virtual BoundingBox GetBox() const = 0;
 };
 
 
@@ -167,25 +167,25 @@ struct MaterialBase : public IMaterial
     //--------------------------------------------------------------------------------
     //! @brief      マテリアルタイプを取得します.
     //--------------------------------------------------------------------------------
-    virtual MATERIAL_TYPE GetType()
+    virtual MATERIAL_TYPE GetType() const
     { return type; }
 
     //--------------------------------------------------------------------------------
     //! @brief      自己発行カラーを取得します.
     //--------------------------------------------------------------------------------
-    virtual Color GetEmissive()
+    virtual Color GetEmissive() const
     { return emissive; }
 
     //--------------------------------------------------------------------------------
     //! @brief      マテリアルカラーを取得します.
     //--------------------------------------------------------------------------------
-    virtual Color GetColor()
+    virtual Color GetColor() const
     { return color; }
 
     //--------------------------------------------------------------------------------
     //! @brief      テクスチャカラーを取得します.
     //--------------------------------------------------------------------------------
-    virtual Color GetTextureColor( const Vector2& texcoord ) 
+    virtual Color GetTextureColor( const Vector2& texcoord ) const
     { return texture.Sample( texcoord );  }
 };
 
@@ -195,9 +195,9 @@ struct MaterialBase : public IMaterial
 //////////////////////////////////////////////////////////////////////////////////////
 struct Sphere : public IShape
 {
-    f64             radius;         //!< 半径です.
-    Vector3         position;       //!< 中心位置です.
-    IMaterial*      pMaterial;      //!< マテリアルです.
+    f64                 radius;         //!< 半径です.
+    Vector3             position;       //!< 中心位置です.
+    const IMaterial*    pMaterial;      //!< マテリアルです.
 
     //--------------------------------------------------------------------------------
     //! @brief      コンストラクタです.
@@ -206,23 +206,23 @@ struct Sphere : public IShape
     (
         const f64,
         const Vector3&,
-        IMaterial*
+        const IMaterial*
     );
 
     //-------------------------------------------------------------------------------
     //! @brief      交差判定します.
     //-------------------------------------------------------------------------------
-    bool IsHit(const Ray&, HitRecord& );
+    bool IsHit(const Ray&, HitRecord& ) const;
 
     //-------------------------------------------------------------------------------
     //! @brief      マテリアルを取得します.
     //-------------------------------------------------------------------------------
-    IMaterial* GetMaterial();
+    const IMaterial* GetMaterial() const;
 
     //-------------------------------------------------------------------------------
     //! @brief      バウンディングボックスを取得します.
     //-------------------------------------------------------------------------------
-    BoundingBox GetBox();
+    BoundingBox GetBox() const;
 };
 
 
@@ -235,10 +235,10 @@ struct Triangle : public IShape
     Vector3         p1;         //!< 頂点座標1
     Vector3         p2;         //!< 頂点座標2
     Vector3         normal;     //!< 法線ベクトル.
-    IMaterial*      pMaterial;  //!< マテリアルを取得します.
     Vector2         uv0;        //!< テクスチャ座標0
     Vector2         uv1;        //!< テクスチャ座標1
     Vector2         uv2;        //!< テクスチャ座標2
+    const IMaterial*      pMaterial;  //!< マテリアルを取得します.
 
     //------------------------------------------------------------------------------
     //! @brief      コンストラクタです.
@@ -248,7 +248,7 @@ struct Triangle : public IShape
         const Vector3&,
         const Vector3&,
         const Vector3&,
-        IMaterial*,
+        const IMaterial*,
         const Vector2& = Vector2( 0.0, 0.0 ),
         const Vector2& = Vector2( 0.0, 0.0 ),
         const Vector2& = Vector2( 0.0, 0.0 )
@@ -257,17 +257,17 @@ struct Triangle : public IShape
     //------------------------------------------------------------------------------
     //! @brief      交差判定を行います.
     //------------------------------------------------------------------------------
-    bool IsHit ( const Ray&, HitRecord& );
+    bool IsHit ( const Ray&, HitRecord& ) const;
 
     //-------------------------------------------------------------------------------
     //! @brief      マテリアルを取得します.
     //-------------------------------------------------------------------------------
-    IMaterial* GetMaterial();
+    const IMaterial* GetMaterial() const;
 
     //-------------------------------------------------------------------------------
     //! @brief      バウンディングボックスを取得します.
     //-------------------------------------------------------------------------------
-    BoundingBox GetBox();
+    BoundingBox GetBox() const;
 };
 
 
@@ -281,11 +281,11 @@ struct Quad : public IShape
     Vector3         p2;         //!< 頂点座標2です.
     Vector3         p3;         //!< 頂点座標3です.
     Vector3         normal;     //!< 法線ベクトルです.
-    IMaterial*      pMaterial;  //!< マテリアルです.
     Vector2         uv0;        //!< テクスチャ座標0です.
     Vector2         uv1;        //!< テクスチャ座標1です.
     Vector2         uv2;        //!< テクスチャ座標2です.
     Vector2         uv3;        //!< テクスチャ座標3です.
+    const IMaterial*      pMaterial;  //!< マテリアルです.
 
     //------------------------------------------------------------------------------
     //! @brief      コンストラクタです.
@@ -296,7 +296,7 @@ struct Quad : public IShape
         const Vector3&,
         const Vector3&,
         const Vector3&,
-        IMaterial*,
+        const IMaterial*,
         const Vector2& = Vector2( 0.0, 0.0 ),
         const Vector2& = Vector2( 0.0, 0.0 ),
         const Vector2& = Vector2( 0.0, 0.0 ),
@@ -306,17 +306,17 @@ struct Quad : public IShape
     //------------------------------------------------------------------------------
     //! @brief      交差判定を行います.
     //------------------------------------------------------------------------------
-    bool IsHit ( const Ray&, HitRecord& );
+    bool IsHit ( const Ray&, HitRecord& ) const;
 
     //-------------------------------------------------------------------------------
     //! @brief      マテリアルを取得します.
     //-------------------------------------------------------------------------------
-    IMaterial* GetMaterial();
+    const IMaterial* GetMaterial() const;
 
     //-------------------------------------------------------------------------------
     //! @brief      バウンディングボックスを取得します.
     //-------------------------------------------------------------------------------
-    BoundingBox GetBox();
+    BoundingBox GetBox() const;
 
     //------------------------------------------------------------------------------
     //! @brief      三角形の交差判定を行います.
@@ -330,7 +330,7 @@ struct Quad : public IShape
         const Vector2&,
         const Vector2&,
        HitRecord&
-    );
+    ) const;
 };
 
 } // namespace s3d

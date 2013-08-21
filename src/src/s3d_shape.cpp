@@ -23,7 +23,7 @@ Sphere::Sphere
 (
     const f64           _radius,
     const Vector3&      _position,
-    IMaterial*          _pMaterial
+    const IMaterial*    _pMaterial
 )
 : radius    ( _radius )
 , position  ( _position )
@@ -34,7 +34,7 @@ Sphere::Sphere
 //--------------------------------------------------------------------------------------
 //      交差判定を行います.
 //--------------------------------------------------------------------------------------
-bool Sphere::IsHit(const Ray &ray, HitRecord& record )
+bool Sphere::IsHit(const Ray &ray, HitRecord& record ) const
 {
     const Vector3 po = position - ray.pos;
     const f64 b  = Vector3::Dot(po, ray.dir);
@@ -73,13 +73,13 @@ bool Sphere::IsHit(const Ray &ray, HitRecord& record )
 //-------------------------------------------------------------------------------------
 //      マテリアルを取得します.
 //-------------------------------------------------------------------------------------
-IMaterial* Sphere::GetMaterial()
+const IMaterial* Sphere::GetMaterial() const
 { return pMaterial; }
 
 //-------------------------------------------------------------------------------------
 //      バウンディングボックスを取得します.
 //-------------------------------------------------------------------------------------
-BoundingBox Sphere::GetBox()
+BoundingBox Sphere::GetBox() const
 {
     Vector3 min( position.x + radius, position.y + radius, position.z + radius );
     Vector3 max( position.y - radius, position.y - radius, position.z - radius );
@@ -100,7 +100,7 @@ Triangle::Triangle
     const Vector3&      _p0,
     const Vector3&      _p1,
     const Vector3&      _p2,
-    IMaterial*          _pMaterial,
+    const IMaterial*    _pMaterial,
     const Vector2&      _uv0,
     const Vector2&      _uv1,
     const Vector2&      _uv2
@@ -119,7 +119,7 @@ Triangle::Triangle
 //-------------------------------------------------------------------------------------
 //      交差判定を行います.
 //-------------------------------------------------------------------------------------
-bool Triangle::IsHit( const Ray& ray, HitRecord& record )
+bool Triangle::IsHit( const Ray& ray, HitRecord& record ) const
 {
     Vector3 e1  = p1 - p0;
     Vector3 e2  = p2 - p0;
@@ -161,13 +161,13 @@ bool Triangle::IsHit( const Ray& ray, HitRecord& record )
 //-------------------------------------------------------------------------------------
 //! @brief      マテリアルを取得します.
 //-------------------------------------------------------------------------------------
-IMaterial* Triangle::GetMaterial()
+const IMaterial* Triangle::GetMaterial() const
 { return pMaterial; }
 
 //-------------------------------------------------------------------------------------
 //      バウンディングボックスを取得します.
 //-------------------------------------------------------------------------------------
-BoundingBox Triangle::GetBox()
+BoundingBox Triangle::GetBox() const
 {
     Vector3 min = Vector3::Min( p0, p1 );
     min = Vector3::Min( min, p2 );
@@ -192,7 +192,7 @@ Quad::Quad
     const Vector3&      _p1,
     const Vector3&      _p2,
     const Vector3&      _p3,
-    IMaterial*          _pMaterial,
+    const IMaterial*    _pMaterial,
     const Vector2&      _uv0,
     const Vector2&      _uv1,
     const Vector2&      _uv2,
@@ -224,7 +224,7 @@ bool Quad::IsHitTriangle
     const Vector2&  st1,
     const Vector2&  st2,
     HitRecord&      record
-)
+) const
 {
     Vector3 e1 = b - a;
     Vector3 e2 = c - a;
@@ -266,7 +266,7 @@ bool Quad::IsHitTriangle
 //-------------------------------------------------------------------------------------
 //      交差判定を行います.
 //-------------------------------------------------------------------------------------
-bool Quad::IsHit( const Ray& ray, HitRecord& record )
+bool Quad::IsHit( const Ray& ray, HitRecord& record ) const
 {
     if ( IsHitTriangle( ray, p0, p1, p2,  uv0, uv1, uv2, record ) )
     { return true; }
@@ -279,13 +279,13 @@ bool Quad::IsHit( const Ray& ray, HitRecord& record )
 //-------------------------------------------------------------------------------------
 //      マテリアルを取得します.
 //-------------------------------------------------------------------------------------
-IMaterial* Quad::GetMaterial()
+const IMaterial* Quad::GetMaterial() const
 { return pMaterial; }
 
 //-------------------------------------------------------------------------------------
 //      バウンディングボックスを取得します.
 //-------------------------------------------------------------------------------------
-BoundingBox Quad::GetBox()
+BoundingBox Quad::GetBox() const
 {
     Vector3 min = Vector3::Min( p0, p1 );
     min = Vector3::Min( min, p2 );

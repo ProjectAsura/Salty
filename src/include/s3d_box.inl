@@ -26,6 +26,15 @@ BoundingBox::BoundingBox()
 //      引数付きコンストラクタです.
 //----------------------------------------------------------------------------------
 S3D_INLINE
+BoundingBox::BoundingBox( const Vector3& value )
+: min( value )
+, max( value )
+{ /* DO_NOTHING */ }
+
+//----------------------------------------------------------------------------------
+//      引数付きコンストラクタです.
+//----------------------------------------------------------------------------------
+S3D_INLINE
 BoundingBox::BoundingBox( const Vector3& mini, const Vector3& maxi )
 : min( mini )
 , max( maxi )
@@ -106,6 +115,18 @@ BoundingBox BoundingBox::Merge( const BoundingBox& a, const BoundingBox& b )
 {
     Vector3 mini = Vector3::Min( a.min, b.min );
     Vector3 maxi = Vector3::Max( a.max, b.max );
+
+    return BoundingBox( mini, maxi );
+}
+
+//-----------------------------------------------------------------------------------
+//      バウンディングボックスと点をマージします.
+//-----------------------------------------------------------------------------------
+S3D_INLINE
+BoundingBox BoundingBox::Merge( const BoundingBox& box, const Vector3& p )
+{
+    Vector3 mini = Vector3::Min( box.min, p );
+    Vector3 maxi = Vector3::Max( box.max, p );
 
     return BoundingBox( mini, maxi );
 }

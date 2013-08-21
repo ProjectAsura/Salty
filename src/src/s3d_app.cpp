@@ -58,7 +58,7 @@ void TimeWatch( void* );
 //----------------------------------------------------------------------------------
 // Constant Values
 //----------------------------------------------------------------------------------
-static const s32 MAX_DEPTH = 32;
+static const s32 MAX_DEPTH = 16;
 
 
 //----------------------------------------------------------------------------------
@@ -72,39 +72,57 @@ Color*  g_pRT        = nullptr;
 Mutex   g_Mutex;
 
 MaterialBase g_Materials[] = {
-    MaterialBase( Color(0, 0, 0),  Color(0.75, 0.25, 0.25), MATERIAL_TYPE_MATTE ),
-    MaterialBase( Color(0, 0, 0),  Color(0.25, 0.25, 0.75), MATERIAL_TYPE_MATTE ),
-    MaterialBase( Color(0, 0, 0),  Color(0.75, 0.75, 0.75), MATERIAL_TYPE_MATTE ),
-    MaterialBase( Color(0, 0, 0),  Color(0.75, 0.25, 0.75), MATERIAL_TYPE_MATTE ),
-    MaterialBase( Color(0, 0, 0),  Color(0.75, 0.75, 0.75), MATERIAL_TYPE_MATTE ),
-    MaterialBase( Color(0, 0 ,0),  Color(0.75, 0.75, 0.75), MATERIAL_TYPE_MATTE ),
-    MaterialBase( Color(0, 0, 0),  Color(0.25, 0.75, 0.25), MATERIAL_TYPE_MATTE, "./res/texture/test.bmp" ),
-    MaterialBase( Color(0, 0, 0),  Color(0.99, 0.99, 0.99), MATERIAL_TYPE_MIRROR ),
-    MaterialBase( Color(0, 0, 0),  Color(0.99, 0.99, 0.99), MATERIAL_TYPE_CRYSTAL ),
-    MaterialBase( Color(36,36,36), Color(0.0,  0.0,  0.0 ), MATERIAL_TYPE_MATTE ),
-    MaterialBase( Color(0, 0, 0),  Color(0.75, 0.75, 0.25), MATERIAL_TYPE_MIRROR )
+    MaterialBase( Color(0.0, 0.0, 0.0),  Color(0.75, 0.25, 0.25), MATERIAL_TYPE_MATTE ),
+    MaterialBase( Color(0.0, 0.0, 0.0),  Color(0.25, 0.25, 0.75), MATERIAL_TYPE_MATTE ),
+    MaterialBase( Color(0.0, 0.0, 0.0),  Color(0.75, 0.75, 0.75), MATERIAL_TYPE_MATTE ),
+    MaterialBase( Color(0.0, 0.0, 0.0),  Color(0.75, 0.25, 0.75), MATERIAL_TYPE_MATTE ),
+    MaterialBase( Color(0.0, 0.0, 0.0),  Color(0.75, 0.75, 0.75), MATERIAL_TYPE_MATTE ),
+    MaterialBase( Color(0.0, 0.0, 0.0),  Color(0.75, 0.75, 0.75), MATERIAL_TYPE_MATTE ),
+    MaterialBase( Color(0.0, 0.0, 0.0),  Color(1.0,  1.0,  1.0 ), MATERIAL_TYPE_MATTE, "./res/texture/test.bmp" ),
+    MaterialBase( Color(0.0, 0.0, 0.0),  Color(0.99, 0.99, 0.99), MATERIAL_TYPE_MIRROR ),
+    MaterialBase( Color(0.0, 0.0, 0.0),  Color(0.99, 0.99, 0.99), MATERIAL_TYPE_CRYSTAL ),
+    MaterialBase( Color(36.0,36.0,36.0), Color(0.0,  0.0,  0.0 ), MATERIAL_TYPE_MATTE ),
+    MaterialBase( Color(0.0, 0.0, 0.0),  Color(0.75, 0.75, 0.25), MATERIAL_TYPE_MIRROR )
 };
 
 // レンダリングするシーンデータ
 Sphere g_Spheres[10] = {
-    Sphere( 1e5, Vector3(  1e5+1, 40.8, 81.6 ),  &g_Materials[0] ),    // 左
-    Sphere( 1e5, Vector3( -1e5+99, 40.8, 81.6 ), &g_Materials[1] ),    // 右
-    Sphere( 1e5, Vector3( 50, 40.8, 1e5 ),       &g_Materials[2] ),    // 奥
-    Sphere( 1e5, Vector3( 50, 40.8, -1e5+250 ),  &g_Materials[3] ),    // 手前
-    Sphere( 1e5, Vector3( 50, 1e5, 81.6 ),       &g_Materials[4] ),    // 床
-    Sphere( 1e5, Vector3( 50, -1e5+81.6, 81.6 ), &g_Materials[5] ),    // 天井
-    Sphere( 20,  Vector3( 65, 20, 20 ),          &g_Materials[6] ),    // 緑球
-    Sphere( 16.5,Vector3( 27, 16.5, 27 ),        &g_Materials[7] ),    // 鏡
-    Sphere( 16.5,Vector3( 77, 16.5, 78 ),        &g_Materials[8] ),    // 水晶.
-    Sphere( 15.0,Vector3( 50.0, 90.0, 81.6 ),    &g_Materials[9] ),    // 照明
+    Sphere( 1e5,   Vector3(  1e5+1.0,     40.8,      81.6       ), &g_Materials[0] ),    // 左
+    Sphere( 1e5,   Vector3( -1e5+99.0,    40.8,      81.6       ), &g_Materials[1] ),    // 右
+    Sphere( 1e5,   Vector3( 50.0,         40.8,      1e5        ), &g_Materials[2] ),    // 奥
+    Sphere( 1e5,   Vector3( 50.0,         40.8,     -1e5+250.0  ), &g_Materials[3] ),    // 手前
+    Sphere( 1e5,   Vector3( 50.0,         1e5,       81.6       ), &g_Materials[4] ),    // 床
+    Sphere( 1e5,   Vector3( 50.0,        -1e5+81.6,  81.6       ), &g_Materials[5] ),    // 天井
+    Sphere( 20.0,  Vector3( 65.0,         20.0,      20.0       ), &g_Materials[6] ),    // 緑球
+    Sphere( 16.5,  Vector3( 27.0,         16.5,      27.0       ), &g_Materials[7] ),    // 鏡
+    Sphere( 16.5,  Vector3( 77.0,         16.5,      78.0       ), &g_Materials[8] ),    // 水晶.
+    Sphere( 15.0,  Vector3( 50.0,         90.0,      81.6       ), &g_Materials[9] ),    // 照明
 };
 
 Triangle g_Triangles[] = {
-    Triangle( Vector3( 70.0, 30.0, 20.0 ), Vector3( 50.0, 70.0, 10.0 ), Vector3( 30.0, 30.0, 20.0 ), &g_Materials[6], Vector2( 0.0, 0.0 ), Vector2( 0.5, 1.0 ), Vector2( 1.0, 0.0 ) ), 
+    Triangle( 
+        Vector3( 70.0, 30.0, 20.0 ),
+        Vector3( 50.0, 70.0, 10.0 ),
+        Vector3( 30.0, 30.0, 20.0 ),
+        &g_Materials[10],
+        Vector2( 0.0, 0.0 ),
+        Vector2( 0.5, 1.0 ),
+        Vector2( 1.0, 0.0 )
+    ), 
 };
 
 Quad g_Quads[] = {
-    Quad( Vector3( 70.0, 30.0, 20.0 ), Vector3( 70.0, 70.0, 10.0 ), Vector3( 30.0, 70.0, 10.0 ), Vector3( 30.0, 30.0, 20.0 ), &g_Materials[8] ), 
+    Quad( 
+        Vector3( 70.0, 30.0, 20.0 ),
+        Vector3( 70.0, 70.0, 10.0 ),
+        Vector3( 30.0, 70.0, 10.0 ),
+        Vector3( 30.0, 30.0, 20.0 ),
+        &g_Materials[6],
+        Vector2( 0.0, 0.0 ),
+        Vector2( 0.0, 1.0 ),
+        Vector2( 1.0, 1.0 ),
+        Vector2( 1.0, 0.0 ) 
+    ),
 };
 
 // シェイプリスト.
@@ -147,13 +165,13 @@ f64 ComputeThreshold( const Color& value )
 S3D_INLINE
 bool Intersect(const Ray &ray, HitRecord& record)
 {
-    const f64 n = sizeof(g_pShapes) / sizeof(IShape*);
+    const s32 n = sizeof(g_pShapes) / sizeof(IShape*);
 
     // 初期化
     record = HitRecord();
 
     // 線形探索
-    for (s32 i = 0; i < s32(n); i ++)
+    for (s32 i = 0; i < n; i ++)
     {
         HitRecord temp;
 
@@ -161,7 +179,7 @@ bool Intersect(const Ray &ray, HitRecord& record)
         if ( g_pShapes[i]->IsHit( ray, temp ) )
         {
             // 距離が0以上かつ，前回計算時よりも距離が近い場合.
-            if ( temp.distance > 0.0 && temp.distance < record.distance )
+            if ( temp.distance > 0.0f && temp.distance < record.distance )
             {
                 // 更新.
                 record = temp;
@@ -238,10 +256,10 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
         { break; }
 
         // 衝突物体へのポインタ.
-        IShape* pShape = record.pShape;
+        const IShape* pShape = record.pShape;
 
         // マテリアルへのポインタ.
-        IMaterial* pMaterial = pShape->GetMaterial();
+        const IMaterial* pMaterial = pShape->GetMaterial();
 
         // 無補正法線データ.
         const Vector3 normalOrg = record.normal;
@@ -304,12 +322,74 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
                 W = Vector3::Mul( W, weight );
 
                 // レイを更新.
-                ray.pos = record.position;
-                ray.dir = dir;
+                ray.Update( record.position, dir );
 
                 #pragma endregion
             }
             break;
+
+#if 0
+            case MATERIAL_TYPE_CLAY:
+            {
+                #pragma region Oren-Nayer
+
+                // normalModの方向を基準とした正規直交基底(w, u, v)を作る。
+                // この基底に対する半球内で次のレイを飛ばす。
+                OrthonormalBasis onb;
+                onb.InitFromW( normalMod );
+
+                // コサイン項を使った重点的サンプリング
+                const f64 r1  = D_2PI * rnd.GetAsF64();
+                const f64 r2  = rnd.GetAsF64();
+                const f64 r2s = sqrt(r2);
+                Vector3 dir = Vector3::UnitVector(
+                    onb.u * cos(r1) * r2s
+                  + onb.v * sin(r1) * r2s
+                  + onb.w * sqrt(1.0 - r2) );
+
+                // コサイン項を使った重点的サンプリング
+                const f64 r1  = D_2PI * rnd.GetAsF64();
+                const f64 r2  = rnd.GetAsF64();
+                const f64 r2s = sqrt(r2);
+                Vector3 dir = Vector3::UnitVector(
+                    onb.u * cos(r1) * r2s
+                  + onb.v * sin(r1) * r2s
+                  + onb.w * sqrt(1.0 - r2) );
+
+                //========================================================================
+                // レンダリング方程式に対するモンテカルロ積分をLambertと同様に考えると,
+                // 従って Wr = color * ( A + B * cosφ * sinα * tanβ ) / q.
+                // ただし, α = min( θi, θr ), β = max( θi, θr )とする.
+                //========================================================================
+
+                //f64 s2 = m_Roughness * m_Roughness;
+                f64 s2 = 0.25 * 0.25;
+                f64 A = 1.0 - ( 0.5 * ( s2 / ( s2 + 0.33 ) ) );
+                f64 B = 0.45 * ( s2 / ( s2 + 0.09 ) );
+
+                f64 NV = Vector3::Dot( normalMod, ray.dir );
+                f64 NL = Vector3::Dot( normalMod, dir );
+
+                Vector3 projI = Vector3::UnitVector( ray.dir  - ( normalMod * NV ) );
+                Vector3 projR = Vector3::UnitVector( dir - ( normalMod * NL ) );
+
+                f64 cosPhai = Max( Vector3::Dot( projI, projR ), 0.0 );
+
+                f64 ti    = acos( NV );
+                f64 to    = acos( NL );
+                f64 alpha = Max( ti, to );
+                f64 beta  = Min( ti, to );
+                f64 f     = A + B * cosPhai * sin( alpha ) * tan( beta );
+
+                Color weight = Color::Mul( pMaterial->GetColor(), pMaterial->GetTextureColor( record.texcoord ) ) * f / prob;
+                W = Color::Mul( W, weight );
+
+                ray.Update( record.position, dir );
+
+                #pragma endregion
+            }
+            break;
+#endif
 
             // 完全鏡面
             case MATERIAL_TYPE_MIRROR:
@@ -326,11 +406,10 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
 
                 // 重み更新.
                 Color weight = Vector3::Mul( pMaterial->GetColor(), pMaterial->GetTextureColor( record.texcoord ) );
-                W = Vector3::Mul( W, weight );
+                W = Color::Mul( W, weight );
 
                 // レイを更新.
-                ray.pos = record.position;
-                ray.dir = reflect;
+                ray.Update( record.position, reflect );
 
                 #pragma endregion
             }
@@ -475,7 +554,7 @@ void PathTrace
         for (s32 x = 0; x < width; x ++) 
         {
             // ピクセルインデックス.
-            const s32 idx = ( y * width ) + x;
+            const s32 idx = ( ( height - 1 - y ) * width ) + x;
 
             Color accRadiance = Color(0.0, 0.0, 0.0);
 
@@ -495,12 +574,12 @@ void PathTrace
                         ( r2 + y ) / height - 0.5 );
 
                     // 加算.
-                    accRadiance += ( Radiance( ray, rnd ) / numSamples );
+                    accRadiance += Radiance( ray, rnd );
                 }
             }
 
             // ピクセルカラーを加算.
-            g_pRT[ idx ] += accRadiance;
+            g_pRT[ idx ] += accRadiance / numSamples;
         }
     }
 

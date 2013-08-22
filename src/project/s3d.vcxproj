@@ -18,6 +18,7 @@
     <ClInclude Include="..\include\s3d_camera.h" />
     <ClInclude Include="..\include\s3d_material.h" />
     <ClInclude Include="..\include\s3d_math.h" />
+    <ClInclude Include="..\include\s3d_mesh.h" />
     <ClInclude Include="..\include\s3d_mutex.h" />
     <ClInclude Include="..\include\s3d_onb.h" />
     <ClInclude Include="..\include\s3d_rand.h" />

@@ -134,6 +134,8 @@ struct OBJMATERIAL
     OBJVEC3 emissive;                               //!< 自己照明色です.
     float   shininess;                              //!< 鏡面反射強度です.
     float   alpha;                                  //!< 透過度です.
+    float   refractivity;
+    float   roughness;
     char    ambientMapName     [OBJ_NAME_LENGTH];   //!< アンビエントマップ名です.
     char    diffuseMapName     [OBJ_NAME_LENGTH];   //!< ディフューズマップ名です.
     char    specularMapName    [OBJ_NAME_LENGTH];   //!< スペキュラーマップ名です.
@@ -144,6 +146,8 @@ struct OBJMATERIAL
     //! @brief      コンストラクタです.
     //-----------------------------------------------------------------------------------
     OBJMATERIAL()
+    : refractivity( 1.0 )
+    , roughness   ( 0.0 )
     { /* DO_NOTHING */ }
 };
 

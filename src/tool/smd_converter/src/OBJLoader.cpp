@@ -785,6 +785,16 @@ bool OBJMESH::LoadMTLFile( const char* filename )
         {
             file >> t_materials[iMtlCount].shininess;
         }
+        // Refraction // Project Asura Original Tag.
+        else if ( 0 == strcmp( buf, "Rr" ) )
+        {
+            file >> t_materials[iMtlCount].refractivity;
+        }
+        // Roughness // Project Asura Original Tag.
+        else if ( 0 == strcmp( buf, "Kr" ) )
+        {
+            file >> t_materials[iMtlCount].roughness;
+        }
         // Ambient Map
         else if ( 0 == strcmp( buf, "map_Ka" ) )
         {
@@ -1340,7 +1350,10 @@ void OBJMESH::WriteDirect( FILE* pFile )
         material.emissive.z = m_Materials[ i ].emissive.z;
 
         // 屈折率.
-        material.refractivity = m_Materials[ i ].alpha;
+        material.refractivity = m_Materials[ i ].refractivity;
+
+        // 面の粗さ.
+        material.roughness = m_Materials[ i ].roughness;
 
         // テクスチャマップ名
         strcpy( material.diffuseMap, m_Materials[ i ].diffuseMapName );
@@ -1581,7 +1594,10 @@ void OBJMESH::WriteOptimize( FILE* pFile )
         material.emissive.z = m_Materials[ i ].emissive.z;
 
         // 屈折率.
-        material.refractivity = m_Materials[ i ].alpha;
+        material.refractivity = m_Materials[ i ].refractivity;
+
+        // 面の粗さ
+        material.roughness = m_Materials[ i ].roughness;
 
         // テクスチャマップ名.
         strcpy( material.diffuseMap, m_Materials[ i ].diffuseMapName );

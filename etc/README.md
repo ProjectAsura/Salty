@@ -4,7 +4,7 @@ Salty
 "Salty"は，見た目も中身も非常にしょっぱいレイトレーサーです。
 下の画像はSaltyでレンダリングしたしょっぱい絵です。
 
-![しょぱい絵](/etc/result.bmp)
+![しょぱい絵](/result.bmp)
 
 作者名：Pocol
 作品名：Salty

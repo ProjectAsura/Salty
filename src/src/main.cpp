@@ -26,7 +26,7 @@ int main( int argc, char **argv )
         // アプリケーションの構成設定.
         s3d::App::Config config;
 
-    #if 0
+    #if 1
         // 本番用.
         config.width         = 640;
         config.height        = 360;

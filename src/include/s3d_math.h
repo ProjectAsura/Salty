@@ -714,12 +714,22 @@ struct Ray
     //--------------------------------------------------------------------------------------
     void Update( const Vector3& p, const Vector3& d )
     {
-        pos = p;
-        dir = d;
-        invDir = Vector3( 1.0 / dir.x, 1.0 / dir.y, 1.0 / dir.z );
-        sign[0] = ( dir.x > 0.0 ) ? 0 : 1;
-        sign[1] = ( dir.y > 0.0 ) ? 0 : 1;
-        sign[2] = ( dir.z > 0.0 ) ? 0 : 1;
+        pos.x = p.x;
+        pos.y = p.y;
+        pos.z = p.z;
+
+        dir.x = d.x;
+        dir.y = d.y;
+        dir.z = d.z;
+
+        // ゼロ除算対策.
+        invDir.x = ( dir.x != 0.0 ) ? 1.0 / dir.x : 0.0;
+        invDir.y = ( dir.y != 0.0 ) ? 1.0 / dir.y : 0.0;
+        invDir.z = ( dir.z != 0.0 ) ? 1.0 / dir.z : 0.0;
+
+        sign[0] = ( dir.x > 0.0 ) ? 1 : 0;
+        sign[1] = ( dir.y > 0.0 ) ? 1 : 0;
+        sign[2] = ( dir.z > 0.0 ) ? 1 : 0;
     }
 };
 

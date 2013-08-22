@@ -56,8 +56,8 @@ bool Sphere::IsHit(const Ray &ray, HitRecord& record ) const
     else 
     { dist = t2; }
 
-    //if ( dist > record.distance )
-    //{ return false; }
+    if ( dist > record.distance )
+    { return false; }
 
     record.distance  = dist;
     record.position  = ray.pos + record.distance * ray.dir;
@@ -91,6 +91,12 @@ BoundingBox Sphere::GetBox() const
 
     return BoundingBox( min, max );
 }
+
+//-------------------------------------------------------------------------------------
+//      基本図形であるかどうか判定します.
+//-------------------------------------------------------------------------------------
+bool Sphere::IsPrimitive() const
+{ return true; }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -150,8 +156,8 @@ bool Triangle::IsHit( const Ray& ray, HitRecord& record ) const
     if ( dist < D_EPS || dist > D_INF )
     { return false; }
 
-    //if ( dist > record.distance )
-    //{ return false; }
+    if ( dist > record.distance )
+    { return false; }
 
     record.position = ray.pos + ray.dir * dist;
     record.distance = dist;
@@ -167,7 +173,7 @@ bool Triangle::IsHit( const Ray& ray, HitRecord& record ) const
 }
 
 //-------------------------------------------------------------------------------------
-//! @brief      マテリアルを取得します.
+//      マテリアルを取得します.
 //-------------------------------------------------------------------------------------
 const IMaterial* Triangle::GetMaterial() const
 { return pMaterial; }
@@ -186,6 +192,12 @@ BoundingBox Triangle::GetBox() const
 
     return BoundingBox( min, max );
 }
+
+//-------------------------------------------------------------------------------------
+//      基本図形であるかどうか判定します.
+//-------------------------------------------------------------------------------------
+bool Triangle::IsPrimitive() const
+{ return true; }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -259,8 +271,8 @@ bool Quad::IsHitTriangle
     if ( dist < D_EPS || dist > D_INF )
     { return false; }
 
-    //if ( dist > record.distance )
-    //{ return false; }
+    if ( dist > record.distance )
+    { return false; }
 
     record.position = ray.pos + ray.dir * dist;
     record.distance = dist;
@@ -310,6 +322,13 @@ BoundingBox Quad::GetBox() const
 
     return BoundingBox( min, max );
 }
+
+//-------------------------------------------------------------------------------------
+//      基本図形であるかどうかチェックします.
+//-------------------------------------------------------------------------------------
+bool Quad::IsPrimitive() const
+{ return true; }
+
 
 } // namespace s3d
 

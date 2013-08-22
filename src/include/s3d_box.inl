@@ -7,6 +7,8 @@
 #ifndef __S3D_BOX_INL__
 #define __S3D_BOX_INL__
 
+#include <cstdio>
+
 namespace s3d {
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -55,56 +57,56 @@ BoundingBox::BoundingBox( const BoundingBox& value )
 S3D_INLINE
 bool BoundingBox::IsHit( const Ray& ray ) const
 {
-    register f64 interval_min = D_EPS;
-    register f64 interval_max = D_INF;
+    register f64 tx_min, ty_min, tz_min;
+    register f64 tx_max, ty_max, tz_max;
 
-    Vector3 pp[2]     = { min, max };
-    Vector3 rayPos    = ray.pos;
-    Vector3 rayInvDir = ray.dir;
+    if ( ray.sign[0] )
+    {
+        tx_min = ( min.x - ray.pos.x ) * ray.invDir.x;
+        tx_max = ( max.x - ray.pos.x ) * ray.invDir.x;
+    }
+    else
+    {
+        tx_min = ( max.x - ray.pos.x ) * ray.invDir.x;
+        tx_max = ( min.x - ray.pos.x ) * ray.invDir.x;
+    }
 
-    register s32 idx0 = ray.sign[0];
-    register s32 idx1 = 1 - idx0;
+    if ( ray.sign[1] )
+    {
+        ty_min = ( min.y - ray.pos.y ) * ray.invDir.y;
+        ty_max = ( max.y - ray.pos.y ) * ray.invDir.y;
+    }
+    else
+    {
+        ty_min = ( max.y - ray.pos.y ) * ray.invDir.y;
+        ty_max = ( min.y - ray.pos.y ) * ray.invDir.y;
+    }
 
-    register f64 t0 = ( pp[ idx0 ].x - rayPos.x ) * rayInvDir.x;
-    register f64 t1 = ( pp[ idx1 ].x - rayPos.x ) * rayInvDir.x;
-    
-    if ( t0 > interval_min )
-    { interval_min = t0; }
-    
-    if ( t1 < interval_max )
-    { interval_max = t1; }
-    
-    if ( interval_min > interval_max )
-    { return false; }
+    if ( ray.sign[2] )
+    {
+        tz_min = ( min.z - ray.pos.z ) * ray.invDir.z;
+        tz_max = ( max.z - ray.pos.z ) * ray.invDir.z;
+    }
+    else
+    {
+        tz_min = ( max.z - ray.pos.z ) * ray.invDir.z;
+        tz_max = ( min.z - ray.pos.z ) * ray.invDir.z;
+    }
 
-    idx0 = ray.sign[1];
-    idx1 = 1 - idx0;
+    f64 t0 = ( tx_min > ty_min ) ? tx_min : ty_min;
+        t0 = ( tz_min > t0 )     ? tz_min : t0;
 
-    t0 = ( pp[ idx0 ].y - rayPos.y ) * rayInvDir.y;
-    t1 = ( pp[ idx1 ].y - rayPos.y ) * rayInvDir.y;
-    
-    if ( t0 > interval_min )
-    { interval_min = t0; }
-    
-    if ( t1 < interval_max )
-    { interval_max = t1; }
-    
-    if ( interval_min > interval_max )
-    { return false; }
+    f64 t1 = ( tx_max > ty_max ) ? tx_max : ty_max;
+        t1 = ( tz_max > t1 )     ? tz_max : t1;
 
-    idx0 = ray.sign[2];
-    idx1 = 1 - idx0;
+    bool result = ( t0 < t1 && t1 > D_EPS );
 
-    t0 = ( pp[ idx0 ].z - rayPos.z ) * rayInvDir.z;
-    t1 = ( pp[ idx1 ].z - rayPos.z ) * rayInvDir.z;
-    
-    if ( t0 > interval_min )
-    { interval_min = t0; }
-    
-    if ( t1 < interval_max )
-    { interval_max = t1; }
+    if ( !result )
+    {
+        printf_s( "t0 = %lf, t1 = %lf\n", t0, t1 );
+    }
 
-    return ( interval_min <= interval_max );
+    return result;
 }
 
 //----------------------------------------------------------------------------------
@@ -131,7 +133,7 @@ BoundingBox BoundingBox::Merge( const BoundingBox& box, const Vector3& p )
     return BoundingBox( mini, maxi );
 }
 
-} // namespace s3d  
+} // namespace s3d
 
 
 #endif//__S3D_BOX_INL__

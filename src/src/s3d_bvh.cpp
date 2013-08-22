@@ -84,6 +84,25 @@ BVH::BVH( IShape* pShape1, IShape* pShape2 )
 }
 
 //--------------------------------------------------------------------------
+//      デストラクタです.
+//--------------------------------------------------------------------------
+BVH::~BVH()
+{
+    if ( !pLeft->IsPrimitive() )
+    {
+        delete pLeft;
+    }
+
+    if ( !pRight->IsPrimitive() )
+    {
+        delete pRight;
+    }
+
+    pLeft  = nullptr;
+    pRight = nullptr;
+}
+
+//--------------------------------------------------------------------------
 //      初期化処理を行います.
 //--------------------------------------------------------------------------
 void BVH::Init( IShape** ppShapes, const u32 numShapes )
@@ -98,8 +117,9 @@ void BVH::Init( IShape** ppShapes, const u32 numShapes )
     { box = BoundingBox::Merge( box, ppShapes[i]->GetBox() ); }
 
     Vector3 pivot = ( box.max + box.min ) / 2.0;
+    Vector3 size  = box.max - box.min;
+
     s32 axis = 0;
-    Vector3 size = box.max - box.min;
     if ( size.x > size.y )
     { axis = ( size.x > size.z ) ? 0 : 2; }
     else
@@ -122,8 +142,6 @@ bool BVH::IsHit( const Ray& ray, HitRecord& record ) const
     bool isHit1 = false;
     bool isHit2 = false;
 
-    //record.distance = D_INF;
-
     isHit1 = pRight->IsHit( ray, record );
     isHit2 = pLeft->IsHit( ray, record );
 
@@ -143,6 +161,12 @@ BoundingBox BVH::GetBox() const
 { return box; }
 
 //--------------------------------------------------------------------------
+//      基本図形であるかどうか判定します.
+//--------------------------------------------------------------------------
+bool BVH::IsPrimitive() const
+{ return false; }
+
+//--------------------------------------------------------------------------
 //      ブランチを構築します.
 //--------------------------------------------------------------------------
 IShape* BVH::BuildBranch( IShape** ppShapes, const s32 numShapes )
@@ -157,9 +181,9 @@ IShape* BVH::BuildBranch( IShape** ppShapes, const s32 numShapes )
     { bbox = BoundingBox::Merge( bbox, ppShapes[i]->GetBox() ); }
 
     Vector3 pivot = ( bbox.max + bbox.min ) / 2.0;
+    Vector3 size  = bbox.max - bbox.min;
 
     s32 axis = 0;
-    Vector3 size = bbox.max - bbox.min;
     if ( size.x > size.y )
     { axis = ( size.x > size.z ) ? 0 : 2; }
     else

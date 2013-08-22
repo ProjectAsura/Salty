@@ -59,22 +59,22 @@ void TimeWatch( void* );
 //----------------------------------------------------------------------------------
 // Constant Values
 //----------------------------------------------------------------------------------
-static const s32 MAX_DEPTH = 16;
+static const s32 MAX_DEPTH = 32;        //!< 打ち切り深度.
 
 
 //----------------------------------------------------------------------------------
 // Global Varaibles.
 //----------------------------------------------------------------------------------
-bool    g_WatcherEnd = false;
-bool    g_IsFinished = false;
-u32     g_Width      = 0;
-u32     g_Height     = 0;
-u32     g_NumSample  = 0;
-u32     g_NumSubSample = 0;
-Color*  g_pRT        = nullptr;
-Mutex   g_Mutex;
+bool    g_WatcherEnd    = false;        //!< ウォッチーの終了フラグ.
+bool    g_IsFinished    = false;        //!< レイトレ終了フラグ.
+u32     g_Width         = 0;            //!< 画像の横幅.
+u32     g_Height        = 0;            //!< 画像の縦幅.
+u32     g_NumSample     = 0;            //!< サンプル数.
+u32     g_NumSubSample  = 0;            //!< サブサンプル数.
+Color*  g_pRT           = nullptr;      //!< レンダーターゲット.
+Mutex   g_Mutex;                        //!< ミューテックス.
 
-
+// Lambert
 Matte g_Matte[] = {
     Matte( Color( 0.75, 0.25, 0.25 ) ),
     Matte( Color( 0.25, 0.75, 0.25 ) ),
@@ -84,23 +84,28 @@ Matte g_Matte[] = {
     Matte( Color( 0.0, 0.0, 0.0 ), Color( 36.0, 36.0, 36.0 ) ),
 };
 
+// Oren-Nayer
 Clay g_Clay[] = {
     Clay( Color( 0.25, 0.75, 0.25 ), 0.85 ),
 };
 
+// Mirror
 Mirror g_Mirror[] = {
     Mirror( Color( 1.0, 1.0, 1.0 ) ),
     Mirror( Color( 0.75, 0.75, 0.25 ) ),
 };
 
+// Refraction (Crystal)
 Crystal g_Crystal[] = {
     Crystal( Color( 1.0, 1.0, 1.0 ) ),
 };
 
+// Refraction (Diamond)
 Diamond g_Diamond[] = {
     Diamond( Color( 1.0, 1.0, 1.0 ) ),
 };
 
+// Materials
 IMaterial* g_pMaterials[] = {
     &g_Matte[0],        // 赤.
     &g_Matte[1],        // 緑.
@@ -128,6 +133,7 @@ Sphere g_Spheres[10] = {
     Sphere( 15.0,  Vector3( 50.0,         90.0,      81.6       ), g_pMaterials[5] ),    // 照明
 };
 
+// トライアングル.
 Triangle g_Triangles[] = {
     Triangle( 
         Vector3( 70.0, 30.0, 20.0 ),
@@ -140,6 +146,7 @@ Triangle g_Triangles[] = {
     ), 
 };
 
+// 矩形.
 Quad g_Quads[] = {
     Quad( 
         Vector3( 70.0, 30.0, 20.0 ),
@@ -169,7 +176,10 @@ IShape* g_pShapes[] = {
     &g_Triangles[0],
 };
 
+// 境界ボリューム階層.
 IShape* g_pBVH = nullptr;
+
+
 
 //----------------------------------------------------------------------------------
 //! @brief      ロシアンルーレットに用いる閾値を求めます.
@@ -196,27 +206,13 @@ f64 ComputeThreshold( const Color& value )
 S3D_INLINE
 bool Intersect(const Ray &ray, HitRecord& record)
 {
-    const s32 n = sizeof(g_pShapes) / sizeof(IShape*);
+    HitRecord temp;
 
-    // 初期化
-    record = HitRecord();
-
-    // 線形探索
-    for (s32 i = 0; i < n; i ++)
+    // 交差判定.
+    if ( g_pBVH->IsHit( ray, temp ) )
     {
-        HitRecord temp;
-
-        // 交差判定.
-        if ( g_pShapes[i]->IsHit( ray, temp ) )
-        //if ( g_pBVH->IsHit( ray, temp ) )
-        {
-            // 距離が0以上かつ，前回計算時よりも距離が近い場合.
-            if ( temp.distance > 0.0f && temp.distance < record.distance )
-            {
-                // 更新.
-                record = temp;
-            }
-        }
+        // 更新.
+        record = temp;
     }
 
     return (record.pShape != nullptr);
@@ -525,12 +521,14 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
             }
             break;
 
-            // プラスチック.
-            case MATERIAL_TYPE_PLASTIC :
-            {
-                /* NOT_IMPLEMENT */                
-            }
-            break;
+#if 0
+            //// プラスチック.
+            //case MATERIAL_TYPE_PLASTIC :
+            //{
+            //    /* NOT_IMPLEMENT */
+            //}
+            //break;
+#endif
         }
     }
 
@@ -578,7 +576,7 @@ void PathTrace
     uintptr_t ret = _beginthread( TimeWatch, 0, nullptr );
     assert( ret != -1 );    // 失敗しちゃだめよ.
 
-
+    // 縦方向のループ.
     for (s32 y = 0; y < height; y ++) 
     {
         // 乱数
@@ -590,11 +588,13 @@ void PathTrace
     #if _OPENMP
         #pragma omp parallel for schedule(dynamic, 1) num_threads(8)
     #endif
+        // 横方向のループ.
         for (s32 x = 0; x < width; x ++) 
         {
             // ピクセルインデックス.
             const s32 idx = ( ( height - 1 - y ) * width ) + x;
 
+            // 蓄積放射輝度.
             Color accRadiance = Color(0.0, 0.0, 0.0);
 
             // supersamples x supersamples のスーパーサンプリング
@@ -630,12 +630,19 @@ void PathTrace
     g_Mutex.Unlock();
 
     // スレッドの終了を待機する.
-    while( !g_WatcherEnd )
-    { Sleep( 10 ); }
+    for( u32 i=0; i<(UINT_MAX-10); ++i )
+    {
+        // ウォッチャーが終了するまで待ち.
+        if ( g_WatcherEnd )
+        { break; }
+
+        // オネンネしな！
+        Sleep( 10 );
+    }
 
     char filename[256];
-    time_t t = time( nullptr );
-    tm local_time;
+    tm      local_time;
+    time_t  t = time( nullptr );
     errno_t err = localtime_s( &local_time, &t );
 
     if ( err == 0 )
@@ -691,8 +698,8 @@ void TimeWatch( void* )
         if ( sec > 59.9 )
         {
             char filename[256];
-            time_t t = time( nullptr );
             tm local_time;
+            time_t t = time( nullptr );
             errno_t err = localtime_s( &local_time, &t );
 
             if ( err == 0 )
@@ -724,7 +731,7 @@ void TimeWatch( void* )
         timer.Stop();
         f64 hour = timer.GetElapsedTimeHour();
 
-#if 0
+#if 1
         // 1時間以上たった
         if ( hour >= 1.0 )
         {
@@ -738,7 +745,7 @@ void TimeWatch( void* )
             g_Mutex.Unlock();
 
             // ループ脱出.
-            break;
+            //break;
         }
 #endif
 
@@ -818,15 +825,29 @@ void App::Run( Config& config )
     _mkdir( "./img" );
     _mkdir( "./img/frame" );
 
-    g_Width  = config.width;
-    g_Height = config.height;
-    g_NumSample = config.numSamples;
+    // かっこ悪いけど, グローバルに格納.
+    g_Width        = config.width;
+    g_Height       = config.height;
+    g_NumSample    = config.numSamples;
     g_NumSubSample = config.numSubSamples;
 
-    //g_pBVH = BVH::BuildBranch( g_pShapes, 11 );
+    // 物体の数を算出.
+    u32 numShapes = sizeof( g_pShapes ) / sizeof( g_pShapes[0] );
+
+    // BVH構築.
+    g_pBVH = BVH::BuildBranch( g_pShapes, numShapes );
+    assert( g_pBVH != nullptr );
 
     // レイトレ！
     PathTrace( config.width, config.height, config.numSamples, config.numSubSamples );
+
+    // メモリ解放.
+    if ( g_pBVH )
+    {
+        delete g_pBVH;
+        g_pBVH = nullptr;
+    }
+
 }
 
 

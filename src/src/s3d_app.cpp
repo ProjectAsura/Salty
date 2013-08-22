@@ -16,6 +16,7 @@
 #include <s3d_timer.h>
 #include <s3d_mutex.h>
 #include <s3d_onb.h>
+#include <s3d_bvh.h>
 
 #include <iostream>
 #include <direct.h>
@@ -68,35 +69,63 @@ bool    g_WatcherEnd = false;
 bool    g_IsFinished = false;
 u32     g_Width      = 0;
 u32     g_Height     = 0;
+u32     g_NumSample  = 0;
+u32     g_NumSubSample = 0;
 Color*  g_pRT        = nullptr;
 Mutex   g_Mutex;
 
-MaterialBase g_Materials[] = {
-    MaterialBase( Color(0.0, 0.0, 0.0),  Color(0.75, 0.25, 0.25), MATERIAL_TYPE_MATTE ),
-    MaterialBase( Color(0.0, 0.0, 0.0),  Color(0.25, 0.25, 0.75), MATERIAL_TYPE_MATTE ),
-    MaterialBase( Color(0.0, 0.0, 0.0),  Color(0.75, 0.75, 0.75), MATERIAL_TYPE_MATTE ),
-    MaterialBase( Color(0.0, 0.0, 0.0),  Color(0.75, 0.25, 0.75), MATERIAL_TYPE_MATTE ),
-    MaterialBase( Color(0.0, 0.0, 0.0),  Color(0.75, 0.75, 0.75), MATERIAL_TYPE_MATTE ),
-    MaterialBase( Color(0.0, 0.0, 0.0),  Color(0.75, 0.75, 0.75), MATERIAL_TYPE_MATTE ),
-    MaterialBase( Color(0.0, 0.0, 0.0),  Color(1.0,  1.0,  1.0 ), MATERIAL_TYPE_MATTE, "./res/texture/test.bmp" ),
-    MaterialBase( Color(0.0, 0.0, 0.0),  Color(0.99, 0.99, 0.99), MATERIAL_TYPE_MIRROR ),
-    MaterialBase( Color(0.0, 0.0, 0.0),  Color(0.99, 0.99, 0.99), MATERIAL_TYPE_CRYSTAL ),
-    MaterialBase( Color(36.0,36.0,36.0), Color(0.0,  0.0,  0.0 ), MATERIAL_TYPE_MATTE ),
-    MaterialBase( Color(0.0, 0.0, 0.0),  Color(0.75, 0.75, 0.25), MATERIAL_TYPE_MIRROR )
+
+Matte g_Matte[] = {
+    Matte( Color( 0.75, 0.25, 0.25 ) ),
+    Matte( Color( 0.25, 0.75, 0.25 ) ),
+    Matte( Color( 0.25, 0.25, 0.75 ) ),
+    Matte( Color( 0.75, 0.75, 0.75 ) ),
+    Matte( Color( 0.25, 0.25, 0.25 ) ),
+    Matte( Color( 0.0, 0.0, 0.0 ), Color( 36.0, 36.0, 36.0 ) ),
+};
+
+Clay g_Clay[] = {
+    Clay( Color( 0.25, 0.75, 0.25 ), 0.85 ),
+};
+
+Mirror g_Mirror[] = {
+    Mirror( Color( 1.0, 1.0, 1.0 ) ),
+    Mirror( Color( 0.75, 0.75, 0.25 ) ),
+};
+
+Crystal g_Crystal[] = {
+    Crystal( Color( 1.0, 1.0, 1.0 ) ),
+};
+
+Diamond g_Diamond[] = {
+    Diamond( Color( 1.0, 1.0, 1.0 ) ),
+};
+
+IMaterial* g_pMaterials[] = {
+    &g_Matte[0],        // 赤.
+    &g_Matte[1],        // 緑.
+    &g_Matte[2],        // 青.
+    &g_Matte[3],        // 白.
+    &g_Matte[4],        // 黒.
+    &g_Matte[5],        // 照明.
+    &g_Mirror[0],       // ミラー.
+    &g_Mirror[1],       // 黄色ミラー.
+    &g_Diamond[0],      // 水晶.
+    &g_Clay[0],
 };
 
 // レンダリングするシーンデータ
 Sphere g_Spheres[10] = {
-    Sphere( 1e5,   Vector3(  1e5+1.0,     40.8,      81.6       ), &g_Materials[0] ),    // 左
-    Sphere( 1e5,   Vector3( -1e5+99.0,    40.8,      81.6       ), &g_Materials[1] ),    // 右
-    Sphere( 1e5,   Vector3( 50.0,         40.8,      1e5        ), &g_Materials[2] ),    // 奥
-    Sphere( 1e5,   Vector3( 50.0,         40.8,     -1e5+250.0  ), &g_Materials[3] ),    // 手前
-    Sphere( 1e5,   Vector3( 50.0,         1e5,       81.6       ), &g_Materials[4] ),    // 床
-    Sphere( 1e5,   Vector3( 50.0,        -1e5+81.6,  81.6       ), &g_Materials[5] ),    // 天井
-    Sphere( 20.0,  Vector3( 65.0,         20.0,      20.0       ), &g_Materials[6] ),    // 緑球
-    Sphere( 16.5,  Vector3( 27.0,         16.5,      27.0       ), &g_Materials[7] ),    // 鏡
-    Sphere( 16.5,  Vector3( 77.0,         16.5,      78.0       ), &g_Materials[8] ),    // 水晶.
-    Sphere( 15.0,  Vector3( 50.0,         90.0,      81.6       ), &g_Materials[9] ),    // 照明
+    Sphere( 1e5,   Vector3(  1e5+1.0,     40.8,      81.6       ), g_pMaterials[0] ),    // 左
+    Sphere( 1e5,   Vector3( 50.0,         40.8,      1e5        ), g_pMaterials[3] ),    // 奥
+    Sphere( 1e5,   Vector3( -1e5+99.0,    40.8,      81.6       ), g_pMaterials[2] ),    // 右
+    Sphere( 1e5,   Vector3( 50.0,         40.8,     -1e5+250.0  ), g_pMaterials[1] ),    // 手前
+    Sphere( 1e5,   Vector3( 50.0,         1e5,       81.6       ), g_pMaterials[3] ),    // 床
+    Sphere( 1e5,   Vector3( 50.0,        -1e5+81.6,  81.6       ), g_pMaterials[3] ),    // 天井
+    Sphere( 20.0,  Vector3( 65.0,         20.0,      20.0       ), g_pMaterials[9] ),    // 緑球
+    Sphere( 16.5,  Vector3( 27.0,         16.5,      27.0       ), g_pMaterials[6] ),    // 鏡
+    Sphere( 16.5,  Vector3( 77.0,         16.5,      78.0       ), g_pMaterials[8] ),    // 水晶.
+    Sphere( 15.0,  Vector3( 50.0,         90.0,      81.6       ), g_pMaterials[5] ),    // 照明
 };
 
 Triangle g_Triangles[] = {
@@ -104,7 +133,7 @@ Triangle g_Triangles[] = {
         Vector3( 70.0, 30.0, 20.0 ),
         Vector3( 50.0, 70.0, 10.0 ),
         Vector3( 30.0, 30.0, 20.0 ),
-        &g_Materials[10],
+        g_pMaterials[7],
         Vector2( 0.0, 0.0 ),
         Vector2( 0.5, 1.0 ),
         Vector2( 1.0, 0.0 )
@@ -117,7 +146,7 @@ Quad g_Quads[] = {
         Vector3( 70.0, 70.0, 10.0 ),
         Vector3( 30.0, 70.0, 10.0 ),
         Vector3( 30.0, 30.0, 20.0 ),
-        &g_Materials[6],
+        g_pMaterials[7],
         Vector2( 0.0, 0.0 ),
         Vector2( 0.0, 1.0 ),
         Vector2( 1.0, 1.0 ),
@@ -139,6 +168,8 @@ IShape* g_pShapes[] = {
     &g_Spheres[9],
     &g_Triangles[0],
 };
+
+IShape* g_pBVH = nullptr;
 
 //----------------------------------------------------------------------------------
 //! @brief      ロシアンルーレットに用いる閾値を求めます.
@@ -177,6 +208,7 @@ bool Intersect(const Ray &ray, HitRecord& record)
 
         // 交差判定.
         if ( g_pShapes[i]->IsHit( ray, temp ) )
+        //if ( g_pBVH->IsHit( ray, temp ) )
         {
             // 距離が0以上かつ，前回計算時よりも距離が近い場合.
             if ( temp.distance > 0.0f && temp.distance < record.distance )
@@ -328,24 +360,16 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
             }
             break;
 
-#if 0
             case MATERIAL_TYPE_CLAY:
             {
                 #pragma region Oren-Nayer
+
+                const Clay* pClay = reinterpret_cast<const Clay*>( pMaterial );
 
                 // normalModの方向を基準とした正規直交基底(w, u, v)を作る。
                 // この基底に対する半球内で次のレイを飛ばす。
                 OrthonormalBasis onb;
                 onb.InitFromW( normalMod );
-
-                // コサイン項を使った重点的サンプリング
-                const f64 r1  = D_2PI * rnd.GetAsF64();
-                const f64 r2  = rnd.GetAsF64();
-                const f64 r2s = sqrt(r2);
-                Vector3 dir = Vector3::UnitVector(
-                    onb.u * cos(r1) * r2s
-                  + onb.v * sin(r1) * r2s
-                  + onb.w * sqrt(1.0 - r2) );
 
                 // コサイン項を使った重点的サンプリング
                 const f64 r1  = D_2PI * rnd.GetAsF64();
@@ -362,8 +386,7 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
                 // ただし, α = min( θi, θr ), β = max( θi, θr )とする.
                 //========================================================================
 
-                //f64 s2 = m_Roughness * m_Roughness;
-                f64 s2 = 0.25 * 0.25;
+                f64 s2 = pClay->GetRoughness() * pClay->GetRoughness();
                 f64 A = 1.0 - ( 0.5 * ( s2 / ( s2 + 0.33 ) ) );
                 f64 B = 0.45 * ( s2 / ( s2 + 0.09 ) );
 
@@ -389,7 +412,6 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
                 #pragma endregion
             }
             break;
-#endif
 
             // 完全鏡面
             case MATERIAL_TYPE_MIRROR:
@@ -415,10 +437,13 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
             }
             break;
 
-            // 水晶.
+            // 屈折系.
             case MATERIAL_TYPE_CRYSTAL:
+            case MATERIAL_TYPE_DIAMOND:
             {
-                #pragma region Crystal
+                #pragma region Refraction
+
+                const RefractionMaterial* pRefractionMat = reinterpret_cast<const RefractionMaterial*>( pMaterial );
 
                 // 反射ベクトルを求める.
                 Vector3 reflect = Vector3::Reflect( ray.dir, normalOrg );
@@ -427,9 +452,16 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
                 // レイがオブジェクトから出るのか? 入るのか?
                 const bool into = ( Vector3::Dot( normalOrg, normalMod ) > 0.0 );
 
+                // ===============
                 // Snellの法則
-                const f64 nc    = 1.0;                  // 真空の屈折率
-                const f64 nt    = REFRACTITY_CRYSTAL;   // オブジェクトの屈折率
+                // ===============
+                
+                // 真空の屈折率
+                const f64 nc    = 1.0;
+
+                // オブジェクトの屈折率
+                const f64 nt    = pRefractionMat->GetRefractivity();
+
                 const f64 nnt   = ( into ) ? ( nc / nt ) : ( nt / nc );
                 const f64 ddn   = Vector3::Dot( ray.dir, normalMod );
                 const f64 cos2t = 1.0 - nnt * nnt * (1.0 - ddn * ddn);
@@ -490,6 +522,13 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
                 }
 
                 #pragma endregion
+            }
+            break;
+
+            // プラスチック.
+            case MATERIAL_TYPE_PLASTIC :
+            {
+                /* NOT_IMPLEMENT */                
             }
             break;
         }
@@ -713,6 +752,11 @@ void TimeWatch( void* )
 
             if ( err == 0 )
             {
+                fprintf( pFile, "Setting : \n" );
+                fprintf( pFile, "    width      = %d\n", g_Width );
+                fprintf( pFile, "    height     = %d\n", g_Height );
+                fprintf( pFile, "    sample     = %d\n", g_NumSample );
+                fprintf( pFile, "    sub sumple = %d\n", g_NumSubSample );
                 fprintf( pFile, "Rendering Time %lf (sec)\n", timer.GetElapsedTimeSec() );
                 fprintf( pFile, "               %lf (min)\n", timer.GetElapsedTimeMin() );
                 fprintf( pFile, "               %lf (hour)\n", timer.GetElapsedTimeHour() );
@@ -776,6 +820,10 @@ void App::Run( Config& config )
 
     g_Width  = config.width;
     g_Height = config.height;
+    g_NumSample = config.numSamples;
+    g_NumSubSample = config.numSubSamples;
+
+    //g_pBVH = BVH::BuildBranch( g_pShapes, 11 );
 
     // レイトレ！
     PathTrace( config.width, config.height, config.numSamples, config.numSubSamples );

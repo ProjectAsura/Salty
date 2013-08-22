@@ -50,11 +50,16 @@ bool Sphere::IsHit(const Ray &ray, HitRecord& record ) const
     if (t1 < D_EPS && t2 < D_EPS)
     { return false; }   // 交差しなかった.
 
+    f64 dist = 0.0;
     if (t1 > D_EPS) 
-    { record.distance = t1; }
+    { dist = t1; }
     else 
-    { record.distance = t2; }
+    { dist = t2; }
 
+    //if ( dist > record.distance )
+    //{ return false; }
+
+    record.distance  = dist;
     record.position  = ray.pos + record.distance * ray.dir;
     record.normal    = Vector3::UnitVector(record.position - position);
     record.pShape    = this;
@@ -81,8 +86,8 @@ const IMaterial* Sphere::GetMaterial() const
 //-------------------------------------------------------------------------------------
 BoundingBox Sphere::GetBox() const
 {
-    Vector3 min( position.x + radius, position.y + radius, position.z + radius );
-    Vector3 max( position.y - radius, position.y - radius, position.z - radius );
+    Vector3 min( position.x - radius, position.y - radius, position.z - radius );
+    Vector3 max( position.y + radius, position.y + radius, position.z + radius );
 
     return BoundingBox( min, max );
 }
@@ -145,6 +150,9 @@ bool Triangle::IsHit( const Ray& ray, HitRecord& record ) const
     if ( dist < D_EPS || dist > D_INF )
     { return false; }
 
+    //if ( dist > record.distance )
+    //{ return false; }
+
     record.position = ray.pos + ray.dir * dist;
     record.distance = dist;
     record.normal   = normal;
@@ -169,10 +177,11 @@ const IMaterial* Triangle::GetMaterial() const
 //-------------------------------------------------------------------------------------
 BoundingBox Triangle::GetBox() const
 {
-    Vector3 min = Vector3::Min( p0, p1 );
+    Vector3 min, max;
+    min = Vector3::Min( p0, p1 );
     min = Vector3::Min( min, p2 );
 
-    Vector3 max = Vector3::Max( p0, p1 );
+    max = Vector3::Max( p0, p1 );
     max = Vector3::Max( max, p2 );
 
     return BoundingBox( min, max );
@@ -250,6 +259,9 @@ bool Quad::IsHitTriangle
     if ( dist < D_EPS || dist > D_INF )
     { return false; }
 
+    //if ( dist > record.distance )
+    //{ return false; }
+
     record.position = ray.pos + ray.dir * dist;
     record.distance = dist;
     record.normal   = normal;
@@ -287,11 +299,12 @@ const IMaterial* Quad::GetMaterial() const
 //-------------------------------------------------------------------------------------
 BoundingBox Quad::GetBox() const
 {
-    Vector3 min = Vector3::Min( p0, p1 );
+    Vector3 min, max;
+    min = Vector3::Min( p0, p1 );
     min = Vector3::Min( min, p2 );
     min = Vector3::Min( min, p3 );
 
-    Vector3 max = Vector3::Max( p0, p1 );
+    max = Vector3::Max( p0, p1 );
     max = Vector3::Max( max, p2 );
     max = Vector3::Max( max, p3 );
 

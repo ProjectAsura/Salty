@@ -22,7 +22,7 @@ int main( int argc, char **argv )
     // 本番用.
     config.width         = 640;
     config.height        = 360;
-    config.numSamples    = 2048;
+    config.numSamples    = 4096;
     config.numSubSamples = 2;
 #else
     // デバッグ用.

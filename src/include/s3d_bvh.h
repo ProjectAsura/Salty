@@ -64,7 +64,7 @@ public:
     //-------------------------------------------------------------------------
     //! @brief      ブランチを構築します.
     //-------------------------------------------------------------------------
-    IShape* BuildBranch( IShape**, const s32, const s32 = 0 );
+    static IShape* BuildBranch( IShape**, const s32 );
 };
 
 } // namespace s3d

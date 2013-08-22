@@ -98,11 +98,17 @@ void BVH::Init( IShape** ppShapes, const u32 numShapes )
     { box = BoundingBox::Merge( box, ppShapes[i]->GetBox() ); }
 
     Vector3 pivot = ( box.max + box.min ) / 2.0;
+    s32 axis = 0;
+    Vector3 size = box.max - box.min;
+    if ( size.x > size.y )
+    { axis = ( size.x > size.z ) ? 0 : 2; }
+    else
+    { axis = ( size.y > size.z ) ? 1 : 2; }
 
-    s32 midPoint = Split( ppShapes, numShapes, pivot.x, 0 );
+    s32 midPoint = Split( ppShapes, numShapes, pivot.v[axis], axis );
 
-    pLeft  = BuildBranch( ppShapes, midPoint, 1 );
-    pRight = BuildBranch( &ppShapes[ midPoint ], numShapes - midPoint, 1 );
+    pLeft  = BuildBranch( ppShapes, midPoint );
+    pRight = BuildBranch( &ppShapes[ midPoint ], numShapes - midPoint );
 }
 
 //--------------------------------------------------------------------------
@@ -115,7 +121,8 @@ bool BVH::IsHit( const Ray& ray, HitRecord& record ) const
 
     bool isHit1 = false;
     bool isHit2 = false;
-    record.distance = D_INF;
+
+    //record.distance = D_INF;
 
     isHit1 = pRight->IsHit( ray, record );
     isHit2 = pLeft->IsHit( ray, record );
@@ -138,7 +145,7 @@ BoundingBox BVH::GetBox() const
 //--------------------------------------------------------------------------
 //      ブランチを構築します.
 //--------------------------------------------------------------------------
-IShape* BVH::BuildBranch( IShape** ppShapes, const s32 numShapes, s32 axis )
+IShape* BVH::BuildBranch( IShape** ppShapes, const s32 numShapes )
 {
     if ( numShapes == 1 ) 
     { return ppShapes[0]; }
@@ -151,10 +158,17 @@ IShape* BVH::BuildBranch( IShape** ppShapes, const s32 numShapes, s32 axis )
 
     Vector3 pivot = ( bbox.max + bbox.min ) / 2.0;
 
+    s32 axis = 0;
+    Vector3 size = bbox.max - bbox.min;
+    if ( size.x > size.y )
+    { axis = ( size.x > size.z ) ? 0 : 2; }
+    else
+    { axis = ( size.y > size.z ) ? 1 : 2; }
+
     s32 midPoint = Split( ppShapes, numShapes, pivot.v[axis], axis );
 
-    IShape* left  = BuildBranch( ppShapes, midPoint, (axis + 1) % 3 );
-    IShape* right = BuildBranch( &ppShapes[midPoint], numShapes - midPoint, (axis + 1 ) % 3 );
+    IShape* left  = BuildBranch( ppShapes, midPoint );
+    IShape* right = BuildBranch( &ppShapes[midPoint], numShapes - midPoint );
 
     return new BVH( left, right, bbox );
 }

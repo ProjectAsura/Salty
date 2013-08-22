@@ -13,6 +13,7 @@
 #include <s3d_rand.h>
 #include <s3d_camera.h>
 #include <s3d_shape.h>
+#include <s3d_material.h>
 #include <s3d_timer.h>
 #include <s3d_mutex.h>
 #include <s3d_onb.h>
@@ -30,7 +31,7 @@ namespace s3d {
 // Macro
 //----------------------------------------------------------------------------------
 
-// Debug Log
+// デバッグログ.
 #ifndef DLOG
     #if defined(DEBUG) || defined(_DEBUG)
         #define DLOG( x, ... ) printf_s( "[File: %s, Line: %d] "x"\n", __FILE__, __LINE__, ##__VA_ARGS__ )
@@ -39,12 +40,12 @@ namespace s3d {
     #endif
 #endif//DLOG
 
-// Infomation Log
+// 情報ログ.
 #ifndef ILOG
 #define ILOG( x, ... ) printf_s( x"\n", ##__VA_ARGS__ )
 #endif//ILOG
 
-// Error Log
+// エラーログ.
 #ifndef ELOG
 #define ELOG( x, ... ) fprintf_s( stderr, "[File: %s, Line: %d] "x"\n", __FILE__, __LINE__, ##__VA_ARGS__ )
 #endif//ELOG
@@ -180,6 +181,9 @@ IShape* g_pShapes[] = {
 IShape* g_pBVH = nullptr;
 
 
+////////////////////////////////////////////////////////////////////////////////////
+// Functions
+////////////////////////////////////////////////////////////////////////////////////
 
 //----------------------------------------------------------------------------------
 //! @brief      ロシアンルーレットに用いる閾値を求めます.

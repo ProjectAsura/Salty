@@ -61,7 +61,6 @@ bool Sphere::IsHit(const Ray &ray, HitRecord& record ) const
 
     record.distance  = dist;
     record.position  = ray.pos + record.distance * ray.dir;
-    record.normal    = Vector3::UnitVector(record.position - position);
     record.pShape    = this;
 
     f64 theta = acos( record.normal.y );
@@ -70,6 +69,9 @@ bool Sphere::IsHit(const Ray &ray, HitRecord& record ) const
     { phi += D_2PI; }
 
     record.texcoord = Vector2( phi * D_1DIV2PI, ( D_PI - theta ) * D_1DIVPI );
+
+    // フラットシェーディング.
+    record.normal    = Vector3::UnitVector(record.position - position);
 
     // 交差した.
     return true;
@@ -327,6 +329,128 @@ BoundingBox Quad::GetBox() const
 //      基本図形であるかどうかチェックします.
 //-------------------------------------------------------------------------------------
 bool Quad::IsPrimitive() const
+{ return true; }
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+// MeshTriangle structure
+///////////////////////////////////////////////////////////////////////////////////////
+
+//-------------------------------------------------------------------------------------
+//      コンストラクタです.
+//-------------------------------------------------------------------------------------
+MeshTriangle::MeshTriangle()
+: pMaterial( nullptr )
+{ /* DO_NOTHING */ }
+
+//-------------------------------------------------------------------------------------
+//      引数付きコンストラクタです.
+//-------------------------------------------------------------------------------------
+MeshTriangle::MeshTriangle
+(
+    const Vector3&      p0,
+    const Vector3&      p1,
+    const Vector3&      p2,
+
+    const Vector3&      n0,
+    const Vector3&      n1,
+    const Vector3&      n2,
+
+    const Vector2&      t0,
+    const Vector2&      t1,
+    const Vector2&      t2,
+
+    const IMaterial*    mat
+)
+: pMaterial( mat )
+{
+    p[ 0 ] = p0;
+    p[ 1 ] = p1;
+    p[ 2 ] = p2;
+
+    n[ 0 ] = n0;
+    n[ 1 ] = n1;
+    n[ 2 ] = n2;
+
+    t[ 0 ] = t0;
+    t[ 1 ] = t1;
+    t[ 2 ] = t2;
+}
+
+
+//-------------------------------------------------------------------------------------
+//      交差判定を行います.
+//-------------------------------------------------------------------------------------
+bool MeshTriangle::IsHit( const Ray& ray, HitRecord& record ) const
+{
+    Vector3 e1  = p[ 1 ] - p[ 0 ];
+    Vector3 e2  = p[ 2 ] - p[ 0 ];
+    Vector3 dir = ray.dir;
+    Vector3 s1  = Vector3::Cross( dir, e2 );
+    register f64 div = Vector3::Dot( s1, e1 );
+    
+    if ( div == 0.0 )
+    { return false; }
+
+    Vector3 d = ray.pos - p[ 0 ];
+    register f64 beta = Vector3::Dot( d, s1 ) / div;
+    if ( beta <= 0.0 || beta >= 1.0 )
+    { return false; }
+    
+    Vector3 s2 = Vector3::Cross( d, e1 );
+    register f64 gamma = Vector3::Dot( dir, s2 ) / div;
+    if ( gamma <= 0.0 || ( beta + gamma ) >= 1.0 )
+    { return false; }
+
+    register f64 dist = Vector3::Dot( e2, s2 ) / div;
+
+    if ( dist < D_EPS || dist > D_INF )
+    { return false; }
+
+    if ( dist > record.distance )
+    { return false; }
+
+    record.position = ray.pos + ray.dir * dist;
+    record.distance = dist;
+    record.pShape   = this;
+
+    f64 alpha = 1.0 - beta - gamma;
+    record.texcoord.x = t[ 0 ].x * alpha + t[ 1 ].x * beta + t[ 2 ].x * gamma;
+    record.texcoord.y = t[ 0 ].y * alpha + t[ 1 ].y * beta + t[ 2 ].y * gamma;
+
+    // スムースシェーディング
+    record.normal.x = n[ 0 ].x * alpha + n[ 1 ].x * beta + n[ 2 ].x * gamma;
+    record.normal.y = n[ 0 ].y * alpha + n[ 1 ].y * beta + n[ 2 ].y * gamma;
+    record.normal.z = n[ 0 ].z * alpha + n[ 1 ].z * beta + n[ 2 ].z * gamma;
+
+    return true;
+}
+
+//-------------------------------------------------------------------------------------
+//      マテリアルを取得します.
+//-------------------------------------------------------------------------------------
+const IMaterial* MeshTriangle::GetMaterial() const
+{ return pMaterial; }
+
+//-------------------------------------------------------------------------------------
+//      バウンディングボックスを取得します.
+//-------------------------------------------------------------------------------------
+BoundingBox MeshTriangle::GetBox() const
+{
+    Vector3 min, max;
+    min = Vector3::Min( p[ 0 ], p[ 1 ] );
+    min = Vector3::Min( min,    p[ 2 ] );
+
+    max = Vector3::Max( p[ 0 ], p[ 1 ] );
+    max = Vector3::Max( max,    p[ 2 ] );
+
+    return BoundingBox( min, max );
+}
+
+//-------------------------------------------------------------------------------------
+//      基本図形であるかどうか判定します.
+//-------------------------------------------------------------------------------------
+bool MeshTriangle::IsPrimitive() const
 { return true; }
 
 

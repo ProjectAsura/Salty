@@ -77,11 +77,12 @@ Mutex   g_Mutex;                        //!< ミューテックス.
 
 // Lambert
 Matte g_Matte[] = {
-    Matte( Color( 0.75, 0.25, 0.25 ) ),
-    Matte( Color( 0.25, 0.75, 0.25 ) ),
-    Matte( Color( 0.25, 0.25, 0.75 ) ),
+    Matte( Color( 0.75, 0.25, 0.25 ), "./res/test.bmp" ),
+    Matte( Color( 0.25, 0.75, 0.25 ), "./res/test.bmp" ),
+    Matte( Color( 0.25, 0.25, 0.75 ), "./res/test.bmp" ),
+    Matte( Color( 0.75, 0.75, 0.75 ), "./res/test.bmp" ),
     Matte( Color( 0.75, 0.75, 0.75 ) ),
-    Matte( Color( 0.25, 0.25, 0.25 ) ),
+    Matte( Color( 0.25, 0.25, 0.25 ), "./res/test.bmp" ),
     Matte( Color( 0.0, 0.0, 0.0 ), Color( 36.0, 36.0, 36.0 ) ),
 };
 
@@ -160,6 +161,84 @@ Quad g_Quads[] = {
         Vector2( 1.0, 1.0 ),
         Vector2( 1.0, 0.0 ) 
     ),
+
+    // 左.
+    Quad( 
+            Vector3( -50.0 + 50, -50.0, -50.0 ),
+            Vector3( -50.0 + 50,  50.0, -50.0 ),
+            Vector3( -50.0 + 50,  50.0,  50.0 ),
+            Vector3( -50.0 + 50, -50.0,  50.0 ),
+            m_ppMaterials[0],
+            Vector2( 0.0, 0.0 ),
+            Vector2( 0.0, 1.0 ),
+            Vector2( 1.0, 1.0 ),
+            Vector2( 1.0, 0.0 )
+    ),
+
+    // 奥.
+    Quad(
+            Vector3( -50.0 + 50, -50.0, 50.0 ),
+            Vector3( -50.0 + 50,  50.0, 50.0 ),
+            Vector3(  50.0 + 50,  50.0, 50.0 ),
+            Vector3(  50.0 + 50, -50.0, 50.0 ),
+            m_ppMaterials[1],
+            Vector2( 0.0, 0.0 ),
+            Vector2( 0.0, 1.0 ),
+            Vector2( 1.0, 1.0 ),
+            Vector2( 1.0, 0.0 )
+    ),
+
+    // 手前.
+    Quad(
+            Vector3(  50.0 + 50, -50.0, -50.0 ),
+            Vector3(  50.0 + 50,  50.0, -50.0 ),
+            Vector3( -50.0 + 50,  50.0, -50.0 ),
+            Vector3( -50.0 + 50, -50.0, -50.0 ),
+            m_ppMaterials[1],
+            Vector2( 0.0, 0.0 ),
+            Vector2( 0.0, 1.0 ),
+            Vector2( 1.0, 1.0 ),
+            Vector2( 1.0, 0.0 )
+    ),
+
+    // 右.
+    Quad(
+            Vector3( 50.0 +50, -50.0,  50.0 ),
+            Vector3( 50.0 +50,  50.0,  50.0 ),
+            Vector3( 50.0 +50,  50.0, -50.0 ),
+            Vector3( 50.0 +50, -50.0, -50.0 ),
+            m_ppMaterials[3],
+            Vector2( 0.0, 0.0 ),
+            Vector2( 0.0, 1.0 ),
+            Vector2( 1.0, 1.0 ),
+            Vector2( 1.0, 0.0 )
+    ),
+
+    // 上
+    Quad(
+            Vector3(  50.0 +50, 50.0, -50.0 ),
+            Vector3(  50.0 +50, 50.0,  50.0 ),
+            Vector3( -50.0 +50, 50.0,  50.0 ),
+            Vector3( -50.0 +50, 50.0, -50.0 ),
+            m_ppMaterials[8],
+            Vector2( 1.0, 0.0 ),
+            Vector2( 1.0, 1.0 ),
+            Vector2( 0.0, 1.0 ),
+            Vector2( 0.0, 0.0 )
+   ),
+
+    // 下.
+    Quad(
+            Vector3( -50.0 +50, -50.0, -50.0 ),
+            Vector3( -50.0 +50, -50.0,  50.0 ),
+            Vector3(  50.0 +50, -50.0,  50.0 ),
+            Vector3(  50.0 +50, -50.0, -50.0 ),
+            m_ppMaterials[1],
+            Vector2( 0.0, 0.0 ),
+            Vector2( 0.0, 1.0 ),
+            Vector2( 1.0, 1.0 ),
+            Vector2( 1.0, 0.0 )
+   ),
 };
 
 // シェイプリスト.
@@ -438,8 +517,7 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
             break;
 
             // 屈折系.
-            case MATERIAL_TYPE_CRYSTAL:
-            case MATERIAL_TYPE_DIAMOND:
+            case MATERIAL_TYPE_REFRACT:
             {
                 #pragma region Refraction
 

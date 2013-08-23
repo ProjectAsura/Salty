@@ -30,10 +30,9 @@ const f64 REFRACTIVITY_DIAMOND = 2.42;  // ダイアモンドの屈折率 (2.42)
 enum MATERIAL_TYPE
 {
     MATERIAL_TYPE_MATTE,    // つやけし.
-    MATERIAL_TYPE_MIRROR,   // 鏡.
-    MATERIAL_TYPE_CRYSTAL,  // 水晶.
     MATERIAL_TYPE_CLAY,     // 粘土.
-    MATERIAL_TYPE_DIAMOND,  // ダイアモンド.
+    MATERIAL_TYPE_MIRROR,   // 完全鏡面反射
+    MATERIAL_TYPE_REFRACT,  // 屈折するやつ.
     //MATERIAL_TYPE_PLASTIC,  // プラスチック.
 };
 
@@ -64,6 +63,17 @@ struct IMaterial
     virtual Color GetTextureColor( const Vector2& ) const = 0;
 };
 
+
+/////////////////////////////////////////////////////////////////////////////////////
+// IRefractionMaterial interface
+/////////////////////////////////////////////////////////////////////////////////////
+struct IRefractionMaterial
+{
+    //-------------------------------------------------------------------------------
+    //! @brief      屈折率を取得します.
+    //-------------------------------------------------------------------------------
+    virtual f64 GetRefractivity() const = 0;
+};
 
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -288,7 +298,7 @@ struct Mirror : public MaterialBase
 //////////////////////////////////////////////////////////////////////////////////////
 // RefractionMaterial structure
 //////////////////////////////////////////////////////////////////////////////////////
-struct RefractionMaterial : public MaterialBase
+struct RefractionMaterial : public MaterialBase, public IRefractionMaterial
 {
     f64     refractivity;       //!< 屈折率です.
 
@@ -297,10 +307,9 @@ struct RefractionMaterial : public MaterialBase
     //--------------------------------------------------------------------------------
     RefractionMaterial
     ( 
-        const MATERIAL_TYPE _type,
         const f64           _refractivity
     )
-    : MaterialBase( _type )
+    : MaterialBase( MATERIAL_TYPE_REFRACT )
     , refractivity( _refractivity )
     { /* DO_NOTHING */ }
 
@@ -309,12 +318,11 @@ struct RefractionMaterial : public MaterialBase
     //--------------------------------------------------------------------------------
     RefractionMaterial
     (
-        const MATERIAL_TYPE _type,
         const Color&        _color    = Color( 0.0, 0.0, 0.0 ),
         const Color&        _emissive = Color( 0.0, 0.0, 0.0 ),
         const f64           _refraction = 1.0
     )
-    : MaterialBase( _type, _color, _emissive )
+    : MaterialBase( MATERIAL_TYPE_REFRACT, _color, _emissive )
     , refractivity( _refraction )
     { /* DO_NOTHING */ }
 
@@ -323,14 +331,13 @@ struct RefractionMaterial : public MaterialBase
     //--------------------------------------------------------------------------------
     RefractionMaterial
     (
-        const MATERIAL_TYPE _type, 
         const Color&        _color,
         const Color&        _emissive,
         const f64           _refraction,
         const char*         _filename,
         const TextureSampler& _sampler = TextureSampler()
     )
-    : MaterialBase( _type, _color, _emissive, _filename, _sampler )
+    : MaterialBase( MATERIAL_TYPE_REFRACT, _color, _emissive, _filename, _sampler )
     , refractivity( _refraction )
     { /* DO_NOTHING */ }
 
@@ -351,7 +358,7 @@ struct Crystal : public RefractionMaterial
     //! @brief      コンストラクタです.
     //--------------------------------------------------------------------------------
     Crystal()
-    : RefractionMaterial( MATERIAL_TYPE_CRYSTAL, REFRACTIVITY_CRYSTAL )
+    : RefractionMaterial( REFRACTIVITY_CRYSTAL )
     { /* DO_NOTHING */ }
 
     //--------------------------------------------------------------------------------
@@ -362,7 +369,7 @@ struct Crystal : public RefractionMaterial
         const Color& _color,
         const Color& _emissive = Color( 0.0, 0.0, 0.0 )
     )
-    : RefractionMaterial( MATERIAL_TYPE_CRYSTAL, _color, _emissive, REFRACTIVITY_CRYSTAL )
+    : RefractionMaterial( _color, _emissive, REFRACTIVITY_CRYSTAL )
     { /* DO_NOTHING */ }
 
     //--------------------------------------------------------------------------------
@@ -375,7 +382,7 @@ struct Crystal : public RefractionMaterial
         const TextureSampler _sampler = TextureSampler(),
         const Color&         _emissive = Color( 0.0, 0.0, 0.0 )
     )
-    : RefractionMaterial( MATERIAL_TYPE_CRYSTAL, _color, _emissive, REFRACTIVITY_CRYSTAL, _filename, _sampler )
+    : RefractionMaterial( _color, _emissive, REFRACTIVITY_CRYSTAL, _filename, _sampler )
     { /* DO_NOTHING */ }
 };
 
@@ -389,7 +396,7 @@ struct Diamond : public RefractionMaterial
     //! @brief      コンストラクタです.
     //--------------------------------------------------------------------------------
     Diamond()
-    : RefractionMaterial( MATERIAL_TYPE_DIAMOND, REFRACTIVITY_DIAMOND )
+    : RefractionMaterial( REFRACTIVITY_DIAMOND )
     { /* DO_NOTHING */ }
 
     //--------------------------------------------------------------------------------
@@ -400,7 +407,7 @@ struct Diamond : public RefractionMaterial
         const Color& _color,
         const Color& _emissive = Color( 0.0, 0.0, 0.0 )
     )
-    : RefractionMaterial( MATERIAL_TYPE_DIAMOND, _color, _emissive, REFRACTIVITY_DIAMOND )
+    : RefractionMaterial( _color, _emissive, REFRACTIVITY_DIAMOND )
     { /* DO_NOTHING */ }
 
     //--------------------------------------------------------------------------------
@@ -413,7 +420,7 @@ struct Diamond : public RefractionMaterial
         const TextureSampler _sampler = TextureSampler(),
         const Color&         _emissive = Color( 0.0, 0.0, 0.0 )
     )
-    : RefractionMaterial( MATERIAL_TYPE_DIAMOND, _color, _emissive, REFRACTIVITY_DIAMOND, _filename, _sampler )
+    : RefractionMaterial( _color, _emissive, REFRACTIVITY_DIAMOND, _filename, _sampler )
     { /* DO_NOTHING */ }
 };
 
@@ -472,6 +479,123 @@ struct Diamond : public RefractionMaterial
 //};
 #endif
 
+
+struct MeshMaterial : public IMaterial, public IRefractionMaterial
+{
+    Color           diffuse;
+    Color           emissive;
+    f64             refractivity;
+    f64             roughness;
+    Texture2D       diffuseMap;
+    TextureSampler  diffuseSmp;
+    MATERIAL_TYPE   type;
+
+    MeshMaterial()
+    : diffuse       ()
+    , emissive      ()
+    , refractivity  ( 1.0 )
+    , roughness     ( 0.0 )
+    , diffuseMap    ()
+    , diffuseSmp    ()
+    , type          ( MATERIAL_TYPE_MATTE )
+    {
+    }
+
+    MeshMaterial
+    (
+        Color Kd,
+        Color Ke,
+        f64   Re,
+        f64   Kr
+    )
+    : diffuse       ( Kd )
+    , emissive      ( Ke )
+    , refractivity  ( Re )
+    , roughness     ( Kr )
+    , diffuseMap    ()
+    , diffuseSmp    ()
+    {
+        if ( refractivity == 1.0 )
+        {
+            if ( roughness != 0.0 )
+            {
+                type = MATERIAL_TYPE_CLAY;
+            }
+            else
+            {
+                type = MATERIAL_TYPE_MATTE;
+            }
+        }
+        else
+        {
+            type = MATERIAL_TYPE_REFRACT;
+        }
+    }
+
+    MeshMaterial
+    (
+        Color       Kd,
+        Color       Ke,
+        f64         Re,
+        f64         Kr,
+        const char* map_Kd,
+        TextureSampler& sampler = TextureSampler()
+    )
+    : diffuse       ( Kd )
+    , emissive      ( Ke )
+    , refractivity  ( Re )
+    , roughness     ( Kr )
+    , diffuseMap    ( map_Kd )
+    , diffuseSmp    ( sampler )
+    {
+        if ( refractivity == 1.0 )
+        {
+            if ( roughness != 0.0 )
+            {
+                type = MATERIAL_TYPE_CLAY;
+            }
+            else
+            {
+                type = MATERIAL_TYPE_MATTE;
+            }
+        }
+        else
+        {
+            type = MATERIAL_TYPE_REFRACT;
+        }
+    }
+
+    //--------------------------------------------------------------------------------
+    //! @brief      マテリアルタイプを取得します.
+    //--------------------------------------------------------------------------------
+    virtual MATERIAL_TYPE GetType() const
+    { return type; }
+
+    //--------------------------------------------------------------------------------
+    //! @brief      自己発行カラーを取得します.
+    //--------------------------------------------------------------------------------
+    virtual Color GetEmissive() const
+    { return emissive; }
+
+    //--------------------------------------------------------------------------------
+    //! @brief      マテリアルカラーを取得します.
+    //--------------------------------------------------------------------------------
+    virtual Color GetColor() const
+    { return diffuse; }
+
+    //--------------------------------------------------------------------------------
+    //! @brief      テクスチャカラーを取得します.
+    //--------------------------------------------------------------------------------
+    virtual Color GetTextureColor( const Vector2& texcoord ) const
+    { return diffuseMap.Sample( diffuseSmp, texcoord );  }
+
+    //--------------------------------------------------------------------------------
+    //! @brief      屈折率を取得します.
+    //--------------------------------------------------------------------------------
+    virtual f64 GetRefractivity() const
+    { return refractivity; }
+
+};
 
 
 

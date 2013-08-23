@@ -13,6 +13,7 @@
 #include <s3d_math.h>
 #include <s3d_shape.h>
 #include <s3d_material.h>
+#include <s3d_bvh.h>
 
 
 namespace s3d {

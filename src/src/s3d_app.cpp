@@ -89,13 +89,13 @@ Clay g_Clay[] = {
 
 // Mirror
 Mirror g_Mirror[] = {
-    Mirror( Color( 1.0, 1.0, 1.0 ) ),
+    Mirror( Color( 0.25, 0.25, 0.75 ) ),
     Mirror( Color( 0.75, 0.75, 0.25 ) ),
 };
 
 // Refraction (Crystal)
 Crystal g_Crystal[] = {
-    Crystal( Color( 1.0, 1.0, 1.0 ) ),
+    Crystal( Color( 0.75, 0.25, 0.25 ) ),
 };
 
 // Refraction (Diamond)
@@ -110,20 +110,33 @@ IMaterial* g_pMaterials[] = {
     &g_Matte[2],        // 2 : 照明.
     &g_Mirror[0],       // 3 : ミラー.
     &g_Mirror[1],       // 4 : 黄色ミラー.
-    &g_Diamond[0],      // 5 : 水晶.
-    &g_Clay[0],         // 6 : 
+    &g_Crystal[0],      // 5 : 水晶.
+    &g_Clay[0],         // 6 : 粘土.
 
 };
 
 // レンダリングするシーンデータ
 Sphere g_Spheres[] = {
-    Sphere( 16.5,  Vector3( 27.0,         16.5,      27.0       ), g_pMaterials[3] ),    // 鏡
-    Sphere( 16.5,  Vector3( 77.0,         16.5,      78.0       ), g_pMaterials[5] ),    // 水晶.
-    Sphere( 15.0,  Vector3( 50.0,         100.0,     81.6       ), g_pMaterials[2] ),    // 照明
+    Sphere( 16.5,  Vector3( 20.0, 16.5,  27.0 ), g_pMaterials[3] ),    // 鏡
+    Sphere( 16.5,  Vector3( 77.0, 16.5,  78.0 ), g_pMaterials[5] ),    // 水晶.
+    Sphere( 15.0,  Vector3( 50.0, 100.0, 81.6 ), g_pMaterials[2] ),    // 照明
 };
 
 // トライアングル.
 Triangle g_Triangles[] = {
+
+    // 上.
+    Triangle( 
+        Vector3( 70.0, 50.0, 20.0 ),
+        Vector3( 50.0, 80.0, 10.0 ),
+        Vector3( 30.0, 50.0, 20.0 ),
+        g_pMaterials[4],
+        Vector2( 0.0, 0.0 ),
+        Vector2( 0.5, 1.0 ),
+        Vector2( 1.0, 0.0 )
+    ), 
+
+    // 左.
     Triangle( 
         Vector3( 70.0, 30.0, 20.0 ),
         Vector3( 50.0, 70.0, 10.0 ),
@@ -133,6 +146,7 @@ Triangle g_Triangles[] = {
         Vector2( 0.5, 1.0 ),
         Vector2( 1.0, 0.0 )
     ), 
+
 };
 
 // 矩形.
@@ -589,6 +603,10 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
             //break;
 #endif
         }
+
+        // 重みがゼロなら，以降の結果はゼロとなり無駄な処理になるので打ち切り.
+        if ( W == Color( 0.0, 0.0, 0.0 ) )
+        { break; }
     }
 
     // 計算結果を返却.

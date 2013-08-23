@@ -20,9 +20,9 @@ namespace /* anonymous */ {
 // 現在のSMDファイルのバージョン番号です.
 static const unsigned int SMD_CURRENT_VERSION = 0x00000001;
 
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 // SMD_DATA_HEADER structure
-//! @brief  MSHファイルのデータヘッダーです.
 /////////////////////////////////////////////////////////////////////////////////////////////
 struct SMD_DATA_HEADER
 {
@@ -38,7 +38,6 @@ struct SMD_DATA_HEADER
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // SMD_FILE_HEADER structure
-//! @brief  MSHファイルのファイルヘッダーです.
 /////////////////////////////////////////////////////////////////////////////////////////////
 struct SMD_FILE_HEADER
 {
@@ -47,6 +46,39 @@ struct SMD_FILE_HEADER
     unsigned int    DataHeaderSize;     //!< データヘッダー構造体のサイズです.
     SMD_DATA_HEADER DataHeader;         //!< データヘッダーです.
 };
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+// SMD_VERTEX structure
+/////////////////////////////////////////////////////////////////////////////////////////////
+struct SMD_VERTEX
+{
+    s3d::Vector3    Position;       //!< 位置座標です.
+    s3d::Vector3    Normal;         //!< 法線ベクトルです.
+    s3d::Vector2    TexCoord;       //!< テクスチャ座標です.
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+// SMD_MATERIAL structure
+/////////////////////////////////////////////////////////////////////////////////////////////
+struct SMD_MATERIAL
+{
+    s3d::Color      Diffuse;            //!< 拡散反射色です.
+    s3d::Color      Emissive;           //!< 自己照明色です.
+    f64             Refractivity;       //!< 屈折率です.
+    f64             Roughness;          //!< 面の粗さです.
+    char            DiffuseMap[ 256 ];  //!< ディフューズマップです.
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// SMD_SUBSET structure
+////////////////////////////////////////////////////////////////////////////////////////////
+struct SMD_SUBSET
+{
+    u32             IndexOffset;        //!< 開始面までのオフセットです.
+    u32             IndexCount;         //!< インデックス数です.
+    u32             MaterialID;         //!< マテリアル識別番号です.
+};
+
 
 } // namespace /* anonymous */
 
@@ -126,7 +158,7 @@ bool ResMesh::LoadFromFile( const char* filename )
     }
 
     // 頂点データサイズをチェック.
-    if ( header.DataHeader.VertexStructureSize != sizeof( ResMesh::Vertex ) )
+    if ( header.DataHeader.VertexStructureSize != sizeof( SMD_VERTEX ) )
     {
         printf_s( "Error : Vertex Structure Size Not Matched. expect size = %d, value = %d\n", sizeof( ResMesh::Vertex ), header.DataHeader.VertexStructureSize );
         fclose( pFile );
@@ -142,7 +174,7 @@ bool ResMesh::LoadFromFile( const char* filename )
     }
 
     // マテリアルデータサイズをチェック.
-    if ( header.DataHeader.MaterialStructureSize != sizeof( ResMesh::Material ) )
+    if ( header.DataHeader.MaterialStructureSize != sizeof( SMD_MATERIAL ) )
     {
         printf_s( "Error : Material Structure Size Not Matched. expect size = %d, value = %d\n", sizeof( ResMesh::Material ), header.DataHeader.MaterialStructureSize );
         fclose( pFile );
@@ -150,7 +182,7 @@ bool ResMesh::LoadFromFile( const char* filename )
     }
 
     // サブセットデータサイズをチェック.
-    if ( header.DataHeader.SubsetStructureSize != sizeof( ResMesh::Subset ) )
+    if ( header.DataHeader.SubsetStructureSize != sizeof( SMD_SUBSET ) )
     {
         printf_s( "Error : Subset Structure Size Not Matched. expect size = %d, value = %d\n", sizeof( ResMesh::Subset ), header.DataHeader.SubsetStructureSize );
         fclose( pFile );

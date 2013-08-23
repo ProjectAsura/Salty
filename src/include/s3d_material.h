@@ -480,15 +480,18 @@ struct Diamond : public RefractionMaterial
 #endif
 
 
+////////////////////////////////////////////////////////////////////////////////////////
+// MeshMaterial structure
+////////////////////////////////////////////////////////////////////////////////////////
 struct MeshMaterial : public IMaterial, public IRefractionMaterial
 {
-    Color           diffuse;
-    Color           emissive;
-    f64             refractivity;
-    f64             roughness;
-    Texture2D       diffuseMap;
-    TextureSampler  diffuseSmp;
-    MATERIAL_TYPE   type;
+    Color           diffuse;            //!< 拡散反射色です.
+    Color           emissive;           //!< 自己発光色です.
+    f64             refractivity;       //!< 屈折率です.
+    f64             roughness;          //!< 面の粗さです.
+    Texture2D       diffuseMap;         //!< ディフューズマップです.
+    TextureSampler  diffuseSmp;         //!< ディフューズマップのサンプラーです.
+    MATERIAL_TYPE   type;               //!< マテリアルタイプです.
 
     MeshMaterial()
     : diffuse       ()
@@ -518,18 +521,12 @@ struct MeshMaterial : public IMaterial, public IRefractionMaterial
         if ( refractivity == 1.0 )
         {
             if ( roughness != 0.0 )
-            {
-                type = MATERIAL_TYPE_CLAY;
-            }
+            { type = MATERIAL_TYPE_CLAY; }
             else
-            {
-                type = MATERIAL_TYPE_MATTE;
-            }
+            { type = MATERIAL_TYPE_MATTE; }
         }
         else
-        {
-            type = MATERIAL_TYPE_REFRACT;
-        }
+        { type = MATERIAL_TYPE_REFRACT; }
     }
 
     MeshMaterial
@@ -551,18 +548,12 @@ struct MeshMaterial : public IMaterial, public IRefractionMaterial
         if ( refractivity == 1.0 )
         {
             if ( roughness != 0.0 )
-            {
-                type = MATERIAL_TYPE_CLAY;
-            }
+            { type = MATERIAL_TYPE_CLAY; }
             else
-            {
-                type = MATERIAL_TYPE_MATTE;
-            }
+            { type = MATERIAL_TYPE_MATTE; }
         }
         else
-        {
-            type = MATERIAL_TYPE_REFRACT;
-        }
+        { type = MATERIAL_TYPE_REFRACT; }
     }
 
     //--------------------------------------------------------------------------------
@@ -596,7 +587,6 @@ struct MeshMaterial : public IMaterial, public IRefractionMaterial
     { return refractivity; }
 
 };
-
 
 
 } // namespace s3d

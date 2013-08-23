@@ -93,20 +93,13 @@ bool BoundingBox::IsHit( const Ray& ray ) const
         tz_max = ( min.z - ray.pos.z ) * ray.invDir.z;
     }
 
-    f64 t0 = ( tx_min > ty_min ) ? tx_min : ty_min;
-        t0 = ( tz_min > t0 )     ? tz_min : t0;
+    register f64 t0 = ( tx_min > ty_min ) ? tx_min : ty_min;
+                 t0 = ( tz_min > t0 )     ? tz_min : t0;
 
-    f64 t1 = ( tx_max > ty_max ) ? tx_max : ty_max;
-        t1 = ( tz_max > t1 )     ? tz_max : t1;
+    register f64 t1 = ( tx_max > ty_max ) ? tx_max : ty_max;
+                 t1 = ( tz_max > t1 )     ? tz_max : t1;
 
-    bool result = ( t0 < t1 && t1 > D_EPS );
-
-    if ( !result )
-    {
-        printf_s( "t0 = %lf, t1 = %lf\n", t0, t1 );
-    }
-
-    return result;
+    return ( t0 < t1 && t1 > D_EPS );
 }
 
 //----------------------------------------------------------------------------------

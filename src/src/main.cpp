@@ -28,9 +28,9 @@ int main( int argc, char **argv )
 
     #if 0
         // 本番用.
-        config.width         = 640;
-        config.height        = 360;
-        config.numSamples    = 4096;
+        config.width         = 1280;
+        config.height        = 720;
+        config.numSamples    = 1024;
         config.numSubSamples = 2;
     #else
         // デバッグ用.

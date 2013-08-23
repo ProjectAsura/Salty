@@ -8,6 +8,7 @@
 // Includes
 //-------------------------------------------------------------------------------------
 #include <s3d_mesh.h>
+#include <cstdio>
 
 
 namespace /* anonymous */ {

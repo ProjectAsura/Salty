@@ -89,14 +89,10 @@ BVH::BVH( IShape* pShape1, IShape* pShape2 )
 BVH::~BVH()
 {
     if ( !pLeft->IsPrimitive() )
-    {
-        delete pLeft;
-    }
+    { delete pLeft; }
 
     if ( !pRight->IsPrimitive() )
-    {
-        delete pRight;
-    }
+    { delete pRight; }
 
     pLeft  = nullptr;
     pRight = nullptr;
@@ -107,16 +103,23 @@ BVH::~BVH()
 //--------------------------------------------------------------------------
 void BVH::Init( IShape** ppShapes, const u32 numShapes )
 {
+    // 自分を2個入れる.
     if ( numShapes == 1 )
     { (*this) = BVH( ppShapes[0], ppShapes[0] ); }
+
+    // 左と右に入れる.
     if ( numShapes == 2 )
     { (*this) = BVH( ppShapes[0], ppShapes[1] ); }
 
+    // AABBを求める.
     box = ppShapes[0]->GetBox();
     for( u32 i=1; i<numShapes; ++i )
     { box = BoundingBox::Merge( box, ppShapes[i]->GetBox() ); }
 
+    // ピボットを求める.
     Vector3 pivot = ( box.max + box.min ) / 2.0;
+
+    // AABBの各辺のサイズを求める.
     Vector3 size  = box.max - box.min;
 
     s32 axis = 0;
@@ -125,8 +128,10 @@ void BVH::Init( IShape** ppShapes, const u32 numShapes )
     else
     { axis = ( size.y > size.z ) ? 1 : 2; }
 
+    // 分割.
     s32 midPoint = Split( ppShapes, numShapes, pivot.v[axis], axis );
 
+    // ブランチ構築.
     pLeft  = BuildBranch( ppShapes, midPoint );
     pRight = BuildBranch( &ppShapes[ midPoint ], numShapes - midPoint );
 }
@@ -171,16 +176,23 @@ bool BVH::IsPrimitive() const
 //--------------------------------------------------------------------------
 IShape* BVH::BuildBranch( IShape** ppShapes, const s32 numShapes )
 {
+    // そのまま返却.
     if ( numShapes == 1 ) 
     { return ppShapes[0]; }
+
+    // 左と右を入れたインスタンスを生成.
     if ( numShapes == 2 )
     { return new BVH( ppShapes[0], ppShapes[1] ); }
 
+    // AABBを求める.
     BoundingBox bbox = ppShapes[0]->GetBox();
     for( s32 i=1; i<numShapes; ++i )
     { bbox = BoundingBox::Merge( bbox, ppShapes[i]->GetBox() ); }
 
+    // ピボットを求める.
     Vector3 pivot = ( bbox.max + bbox.min ) / 2.0;
+
+    // AABBの各辺の長さを求める.
     Vector3 size  = bbox.max - bbox.min;
 
     s32 axis = 0;
@@ -189,11 +201,14 @@ IShape* BVH::BuildBranch( IShape** ppShapes, const s32 numShapes )
     else
     { axis = ( size.y > size.z ) ? 1 : 2; }
 
+    // 中間値.
     s32 midPoint = Split( ppShapes, numShapes, pivot.v[axis], axis );
 
+    // ブランチ構築.
     IShape* left  = BuildBranch( ppShapes, midPoint );
     IShape* right = BuildBranch( &ppShapes[midPoint], numShapes - midPoint );
 
+    // インスタンスを返却.
     return new BVH( left, right, bbox );
 }
 

@@ -77,12 +77,8 @@ Mutex   g_Mutex;                        //!< ミューテックス.
 
 // Lambert
 Matte g_Matte[] = {
-    Matte( Color( 0.75, 0.25, 0.25 ), "./res/test.bmp" ),
-    Matte( Color( 0.25, 0.75, 0.25 ), "./res/test.bmp" ),
-    Matte( Color( 0.25, 0.25, 0.75 ), "./res/test.bmp" ),
-    Matte( Color( 0.75, 0.75, 0.75 ), "./res/test.bmp" ),
-    Matte( Color( 0.75, 0.75, 0.75 ) ),
-    Matte( Color( 0.25, 0.25, 0.25 ), "./res/test.bmp" ),
+    Matte( Color( 0.75, 0.75, 0.75 ), "./res/texture/wall.bmp" ),
+    Matte( Color( 0.75, 0.75, 0.75 ), "./res/texture/tile.bmp" ),
     Matte( Color( 0.0, 0.0, 0.0 ), Color( 36.0, 36.0, 36.0 ) ),
 };
 
@@ -109,30 +105,21 @@ Diamond g_Diamond[] = {
 
 // Materials
 IMaterial* g_pMaterials[] = {
-    &g_Matte[0],        // 赤.
-    &g_Matte[1],        // 緑.
-    &g_Matte[2],        // 青.
-    &g_Matte[3],        // 白.
-    &g_Matte[4],        // 黒.
-    &g_Matte[5],        // 照明.
-    &g_Mirror[0],       // ミラー.
-    &g_Mirror[1],       // 黄色ミラー.
-    &g_Diamond[0],      // 水晶.
-    &g_Clay[0],
+    &g_Matte[0],        // 0 : 白.
+    &g_Matte[1],        // 1 : タイル.
+    &g_Matte[2],        // 2 : 照明.
+    &g_Mirror[0],       // 3 : ミラー.
+    &g_Mirror[1],       // 4 : 黄色ミラー.
+    &g_Diamond[0],      // 5 : 水晶.
+    &g_Clay[0],         // 6 : 
+
 };
 
 // レンダリングするシーンデータ
-Sphere g_Spheres[10] = {
-    Sphere( 1e5,   Vector3(  1e5+1.0,     40.8,      81.6       ), g_pMaterials[0] ),    // 左
-    Sphere( 1e5,   Vector3( 50.0,         40.8,      1e5        ), g_pMaterials[3] ),    // 奥
-    Sphere( 1e5,   Vector3( -1e5+99.0,    40.8,      81.6       ), g_pMaterials[2] ),    // 右
-    Sphere( 1e5,   Vector3( 50.0,         40.8,     -1e5+250.0  ), g_pMaterials[1] ),    // 手前
-    Sphere( 1e5,   Vector3( 50.0,         1e5,       81.6       ), g_pMaterials[3] ),    // 床
-    Sphere( 1e5,   Vector3( 50.0,        -1e5+81.6,  81.6       ), g_pMaterials[3] ),    // 天井
-    Sphere( 20.0,  Vector3( 65.0,         20.0,      20.0       ), g_pMaterials[9] ),    // 緑球
-    Sphere( 16.5,  Vector3( 27.0,         16.5,      27.0       ), g_pMaterials[6] ),    // 鏡
-    Sphere( 16.5,  Vector3( 77.0,         16.5,      78.0       ), g_pMaterials[8] ),    // 水晶.
-    Sphere( 15.0,  Vector3( 50.0,         90.0,      81.6       ), g_pMaterials[5] ),    // 照明
+Sphere g_Spheres[] = {
+    Sphere( 16.5,  Vector3( 27.0,         16.5,      27.0       ), g_pMaterials[3] ),    // 鏡
+    Sphere( 16.5,  Vector3( 77.0,         16.5,      78.0       ), g_pMaterials[5] ),    // 水晶.
+    Sphere( 15.0,  Vector3( 50.0,         100.0,     81.6       ), g_pMaterials[2] ),    // 照明
 };
 
 // トライアングル.
@@ -141,7 +128,7 @@ Triangle g_Triangles[] = {
         Vector3( 70.0, 30.0, 20.0 ),
         Vector3( 50.0, 70.0, 10.0 ),
         Vector3( 30.0, 30.0, 20.0 ),
-        g_pMaterials[7],
+        g_pMaterials[4],
         Vector2( 0.0, 0.0 ),
         Vector2( 0.5, 1.0 ),
         Vector2( 1.0, 0.0 )
@@ -150,109 +137,98 @@ Triangle g_Triangles[] = {
 
 // 矩形.
 Quad g_Quads[] = {
-    Quad( 
-        Vector3( 70.0, 30.0, 20.0 ),
-        Vector3( 70.0, 70.0, 10.0 ),
-        Vector3( 30.0, 70.0, 10.0 ),
-        Vector3( 30.0, 30.0, 20.0 ),
-        g_pMaterials[7],
-        Vector2( 0.0, 0.0 ),
-        Vector2( 0.0, 1.0 ),
-        Vector2( 1.0, 1.0 ),
-        Vector2( 1.0, 0.0 ) 
-    ),
 
     // 左.
     Quad( 
-            Vector3( -50.0 + 50, -50.0, -50.0 ),
-            Vector3( -50.0 + 50,  50.0, -50.0 ),
-            Vector3( -50.0 + 50,  50.0,  50.0 ),
-            Vector3( -50.0 + 50, -50.0,  50.0 ),
-            m_ppMaterials[0],
+            Vector3( 0,  0.0,  250.0 ),
+            Vector3( 0, 100.0, 250.0 ),
+            Vector3( 0, 100.0, 0.0 ),
+            Vector3( 0,  0.0,  0.0 ),
+            g_pMaterials[0],
             Vector2( 0.0, 0.0 ),
-            Vector2( 0.0, 1.0 ),
-            Vector2( 1.0, 1.0 ),
-            Vector2( 1.0, 0.0 )
+            Vector2( 0.0, 2.0 ),
+            Vector2( 2.0, 2.0 ),
+            Vector2( 2.0, 0.0 )
     ),
 
     // 奥.
     Quad(
-            Vector3( -50.0 + 50, -50.0, 50.0 ),
-            Vector3( -50.0 + 50,  50.0, 50.0 ),
-            Vector3(  50.0 + 50,  50.0, 50.0 ),
-            Vector3(  50.0 + 50, -50.0, 50.0 ),
-            m_ppMaterials[1],
+            Vector3( 0,   0.0,  0.0 ),
+            Vector3( 0, 100.0,  0.0 ),
+            Vector3( 100, 100.0,  0.0 ),
+            Vector3( 100,   0.0,  0.0 ),
+            g_pMaterials[0],
             Vector2( 0.0, 0.0 ),
-            Vector2( 0.0, 1.0 ),
-            Vector2( 1.0, 1.0 ),
-            Vector2( 1.0, 0.0 )
+            Vector2( 0.0, 2.0 ),
+            Vector2( 2.0, 2.0 ),
+            Vector2( 2.0, 0.0 )
     ),
 
     // 手前.
     Quad(
-            Vector3(  50.0 + 50, -50.0, -50.0 ),
-            Vector3(  50.0 + 50,  50.0, -50.0 ),
-            Vector3( -50.0 + 50,  50.0, -50.0 ),
-            Vector3( -50.0 + 50, -50.0, -50.0 ),
-            m_ppMaterials[1],
+            Vector3(  100,    0.0, 250.0 ),
+            Vector3(  100,  100.0, 250.0 ),
+            Vector3(  0,  100.0,  250.0 ),
+            Vector3(  0,    0.0,  250.0 ),
+            g_pMaterials[0],
             Vector2( 0.0, 0.0 ),
-            Vector2( 0.0, 1.0 ),
-            Vector2( 1.0, 1.0 ),
-            Vector2( 1.0, 0.0 )
+            Vector2( 0.0, 2.0 ),
+            Vector2( 2.0, 2.0 ),
+            Vector2( 2.0, 0.0 )
     ),
 
     // 右.
     Quad(
-            Vector3( 50.0 +50, -50.0,  50.0 ),
-            Vector3( 50.0 +50,  50.0,  50.0 ),
-            Vector3( 50.0 +50,  50.0, -50.0 ),
-            Vector3( 50.0 +50, -50.0, -50.0 ),
-            m_ppMaterials[3],
+            Vector3( 100,   0.0,  0.0 ),
+            Vector3( 100, 100.0,  0.0 ),
+            Vector3( 100, 100.0, 250.0 ),
+            Vector3( 100,  0.0, 250.0 ),
+            g_pMaterials[0],
             Vector2( 0.0, 0.0 ),
-            Vector2( 0.0, 1.0 ),
-            Vector2( 1.0, 1.0 ),
-            Vector2( 1.0, 0.0 )
+            Vector2( 0.0, 2.0 ),
+            Vector2( 2.0, 2.0 ),
+            Vector2( 2.0, 0.0 )
     ),
 
     // 上
     Quad(
-            Vector3(  50.0 +50, 50.0, -50.0 ),
-            Vector3(  50.0 +50, 50.0,  50.0 ),
-            Vector3( -50.0 +50, 50.0,  50.0 ),
-            Vector3( -50.0 +50, 50.0, -50.0 ),
-            m_ppMaterials[8],
-            Vector2( 1.0, 0.0 ),
-            Vector2( 1.0, 1.0 ),
-            Vector2( 0.0, 1.0 ),
+            Vector3( 100, 100.0, 250.0 ),
+            Vector3( 100, 100.0,  0.0 ),
+            Vector3( 0, 100.0,  0.0 ),
+            Vector3( 0, 100.0, 250.0 ),
+            g_pMaterials[0],
+            Vector2( 2.0, 0.0 ),
+            Vector2( 2.0, 2.0 ),
+            Vector2( 0.0, 2.0 ),
             Vector2( 0.0, 0.0 )
    ),
 
     // 下.
     Quad(
-            Vector3( -50.0 +50, -50.0, -50.0 ),
-            Vector3( -50.0 +50, -50.0,  50.0 ),
-            Vector3(  50.0 +50, -50.0,  50.0 ),
-            Vector3(  50.0 +50, -50.0, -50.0 ),
-            m_ppMaterials[1],
+            Vector3( 0, 0.0, 250.0 ),
+            Vector3( 0, 0.0,  0.0 ),
+            Vector3( 100, 0.0,  0.0 ),
+            Vector3( 100, 0.0, 250.0 ),
+            g_pMaterials[1],
             Vector2( 0.0, 0.0 ),
-            Vector2( 0.0, 1.0 ),
-            Vector2( 1.0, 1.0 ),
-            Vector2( 1.0, 0.0 )
+            Vector2( 0.0, 3.0 ),
+            Vector2( 3.0, 3.0 ),
+            Vector2( 3.0, 0.0 )
    ),
 };
 
 // シェイプリスト.
 IShape* g_pShapes[] = {
+    &g_Quads[0],
+    &g_Quads[1],
+    &g_Quads[2],
+    &g_Quads[3],
+    &g_Quads[4],
+    &g_Quads[5],
+
     &g_Spheres[0],
     &g_Spheres[1],
     &g_Spheres[2],
-    &g_Spheres[3],
-    &g_Spheres[4],
-    &g_Spheres[5],
-    &g_Spheres[6],
-    &g_Spheres[7],
-    &g_Spheres[8],
-    &g_Spheres[9],
     &g_Triangles[0],
 };
 
@@ -379,7 +355,8 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
         const Vector3 normalMod = ( Vector3::Dot ( normalOrg, ray.dir ) < 0.0 ) ? normalOrg : -normalOrg;
 
         // 自己発光による放射輝度.
-        L += Vector3::Mul( W, pMaterial->GetEmissive() );
+        Color emission = Color::Mul( pMaterial->GetEmissive(), pMaterial->GetTextureColor( record.texcoord ) );
+        L += Color::Mul( W, emission );
 
         // 色の反射率最大のものを得る。ロシアンルーレットで使う。
         // ロシアンルーレットの閾値は任意だが色の反射率等を使うとより良い ... らしい。
@@ -574,7 +551,7 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
 
                 // 一定以上レイを追跡したら屈折と反射のどちらか一方を追跡する
                 // ロシアンルーレットで決定する。
-                const f64 P = 0.25 + 0.5 * Re;      // Memo : この式はどこから来たか謎... smallptにも特に説明なし.
+                const f64 P = 0.25 + 0.5 * Re;      // フレネルのグラフを参照.
                 
                 // 反射の場合.
                 if ( rnd.GetAsF64() < P )

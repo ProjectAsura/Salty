@@ -9,6 +9,7 @@
 //-------------------------------------------------------------------------------------
 #include <s3d_mesh.h>
 #include <cstdio>
+#include <string>
 
 
 namespace /* anonymous */ {
@@ -92,21 +93,16 @@ namespace s3d {
 //-------------------------------------------------------------------------------------
 //      コンストラクタです.
 //-------------------------------------------------------------------------------------
-ResMesh::ResMesh()
-: m_VertexCount     ( 0 )
-, m_IndexCount      ( 0 )
-, m_MaterialCount   ( 0 )
-, m_SubsetCount     ( 0 )
-, m_pVertex         ( nullptr )
-, m_pIndex          ( nullptr )
-, m_pMaterial       ( nullptr )
-, m_pSubset         ( nullptr )
+Mesh::Mesh()
+: m_pTriangle()
+, m_pMaterial()
+, m_pBVH     ( nullptr )
 { /* DO_NOTHING */ }
 
 //-------------------------------------------------------------------------------------
 //      デストラクタです.
 //-------------------------------------------------------------------------------------
-ResMesh::~ResMesh()
+Mesh::~Mesh()
 {
     Release();
 }
@@ -114,7 +110,7 @@ ResMesh::~ResMesh()
 //-------------------------------------------------------------------------------------
 //      ファイルからロードします.
 //-------------------------------------------------------------------------------------
-bool ResMesh::LoadFromFile( const char* filename )
+bool Mesh::LoadFromFile( const char* filename )
 {
     FILE* pFile;
 
@@ -124,6 +120,16 @@ bool ResMesh::LoadFromFile( const char* filename )
     {
         printf_s( "Error : LoadFromFile() Failed. filename = %s\n", filename );
         return false;
+    }
+
+    std::string baseName;
+    {
+        std::string temp( filename );
+        s32 n = temp.rfind( '/' );
+        if ( n != std::string::npos )
+        {
+            baseName = temp.substr( 0, n );
+        }
     }
 
     // ファイルヘッダーを読み取り.
@@ -160,7 +166,7 @@ bool ResMesh::LoadFromFile( const char* filename )
     // 頂点データサイズをチェック.
     if ( header.DataHeader.VertexStructureSize != sizeof( SMD_VERTEX ) )
     {
-        printf_s( "Error : Vertex Structure Size Not Matched. expect size = %d, value = %d\n", sizeof( ResMesh::Vertex ), header.DataHeader.VertexStructureSize );
+        printf_s( "Error : Vertex Structure Size Not Matched. expect size = %d, value = %d\n", sizeof( SMD_VERTEX ), header.DataHeader.VertexStructureSize );
         fclose( pFile );
         return false;
     }
@@ -176,7 +182,7 @@ bool ResMesh::LoadFromFile( const char* filename )
     // マテリアルデータサイズをチェック.
     if ( header.DataHeader.MaterialStructureSize != sizeof( SMD_MATERIAL ) )
     {
-        printf_s( "Error : Material Structure Size Not Matched. expect size = %d, value = %d\n", sizeof( ResMesh::Material ), header.DataHeader.MaterialStructureSize );
+        printf_s( "Error : Material Structure Size Not Matched. expect size = %d, value = %d\n", sizeof( SMD_MATERIAL ), header.DataHeader.MaterialStructureSize );
         fclose( pFile );
         return false;
     }
@@ -184,16 +190,16 @@ bool ResMesh::LoadFromFile( const char* filename )
     // サブセットデータサイズをチェック.
     if ( header.DataHeader.SubsetStructureSize != sizeof( SMD_SUBSET ) )
     {
-        printf_s( "Error : Subset Structure Size Not Matched. expect size = %d, value = %d\n", sizeof( ResMesh::Subset ), header.DataHeader.SubsetStructureSize );
+        printf_s( "Error : Subset Structure Size Not Matched. expect size = %d, value = %d\n", sizeof( SMD_SUBSET ), header.DataHeader.SubsetStructureSize );
         fclose( pFile );
         return false;
     }
 
     // カウント数を設定.
-    m_VertexCount   = header.DataHeader.NumVertices;
-    m_IndexCount    = header.DataHeader.NumIndices;
-    m_MaterialCount = header.DataHeader.NumMaterials;
-    m_SubsetCount   = header.DataHeader.NumSubsets;
+    u32 vertexCount   = header.DataHeader.NumVertices;
+    u32 indexCount    = header.DataHeader.NumIndices;
+    u32 materialCount = header.DataHeader.NumMaterials;
+    u32 subsetCount   = header.DataHeader.NumSubsets;
 
 #if 0
     //// デバッグログ.
@@ -203,9 +209,14 @@ bool ResMesh::LoadFromFile( const char* filename )
     //printf_s( "SubsetCount   : %d\n", m_SubsetCount );
 #endif
 
+    SMD_VERTEX*   pVertex   = nullptr;
+    SMD_MATERIAL* pMaterial = nullptr;
+    SMD_SUBSET*   pSubset   = nullptr;
+    u32*          pIndex    = nullptr;
+
     // 頂点データのメモリを確保.
-    m_pVertex = new Vertex[ m_VertexCount ];
-    if ( m_pVertex == nullptr )
+    pVertex = new SMD_VERTEX[ vertexCount ];
+    if ( pVertex == nullptr )
     {
         //　エラーログ出力.
         printf_s( "Error : Memory Allocate Failed.\n" );
@@ -221,14 +232,20 @@ bool ResMesh::LoadFromFile( const char* filename )
     }
 
     // 頂点インデックスデータのメモリを確保.
-    m_pIndex = new u32 [ m_IndexCount ];
-    if ( m_pIndex == nullptr )
+    pIndex = new u32 [ indexCount ];
+    if ( pIndex == nullptr )
     {
         // エラーログ出力.
         printf_s( "Error : Memory Allocate Failed.\n" );
 
         // ファイルを閉じる.
         fclose( pFile );
+
+        if ( pVertex )
+        {
+            delete [] pVertex;
+            pVertex = nullptr;
+        }
 
         // メモリ解放とカウント数をリセット.
         Release();
@@ -238,14 +255,26 @@ bool ResMesh::LoadFromFile( const char* filename )
     }
 
     // マテリアルデータのメモリを確保.
-    m_pMaterial = new Material[ m_MaterialCount ];
-    if ( m_pMaterial == nullptr )
+    pMaterial = new SMD_MATERIAL[ materialCount ];
+    if ( pMaterial == nullptr )
     {
         // エラーログ出力.
         printf_s( "Error : Memory Allocate Failed.\n" );
 
         // ファイルを閉じる.
         fclose( pFile );
+
+        if ( pVertex )
+        {
+            delete [] pVertex;
+            pVertex = nullptr;
+        }
+
+        if ( pIndex )
+        {
+            delete [] pIndex;
+            pIndex = nullptr;
+        }
 
         // メモリ解放とカウント数をリセット.
         Release();
@@ -255,14 +284,32 @@ bool ResMesh::LoadFromFile( const char* filename )
     }
 
     // サブセットデータのメモリを確保.
-    m_pSubset = new Subset[ m_SubsetCount ];
-    if ( m_pSubset == nullptr )
+    pSubset = new SMD_SUBSET[ subsetCount ];
+    if ( pSubset == nullptr )
     {
         // エラーログ出力.
         printf_s( "Error : Memory Allocate Failed.\n" );
 
         // ファイルを閉じる.
         fclose( pFile );
+
+        if ( pVertex )
+        {
+            delete [] pVertex;
+            pVertex = nullptr;
+        }
+
+        if ( pIndex )
+        {
+            delete [] pIndex;
+            pIndex = nullptr;
+        }
+
+        if ( pMaterial )
+        {
+            delete [] pMaterial;
+            pMaterial = nullptr;
+        }
 
         // メモリ解放とカウント数をリセット.
         Release();
@@ -272,10 +319,10 @@ bool ResMesh::LoadFromFile( const char* filename )
     }
 
     // データを一気に読み込み.
-    fread( m_pVertex,   sizeof( Vertex ),   m_VertexCount,   pFile );
-    fread( m_pIndex,    sizeof( u32 ),      m_IndexCount,    pFile );
-    fread( m_pMaterial, sizeof( Material ), m_MaterialCount, pFile );
-    fread( m_pSubset,   sizeof( Subset ),   m_SubsetCount,   pFile );
+    fread( pVertex,   sizeof( SMD_VERTEX ),   vertexCount,   pFile );
+    fread( pIndex,    sizeof( u32 ),          indexCount,    pFile );
+    fread( pMaterial, sizeof( SMD_MATERIAL ), materialCount, pFile );
+    fread( pSubset,   sizeof( SMD_SUBSET ),   subsetCount,   pFile );
 
 #if 0
     //for( u32 i=0; i<m_VertexCount; ++i )
@@ -319,6 +366,85 @@ bool ResMesh::LoadFromFile( const char* filename )
     // ファイルを閉じる.
     fclose( pFile );
 
+
+    m_pMaterial.resize( materialCount );
+    for( u32 i=0; i<materialCount; ++i )
+    {
+        if ( pMaterial[ i ].DiffuseMap[0] != 0 )
+        {
+            std::string textureName = baseName + "/" + pMaterial[ i].DiffuseMap;
+            m_pMaterial[ i ] = MeshMaterial( 
+                pMaterial[ i ].Diffuse,
+                pMaterial[ i ].Emissive,
+                pMaterial[ i ].Refractivity,
+                pMaterial[ i ].Roughness,
+                textureName.c_str() );
+        }
+        else
+        {
+            m_pMaterial[ i ] =  MeshMaterial( 
+                pMaterial[ i ].Diffuse,
+                pMaterial[ i ].Emissive,
+                pMaterial[ i ].Refractivity,
+                pMaterial[ i ].Roughness );
+        }
+    }
+
+    if ( pMaterial )
+    {
+        delete [] pMaterial;
+        pMaterial = nullptr;
+    }
+
+    m_pTriangle.resize( indexCount );
+
+    u32 count = 0;
+    for( u32 i=0; i<subsetCount; ++i )
+    {
+        for( u32 j=0; j<pSubset->IndexCount; j+=3 )
+        {
+            u32 idx0 = pSubset->IndexOffset + ( j + 0 );
+            u32 idx1 = pSubset->IndexOffset + ( j + 1 );
+            u32 idx2 = pSubset->IndexOffset + ( j + 2 );
+
+            m_pTriangle[ count ] = MeshTriangle(
+                pVertex[ idx0 ].Position,
+                pVertex[ idx1 ].Position,
+                pVertex[ idx2 ].Position,
+                pVertex[ idx0 ].Normal,
+                pVertex[ idx1 ].Normal,
+                pVertex[ idx2 ].Normal,
+                pVertex[ idx0 ].TexCoord,
+                pVertex[ idx1 ].TexCoord,
+                pVertex[ idx2 ].TexCoord,
+                &m_pMaterial[ pSubset->MaterialID ] );
+            count++;
+        }
+    }
+
+    if ( pVertex )
+    {
+        delete [] pVertex;
+        pVertex = nullptr;
+    }
+
+    if ( pIndex )
+    {
+        delete [] pIndex;
+        pIndex = nullptr;
+    }
+
+    if ( pSubset )
+    {
+        delete [] pSubset;
+        pSubset = nullptr;
+    }
+
+    IShape*  pShape = &m_pTriangle[0];
+    IShape** ppShapes = &pShape;
+
+    m_pBVH = BVH::BuildBranch( ppShapes, m_pTriangle.size() );
+
     // 正常終了.
     return true;
 }
@@ -326,37 +452,16 @@ bool ResMesh::LoadFromFile( const char* filename )
 //-------------------------------------------------------------------------------------
 //      メモリ解放処理を行います.
 //-------------------------------------------------------------------------------------
-void ResMesh::Release()
+void Mesh::Release()
 {
-    if ( m_pVertex )
+    if ( m_pBVH )
     {
-        delete [] m_pVertex;
-        m_pVertex = nullptr;
+        delete m_pBVH;
+        m_pBVH = nullptr;
     }
 
-    if ( m_pIndex )
-    {
-        delete [] m_pIndex;
-        m_pIndex = nullptr;
-    }
-
-    if ( m_pMaterial )
-    {
-        delete [] m_pMaterial;
-        m_pMaterial = nullptr;
-    }
-
-    if ( m_pSubset )
-    {
-        delete [] m_pSubset;
-        m_pSubset = nullptr;
-    }
-
-    // カウンターリセット.
-    m_VertexCount   = 0;
-    m_IndexCount    = 0;
-    m_MaterialCount = 0;
-    m_SubsetCount   = 0;
+    m_pTriangle.clear();
+    m_pMaterial.clear();
 }
 
 

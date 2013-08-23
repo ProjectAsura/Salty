@@ -38,9 +38,12 @@ Texture2D::Texture2D( const char* filename )
 , m_Size        ( 0 )
 , m_pPixels     ( nullptr )
 {
-    bool result = LoadFromFile( filename );
-    assert( result == true );
-    S3D_UNUSED_VAR( result );
+    if ( filename != nullptr && filename[0] != 0 && filename[0] != '\0' )
+    {
+        bool result = LoadFromFile( filename );
+        assert( result == true );
+        S3D_UNUSED_VAR( result );
+    }
 }
 
 //--------------------------------------------------------------------------------------

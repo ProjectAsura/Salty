@@ -18,6 +18,7 @@
 #include <s3d_mutex.h>
 #include <s3d_onb.h>
 #include <s3d_bvh.h>
+#include <s3d_mesh.h>
 
 #include <iostream>
 #include <direct.h>
@@ -231,20 +232,6 @@ Quad g_Quads[] = {
    ),
 };
 
-// シェイプリスト.
-IShape* g_pShapes[] = {
-    &g_Quads[0],
-    &g_Quads[1],
-    &g_Quads[2],
-    &g_Quads[3],
-    &g_Quads[4],
-    &g_Quads[5],
-
-    &g_Spheres[0],
-    &g_Spheres[1],
-    &g_Spheres[2],
-    &g_Triangles[0],
-};
 
 // 境界ボリューム階層.
 IShape* g_pBVH = nullptr;
@@ -908,11 +895,27 @@ void App::Run( Config& config )
     g_NumSample    = config.numSamples;
     g_NumSubSample = config.numSubSamples;
 
+    // シェイプリスト.
+    IShape* pShapes[] = {
+        &g_Quads[0],
+        &g_Quads[1],
+        &g_Quads[2],
+        &g_Quads[3],
+        &g_Quads[4],
+        &g_Quads[5],
+
+        &g_Spheres[0],
+        &g_Spheres[1],
+        &g_Spheres[2],
+        &g_Triangles[0],
+    };
+
+
     // 物体の数を算出.
-    u32 numShapes = sizeof( g_pShapes ) / sizeof( g_pShapes[0] );
+    u32 numShapes = sizeof( pShapes ) / sizeof( pShapes[0] );
 
     // BVH構築.
-    g_pBVH = BVH::BuildBranch( g_pShapes, numShapes );
+    g_pBVH = BVH::BuildBranch( pShapes, numShapes );
     assert( g_pBVH != nullptr );
 
     // レイトレ！
@@ -924,7 +927,6 @@ void App::Run( Config& config )
         delete g_pBVH;
         g_pBVH = nullptr;
     }
-
 }
 
 

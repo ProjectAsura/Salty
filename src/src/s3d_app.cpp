@@ -359,7 +359,7 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
         // 色の反射率最大のものを得る。ロシアンルーレットで使う。
         // ロシアンルーレットの閾値は任意だが色の反射率等を使うとより良い ... らしい。
         // Memo : 閾値を平均とかにすると，うまい具合にばらけず偏ったりしたので上記を守るのが一番良さげ.
-        arg.prob = pMaterial->GetThreshold();//ComputeThreshold( pMaterial->GetColor() );
+        arg.prob = pMaterial->GetThreshold();
 
         // 最大深度以上になったら，打ち切るために閾値を急激に下げる.
         if ( depth > MAX_DEPTH )
@@ -429,11 +429,11 @@ void PathTrace
 
     // 1サブサンプルあたり.
     const f64 rate = (1.0 / supersamples);
+    const f64 halfRate = rate / 2.0;
 
     // 時間監視スレッドを走らせる.
     uintptr_t ret = _beginthread( TimeWatch, 0, nullptr );
     assert( ret != -1 );    // 失敗しちゃだめよ.
-
 
 #if _OPENMP
     #pragma omp parallel for schedule(dynamic, 1) num_threads(8)
@@ -463,8 +463,8 @@ void PathTrace
                 // 一つのサブピクセルあたりsamples回サンプリングする
                 for (s32 s = 0; s < samples; s ++)
                 {
-                    const f64 r1 = sx * rate + rate / 2.0;
-                    const f64 r2 = sy * rate + rate / 2.0;
+                    const f64 r1 = sx * rate + halfRate;
+                    const f64 r2 = sy * rate + halfRate;
 
                     // ぶっ飛ばすレイを取得.
                     Ray ray = camera.GetRay(
@@ -499,7 +499,7 @@ void PathTrace
         Sleep( 10 );
     }
 
-    char filename[256];
+    char    filename[256];
     tm      local_time;
     time_t  t = time( nullptr );
     errno_t err = localtime_s( &local_time, &t );

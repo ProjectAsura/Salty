@@ -526,7 +526,10 @@ MeshMaterial::MeshMaterial()
 , roughness     ( 0.0 )
 , diffuseMap    ()
 , diffuseSmp    ()
-{ /* DO_NOTHING */ }
+{ 
+    threshold = Max( diffuse.x, diffuse.y );
+    threshold = Max( diffuse.z, threshold );
+}
 
 //--------------------------------------------------------------------------------
 //      引数付きコンストラクタです.
@@ -544,7 +547,10 @@ MeshMaterial::MeshMaterial
 , roughness     ( Kr )
 , diffuseMap    ()
 , diffuseSmp    ()
-{ /* DO_NOTHING */ }
+{
+    threshold = Max( diffuse.x, diffuse.y );
+    threshold = Max( diffuse.z, threshold );
+}
 
 //--------------------------------------------------------------------------------
 //      引数付きコンストラクタです.
@@ -564,13 +570,22 @@ MeshMaterial::MeshMaterial
 , roughness     ( Kr )
 , diffuseMap    ( map_Kd )
 , diffuseSmp    ( sampler )
-{ /* DO_NOTHING */ }
+{
+    threshold = Max( diffuse.x, diffuse.y );
+    threshold = Max( diffuse.z, threshold );
+}
 
 //--------------------------------------------------------------------------------
 //      自己発光カラーを取得します.
 //--------------------------------------------------------------------------------
 Color MeshMaterial::GetEmissive() const
 { return emissive; }
+
+//--------------------------------------------------------------------------------
+//      ロシアンルーレットの閾値を求めます.
+//--------------------------------------------------------------------------------
+f64 MeshMaterial::GetThreshold() const
+{ return threshold; }
 
 //--------------------------------------------------------------------------------
 //      色を求めます.

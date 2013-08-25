@@ -48,6 +48,7 @@ struct ShadingArg
     Vector3     normal;         //!< 法線ベクトル.
     Vector2     texcoord;       //!< テクスチャ座標.
     Random      random;         //!< 乱数.
+    f64         prob;           //!< 確率.
 };
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -274,7 +275,7 @@ struct Matte: public MaterialBase
         //=====================================================================
 
         // カラー返却
-        return Vector3::Mul( color, texture.Sample( sampler, arg.texcoord ) ) / threshold;
+        return Vector3::Mul( color, texture.Sample( sampler, arg.texcoord ) ) / arg.prob;
     }
 };
 
@@ -375,7 +376,7 @@ struct Clay : public MaterialBase
         f64 beta  = Min( ti, to );
         f64 f     = A + B * cosPhai * sin( alpha ) * tan( beta );
 
-        return Color::Mul( color, texture.Sample( sampler, arg.texcoord ) ) * f / threshold;
+        return Color::Mul( color, texture.Sample( sampler, arg.texcoord ) ) * f / arg.prob;
     }
 };
 
@@ -549,7 +550,7 @@ struct RefractionMaterial : public MaterialBase, public IRefractionMaterial
             arg.output = reflect;
 
             // 重み更新.
-            return Vector3::Mul( color, texture.Sample( sampler, arg.texcoord ) ) * Re / ( P * threshold );
+            return Vector3::Mul( color, texture.Sample( sampler, arg.texcoord ) ) * Re / ( P * arg.prob );
         }
         // 屈折の場合.
         else
@@ -557,7 +558,7 @@ struct RefractionMaterial : public MaterialBase, public IRefractionMaterial
             arg.output = refract;
 
             // 重み更新.
-            return Vector3::Mul( color, texture.Sample( sampler, arg.texcoord ) ) * Tr / ( ( 1.0 - P ) * threshold );
+            return Vector3::Mul( color, texture.Sample( sampler, arg.texcoord ) ) * Tr / ( ( 1.0 - P ) * arg.prob );
         }
 
     }

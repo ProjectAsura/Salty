@@ -85,8 +85,8 @@ Matte g_Matte[] = {
 
 // Oren-Nayer
 Clay g_Clay[] = {
-    Clay( Color( 0.75, 0.75, 0.75 ), 1.0, "./res/texture/wall.bmp" ),
-    Clay( Color( 0.75, 0.75, 0.75 ), 1.0, "./res/texture/tile.bmp" ),
+    Clay( Color( 0.75, 0.75, 0.75 ), 0.75  ,"./res/texture/wall.bmp" ),
+    Clay( Color( 0.75, 0.75, 0.75 ), 0.25  ,"./res/texture/tile.bmp" ),
 };
 
 // Mirror
@@ -107,8 +107,8 @@ Diamond g_Diamond[] = {
 
 // Materials
 IMaterial* g_pMaterials[] = {
-    &g_Clay[0],        // 0 : 白.
-    &g_Clay[1],        // 1 : タイル.
+    &g_Matte[0],        // 0 : 白.
+    &g_Matte[1],        // 1 : タイル.
     &g_Matte[2],        // 2 : 照明.
     &g_Mirror[0],       // 3 : ミラー.
     &g_Mirror[1],       // 4 : 黄色ミラー.
@@ -353,267 +353,42 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
         // マテリアルへのポインタ.
         const IMaterial* pMaterial = pShape->GetMaterial();
 
-        // 無補正法線データ.
-        const Vector3 normalOrg = record.normal;
-
-        // 補正済み法線データ (レイの入出を考慮済み).
-        const Vector3 normalMod = ( Vector3::Dot ( normalOrg, ray.dir ) < 0.0 ) ? normalOrg : -normalOrg;
-
         // 自己発光による放射輝度.
-        Color emission = Color::Mul( pMaterial->GetEmissive(), pMaterial->GetTextureColor( record.texcoord ) );
-        L += Color::Mul( W, emission );
+        L += Color::Mul( W, pMaterial->GetEmissive() );
 
         // 色の反射率最大のものを得る。ロシアンルーレットで使う。
         // ロシアンルーレットの閾値は任意だが色の反射率等を使うとより良い ... らしい。
         // Memo : 閾値を平均とかにすると，うまい具合にばらけず偏ったりしたので上記を守るのが一番良さげ.
-        f64 prob = ComputeThreshold( pMaterial->GetColor() );
+        arg.prob = pMaterial->GetThreshold();//ComputeThreshold( pMaterial->GetColor() );
 
         // 最大深度以上になったら，打ち切るために閾値を急激に下げる.
         if ( depth > MAX_DEPTH )
-        { prob *= pow( 0.5, depth - MAX_DEPTH ); }
+        { arg.prob *= pow( 0.5, depth - MAX_DEPTH ); }
 
         // ロシアンルーレット!
-        if ( rnd.GetAsF64() >= prob )
+        if ( arg.random.GetAsF64() >= arg.prob )
         { break; }
 
+        // シェーディング引数を設定.
         arg.input    = ray.dir;
         arg.normal   = record.normal;
         arg.texcoord = record.texcoord;
-        arg.random   = rnd;
 
+        // 色を求める.
         W = Color::Mul( W, pMaterial->ComputeColor( arg ) );
 
-        rnd = arg.random;
-
-
+        // レイを更新.
         ray.Update( record.position, arg.output );
 
-
-#if 0
-        // マテリアル計算.
-        // TODO : 関数化で分岐処理をなくして，コードをすっきりさせる.
-        switch ( pMaterial->GetType() )
-        {
-            // 完全拡散面
-            case MATERIAL_TYPE_MATTE: 
-            {
-                #pragma region Lambert
-
-                // normalModの方向を基準とした正規直交基底(w, u, v)を作る。
-                // この基底に対する半球内で次のレイを飛ばす。
-                OrthonormalBasis onb;
-                onb.InitFromW( normalMod );
-
-                // コサイン項を使った重点的サンプリング
-                const f64 r1  = D_2PI * rnd.GetAsF64();
-                const f64 r2  = rnd.GetAsF64();
-                const f64 r2s = sqrt(r2);
-                Vector3 dir = Vector3::UnitVector(
-                    onb.u * cos(r1) * r2s
-                  + onb.v * sin(r1) * r2s
-                  + onb.w * sqrt(1.0 - r2) );
-
-                //====================================================================
-                // レンダリング方程式に対するモンテカルロ積分を考えると、
-                // outgoing_radiance = weight * incoming_radiance。
-                // ここで、weight = (ρ/π) * cosθ / pdf(ω) / R になる。
-                // ρ/πは完全拡散面のBRDFでρは反射率、cosθはレンダリング方程式におけるコサイン項、
-                // pdf(ω)はサンプリング方向についての確率密度関数。
-                // Rはロシアンルーレットの確率。
-                // 今、コサイン項に比例した確率密度関数によるサンプリングを行っているため、pdf(ω) = cosθ/π
-                // よって、weight = ρ/ R。
-                //=====================================================================
-
-                // 重み更新.
-                Color weight = Vector3::Mul( pMaterial->GetColor(), pMaterial->GetTextureColor( record.texcoord ) ) / prob;
-                W = Vector3::Mul( W, weight );
-
-                // レイを更新.
-                ray.Update( record.position, dir );
-
-                #pragma endregion
-            }
-            break;
-
-            case MATERIAL_TYPE_CLAY:
-            {
-                #pragma region Oren-Nayer
-
-                const Clay* pClay = reinterpret_cast<const Clay*>( pMaterial );
-
-                // normalModの方向を基準とした正規直交基底(w, u, v)を作る。
-                // この基底に対する半球内で次のレイを飛ばす。
-                OrthonormalBasis onb;
-                onb.InitFromW( normalMod );
-
-                // コサイン項を使った重点的サンプリング
-                const f64 r1  = D_2PI * rnd.GetAsF64();
-                const f64 r2  = rnd.GetAsF64();
-                const f64 r2s = sqrt(r2);
-                Vector3 dir = Vector3::UnitVector(
-                    onb.u * cos(r1) * r2s
-                  + onb.v * sin(r1) * r2s
-                  + onb.w * sqrt(1.0 - r2) );
-
-                //========================================================================
-                // レンダリング方程式に対するモンテカルロ積分をLambertと同様に考えると,
-                // 従って Wr = color * ( A + B * cosφ * sinα * tanβ ) / q.
-                // ただし, α = min( θi, θr ), β = max( θi, θr )とする.
-                //========================================================================
-
-                f64 s2 = pClay->GetRoughness() * pClay->GetRoughness();
-                f64 A = 1.0 - ( 0.5 * ( s2 / ( s2 + 0.33 ) ) );
-                f64 B = 0.45 * ( s2 / ( s2 + 0.09 ) );
-
-                f64 NV = Vector3::Dot( normalMod, ray.dir );
-                f64 NL = Vector3::Dot( normalMod, dir );
-
-                Vector3 projI = Vector3::UnitVector( ray.dir  - ( normalMod * NV ) );
-                Vector3 projR = Vector3::UnitVector( dir - ( normalMod * NL ) );
-
-                f64 cosPhai = Max( Vector3::Dot( projI, projR ), 0.0 );
-
-                f64 ti    = acos( NV );
-                f64 to    = acos( NL );
-                f64 alpha = Max( ti, to );
-                f64 beta  = Min( ti, to );
-                f64 f     = A + B * cosPhai * sin( alpha ) * tan( beta );
-
-                Color weight = Color::Mul( pMaterial->GetColor(), pMaterial->GetTextureColor( record.texcoord ) ) * f / prob;
-                W = Color::Mul( W, weight );
-
-                ray.Update( record.position, dir );
-
-                #pragma endregion
-            }
-            break;
-
-            // 完全鏡面
-            case MATERIAL_TYPE_MIRROR:
-            {
-                #pragma region Mirror
-                // ====================================================
-                // 完全鏡面なのでレイの反射方向は決定的。
-                // ロシアンルーレットの確率で除算するのは上と同じ。
-                // ====================================================
-
-                // 反射ベクトルを求める.
-                Vector3 reflect = Vector3::Reflect( ray.dir, normalMod );
-                reflect.Normalize();
-
-                // 重み更新.
-                Color weight = Vector3::Mul( pMaterial->GetColor(), pMaterial->GetTextureColor( record.texcoord ) );
-                W = Color::Mul( W, weight );
-
-                // レイを更新.
-                ray.Update( record.position, reflect );
-
-                #pragma endregion
-            }
-            break;
-
-            // 屈折系.
-            case MATERIAL_TYPE_REFRACT:
-            {
-                #pragma region Refraction
-
-                const RefractionMaterial* pRefractionMat = reinterpret_cast<const RefractionMaterial*>( pMaterial );
-
-                // 反射ベクトルを求める.
-                Vector3 reflect = Vector3::Reflect( ray.dir, normalOrg );
-                reflect.Normalize();
-
-                // レイがオブジェクトから出るのか? 入るのか?
-                const bool into = ( Vector3::Dot( normalOrg, normalMod ) > 0.0 );
-
-                // ===============
-                // Snellの法則
-                // ===============
-                
-                // 真空の屈折率
-                const f64 nc    = 1.0;
-
-                // オブジェクトの屈折率
-                const f64 nt    = pRefractionMat->GetRefractivity();
-
-                const f64 nnt   = ( into ) ? ( nc / nt ) : ( nt / nc );
-                const f64 ddn   = Vector3::Dot( ray.dir, normalMod );
-                const f64 cos2t = 1.0 - nnt * nnt * (1.0 - ddn * ddn);
-
-                // 全反射
-                if ( cos2t < 0.0 )
-                {
-                    // 重み更新.
-                    Color weight = Vector3::Mul( pMaterial->GetColor(), pMaterial->GetTextureColor( record.texcoord ) );
-                    W = Vector3::Mul( W, weight );
-
-                    // レイを更新.
-                    ray.pos = record.position;
-                    ray.dir = reflect;
-
-                    // swith-case文脱出.
-                    break;
-                }
-
-                // 屈折ベクトル.
-                Vector3 refract = Vector3::UnitVector(
-                    ray.dir * nnt - normalOrg * ( ( into ) ? 1.0 : -1.0 ) * ( ddn * nnt + sqrt(cos2t) ) );
-
-                // SchlickによるFresnelの反射係数の近似を使う
-                const f64 a = nt - nc;
-                const f64 b = nt + nc;
-                const f64 R0 = (a * a) / (b * b);
-
-                const f64 c = 1.0 - ( ( into ) ? -ddn : Vector3::Dot( refract, normalOrg ) );
-                const f64 Re = R0 + (1.0 - R0) * pow(c, 5.0); // 反射方向の光が反射してray.dirの方向に運ぶ割合。同時に屈折方向の光が反射する方向に運ぶ割合。
-                const f64 Tr = ( 1.0 - Re );
-
-                // 一定以上レイを追跡したら屈折と反射のどちらか一方を追跡する
-                // ロシアンルーレットで決定する。
-                const f64 P = 0.25 + 0.5 * Re;      // フレネルのグラフを参照.
-                
-                // 反射の場合.
-                if ( rnd.GetAsF64() < P )
-                {
-                    // 重み更新.
-                    Color weight = Vector3::Mul( pMaterial->GetColor(), pMaterial->GetTextureColor( record.texcoord ) ) * Re / ( P * prob );
-                    W = Vector3::Mul( W, weight );
-
-                    // レイを更新.
-                    ray.pos = record.position;
-                    ray.dir = reflect;
-                }
-                // 屈折の場合.
-                else
-                {
-                    // 重み更新.
-                    Color weight = Vector3::Mul( pMaterial->GetColor(), pMaterial->GetTextureColor( record.texcoord ) ) * Tr / ( ( 1.0 - P ) * prob );
-                    W = Vector3::Mul( W, weight );
-
-                    // レイを更新.
-                    ray.pos = record.position;
-                    ray.dir = refract;
-                }
-
-                #pragma endregion
-            }
-            break;
-
-#if 0
-            //// プラスチック.
-            //case MATERIAL_TYPE_PLASTIC :
-            //{
-            //    /* NOT_IMPLEMENT */
-            //}
-            //break;
-#endif
-        }
-#endif
-
         // 重みがゼロなら，以降の結果はゼロとなり無駄な処理になるので打ち切り.
-        if ( W == Color( 0.0, 0.0, 0.0 ) )
+        if ( ( W.x <= 0.0 )
+          && ( W.y <= 0.0 )
+          && ( W.z <= 0.0 ) )
         { break; }
     }
+
+    // 乱数を更新.
+    rnd = arg.random;
 
     // 計算結果を返却.
     return L;
@@ -659,18 +434,19 @@ void PathTrace
     uintptr_t ret = _beginthread( TimeWatch, 0, nullptr );
     assert( ret != -1 );    // 失敗しちゃだめよ.
 
+
+#if _OPENMP
+    #pragma omp parallel for schedule(dynamic, 1) num_threads(8)
+#endif
     // 縦方向のループ.
     for (s32 y = 0; y < height; y ++) 
     {
         // 乱数
-        s3d::Random rnd(y + 1);
+        s3d::Random rnd( y << 4 );
 
         // 何%完了したか表示する.
         printf_s( "process %lf completed.\n", (100.0 * y / (height - 1)) );
 
-    #if _OPENMP
-        #pragma omp parallel for schedule(dynamic, 1) num_threads(8)
-    #endif
         // 横方向のループ.
         for (s32 x = 0; x < width; x ++) 
         {
@@ -685,7 +461,7 @@ void PathTrace
             for (s32 sx = 0; sx < supersamples; sx ++) 
             {
                 // 一つのサブピクセルあたりsamples回サンプリングする
-                for (s32 s = 0; s < samples; s ++) 
+                for (s32 s = 0; s < samples; s ++)
                 {
                     const f64 r1 = sx * rate + rate / 2.0;
                     const f64 r2 = sy * rate + rate / 2.0;

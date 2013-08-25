@@ -85,7 +85,8 @@ Matte g_Matte[] = {
 
 // Oren-Nayer
 Clay g_Clay[] = {
-    Clay( Color( 0.25, 0.75, 0.25 ), 0.85 ),
+    Clay( Color( 0.75, 0.75, 0.75 ), 1.0, "./res/texture/wall.bmp" ),
+    Clay( Color( 0.75, 0.75, 0.75 ), 1.0, "./res/texture/tile.bmp" ),
 };
 
 // Mirror
@@ -106,8 +107,8 @@ Diamond g_Diamond[] = {
 
 // Materials
 IMaterial* g_pMaterials[] = {
-    &g_Matte[0],        // 0 : 白.
-    &g_Matte[1],        // 1 : タイル.
+    &g_Clay[0],        // 0 : 白.
+    &g_Clay[1],        // 1 : タイル.
     &g_Matte[2],        // 2 : 照明.
     &g_Mirror[0],       // 3 : ミラー.
     &g_Mirror[1],       // 4 : 黄色ミラー.
@@ -288,7 +289,8 @@ bool Intersect(const Ray &ray, HitRecord& record)
 //---------------------------------------------------------------------------------
 Color Radiance(const Ray &inRay, s3d::Random &rnd)
 {
-    HitRecord record = HitRecord();
+    HitRecord   record = HitRecord();
+    ShadingArg  arg    = ShadingArg();
     Ray ray( inRay );
 
     //========================================================
@@ -337,6 +339,8 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
     Color W( 1.0, 1.0, 1.0 );
     Color L( 0.0, 0.0, 0.0 );
 
+    arg.random = rnd;
+
     for( s32 depth=0; /* NOTHING */; ++depth )
     {
         // シーンと交差判定
@@ -372,6 +376,20 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
         if ( rnd.GetAsF64() >= prob )
         { break; }
 
+        arg.input    = ray.dir;
+        arg.normal   = record.normal;
+        arg.texcoord = record.texcoord;
+        arg.random   = rnd;
+
+        W = Color::Mul( W, pMaterial->ComputeColor( arg ) );
+
+        rnd = arg.random;
+
+
+        ray.Update( record.position, arg.output );
+
+
+#if 0
         // マテリアル計算.
         // TODO : 関数化で分岐処理をなくして，コードをすっきりさせる.
         switch ( pMaterial->GetType() )
@@ -590,6 +608,7 @@ Color Radiance(const Ray &inRay, s3d::Random &rnd)
             //break;
 #endif
         }
+#endif
 
         // 重みがゼロなら，以降の結果はゼロとなり無駄な処理になるので打ち切り.
         if ( W == Color( 0.0, 0.0, 0.0 ) )

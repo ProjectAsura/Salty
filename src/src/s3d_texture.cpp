@@ -55,7 +55,7 @@ Texture2D::Texture2D( const Texture2D& value )
 , m_Size        ( value.m_Size )
 , m_pPixels     ( nullptr )
 {
-    m_pPixels = new f64 [ m_Size ];
+    m_pPixels = new f32 [ m_Size ];
     assert( m_pPixels != nullptr );
 
     for( u32 i=0; i<m_Size; ++i )
@@ -122,7 +122,7 @@ Color Texture2D::Sample( const TextureSampler& sampler, const Vector2& location 
 {
     // テクスチャが無ければ(1.0, 1.0, 1.0)を返しておく.
     if ( m_pPixels == nullptr )
-    { return Color( 1.0, 1.0, 1.0 ); }
+    { return Color( 1.0f, 1.0f, 1.0f ); }
 
     Vector2 uv = location;
 
@@ -132,32 +132,32 @@ Color Texture2D::Sample( const TextureSampler& sampler, const Vector2& location 
         // 0.0 ～ 1.0 でリピート.
         case TEXTURE_ADDRESS_WRAP:
         {
-            while ( uv.x > 1.0 ) 
-            { uv.x -= 1.0; }
+            while ( uv.x > 1.0f ) 
+            { uv.x -= 1.0f; }
 
-            while ( uv.x < 0.0 )
-            { uv.x += 1.0; }
+            while ( uv.x < 0.0f )
+            { uv.x += 1.0f; }
         }
         break;
 
         // 0.0 ～ 1.0 でクランプ.
         case TEXTURE_ADDRESS_CLAMP:
         {
-            if ( uv.x > 1.0 )
+            if ( uv.x > 1.0f )
             { uv.x = 1.0; }
 
-            if ( uv.x < 0.0 )
-            { uv.x = 0.0; }
+            if ( uv.x < 0.0f )
+            { uv.x = 0.0f; }
         }
         break;
 
         // 0.0 ～ 1.0 の範囲外なら境界色.
         case TEXTURE_ADDRESS_BORADER:
         {
-            if ( uv.x > 1.0 )
+            if ( uv.x > 1.0f )
             { return sampler.boarderColor; }
 
-            if ( uv.x < 0.0 )
+            if ( uv.x < 0.0f )
             { return sampler.boarderColor; }
         }
         break;
@@ -169,39 +169,39 @@ Color Texture2D::Sample( const TextureSampler& sampler, const Vector2& location 
         // 0.0 ～ 1.0 でリピート.
         case TEXTURE_ADDRESS_WRAP:
         {
-            while ( uv.y > 1.0 ) 
-            { uv.y -= 1.0; }
+            while ( uv.y > 1.0f ) 
+            { uv.y -= 1.0f; }
 
-            while ( uv.y < 0.0 )
-            { uv.y += 1.0; }
+            while ( uv.y < 0.0f )
+            { uv.y += 1.0f; }
         }
         break;
 
         // 0.0 ～ 1.0 でクランプ.
         case TEXTURE_ADDRESS_CLAMP:
         {
-            if ( uv.y > 1.0 )
-            { uv.y = 1.0; }
+            if ( uv.y > 1.0f )
+            { uv.y = 1.0f; }
 
-            if ( uv.y < 0.0 )
-            { uv.y = 0.0; }
+            if ( uv.y < 0.0f )
+            { uv.y = 0.0f; }
         }
         break;
 
         // 0.0 ～ 1.0 の範囲外なら境界色を返す.
         case TEXTURE_ADDRESS_BORADER:
         {
-            if ( uv.y > 1.0 )
+            if ( uv.y > 1.0f )
             { return sampler.boarderColor; }
-            if ( uv.y < 0.0 )
+            if ( uv.y < 0.0f )
             { return sampler.boarderColor; }
         }
         break;
     }
 
     // 一応念のためにチェック!
-    assert( 0.0 <= uv.x && uv.x <= 1.0 );
-    assert( 0.0 <= uv.y && uv.y <= 1.0 );
+    assert( 0.0f <= uv.x && uv.x <= 1.0f );
+    assert( 0.0f <= uv.y && uv.y <= 1.0f );
 
     // テクスチャインデックス算出.
     u32 x = static_cast<u32>( uv.x * ( m_Width - 1 ) );

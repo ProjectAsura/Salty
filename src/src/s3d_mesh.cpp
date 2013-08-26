@@ -367,28 +367,28 @@ bool Mesh::LoadFromFile( const char* filename )
     fclose( pFile );
 
 
-    m_pMaterial.resize( materialCount );
-    for( u32 i=0; i<materialCount; ++i )
-    {
-        if ( pMaterial[ i ].DiffuseMap[0] != 0 )
-        {
-            std::string textureName = baseName + "/" + pMaterial[ i].DiffuseMap;
-            m_pMaterial[ i ] = MeshMaterial( 
-                pMaterial[ i ].Diffuse,
-                pMaterial[ i ].Emissive,
-                pMaterial[ i ].Refractivity,
-                pMaterial[ i ].Roughness,
-                textureName.c_str() );
-        }
-        else
-        {
-            m_pMaterial[ i ] =  MeshMaterial( 
-                pMaterial[ i ].Diffuse,
-                pMaterial[ i ].Emissive,
-                pMaterial[ i ].Refractivity,
-                pMaterial[ i ].Roughness );
-        }
-    }
+    //m_pMaterial.resize( materialCount );
+    //for( u32 i=0; i<materialCount; ++i )
+    //{
+    //    if ( pMaterial[ i ].DiffuseMap[0] != 0 )
+    //    {
+    //        std::string textureName = baseName + "/" + pMaterial[ i].DiffuseMap;
+    //        m_pMaterial[ i ] = MeshMaterial( 
+    //            pMaterial[ i ].Diffuse,
+    //            pMaterial[ i ].Emissive,
+    //            pMaterial[ i ].Refractivity,
+    //            pMaterial[ i ].Roughness,
+    //            textureName.c_str() );
+    //    }
+    //    else
+    //    {
+    //        m_pMaterial[ i ] =  MeshMaterial( 
+    //            pMaterial[ i ].Diffuse,
+    //            pMaterial[ i ].Emissive,
+    //            pMaterial[ i ].Refractivity,
+    //            pMaterial[ i ].Roughness );
+    //    }
+    //}
 
     if ( pMaterial )
     {

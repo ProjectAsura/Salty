@@ -56,7 +56,7 @@ namespace s3d {
 // Forward Declarations.
 //----------------------------------------------------------------------------------
 void TimeWatch( void* );
-
+Color Radiance( const Ray &inRay, s3d::Random &rnd );
 
 //----------------------------------------------------------------------------------
 // Constant Values
@@ -76,33 +76,23 @@ u32     g_NumSubSample  = 0;            //!< サブサンプル数.
 Color*  g_pRT           = nullptr;      //!< レンダーターゲット.
 Mutex   g_Mutex;                        //!< ミューテックス.
 
-// Lambert
-Matte g_Matte[] = {
-    Matte( Color( 0.75, 0.75, 0.75 ), "./res/texture/wall.bmp" ),
-    Matte( Color( 0.75, 0.75, 0.75 ), "./res/texture/tile.bmp" ),
-    Matte( Color( 0.0, 0.0, 0.0 ), Color( 36.0, 36.0, 36.0 ) ),
-};
-
 // Oren-Nayer
-Clay g_Clay[] = {
-    Clay( Color( 0.75, 0.75, 0.75 ), 0.75  ,"./res/texture/wall.bmp" ),
-    Clay( Color( 0.75, 0.75, 0.75 ), 0.25  ,"./res/texture/tile.bmp" ),
+Matte g_Matte[] = {
+    Matte( Color( 0.75f, 0.75f, 0.75f ), 0.75f, "./res/texture/wall.bmp" ),
+    Matte( Color( 0.75f, 0.75f, 0.75f ), 0.25f, "./res/texture/tile.bmp" ),
+    Matte( Color( 0.0f,  0.0f,  0.0f  ), 0.0f,  Color( 36.0f, 36.0f, 36.0f ) ),
 };
 
 // Mirror
 Mirror g_Mirror[] = {
-    Mirror( Color( 0.25, 0.25, 0.75 ) ),
-    Mirror( Color( 0.75, 0.75, 0.25 ) ),
+    Mirror( Color( 0.25f, 0.25f, 0.75f ) ),
+    Mirror( Color( 0.75f, 0.75f, 0.25f ) ),
 };
 
 // Refraction (Crystal)
-Crystal g_Crystal[] = {
-    Crystal( Color( 0.75, 0.25, 0.25 ) ),
-};
-
-// Refraction (Diamond)
-Diamond g_Diamond[] = {
-    Diamond( Color( 1.0, 1.0, 1.0 ) ),
+Transparent g_Crystal[] = {
+    Transparent( 1.54f, Color( 0.75f, 0.25f, 0.25f ) ),
+    Transparent( 2.5f,  Color( 1.0f,  1.0f,  1.0f  ) ),
 };
 
 // Materials
@@ -113,15 +103,13 @@ IMaterial* g_pMaterials[] = {
     &g_Mirror[0],       // 3 : ミラー.
     &g_Mirror[1],       // 4 : 黄色ミラー.
     &g_Crystal[0],      // 5 : 水晶.
-    &g_Clay[0],         // 6 : 粘土.
-
 };
 
 // レンダリングするシーンデータ
 Sphere g_Spheres[] = {
-    Sphere( 16.5,  Vector3( 20.0, 16.5,  27.0 ), g_pMaterials[3] ),    // 鏡
-    Sphere( 16.5,  Vector3( 77.0, 16.5,  78.0 ), g_pMaterials[5] ),    // 水晶.
-    Sphere( 15.0,  Vector3( 50.0, 100.0, 81.6 ), g_pMaterials[2] ),    // 照明
+    Sphere( 16.5f,  Vector3( 20.0f, 16.5f,  27.0f ), g_pMaterials[3] ),    // 鏡
+    Sphere( 16.5f,  Vector3( 77.0f, 16.5f,  78.0f ), g_pMaterials[5] ),    // 水晶.
+    Sphere( 15.0f,  Vector3( 50.0f, 100.0f, 81.6f ), g_pMaterials[2] ),    // 照明
 };
 
 // トライアングル.
@@ -246,17 +234,17 @@ IShape* g_pBVH = nullptr;
 //! @brief      ロシアンルーレットに用いる閾値を求めます.
 //----------------------------------------------------------------------------------
 S3D_INLINE
-f64 ComputeThreshold( const Color& value )
+f32 ComputeThreshold( const Color& value )
 {
-    f64 result = value.x;
+    f32 result = value.x;
     result = ( value.y > result ) ? value.y : result;
     result = ( value.z > result ) ? value.z : result;
 
     // 無限ループ対策
-    result = Min( result, 0.99 );
+    result = Min( result, 0.99f );
 
     // ゼロ除算対策.
-    result = Max( result, DBL_EPSILON );
+    result = Max( result, FLT_EPSILON );
 
     return result;
 }
@@ -281,11 +269,6 @@ bool Intersect(const Ray &ray, HitRecord& record)
 
 //---------------------------------------------------------------------------------
 //! @brief      指定方向からの放射輝度を求めます.
-//!
-//! @note       このメソッドは edupt を基にしています.
-//!             edupt の解説記事は，http://www.slideshare.net/h013/edupt-kaisetsu-22852235
-//!             ソースコードは, https://github.com/githole/edupt
-//!             をそれぞれ参照してください.
 //---------------------------------------------------------------------------------
 Color Radiance( const Ray &inRay, s3d::Random &rnd )
 {
@@ -293,8 +276,8 @@ Color Radiance( const Ray &inRay, s3d::Random &rnd )
     ShadingArg  arg    = ShadingArg();
 
     Ray   ray( inRay );
-    Color W  ( 1.0, 1.0, 1.0 );
-    Color L  ( 0.0, 0.0, 0.0 );
+    Color W  ( 1.0f, 1.0f, 1.0f );
+    Color L  ( 0.0f, 0.0f, 0.0f );
 
 	// 乱数設定.
     arg.random = rnd;
@@ -321,10 +304,10 @@ Color Radiance( const Ray &inRay, s3d::Random &rnd )
 
         // 最大深度以上になったら，打ち切るために閾値を急激に下げる.
         if ( depth > MAX_DEPTH )
-        { arg.prob *= pow( 0.5, depth - MAX_DEPTH ); }
+        { arg.prob *= powf( 0.5f, static_cast<f32>( depth - MAX_DEPTH ) ); }
 
         // ロシアンルーレット!
-        if ( arg.random.GetAsF64() >= arg.prob )
+        if ( arg.random.GetAsF32() >= arg.prob )
         { break; }
 
         // シェーディング引数を設定.
@@ -339,9 +322,9 @@ Color Radiance( const Ray &inRay, s3d::Random &rnd )
         ray.Update( record.position, arg.output );
 
         // 重みがゼロなら，以降の結果はゼロとなり無駄な処理になるので打ち切り.
-        if ( ( W.x <= 0.0 )
-          && ( W.y <= 0.0 )
-          && ( W.z <= 0.0 ) )
+        if ( ( W.x <= 0.0f )
+          && ( W.y <= 0.0f )
+          && ( W.z <= 0.0f ) )
         { break; }
     }
 
@@ -367,13 +350,13 @@ void PathTrace
     // カメラ更新.
     Camera camera;
     camera.Update( 
-        Vector3( 50.0, 52.0, 220.0 ),
-        Vector3( 50.0, 50.0, 180.0 ),
-        Vector3( 0.0, 1.0, 0.0 ),
+        Vector3( 50.0f, 52.0f, 220.0f ),
+        Vector3( 50.0f, 50.0f, 180.0f ),
+        Vector3( 0.0f, 1.0f, 0.0f ),
         width,
         height,
-        D_PIDIV4,
-        1.0 );
+        F_PIDIV4,
+        1.0f );
 
     // レンダーターゲットのメモリを確保.
     g_pRT = new Color[ width * height ];
@@ -386,8 +369,8 @@ void PathTrace
     const s32 numSamples = samples * supersamples * supersamples;
 
     // 1サブサンプルあたり.
-    const f64 rate = (1.0 / supersamples);
-    const f64 halfRate = rate / 2.0;
+    const f32 rate = (1.0f / supersamples);
+    const f32 halfRate = rate / 2.0f;
 
     // 時間監視スレッドを走らせる.
     uintptr_t ret = _beginthread( TimeWatch, 0, nullptr );
@@ -412,7 +395,7 @@ void PathTrace
             const s32 idx = ( ( height - 1 - y ) * width ) + x;
 
             // 蓄積放射輝度.
-            Color accRadiance = Color(0.0, 0.0, 0.0);
+            Color accRadiance = Color(0.0f, 0.0f, 0.0f);
 
             // supersamples x supersamples のスーパーサンプリング
             for (s32 sy = 0; sy < supersamples; sy ++) 
@@ -421,21 +404,21 @@ void PathTrace
                 // 一つのサブピクセルあたりsamples回サンプリングする
                 for (s32 s = 0; s < samples; s ++)
                 {
-                    const f64 r1 = sx * rate + halfRate;
-                    const f64 r2 = sy * rate + halfRate;
+                    const f32 r1 = sx * rate + halfRate;
+                    const f32 r2 = sy * rate + halfRate;
 
                     // ぶっ飛ばすレイを取得.
                     Ray ray = camera.GetRay(
-                        ( r1 + x ) / width  - 0.5,
-                        ( r2 + y ) / height - 0.5 );
+                        ( r1 + x ) / width  - 0.5f,
+                        ( r2 + y ) / height - 0.5f );
 
                     // 加算.
-                    accRadiance += Radiance( ray, rnd );
+                    accRadiance += Radiance( ray, rnd ) / static_cast<f32>( numSamples );
                 }
             }
 
             // ピクセルカラーを加算.
-            g_pRT[ idx ] += accRadiance / numSamples;
+            g_pRT[ idx ] += accRadiance;
         }
     }
 

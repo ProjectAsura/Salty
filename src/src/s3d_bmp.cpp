@@ -96,7 +96,7 @@ void WriteBmpInfoHeader( BMP_INFO_HEADER& header, FILE* pFile )
 //-------------------------------------------------------------------------------------------
 //      BMPファイルに書き出します.
 //-------------------------------------------------------------------------------------------
-void WriteBmp( FILE* pFile, const int width, const int height, const double* pPixel, const double gamma )
+void WriteBmp( FILE* pFile, const s32 width, const s32 height, const f32* pPixel, const f32 gamma )
 {
     BMP_FILE_HEADER fileHeader;
     BMP_INFO_HEADER infoHeader;
@@ -126,29 +126,29 @@ void WriteBmp( FILE* pFile, const int width, const int height, const double* pPi
     {
         for( int j=width-1; j>=0; --j )
         {
-            int index = ( i * width * 3 ) + ( j * 3 );
+            s32 index = ( i * width * 3 ) + ( j * 3 );
 
-            double r = pow( pPixel[index + 0], 1.0 / gamma );
-            double g = pow( pPixel[index + 1], 1.0 / gamma );
-            double b = pow( pPixel[index + 2], 1.0 / gamma );
+            f32 r = powf( pPixel[index + 0], 1.0f / gamma );
+            f32 g = powf( pPixel[index + 1], 1.0f / gamma );
+            f32 b = powf( pPixel[index + 2], 1.0f / gamma );
 
-            if ( r > 1.0 ) { r = 1.0; }
-            if ( g > 1.0 ) { g = 1.0; }
-            if ( b > 1.0 ) { b = 1.0; }
+            if ( r > 1.0f ) { r = 1.0f; }
+            if ( g > 1.0f ) { g = 1.0f; }
+            if ( b > 1.0f ) { b = 1.0f; }
 
-            if ( r < 0.0 ) { r = 0.0; }
-            if ( g < 0.0 ) { g = 0.0; }
-            if ( b < 0.0 ) { b = 0.0; }
+            if ( r < 0.0f ) { r = 0.0f; }
+            if ( g < 0.0f ) { g = 0.0f; }
+            if ( b < 0.0f ) { b = 0.0f; }
 
 
-            unsigned char R = (unsigned char)( r * 255.0 + 0.5 );
-            unsigned char G = (unsigned char)( g * 255.0 + 0.5 );
-            unsigned char B = (unsigned char)( b * 255.0 + 0.5 );
+            u8 R = static_cast<u8>( r * 255.0f + 0.5f );
+            u8 G = static_cast<u8>( g * 255.0f + 0.5f );
+            u8 B = static_cast<u8>( b * 255.0f + 0.5f );
 
             {
-                fwrite( &B, sizeof(unsigned char), 1, pFile );
-                fwrite( &G, sizeof(unsigned char), 1, pFile );
-                fwrite( &R, sizeof(unsigned char), 1, pFile );
+                fwrite( &B, sizeof(u8), 1, pFile );
+                fwrite( &G, sizeof(u8), 1, pFile );
+                fwrite( &R, sizeof(u8), 1, pFile );
             }
         }
     }
@@ -157,7 +157,7 @@ void WriteBmp( FILE* pFile, const int width, const int height, const double* pPi
 //-------------------------------------------------------------------------------------------
 //      BMPファイルに保存します.
 //-------------------------------------------------------------------------------------------
-bool SaveToBMP( const char* filename, const int width, const int height, const double* pPixel, const double gamma )
+bool SaveToBMP( const char* filename, const s32 width, const s32 height, const f32* pPixel, const f32 gamma )
 {
     FILE* pFile;
     errno_t err = fopen_s( &pFile, filename, "wb" );
@@ -175,7 +175,7 @@ bool SaveToBMP( const char* filename, const int width, const int height, const d
 //------------------------------------------------------------------------------------------
 //      BMPファイルから読み込みます.
 //------------------------------------------------------------------------------------------
-bool LoadFromBMP( const char* filename, int& width, int& height, double** ppPixels )
+bool LoadFromBMP( const char* filename, s32& width, s32& height, f32** ppPixels )
 {
     FILE* pFile;
     errno_t err = fopen_s( &pFile, filename, "rb" );
@@ -202,23 +202,23 @@ bool LoadFromBMP( const char* filename, int& width, int& height, double** ppPixe
         return false;
     }
 
-    width  = static_cast<int>( infoHeader.Width );
-    height = static_cast<int>( infoHeader.Height );
+    width  = static_cast<s32>( infoHeader.Width );
+    height = static_cast<s32>( infoHeader.Height );
 
-    int size = width * height * 3;
-    unsigned char* pTexels = new unsigned char [ size ];
+    s32 size = width * height * 3;
+    u8* pTexels = new u8 [ size ];
     assert( pTexels != nullptr );
 
-    fread( pTexels, sizeof(unsigned char), size, pFile );
+    fread( pTexels, sizeof(u8), size, pFile );
 
     fclose( pFile );
 
-    (*ppPixels) = new double [ size ];
-    for( int i=0; i<size-3; i+=3)
+    (*ppPixels) = new f32 [ size ];
+    for( s32 i=0; i<size-3; i+=3)
     {
-        (*ppPixels)[ i + 0 ] = static_cast<double>( pTexels[ i + 2 ] ) / 255.0;
-        (*ppPixels)[ i + 1 ] = static_cast<double>( pTexels[ i + 1 ] ) / 255.0;
-        (*ppPixels)[ i + 2 ] = static_cast<double>( pTexels[ i + 0 ] ) / 255.0;
+        (*ppPixels)[ i + 0 ] = static_cast<f32>( pTexels[ i + 2 ] ) / 255.0f;
+        (*ppPixels)[ i + 1 ] = static_cast<f32>( pTexels[ i + 1 ] ) / 255.0f;
+        (*ppPixels)[ i + 2 ] = static_cast<f32>( pTexels[ i + 0 ] ) / 255.0f;
     }
 
     delete [] pTexels;

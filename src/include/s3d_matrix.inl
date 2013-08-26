@@ -27,10 +27,10 @@ Matrix::Matrix()
 S3D_INLINE
 Matrix::Matrix
 (
-    const f64 m11, const f64 m12, const f64 m13, const f64 m14,
-    const f64 m21, const f64 m22, const f64 m23, const f64 m24,
-    const f64 m31, const f64 m32, const f64 m33, const f64 m34,
-    const f64 m41, const f64 m42, const f64 m43, const f64 m44
+    const f32 m11, const f32 m12, const f32 m13, const f32 m14,
+    const f32 m21, const f32 m22, const f32 m23, const f32 m24,
+    const f32 m31, const f32 m32, const f32 m33, const f32 m34,
+    const f32 m41, const f32 m42, const f32 m43, const f32 m44
 )
 : _11( m11 ), _12( m12 ), _13( m13 ), _14( m14 )
 , _21( m21 ), _22( m22 ), _23( m23 ), _24( m24 )
@@ -95,10 +95,10 @@ S3D_INLINE
 Matrix& Matrix::operator *= ( const Matrix& value )
 {
     {
-        register f64 m11 = ( _11 * value._11 ) + ( _12 * value._21 ) + ( _13 * value._31 ) + ( _14 * value._41 );
-        register f64 m12 = ( _11 * value._12 ) + ( _12 * value._22 ) + ( _13 * value._32 ) + ( _14 * value._42 );
-        register f64 m13 = ( _11 * value._13 ) + ( _12 * value._23 ) + ( _13 * value._33 ) + ( _14 * value._43 );
-        register f64 m14 = ( _11 * value._14 ) + ( _12 * value._24 ) + ( _13 * value._34 ) + ( _14 * value._44 );
+        register f32 m11 = ( _11 * value._11 ) + ( _12 * value._21 ) + ( _13 * value._31 ) + ( _14 * value._41 );
+        register f32 m12 = ( _11 * value._12 ) + ( _12 * value._22 ) + ( _13 * value._32 ) + ( _14 * value._42 );
+        register f32 m13 = ( _11 * value._13 ) + ( _12 * value._23 ) + ( _13 * value._33 ) + ( _14 * value._43 );
+        register f32 m14 = ( _11 * value._14 ) + ( _12 * value._24 ) + ( _13 * value._34 ) + ( _14 * value._44 );
 
         _11 = m11;
         _12 = m12;
@@ -107,10 +107,10 @@ Matrix& Matrix::operator *= ( const Matrix& value )
     }
 
     {
-        register f64 m21 = ( _21 * value._11 ) + ( _22 * value._21 ) + ( _23 * value._31 ) + ( _24 * value._41 );
-        register f64 m22 = ( _21 * value._12 ) + ( _22 * value._22 ) + ( _23 * value._32 ) + ( _24 * value._42 );
-        register f64 m23 = ( _21 * value._13 ) + ( _22 * value._23 ) + ( _23 * value._33 ) + ( _24 * value._43 );
-        register f64 m24 = ( _21 * value._14 ) + ( _22 * value._24 ) + ( _23 * value._34 ) + ( _24 * value._44 );
+        register f32 m21 = ( _21 * value._11 ) + ( _22 * value._21 ) + ( _23 * value._31 ) + ( _24 * value._41 );
+        register f32 m22 = ( _21 * value._12 ) + ( _22 * value._22 ) + ( _23 * value._32 ) + ( _24 * value._42 );
+        register f32 m23 = ( _21 * value._13 ) + ( _22 * value._23 ) + ( _23 * value._33 ) + ( _24 * value._43 );
+        register f32 m24 = ( _21 * value._14 ) + ( _22 * value._24 ) + ( _23 * value._34 ) + ( _24 * value._44 );
 
         _21 = m21;
         _22 = m22;
@@ -119,10 +119,10 @@ Matrix& Matrix::operator *= ( const Matrix& value )
     }
 
     {
-        register f64 m31 = ( _31 * value._11 ) + ( _32 * value._21 ) + ( _33 * value._31 ) + ( _34 * value._41 );
-        register f64 m32 = ( _31 * value._12 ) + ( _32 * value._22 ) + ( _33 * value._32 ) + ( _34 * value._42 );
-        register f64 m33 = ( _31 * value._13 ) + ( _32 * value._23 ) + ( _33 * value._33 ) + ( _34 * value._43 );
-        register f64 m34 = ( _31 * value._14 ) + ( _32 * value._24 ) + ( _33 * value._34 ) + ( _34 * value._44 );
+        register f32 m31 = ( _31 * value._11 ) + ( _32 * value._21 ) + ( _33 * value._31 ) + ( _34 * value._41 );
+        register f32 m32 = ( _31 * value._12 ) + ( _32 * value._22 ) + ( _33 * value._32 ) + ( _34 * value._42 );
+        register f32 m33 = ( _31 * value._13 ) + ( _32 * value._23 ) + ( _33 * value._33 ) + ( _34 * value._43 );
+        register f32 m34 = ( _31 * value._14 ) + ( _32 * value._24 ) + ( _33 * value._34 ) + ( _34 * value._44 );
 
         _31 = m31;
         _32 = m32;
@@ -131,10 +131,10 @@ Matrix& Matrix::operator *= ( const Matrix& value )
     }
 
     {
-        register f64 m41 = ( _41 * value._11 ) + ( _42 * value._21 ) + ( _43 * value._31 ) + ( _44 * value._41 );
-        register f64 m42 = ( _41 * value._12 ) + ( _42 * value._22 ) + ( _43 * value._32 ) + ( _44 * value._42 );
-        register f64 m43 = ( _41 * value._13 ) + ( _42 * value._23 ) + ( _43 * value._33 ) + ( _44 * value._43 );
-        register f64 m44 = ( _41 * value._14 ) + ( _42 * value._24 ) + ( _43 * value._34 ) + ( _44 * value._44 );
+        register f32 m41 = ( _41 * value._11 ) + ( _42 * value._21 ) + ( _43 * value._31 ) + ( _44 * value._41 );
+        register f32 m42 = ( _41 * value._12 ) + ( _42 * value._22 ) + ( _43 * value._32 ) + ( _44 * value._42 );
+        register f32 m43 = ( _41 * value._13 ) + ( _42 * value._23 ) + ( _43 * value._33 ) + ( _44 * value._43 );
+        register f32 m44 = ( _41 * value._14 ) + ( _42 * value._24 ) + ( _43 * value._34 ) + ( _44 * value._44 );
 
         _41 = m41;
         _42 = m42;
@@ -149,7 +149,7 @@ Matrix& Matrix::operator *= ( const Matrix& value )
 //      乗算代入演算子です.
 //------------------------------------------------------------------------------
 S3D_INLINE
-Matrix& Matrix::operator *= ( const f64 value )
+Matrix& Matrix::operator *= ( const f32 value )
 {
     _11 *= value; _12 *= value; _13 *= value; _14 *= value;
     _21 *= value; _22 *= value; _23 *= value; _24 *= value;
@@ -236,7 +236,7 @@ Matrix Matrix::operator * ( const Matrix& value ) const
 //      乗算演算子です.
 //------------------------------------------------------------------------------
 S3D_INLINE
-Matrix Matrix::operator * ( const f64 value ) const
+Matrix Matrix::operator * ( const f32 value ) const
 {
     return Matrix(
         _11 * value, _12 * value, _13 * value, _14 * value,
@@ -249,7 +249,7 @@ Matrix Matrix::operator * ( const f64 value ) const
 //      行列式を求めます.
 //------------------------------------------------------------------------------
 S3D_INLINE
-f64 Matrix::Det() const
+f32 Matrix::Det() const
 {
         return (
            ( _11 * _22 * _33 * _44 ) + ( _11 * _23 * _34 * _42 ) +
@@ -274,7 +274,7 @@ S3D_INLINE
 Matrix Matrix::Invert( const Matrix& value )
 {
     Matrix result;
-    register f64 det = value.Det();
+    register f32 det = value.Det();
 
     result._11 = ( value._22 * value._33 * value._44 ) + ( value._23 * value._34 * value._42 ) + ( value._24 * value._32 * value._43 )
                - ( value._22 * value._34 * value._43 ) - ( value._23 * value._32 * value._44 ) - ( value._24 * value._33 * value._42 ) / det;
@@ -335,101 +335,101 @@ S3D_INLINE
 Matrix Matrix::Identity()
 {
     return Matrix(
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        0.0, 0.0, 0.0, 1.0 );
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f );
 }
 
 //------------------------------------------------------------------------------
 //      平行移動行列を取得します.
 //------------------------------------------------------------------------------
 S3D_INLINE
-Matrix Matrix::Translate( const f64 x, const f64 y, const f64 z )
+Matrix Matrix::Translate( const f32 x, const f32 y, const f32 z )
 {
     return Matrix(
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        x,   y,   z,   1.0 ); 
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        x,    y,    z,    1.0f );
 }
 
 //------------------------------------------------------------------------------
 //      拡大縮小行列を取得します.
 //------------------------------------------------------------------------------
 S3D_INLINE
-Matrix Matrix::Scale( const f64 x, const f64 y, const f64 z )
+Matrix Matrix::Scale( const f32 x, const f32 y, const f32 z )
 {
     return Matrix(
-        x,   0.0, 0.0, 0.0,
-        0.0, y,   0.0, 0.0,
-        0.0, 0.0, z,   0.0,
-        0.0, 0.0, 0.0, 1.0f );
+        x,    0.0f, 0.0f, 0.0f,
+        0.0f, y,    0.0f, 0.0f,
+        0.0f, 0.0f, z,    0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f );
 }
 
 //------------------------------------------------------------------------------
 //      X軸周りの回転行列を取得します.
 //------------------------------------------------------------------------------
 S3D_INLINE
-Matrix Matrix::RotateX( const f64 rad )
+Matrix Matrix::RotateX( const f32 rad )
 {
-    register f64 cosRad = cos( rad );
-    register f64 sinRad = sin( rad );
+    register f32 cosRad = cosf( rad );
+    register f32 sinRad = sinf( rad );
     return Matrix(
-        1.0,     0.0,    0.0, 0.0,
-        0.0,  cosRad, sinRad, 0.0,
-        0.0, -sinRad, cosRad, 0.0,
-        0.0,     0.0,    0.0, 1.0 );
+        1.0f,    0.0f,   0.0f, 0.0f,
+        0.0f,  cosRad, sinRad, 0.0f,
+        0.0f, -sinRad, cosRad, 0.0f,
+        0.0f,    0.0f,   0.0f, 1.0f );
 }
 
 //------------------------------------------------------------------------------
 //      Y軸周りの回転行列を取得します.
 //------------------------------------------------------------------------------
 S3D_INLINE
-Matrix Matrix::RotateY( const f64 rad )
+Matrix Matrix::RotateY( const f32 rad )
 {
-    register f64 cosRad = cos( rad );
-    register f64 sinRad = sin( rad );
+    register f32 cosRad = cosf( rad );
+    register f32 sinRad = sinf( rad );
     return Matrix(
-        cosRad,  0.0, -sinRad, 0.0,
-        0.0,     1.0,     0.0, 0.0,
-        sinRad,  0.0,  cosRad, 0.0,
-        0.0,     0.0,     0.0, 1.0 );
+        cosRad,  0.0f, -sinRad, 0.0f,
+        0.0f,    1.0f,    0.0f, 0.0f,
+        sinRad,  0.0f,  cosRad, 0.0f,
+        0.0f,    0.0f,    0.0f, 1.0f );
 }
 
 //------------------------------------------------------------------------------
 //      Z軸周りの回転行列を取得します.
 //------------------------------------------------------------------------------
 S3D_INLINE
-Matrix Matrix::RotateZ( const f64 rad )
+Matrix Matrix::RotateZ( const f32 rad )
 {
-    register f64 cosRad = cos( rad );
-    register f64 sinRad = sin( rad );
+    register f32 cosRad = cosf( rad );
+    register f32 sinRad = sinf( rad );
     return Matrix(
-        cosRad, sinRad, 0.0, 0.0,
-        sinRad, cosRad, 0.0, 0.0,
-        0.0,       0.0, 1.0, 0.0,
-        0.0,       0.0, 0.0, 1.0 );
+        cosRad, sinRad, 0.0f, 0.0f,
+        sinRad, cosRad, 0.0f, 0.0f,
+        0.0f,     0.0f, 1.0f, 0.0f,
+        0.0f,     0.0f, 0.0f, 1.0f );
 }
 
 //------------------------------------------------------------------------------
 //      回転行列を取得します.
 //------------------------------------------------------------------------------
 S3D_INLINE
-Matrix Matrix::Rotate( const f64 x, const f64 y, const f64 z, const f64 rad )
+Matrix Matrix::Rotate( const f32 x, const f32 y, const f32 z, const f32 rad )
 {
     Matrix result;
 
-    register f64 sinRad = sin(rad);
-    register f64 cosRad = cos(rad);
-    register f64 a = 1.0 -cosRad;
+    register f32 sinRad = sinf(rad);
+    register f32 cosRad = cosf(rad);
+    register f32 a = 1.0 -cosRad;
     
-    register f64 ab = x * y * a;
-    register f64 bc = y * z * a;
-    register f64 ca = z * x * a;
-    register f64 tx = x * x;
-    register f64 ty = y * y;
-    register f64 tz = z * z;
+    register f32 ab = x * y * a;
+    register f32 bc = y * z * a;
+    register f32 ca = z * x * a;
+    register f32 tx = x * x;
+    register f32 ty = y * y;
+    register f32 tz = z * z;
 
     result._11 = tx + cosRad * (1.0 - tx);
     result._12 = ab + z * sinRad;
@@ -465,9 +465,9 @@ Matrix Matrix::LookAt( const Vector3& position, const Vector3& target, const Vec
     Vector3 yaxis = Vector3::UnitVector( Vector3::Cross( zaxis, xaxis ) );
 
     return Matrix(
-        xaxis.x, yaxis.x, zaxis.x, 0.0,
-        xaxis.y, yaxis.y, zaxis.y, 0.0,
-        xaxis.z, yaxis.z, zaxis.z, 0.0,
+        xaxis.x, yaxis.x, zaxis.x, 0.0f,
+        xaxis.y, yaxis.y, zaxis.y, 0.0f,
+        xaxis.z, yaxis.z, zaxis.z, 0.0f,
 
         -Vector3::Dot( xaxis, position ),
         -Vector3::Dot( yaxis, position ),
@@ -479,32 +479,32 @@ Matrix Matrix::LookAt( const Vector3& position, const Vector3& target, const Vec
 //      射影行列を取得します.
 //------------------------------------------------------------------------------
 S3D_INLINE
-Matrix Matrix::PersFov( const f64 fieldOfView, const f64 aspectRatio, const f64 nearClip, const f64 farClip )
+Matrix Matrix::PersFov( const f32 fieldOfView, const f32 aspectRatio, const f32 nearClip, const f32 farClip )
 {
-    register f64 diff = farClip - nearClip;
-    register f64 yScale = 1.0 / tan( fieldOfView * 0.5 );
-    register f64 xScale = yScale / aspectRatio;
+    register f32 diff = farClip - nearClip;
+    register f32 yScale = 1.0f / tanf( fieldOfView * 0.5f );
+    register f32 xScale = yScale / aspectRatio;
 
     Matrix result;
     result._11 = xScale;
-    result._12 = 0.0;
-    result._13 = 0.0;
-    result._14 = 0.0;
+    result._12 = 0.0f;
+    result._13 = 0.0f;
+    result._14 = 0.0f;
 
-    result._21 = 0.0;
+    result._21 = 0.0f;
     result._22 = yScale;
-    result._23 = 0.0;
-    result._24 = 0.0;
+    result._23 = 0.0f;
+    result._24 = 0.0f;
 
-    result._31 = 0.0;
-    result._32 = 0.0;
+    result._31 = 0.0f;
+    result._32 = 0.0f;
     result._33 = farClip / diff;
-    result._34 = -1.0;
+    result._34 = -1.0f;
 
-    result._41 = 0.0;
-    result._42 = 0.0;
+    result._41 = 0.0f;
+    result._42 = 0.0f;
     result._43 = - (nearClip * farClip) / diff;
-    result._44 = 0.0;
+    result._44 = 0.0f;
 
     return result;
 }

@@ -7,6 +7,11 @@
 #ifndef __S3D_BMP_H__
 #define __S3D_BMP_H__
 
+//----------------------------------------------------------------------------------------
+// Includes
+//----------------------------------------------------------------------------------------
+#include <s3d_typedef.h>
+
 
 namespace s3d {
 
@@ -20,7 +25,7 @@ namespace s3d {
 //! @retval true    保存に成功.
 //! @retval false   保存に失敗.
 //----------------------------------------------------------------------------------------
-bool SaveToBMP( const char* filename, const int width, const int height, const double* pPixel, const double gamma = 2.2 );
+bool SaveToBMP( const char* filename, const s32 width, const s32 height, const f32* pPixel, const f32 gamma = 2.2f );
 
 //----------------------------------------------------------------------------------------
 //! @brief      BMPファイルを読み込みます.
@@ -32,7 +37,7 @@ bool SaveToBMP( const char* filename, const int width, const int height, const d
 //! @retval true    読み込みに成功.
 //! @retval false   読み込みに失敗.
 //----------------------------------------------------------------------------------------
-bool LoadFromBMP( const char* filename, int& width, int& height, double** ppPixel );
+bool LoadFromBMP( const char* filename, s32& width, s32& height, f32** ppPixel );
 
 
 } // namespace s3d

@@ -41,7 +41,7 @@ struct TextureSampler
     TextureSampler()
     : addressU      ( TEXTURE_ADDRESS_WRAP )
     , addressV      ( TEXTURE_ADDRESS_WRAP )
-    , boarderColor  ( 0.0, 0.0, 0.0 )
+    , boarderColor  ( 0.0f, 0.0f, 0.0f )
     { /* DO_NOTHING */ }
 
     //------------------------------------------------------------------------------
@@ -133,7 +133,7 @@ private:
     u32     m_Width;            //!< 画像の横幅です.
     u32     m_Height;           //!< 画像の縦幅です.
     u32     m_Size;             //!< データサイズです.
-    f64*    m_pPixels;          //!< ピクセルデータです.
+    f32*    m_pPixels;          //!< ピクセルデータです.
 
     //==============================================================================
     // private methods.

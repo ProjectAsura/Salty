@@ -34,7 +34,7 @@ public:
     //u32                 m_TriangleCount;
     //u32                 m_MaterialCount;
     std::vector<MeshTriangle>  m_pTriangle;
-    std::vector<MeshMaterial> m_pMaterial;
+    //std::vector<MeshMaterial> m_pMaterial;
     IShape*             m_pBVH;
 
     //==================================================================================

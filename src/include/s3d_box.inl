@@ -20,8 +20,8 @@ namespace s3d {
 //----------------------------------------------------------------------------------
 S3D_INLINE
 BoundingBox::BoundingBox()
-: min( D_MAX, D_MAX, D_MAX )
-, max( D_MIN, D_MIN, D_MIN )
+: min( F_MAX, F_MAX, F_MAX )
+, max( F_MIN, F_MIN, F_MIN )
 { /* DO_NOTHING */ }
 
 //----------------------------------------------------------------------------------
@@ -99,7 +99,7 @@ bool BoundingBox::IsHit( const Ray& ray ) const
     register f64 t1 = ( tx_max > ty_max ) ? tx_max : ty_max;
                  t1 = ( tz_max > t1 )     ? tz_max : t1;
 
-    return ( t0 < t1 && t1 > D_EPS );
+    return ( t0 < t1 && t1 > F_HIT_MIN );
 }
 
 //----------------------------------------------------------------------------------

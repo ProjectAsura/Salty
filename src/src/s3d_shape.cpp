@@ -21,7 +21,7 @@ namespace s3d {
 //--------------------------------------------------------------------------------------
 Sphere::Sphere
 (
-    const f64           _radius,
+    const f32           _radius,
     const Vector3&      _position,
     const IMaterial*    _pMaterial
 )
@@ -37,21 +37,21 @@ Sphere::Sphere
 bool Sphere::IsHit(const Ray &ray, HitRecord& record ) const
 {
     const Vector3 po = position - ray.pos;
-    const f64 b  = Vector3::Dot(po, ray.dir);
-    const f64 D4 = b * b - Vector3::Dot(po, po) + radius * radius;
+    const f32 b  = Vector3::Dot(po, ray.dir);
+    const f32 D4 = b * b - Vector3::Dot(po, po) + radius * radius;
 
-    if ( D4 < 0.0 )
+    if ( D4 < 0.0f )
     { return false; }   // 交差しなかった.
 
-    const f64 sqrt_D4 = sqrt(D4);
-    const f64 t1 = b - sqrt_D4;
-    const f64 t2 = b + sqrt_D4;
+    const f32 sqrt_D4 = sqrt(D4);
+    const f32 t1 = b - sqrt_D4;
+    const f32 t2 = b + sqrt_D4;
 
-    if (t1 < D_EPS && t2 < D_EPS)
+    if (t1 < F_HIT_MIN && t2 < F_HIT_MIN)
     { return false; }   // 交差しなかった.
 
-    f64 dist = 0.0;
-    if (t1 > D_EPS) 
+    f32 dist = 0.0f;
+    if (t1 > F_HIT_MIN) 
     { dist = t1; }
     else 
     { dist = t2; }
@@ -63,12 +63,12 @@ bool Sphere::IsHit(const Ray &ray, HitRecord& record ) const
     record.position  = ray.pos + record.distance * ray.dir;
     record.pShape    = this;
 
-    f64 theta = acos( record.normal.y );
-    f64 phi   = atan2( record.normal.x, record.normal.z );
-    if ( phi < 0.0 )
-    { phi += D_2PI; }
+    f32 theta = acosf( record.normal.y );
+    f32 phi   = atan2f( record.normal.x, record.normal.z );
+    if ( phi < 0.0f )
+    { phi += F_2PI; }
 
-    record.texcoord = Vector2( phi * D_1DIV2PI, ( D_PI - theta ) * D_1DIVPI );
+    record.texcoord = Vector2( phi * F_1DIV2PI, ( F_PI - theta ) * F_1DIVPI );
 
     // フラットシェーディング.
     record.normal    = Vector3::UnitVector(record.position - position);
@@ -138,24 +138,24 @@ bool Triangle::IsHit( const Ray& ray, HitRecord& record ) const
     Vector3 e2  = p2 - p0;
     Vector3 dir = ray.dir;
     Vector3 s1  = Vector3::Cross( dir, e2 );
-    register f64 div = Vector3::Dot( s1, e1 );
+    register f32 div = Vector3::Dot( s1, e1 );
     
     if ( div == 0.0 )
     { return false; }
 
     Vector3 d = ray.pos - p0;
-    register f64 beta = Vector3::Dot( d, s1 ) / div;
+    register f32 beta = Vector3::Dot( d, s1 ) / div;
     if ( beta <= 0.0 || beta >= 1.0 )
     { return false; }
     
     Vector3 s2 = Vector3::Cross( d, e1 );
-    register f64 gamma = Vector3::Dot( dir, s2 ) / div;
+    register f32 gamma = Vector3::Dot( dir, s2 ) / div;
     if ( gamma <= 0.0 || ( beta + gamma ) >= 1.0 )
     { return false; }
 
-    register f64 dist = Vector3::Dot( e2, s2 ) / div;
+    register f32 dist = Vector3::Dot( e2, s2 ) / div;
 
-    if ( dist < D_EPS || dist > D_INF )
+    if ( dist < F_HIT_MIN || dist > F_HIT_MAX )
     { return false; }
 
     if ( dist > record.distance )
@@ -166,7 +166,7 @@ bool Triangle::IsHit( const Ray& ray, HitRecord& record ) const
     record.normal   = normal;
     record.pShape   = this;
 
-    f64 alpha = 1.0 - beta - gamma;
+    f32 alpha = 1.0f - beta - gamma;
     record.texcoord = Vector2(
         uv0.x * alpha + uv1.x * beta + uv2.x * gamma,
         uv0.y * alpha + uv1.y * beta + uv2.y * gamma );
@@ -253,24 +253,24 @@ bool Quad::IsHitTriangle
     Vector3 e2 = c - a;
     Vector3 dir = ray.dir;
     Vector3 s1 = Vector3::Cross( dir, e2 );
-    register f64 div = Vector3::Dot( s1, e1 );
+    register f32 div = Vector3::Dot( s1, e1 );
     
     if ( div == 0.0 )
     { return false; }
         
     Vector3 d = ray.pos - a;
-    register f64 beta = Vector3::Dot( d, s1 ) / div;
+    register f32 beta = Vector3::Dot( d, s1 ) / div;
     if ( beta <= 0.0 || beta >= 1.0 )
     { return false; }
     
     Vector3 s2 = Vector3::Cross( d, e1 );
-    register f64 gamma = Vector3::Dot( dir, s2 ) / div;
+    register f32 gamma = Vector3::Dot( dir, s2 ) / div;
     if ( gamma <= 0.0 || ( beta + gamma ) >= 1.0 )
     { return false; }
     
-    register f64 dist = Vector3::Dot( e2, s2 ) / div;
+    register f32 dist = Vector3::Dot( e2, s2 ) / div;
     
-    if ( dist < D_EPS || dist > D_INF )
+    if ( dist < F_HIT_MIN || dist > F_HIT_MAX )
     { return false; }
 
     if ( dist > record.distance )
@@ -281,7 +281,7 @@ bool Quad::IsHitTriangle
     record.normal   = normal;
     record.pShape   = this;
 
-    f64 alpha = 1.0 - beta - gamma;
+    f32 alpha = 1.0f - beta - gamma;
     record.texcoord = Vector2(
         st0.x * alpha + st1.x * beta + st2.x * gamma,
         st0.y * alpha + st1.y * beta + st2.y * gamma );
@@ -387,24 +387,24 @@ bool MeshTriangle::IsHit( const Ray& ray, HitRecord& record ) const
     Vector3 e2  = p[ 2 ] - p[ 0 ];
     Vector3 dir = ray.dir;
     Vector3 s1  = Vector3::Cross( dir, e2 );
-    register f64 div = Vector3::Dot( s1, e1 );
+    register f32 div = Vector3::Dot( s1, e1 );
     
     if ( div == 0.0 )
     { return false; }
 
     Vector3 d = ray.pos - p[ 0 ];
-    register f64 beta = Vector3::Dot( d, s1 ) / div;
+    register f32 beta = Vector3::Dot( d, s1 ) / div;
     if ( beta <= 0.0 || beta >= 1.0 )
     { return false; }
     
     Vector3 s2 = Vector3::Cross( d, e1 );
-    register f64 gamma = Vector3::Dot( dir, s2 ) / div;
+    register f32 gamma = Vector3::Dot( dir, s2 ) / div;
     if ( gamma <= 0.0 || ( beta + gamma ) >= 1.0 )
     { return false; }
 
-    register f64 dist = Vector3::Dot( e2, s2 ) / div;
+    register f32 dist = Vector3::Dot( e2, s2 ) / div;
 
-    if ( dist < D_EPS || dist > D_INF )
+    if ( dist < F_HIT_MIN || dist > F_HIT_MAX )
     { return false; }
 
     if ( dist > record.distance )
@@ -414,7 +414,7 @@ bool MeshTriangle::IsHit( const Ray& ray, HitRecord& record ) const
     record.distance = dist;
     record.pShape   = this;
 
-    f64 alpha = 1.0 - beta - gamma;
+    f32 alpha = 1.0f - beta - gamma;
     record.texcoord.x = t[ 0 ].x * alpha + t[ 1 ].x * beta + t[ 2 ].x * gamma;
     record.texcoord.y = t[ 0 ].y * alpha + t[ 1 ].y * beta + t[ 2 ].y * gamma;
 

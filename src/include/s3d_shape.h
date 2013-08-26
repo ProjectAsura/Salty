@@ -29,7 +29,7 @@ struct IMaterial;
 /////////////////////////////////////////////////////////////////////////////////////
 struct HitRecord
 {
-    f64             distance;       //!< 衝突点までの距離.
+    f32             distance;       //!< 衝突点までの距離.
     Vector3         position;       //!< 衝突点の位置座標.
     Vector3         normal;         //!< 法線ベクトル.
     Vector2         texcoord;       //!< 衝突点のテクスチャ座標です.
@@ -39,10 +39,10 @@ struct HitRecord
     //! @brief      コンストラクタです.
     //-------------------------------------------------------------------------------
     HitRecord()
-    : distance   ( D_MAX )
-    , position   ( 0.0, 0.0, 0.0 )
-    , normal     ( 0.0, 0.0, 0.0 )
-    , texcoord   ( 0.0, 0.0 )
+    : distance   ( F_MAX )
+    , position   ( 0.0f, 0.0f, 0.0f )
+    , normal     ( 0.0f, 0.0f, 0.0f )
+    , texcoord   ( 0.0f, 0.0f )
     , pShape     ( nullptr )
     { /* DO_NOTHING */ }
 };
@@ -80,7 +80,7 @@ struct IShape
 //////////////////////////////////////////////////////////////////////////////////////
 struct Sphere : public IShape
 {
-    f64                 radius;         //!< 半径です.
+    f32                 radius;         //!< 半径です.
     Vector3             position;       //!< 中心位置です.
     const IMaterial*    pMaterial;      //!< マテリアルです.
 
@@ -89,7 +89,7 @@ struct Sphere : public IShape
     //--------------------------------------------------------------------------------
     Sphere
     (
-        const f64,
+        const f32,
         const Vector3&,
         const IMaterial*
     );

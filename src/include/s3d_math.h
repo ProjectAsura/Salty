@@ -13,6 +13,7 @@
 #include <s3d_typedef.h>
 #include <s3d_rand.h>
 #include <cmath>
+#include <cfloat>
 #include <cassert>
 
 
@@ -34,52 +35,52 @@ typedef Vector3 Color;
 //------------------------------------------------------------------------------------------
 // Constant Values
 //------------------------------------------------------------------------------------------
-const f64   D_INF       = 1e12;                                  //!< Inifity.
-const f64   D_EPS       = 1e-6;                                  //!< セルフヒット防止閾値.
-const f64   D_PI        = 3.1415926535897932384626433832795;     //!< πです.
-const f64   D_2PI       = 6.283185307179586476925286766559;      //!< 2πです.
-const f64   D_1DIVPI    = 0.31830988618379067153776752674503;    //!< 1/πです.
-const f64   D_1DIV2PI   = 0.15915494309189533576888376337251;    //!< 1/2πです.
-const f64   D_PIDIV2    = 1.5707963267948966192313216916398;     //!< π/2です.
-const f64   D_PIDIV3    = 1.0471975511965977461542144610932;     //!< π/3です.
-const f64   D_PIDIV4    = 0.78539816339744830961566084581988;    //!< π/4です.
-const f64   D_MAX       = 1.7976931348623158e+308;               //!< f64型の最大値です.
-const f64   D_MIN       = 2.2250738585072014e-308;               //!< f64型の最小値です.
+const f32   F_HIT_MAX   = 1e12f;                                  //!< 交差判定上限値.
+const f32   F_HIT_MIN   = 0.1f;                                   //!< 交差判定下限値.
+const f32   F_PI        = 3.1415926535897932384626433832795f;     //!< πです.
+const f32   F_2PI       = 6.283185307179586476925286766559f;      //!< 2πです.
+const f32   F_1DIVPI    = 0.31830988618379067153776752674503f;    //!< 1/πです.
+const f32   F_1DIV2PI   = 0.15915494309189533576888376337251f;    //!< 1/2πです.
+const f32   F_PIDIV2    = 1.5707963267948966192313216916398f;     //!< π/2です.
+const f32   F_PIDIV3    = 1.0471975511965977461542144610932f;     //!< π/3です.
+const f32   F_PIDIV4    = 0.78539816339744830961566084581988f;    //!< π/4です.
+const f32   F_MAX       = 3.402823466e+38F;                       //!< f32型の最大値です.
+const f32   F_MIN       = 1.175494351e-38F;                       //!< f32型の最小値です.
 
 
 //------------------------------------------------------------------------------------------
 //! @brief      最大値を求めます.
 //------------------------------------------------------------------------------------------
 S3D_INLINE
-f64 Max( const f64 a, const f64 b )
+f32 Max( const f32 a, const f32 b )
 { return ( a > b ) ? a : b; }
 
 //------------------------------------------------------------------------------------------
 //! @brief      最小値を求めます.
 //------------------------------------------------------------------------------------------
 S3D_INLINE
-f64 Min( const f64 a, const f64 b )
+f32 Min( const f32 a, const f32 b )
 { return ( a < b ) ? a : b; }
 
 //------------------------------------------------------------------------------------------
 //! @brief      ラジアンに変換します.
 //------------------------------------------------------------------------------------------
 S3D_INLINE
-f64 ToRad( const f64 deg )
-{ return deg * ( D_PI / 180.0 ); }
+f32 ToRad( const f32 deg )
+{ return deg * ( F_PI / 180.0f ); }
 
 //------------------------------------------------------------------------------------------
 //! @brief      度に変換します.
 //------------------------------------------------------------------------------------------
 S3D_INLINE
-f64 ToDeg( const f64 rad )
-{ return rad * ( 180.0 / D_PI ); }
+f32 ToDeg( const f32 rad )
+{ return rad * ( 180.0f / F_PI ); }
 
 //------------------------------------------------------------------------------------------
 //! @brief      非数であるかチェックします.
 //------------------------------------------------------------------------------------------
 S3D_INLINE
-bool IsNan( const f64 value )
+bool IsNan( const f32 value )
 { return ( value != value ); }
 
 
@@ -93,10 +94,10 @@ public:
     {
         struct
         {
-            f64 x;      //!< X成分です.
-            f64 y;      //!< Y成分です.
+            f32 x;      //!< X成分です.
+            f32 y;      //!< Y成分です.
         };
-        f64 v[2];       //!< 各成分を表す配列です;
+        f32 v[2];       //!< 各成分を表す配列です;
     };
 
     //--------------------------------------------------------------------------------------
@@ -108,7 +109,7 @@ public:
     //--------------------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです.
     //--------------------------------------------------------------------------------------
-    Vector2( const f64 nx, const f64 ny )
+    Vector2( const f32 nx, const f32 ny )
     : x( nx )
     , y( ny )
     { /* DO_NOTHING */ }
@@ -178,7 +179,7 @@ public:
     //! @brief      乗算代入演算子です.
     //--------------------------------------------------------------------------------------
     S3D_INLINE
-    Vector2& operator *= ( const f64 b )
+    Vector2& operator *= ( const f32 b )
     {
         x *= b;
         y *= b;
@@ -189,7 +190,7 @@ public:
     //! @brief      除算代入演算子です.
     //--------------------------------------------------------------------------------------
     S3D_INLINE
-    Vector2& operator /= ( const f64 b )
+    Vector2& operator /= ( const f32 b )
     {
         assert( b != 0.0 );
         x /= b;
@@ -237,7 +238,7 @@ public:
     //! @brief      乗算演算子です.
     //--------------------------------------------------------------------------------------
     S3D_INLINE
-    Vector2 operator * (const f64 b) const
+    Vector2 operator * (const f32 b) const
     { 
         return Vector2(
             x * b,
@@ -248,7 +249,7 @@ public:
     //! @brief      除算演算子です.
     //--------------------------------------------------------------------------------------
     S3D_INLINE
-    Vector2 operator / (const f64 b) const
+    Vector2 operator / (const f32 b) const
     {
         assert( b != 0.0 );
         return Vector2(
@@ -260,15 +261,15 @@ public:
     //! @brief      長さの2乗値を求めます.
     //--------------------------------------------------------------------------------------
     S3D_INLINE
-    f64 LengthSq() const
+    f32 LengthSq() const
     { return ( x * x ) + ( y * y ); }
 
     //--------------------------------------------------------------------------------------
     //! @brief      長さを求めます.
     //--------------------------------------------------------------------------------------
     S3D_INLINE 
-    f64 Length() const
-    { return sqrt( ( x * x ) + ( y * y ) ); }
+    f32 Length() const
+    { return sqrtf( ( x * x ) + ( y * y ) ); }
 
     //--------------------------------------------------------------------------------------
     //! @brief      正規化します.
@@ -276,10 +277,21 @@ public:
     S3D_INLINE
     void Normalize()
     {
-        register f64 mag = sqrt( x * x + y * y );
-        assert( mag != 0.0 );
+        register f32 mag = sqrtf( x * x + y * y );
+        assert( mag != 0.0f );
         x /= mag;
         y /= mag;
+    }
+
+    S3D_INLINE
+    void SafeNormalize()
+    {
+        register f32 mag = sqrtf( x * x + y * y );
+        if ( mag != 0.0f )
+        {
+            x /= mag;
+            y /= mag;
+        }
     }
 
     //--------------------------------------------------------------------------------------
@@ -288,11 +300,27 @@ public:
     static S3D_INLINE
     Vector2 UnitVector (const Vector2 &v)
     {
-        register f64 mag = sqrt( v.x * v.x + v.y * v.y );
+        register f32 mag = sqrtf( v.x * v.x + v.y * v.y );
         assert( mag != 0.0 );
         return Vector2(
             v.x / mag,
             v.y / mag );
+    }
+
+    static S3D_INLINE
+    Vector2 SafeUnitVector ( const Vector2& v)
+    {
+        register f32 mag = sqrtf( v.x * v.x + v.y * v.y );
+        if ( mag != 0.0f )
+        {
+            return Vector2(
+                v.x / mag,
+                v.y / mag );
+        }
+        else
+        {
+            return Vector2( v.x, v.y );
+        }
     }
 
     //--------------------------------------------------------------------------------------
@@ -310,7 +338,7 @@ public:
     //! @brief      内積を求めます.
     //--------------------------------------------------------------------------------------
     static S3D_INLINE
-    f64 Dot (const Vector2 &v1, const Vector2 &v2) 
+    f32 Dot (const Vector2 &v1, const Vector2 &v2) 
     { return ( v1.x * v2.x ) + ( v1.y * v2.y ); }
 
     //--------------------------------------------------------------------------------------
@@ -319,8 +347,8 @@ public:
     static S3D_INLINE
     Vector2 Reflect( const Vector2& i, const Vector2& n )
     {
-        register f64 dot = ( n.x * i.x ) + ( n.y * i.y );
-        register f64 _2dot = 2.0 * dot;
+        register f32 dot = ( n.x * i.x ) + ( n.y * i.y );
+        register f32 _2dot = 2.0f * dot;
 
         return Vector2(
             i.x - ( _2dot * n.x ),
@@ -361,11 +389,11 @@ public:
     {
         struct
         {
-            f64 x;      //!< X成分です.
-            f64 y;      //!< Y成分です.
-            f64 z;      //!< Z成分です.
+            f32 x;      //!< X成分です.
+            f32 y;      //!< Y成分です.
+            f32 z;      //!< Z成分です.
         };
-        f64 v[3];       //!< 各成分を表す配列です.
+        f32 v[3];       //!< 各成分を表す配列です.
     };
 
     //--------------------------------------------------------------------------------------
@@ -377,7 +405,7 @@ public:
     //--------------------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです.
     //--------------------------------------------------------------------------------------
-    Vector3( const f64 nx, const f64 ny, const f64 nz ) 
+    Vector3( const f32 nx, const f32 ny, const f32 nz ) 
     : x( nx )
     , y( ny )
     , z( nz )
@@ -454,7 +482,7 @@ public:
     //! @brief      乗算代入演算子です.
     //--------------------------------------------------------------------------------------
     S3D_INLINE
-    Vector3& operator *= ( const f64 b )
+    Vector3& operator *= ( const f32 b )
     {
         x *= b;
         y *= b;
@@ -466,7 +494,7 @@ public:
     //! @brief      除算代入演算子です.
     //--------------------------------------------------------------------------------------
     S3D_INLINE
-    Vector3& operator /= ( const f64 b )
+    Vector3& operator /= ( const f32 b )
     {
         assert( b != 0.0 );
         x /= b;
@@ -517,7 +545,7 @@ public:
     //! @brief      乗算演算子です.
     //--------------------------------------------------------------------------------------
     S3D_INLINE
-    Vector3 operator * (const f64 b) const
+    Vector3 operator * (const f32 b) const
     { 
         return Vector3(
             x * b,
@@ -529,7 +557,7 @@ public:
     //! @brief      除算演算子です.
     //--------------------------------------------------------------------------------------
     S3D_INLINE
-    Vector3 operator / (const f64 b) const
+    Vector3 operator / (const f32 b) const
     {
         assert( b != 0.0 );
         return Vector3(
@@ -542,15 +570,15 @@ public:
     //! @brief      長さの2乗値を求めます.
     //--------------------------------------------------------------------------------------
     S3D_INLINE
-    f64 LengthSq() const
+    f32 LengthSq() const
     { return ( x * x ) + ( y * y ) + ( z * z ); }
 
     //--------------------------------------------------------------------------------------
     //! @brief      長さを求めます.
     //--------------------------------------------------------------------------------------
     S3D_INLINE 
-    f64 Length() const
-    { return sqrt( ( x * x ) + ( y * y ) + ( z * z ) ); }
+    f32 Length() const
+    { return sqrtf( ( x * x ) + ( y * y ) + ( z * z ) ); }
 
     //--------------------------------------------------------------------------------------
     //! @brief      正規化します.
@@ -558,11 +586,23 @@ public:
     S3D_INLINE
     void Normalize()
     {
-        register f64 mag = sqrt( x * x + y * y + z * z );
-        assert( mag != 0.0 );
+        register f32 mag = sqrtf( x * x + y * y + z * z );
+        assert( mag != 0.0f );
         x /= mag;
         y /= mag;
         z /= mag;
+    }
+
+    S3D_INLINE
+    void SafeNormalize()
+    {
+        register f32 mag = sqrtf( x * x + y * y + z * z );
+        if ( mag != 0.0f )
+        {
+             x /= mag;
+             y /= mag;
+             z /= mag;
+        }
     }
 
     //--------------------------------------------------------------------------------------
@@ -571,12 +611,26 @@ public:
     static S3D_INLINE
     Vector3 UnitVector (const Vector3 &v)
     {
-        register f64 mag = sqrt( v.x * v.x + v.y * v.y + v.z * v.z );
-        assert( mag != 0.0 );
+        register f32 mag = sqrtf( v.x * v.x + v.y * v.y + v.z * v.z );
+        assert( mag != 0.0f );
         return Vector3(
             v.x / mag,
             v.y / mag,
             v.z / mag );
+    }
+
+    static S3D_INLINE
+    Vector3 SafeUnitVector (const Vector3& v)
+    {
+        register f32 mag = sqrtf( v.x * v.x + v.y * v.y + v.z * v.z );
+        if ( mag != 0.0f )
+        {
+            return Vector3(
+                v.x / mag,
+                v.y / mag,
+                v.z / mag );
+        }
+        return v;
     }
 
     //--------------------------------------------------------------------------------------
@@ -595,7 +649,7 @@ public:
     //! @brief      内積を求めます.
     //--------------------------------------------------------------------------------------
     static S3D_INLINE
-    f64 Dot (const Vector3 &v1, const Vector3 &v2) 
+    f32 Dot (const Vector3 &v1, const Vector3 &v2) 
     { return ( v1.x * v2.x ) + ( v1.y * v2.y ) + ( v1.z * v2.z ); }
 
     //--------------------------------------------------------------------------------------
@@ -617,8 +671,8 @@ public:
     static S3D_INLINE
     Vector3 Reflect( const Vector3& i, const Vector3& n )
     {
-        register f64 dot = ( n.x * i.x ) + ( n.y * i.y ) + ( n.z * i.z );
-        register f64 _2dot = 2.0 * dot;
+        register f32 dot = ( n.x * i.x ) + ( n.y * i.y ) + ( n.z * i.z );
+        register f32 _2dot = 2.0f * dot;
 
         return Vector3(
             i.x - ( _2dot * n.x ),
@@ -683,7 +737,7 @@ public:
 //! @brief      乗算演算子です.
 //------------------------------------------------------------------------------------------
 S3D_INLINE 
-Vector3 operator * (const f64 f, const Vector3 &v)
+Vector3 operator * (const f32 f, const Vector3 &v)
 { return v * f; }
 
 
@@ -723,19 +777,18 @@ struct Ray
         dir.z = d.z;
 
         // ゼロ除算対策.
-        invDir.x = ( dir.x != 0.0 ) ? 1.0 / dir.x : 0.0;
-        invDir.y = ( dir.y != 0.0 ) ? 1.0 / dir.y : 0.0;
-        invDir.z = ( dir.z != 0.0 ) ? 1.0 / dir.z : 0.0;
+        invDir.x = ( dir.x != 0.0f ) ? 1.0f / dir.x : 0.0f;
+        invDir.y = ( dir.y != 0.0f ) ? 1.0f / dir.y : 0.0f;
+        invDir.z = ( dir.z != 0.0f ) ? 1.0f / dir.z : 0.0f;
 
-        sign[0] = ( dir.x > 0.0 ) ? 1 : 0;
-        sign[1] = ( dir.y > 0.0 ) ? 1 : 0;
-        sign[2] = ( dir.z > 0.0 ) ? 1 : 0;
+        sign[0] = ( dir.x > 0.0f ) ? 1 : 0;
+        sign[1] = ( dir.y > 0.0f ) ? 1 : 0;
+        sign[2] = ( dir.z > 0.0f ) ? 1 : 0;
     }
 };
 
 
 } // namespace s3d
-
 
 
 #endif//__S3D_MATH__

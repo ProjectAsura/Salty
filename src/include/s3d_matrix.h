@@ -11,8 +11,7 @@
 //----------------------------------------------------------------------------------
 // Includes
 //----------------------------------------------------------------------------------
-#include <s3d_typedef.h>
-#include <s3d_vector3.h>
+#include <s3d_math.h>
 
 
 namespace s3d {
@@ -23,46 +22,46 @@ namespace s3d {
 struct Matrix
 {
 public:
-    f64 _11, _12, _13, _14;
-    f64 _21, _22, _23, _24;
-    f64 _31, _32, _33, _34;
-    f64 _41, _42, _43, _44;
+    f32 _11, _12, _13, _14;
+    f32 _21, _22, _23, _24;
+    f32 _31, _32, _33, _34;
+    f32 _41, _42, _43, _44;
 
     Matrix();
     Matrix( 
-        const f64, const f64, const f64, const f64,
-        const f64, const f64, const f64, const f64,
-        const f64, const f64, const f64, const f64,
-        const f64, const f64, const f64, const f64 );
+        const f32, const f32, const f32, const f32,
+        const f32, const f32, const f32, const f32,
+        const f32, const f32, const f32, const f32,
+        const f32, const f32, const f32, const f32 );
     Matrix( const Matrix& );
 
     Matrix& operator =  ( const Matrix& );
     Matrix& operator += ( const Matrix& );
     Matrix& operator -= ( const Matrix& );
     Matrix& operator *= ( const Matrix& );
-    Matrix& operator *= ( const f64 );
+    Matrix& operator *= ( const f32 );
 
     Matrix operator + () const;
     Matrix operator - () const;
     Matrix operator + ( const Matrix& ) const;
     Matrix operator - ( const Matrix& ) const;
     Matrix operator * ( const Matrix& ) const;
-    Matrix operator * ( const f64 )     const;
+    Matrix operator * ( const f32 )     const;
 
-    f64 Det() const;
+    f32 Det() const;
 
     static Matrix Invert    ( const Matrix& );
     static Matrix Transpose ( const Matrix& );
 
     static Matrix Identity  ();
-    static Matrix Translate ( const f64, const f64, const f64 );
-    static Matrix Scale     ( const f64, const f64, const f64 );
-    static Matrix RotateX   ( const f64 );
-    static Matrix RotateY   ( const f64 );
-    static Matrix RotateZ   ( const f64 );
-    static Matrix Rotate    ( const f64, const f64, const f64, const f64 );
+    static Matrix Translate ( const f32, const f32, const f32 );
+    static Matrix Scale     ( const f32, const f32, const f32 );
+    static Matrix RotateX   ( const f32 );
+    static Matrix RotateY   ( const f32 );
+    static Matrix RotateZ   ( const f32 );
+    static Matrix Rotate    ( const f32, const f32, const f32, const f32 );
     static Matrix LookAt    ( const Vector3&, const Vector3&, const Vector3& );
-    static Matrix PersFov   ( const f64, const f64, const f64, const f64 );
+    static Matrix PersFov   ( const f32, const f32, const f32, const f32 );
 };
 
 } // namespace s3d

@@ -336,13 +336,13 @@ Color Transparent::ComputeColor( ShadingArg& arg ) const
     const f32 R0 = (a * a) / (b * b);
 
     const f32 c = 1.0f - ( ( into ) ? -ddn : Vector3::Dot( refract, arg.normal ) );
-    const f32 Re = R0 + (1.0f - R0) * powf(c, 5.0f); // 反射方向の光が反射してray.dirの方向に運ぶ割合。同時に屈折方向の光が反射する方向に運ぶ割合。
+    const f32 Re = R0 + (1.0f - R0) * ( c * c * c * c * c ); // 反射方向の光が反射してray.dirの方向に運ぶ割合。同時に屈折方向の光が反射する方向に運ぶ割合。
     const f32 Tr = ( 1.0f - Re );
 
     // 一定以上レイを追跡したら屈折と反射のどちらか一方を追跡する
     // ロシアンルーレットで決定する。
     const f32 P = 0.25f + 0.5f * Re;      // フレネルのグラフを参照.
-                
+
     // 反射の場合.
     if ( arg.random.GetAsF32() < P )
     {

@@ -367,58 +367,50 @@ void PathTrace
 
     // 全サンプル数.
     const s32 numSamples = samples * supersamples * supersamples;
+    const f32 invNumSamples = 1.0f / static_cast<f32>( numSamples );
 
     // 1サブサンプルあたり.
-    const f32 rate = (1.0f / supersamples);
+    const f32 rate = 1.0f / static_cast<f32>( supersamples );
     const f32 halfRate = rate / 2.0f;
 
     // 時間監視スレッドを走らせる.
     uintptr_t ret = _beginthread( TimeWatch, 0, nullptr );
     assert( ret != -1 );    // 失敗しちゃだめよ.
 
-#if _OPENMP
-    #pragma omp parallel for schedule(dynamic, 1) num_threads(8)
-#endif
-    // 縦方向のループ.
-    for (s32 y = 0; y < height; y ++) 
+    // 乱数初期化.
+    s3d::Random rnd( 3141592 );
+
+    // supersamples x supersamples のスーパーサンプリング
+    for ( s32 sy = 0; sy < supersamples; ++sy ) 
+    for ( s32 sx = 0; sx < supersamples; ++sx ) 
     {
-        // 乱数
-        s3d::Random rnd( y << 4 );
+        const f32 r1 = sx * rate + halfRate;
+        const f32 r2 = sy * rate + halfRate;
 
-        // 何%完了したか表示する.
-        printf_s( "process %lf completed.\n", (100.0 * y / (height - 1)) );
-
-        // 横方向のループ.
-        for (s32 x = 0; x < width; x ++) 
+        // 一つのサブピクセルあたりsamples回サンプリングする
+        for (s32 s = 0; s < samples; s ++)
         {
-            // ピクセルインデックス.
-            const s32 idx = ( ( height - 1 - y ) * width ) + x;
-
-            // 蓄積放射輝度.
-            Color accRadiance = Color(0.0f, 0.0f, 0.0f);
-
-            // supersamples x supersamples のスーパーサンプリング
-            for (s32 sy = 0; sy < supersamples; sy ++) 
-            for (s32 sx = 0; sx < supersamples; sx ++) 
-            {
-                // 一つのサブピクセルあたりsamples回サンプリングする
-                for (s32 s = 0; s < samples; s ++)
+        #if _OPENMP
+            #pragma omp parallel for schedule(dynamic, 1) num_threads(8)
+        #endif
+            // 縦方向のループ.
+            for ( s32 y = 0; y < height; ++y ) 
+            { 
+                // 横方向のループ.
+                for ( s32 x = 0; x < width; ++x ) 
                 {
-                    const f32 r1 = sx * rate + halfRate;
-                    const f32 r2 = sy * rate + halfRate;
-
                     // ぶっ飛ばすレイを取得.
                     Ray ray = camera.GetRay(
                         ( r1 + x ) / width  - 0.5f,
                         ( r2 + y ) / height - 0.5f );
 
-                    // 加算.
-                    accRadiance += Radiance( ray, rnd ) / static_cast<f32>( numSamples );
+                    // ピクセルインデックス.
+                    const s32 idx = ( ( height - 1 - y ) * width ) + x;
+
+                    // ピクセルカラーを加算.
+                    g_pRT[ idx ] += Radiance( ray, rnd ) * invNumSamples;
                 }
             }
-
-            // ピクセルカラーを加算.
-            g_pRT[ idx ] += accRadiance;
         }
     }
 
@@ -494,6 +486,10 @@ void TimeWatch( void* )
         captureTimer.Stop();
         f64 sec  = captureTimer.GetElapsedTimeSec();
 
+        // レンダリング開始してからの時間を取得.
+        timer.Stop();
+        f64 hour = timer.GetElapsedTimeHour();
+
         // 59.9秒以上立ったらキャプチャー.
         if ( sec > 59.9 )
         {
@@ -523,13 +519,11 @@ void TimeWatch( void* )
                 SaveToBMP( "img/frame/frame.bmp", g_Width, g_Height, &g_pRT[0].x );
             }
 
+            printf_s( "Captured. %lf hour\n", hour );
+
             // タイマーを再スタート.
             captureTimer.Start();
         }
-
-        // レンダリング開始してからの時間を取得.
-        timer.Stop();
-        f64 hour = timer.GetElapsedTimeHour();
 
 #if 1
         // 1時間以上たった

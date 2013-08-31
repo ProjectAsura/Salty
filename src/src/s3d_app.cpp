@@ -76,11 +76,11 @@ u32     g_NumSubSample  = 0;            //!< サブサンプル数.
 Color*  g_pRT           = nullptr;      //!< レンダーターゲット.
 Mutex   g_Mutex;                        //!< ミューテックス.
 
-// Oren-Nayer
+// Lambert
 Matte g_Matte[] = {
-    Matte( Color( 0.75f, 0.75f, 0.75f ), 0.75f, "./res/texture/wall.bmp" ),
-    Matte( Color( 0.75f, 0.75f, 0.75f ), 0.25f, "./res/texture/tile.bmp" ),
-    Matte( Color( 0.0f,  0.0f,  0.0f  ), 0.0f,  Color( 36.0f, 36.0f, 36.0f ) ),
+    Matte( Color( 0.75f, 0.75f, 0.75f ), "./res/texture/wall.bmp" ),
+    Matte( Color( 0.75f, 0.75f, 0.75f ), "./res/texture/tile.bmp" ),
+    Matte( Color( 0.0f,  0.0f,  0.0f  ), Color( 36.0f, 36.0f, 36.0f ) ),
 };
 
 // Mirror
@@ -95,6 +95,11 @@ Transparent g_Crystal[] = {
     Transparent( 2.5f,  Color( 1.0f,  1.0f,  1.0f  ) ),
 };
 
+// Phong
+Glossy g_Glossy[] = {
+    Glossy( Color( 0.0f, 1.0f, 0.0f ), 100000.0f ),
+};
+
 // Materials
 IMaterial* g_pMaterials[] = {
     &g_Matte[0],        // 0 : 白.
@@ -103,11 +108,12 @@ IMaterial* g_pMaterials[] = {
     &g_Mirror[0],       // 3 : ミラー.
     &g_Mirror[1],       // 4 : 黄色ミラー.
     &g_Crystal[0],      // 5 : 水晶.
+    &g_Glossy[0],       // 6 : メタル(緑).
 };
 
 // レンダリングするシーンデータ
 Sphere g_Spheres[] = {
-    Sphere( 16.5f,  Vector3( 20.0f, 16.5f,  27.0f ), g_pMaterials[3] ),    // 鏡
+    Sphere( 16.5f,  Vector3( 20.0f, 16.5f,  27.0f ), g_pMaterials[6] ),    // 鏡
     Sphere( 16.5f,  Vector3( 77.0f, 16.5f,  78.0f ), g_pMaterials[5] ),    // 水晶.
     Sphere( 15.0f,  Vector3( 50.0f, 100.0f, 81.6f ), g_pMaterials[2] ),    // 照明
 };

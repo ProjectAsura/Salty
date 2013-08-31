@@ -109,12 +109,9 @@ struct MaterialBase : public IMaterial
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Matte structure
-// (Oren-Nayer Model)
 //////////////////////////////////////////////////////////////////////////////////////
 struct Matte : public MaterialBase
 {
-    f32 roughness;      //!< 面の粗さです.
-
     //--------------------------------------------------------------------------------
     //! @brief      コンストラクタです.
     //--------------------------------------------------------------------------------
@@ -123,7 +120,7 @@ struct Matte : public MaterialBase
     //--------------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです.
     //--------------------------------------------------------------------------------
-    Matte( const Color&, const f32, const Color& = Color( 0.0f, 0.0f, 0.0f ) );
+    Matte( const Color&, const Color& = Color( 0.0f, 0.0f, 0.0f ) );
 
     //--------------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです.
@@ -131,7 +128,6 @@ struct Matte : public MaterialBase
     Matte
     ( 
         const Color&,
-        const f32,
         const char*,
         const Color&  = Color( 0.0f, 0.0f, 0.0f ),
         const TextureSampler& = TextureSampler()
@@ -146,7 +142,6 @@ struct Matte : public MaterialBase
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Mirror structure
-// (Perfect Reflection)
 //////////////////////////////////////////////////////////////////////////////////////
 struct Mirror : public MaterialBase
 {
@@ -180,7 +175,6 @@ struct Mirror : public MaterialBase
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Transparent structure
-// (Refraction)
 //////////////////////////////////////////////////////////////////////////////////////
 struct Transparent : public MaterialBase
 {
@@ -222,38 +216,31 @@ struct Transparent : public MaterialBase
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Glossy structure
-// (Cook-Torrance Model)
 //////////////////////////////////////////////////////////////////////////////////////
 struct Glossy : public IMaterial
 {
     Color           emissive;       //!< 自己発光カラーです.
-    Color           diffuse;        //!< 拡散反射色です.
     Color           specular;       //!< 鏡面反射色です.
+    f32             power;          //!< 鏡面反射強度です.
+    f32             threshold;      //!<
     Texture2D       texture;        //!< 2次元テクスチャです.
     TextureSampler  sampler;        //!< テクスチャサンプラーです.
-    f32             threshold;      //!< 閾値です.
-    f32             roughness;      //!< 面の粗さ.
-    f32             fresnel;        //!< フレネル反射係数.
 
     Glossy();
 
     Glossy
     ( 
-        const f32,
-        const f32,
         const Color&,
-        const Color&,
-        const Color&
+        const f32,
+        const Color& = Color( 0.0f, 0.0f, 0.0f )
     );
 
     Glossy
     (
+        const Color&,
         const f32,
-        const f32,
-        const Color&,
-        const Color&,
-        const Color&,
         const char*,
+        const Color&          = Color( 0.0f, 0.0f, 0.0f ),
         const TextureSampler& = TextureSampler()
     );
 

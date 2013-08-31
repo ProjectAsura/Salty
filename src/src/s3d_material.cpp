@@ -110,7 +110,6 @@ Color MaterialBase::ComputeColor( ShadingArg& arg ) const
 //--------------------------------------------------------------------------------
 Matte::Matte()
 : MaterialBase()
-, roughness( 0.0 )
 { /* DO_NOTHING */ }
 
 //--------------------------------------------------------------------------------
@@ -119,11 +118,9 @@ Matte::Matte()
 Matte::Matte
 (
     const Color& _color,
-    const f32    _roughness,
     const Color& _emissive
 )
 : MaterialBase( _color, _emissive )
-, roughness( _roughness )
 { /* DO_NOTHING */ }
 
 //--------------------------------------------------------------------------------
@@ -132,13 +129,11 @@ Matte::Matte
 Matte::Matte
 (
     const Color&        _color,
-    const f32           _roughness,
     const char*         _filename,
     const Color&        _emissive,
     const TextureSampler& _sampler
 )
 : MaterialBase( _color, _emissive, _filename, _sampler )
-, roughness( _roughness )
 { /* DO_NOTHING */ }
 
 //--------------------------------------------------------------------------------
@@ -146,6 +141,10 @@ Matte::Matte
 //--------------------------------------------------------------------------------
 Color Matte::ComputeColor( ShadingArg& arg ) const
 {
+    // ========================
+    // Lambert BRDF.
+    // ========================
+
     // 補正済み法線データ (レイの入出を考慮済み).
     const Vector3 normalMod = ( Vector3::Dot ( arg.normal, arg.input ) < 0.0 ) ? arg.normal : -arg.normal;
 
@@ -154,38 +153,18 @@ Color Matte::ComputeColor( ShadingArg& arg ) const
     OrthonormalBasis onb;
     onb.InitFromW( normalMod );
 
-    // コサイン項を使った重点的サンプリング
-    const f32 r1  = F_2PI * arg.random.GetAsF32();
-    const f32 r2  = arg.random.GetAsF32();
-    const f32 r2s = sqrtf(r2);
-    Vector3 dir = Vector3::UnitVector(
-          onb.u * cosf(r1) * r2s
-        + onb.v * sinf(r1) * r2s
-        + onb.w * sqrtf(1.0f - r2) );
+    // インポータンスサンプリング.
+    const f32 phi = F_2PI * arg.random.GetAsF32();
+    const f32 r = sqrtf( arg.random.GetAsF32() );
+    const f32 x = r * cosf( phi );
+    const f32 y = r * sinf( phi );
+    const f32 z = sqrtf( 1 - x * x - y * y );
 
-    // 出射方向設定.
+    // 出射方向.
+    Vector3 dir = Vector3::UnitVector( onb.u * x + onb.v * y + onb.w * z );
     arg.output = dir;
 
-    // Oren-Nayer BRDF
-    f32 s2 = roughness * roughness;
-    f32 A = 1.0f - ( 0.5f * ( s2 / ( s2 + 0.33f ) ) );
-    f32 B = 0.45f * ( s2 / ( s2 + 0.09f ) );
-
-    f32 NV = Vector3::Dot( normalMod, arg.input );
-    f32 NL = Vector3::Dot( normalMod, dir );
-
-    Vector3 projI = Vector3::UnitVector( arg.input  - ( normalMod * NV ) );
-    Vector3 projR = Vector3::UnitVector( dir - ( normalMod * NL ) );
-
-    f32 cosPhai = Max( Vector3::Dot( projI, projR ), 0.0 );
-
-    f32 ti    = acosf( NV );
-    f32 to    = acosf( NL );
-    f32 alpha = Max( ti, to );
-    f32 beta  = Min( ti, to );
-    f32 f     = A + B * cosPhai * sin( alpha ) * tan( beta );
-
-    return Color::Mul( color, texture.Sample( sampler, arg.texcoord ) ) * f / arg.prob;
+    return Color::Mul( color, texture.Sample( sampler, arg.texcoord ) ) / arg.prob;
 }
 
 
@@ -366,30 +345,29 @@ Color Transparent::ComputeColor( ShadingArg& arg ) const
 // Glossy structure
 //////////////////////////////////////////////////////////////////////////////////
 
+//--------------------------------------------------------------------------------
+//      コンストラクタです.
+//--------------------------------------------------------------------------------
 Glossy::Glossy()
 : emissive  ( 0.0f, 0.0f, 0.0f )
-, diffuse   ( 0.0f, 0.0f, 0.0f )
 , specular  ( 0.0f, 0.0f, 0.0f )
+, power     ( 0.0f )
 , texture   ()
 , sampler   ()
-, roughness ( 0.0f )
-, fresnel   ( 0.0f )
-, threshold ( 0.0f )
 { /* DO_NOTHING */ }
 
+//--------------------------------------------------------------------------------
+//      引数付きコンストラクタです.
+//--------------------------------------------------------------------------------
 Glossy::Glossy
 (
-    const f32 _roughness,
-    const f32 _fresnel,
-    const Color& _diffuse,
     const Color& _specular,
+    const f32    _power,
     const Color& _emissive
 )
 : emissive  ( _emissive )
-, diffuse   ( _diffuse )
 , specular  ( _specular )
-, roughness ( _roughness )
-, fresnel   ( _fresnel )
+, power     ( _power )
 , texture   ()
 , sampler   ()
 {
@@ -397,27 +375,65 @@ Glossy::Glossy
     threshold = Max( specular.z, threshold );
 }
 
+//--------------------------------------------------------------------------------
+//      自己発光色を取得します.
+//--------------------------------------------------------------------------------
 Color Glossy::GetEmissive() const
 { return emissive; }
 
+//--------------------------------------------------------------------------------
+//      ロシアンルーレットの閾値を取得します.
+//--------------------------------------------------------------------------------
 f32 Glossy::GetThreshold() const
 { return threshold; }
 
+//---------------------------------------------------------------------------------
+//      色を取得します.
+//---------------------------------------------------------------------------------
 Color Glossy::ComputeColor( ShadingArg& arg ) const
 {
-    Vector3 reflect = Vector3::Reflect( arg.input, arg.normal );
-    reflect.Normalize();
+    // 補正済み法線データ (レイの入出を考慮済み).
+    const Vector3 normalMod = ( Vector3::Dot ( arg.normal, arg.input ) < 0.0 ) ? arg.normal : -arg.normal;
 
-    OrthonormalBasis onb;
-    onb.InitFromW( arg.normal );
+    Vector3 dir;
+    f32 dots = 0.0f;
 
-    //for( ;; )
-    //{
-    //    f32 r1 = D_2PI * arg.random.GetAsF64();
-    //    f32 r2 = 
-    //}
+    for( ;; )
+    {
+        // インポータンスサンプリング.
+        const f32 phi = F_2PI * arg.random.GetAsF32();
+        const f32 cosTheta = powf( 1.0f - arg.random.GetAsF32(), 1.0f / ( power + 1.0f ) );
+        const f32 sinTheta = sqrtf( 1.0f - cosTheta * cosTheta );
+        const f32 x = cosf( phi ) * sinTheta;
+        const f32 y = sinf( phi ) * sinTheta;
+        const f32 z = cosTheta;
 
-    return Color( 0.0f, 0.0f, 0.0f );
+        // 反射ベクトル.
+        Vector3 w = Vector3::Reflect( arg.input, normalMod );
+        w.Normalize();
+
+        // 基底ベクトルを求める.
+        OrthonormalBasis onb;
+        onb.InitFromW( w );
+
+        // 出射方向.
+        dir = Vector3::UnitVector( onb.u * x + onb.v * y + onb.w * z );
+
+        // 出射方向と法線ベクトルの内積を求める.
+        dots = Vector3::Dot( dir, normalMod );
+
+        // 反射するかどうかチェック.
+        if ( dots >= 0.0f )
+        {
+            // 反射するのでループ脱出.
+            break;
+        }
+    }
+
+    // 出射方向を設定.
+    arg.output = dir;
+
+    return Color::Mul( specular, texture.Sample( sampler, arg.texcoord ) ) * dots;
 }
 
 

@@ -164,6 +164,7 @@ Color Matte::ComputeColor( ShadingArg& arg ) const
     Vector3 dir = Vector3::UnitVector( onb.u * x + onb.v * y + onb.w * z );
     arg.output = dir;
 
+    // 重み更新 (飛ぶ方向が不定なので確率で割る必要あり).
     return Color::Mul( color, texture.Sample( sampler, arg.texcoord ) ) / arg.prob;
 }
 
@@ -220,9 +221,10 @@ Color Mirror::ComputeColor( ShadingArg& arg ) const
     Vector3 reflect = Vector3::Reflect( arg.input, normalMod );
     reflect.Normalize();
 
+    // 出射方向.
     arg.output = reflect;
 
-    // 重み更新.
+    // 重み更新 (飛ぶ方向が確定しているので，確率100%).
     return Vector3::Mul( color, texture.Sample( sampler, arg.texcoord ) );
 }
 
@@ -299,9 +301,10 @@ Color Transparent::ComputeColor( ShadingArg& arg ) const
     // 全反射
     if ( cos2t < 0.0f )
     {
+        // 出射方向.
         arg.output = reflect;
 
-        // 重み更新.
+        // 重み更新 (飛ぶ方向が確定しているので，確率100%).
         return Vector3::Mul( color, texture.Sample( sampler, arg.texcoord ) );
     }
 
@@ -325,6 +328,7 @@ Color Transparent::ComputeColor( ShadingArg& arg ) const
     // 反射の場合.
     if ( arg.random.GetAsF32() < P )
     {
+        // 出射方向.
         arg.output = reflect;
 
         // 重み更新.
@@ -333,6 +337,7 @@ Color Transparent::ComputeColor( ShadingArg& arg ) const
     // 屈折の場合.
     else
     {
+        // 出射方向.
         arg.output = refract;
 
         // 重み更新.
@@ -433,6 +438,7 @@ Color Glossy::ComputeColor( ShadingArg& arg ) const
     // 出射方向を設定.
     arg.output = dir;
 
+    // 重み更新.
     return Color::Mul( specular, texture.Sample( sampler, arg.texcoord ) ) * dots;
 }
 

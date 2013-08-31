@@ -279,7 +279,7 @@ Color Radiance( const Ray &inRay, s3d::Random &rnd )
     Color W  ( 1.0f, 1.0f, 1.0f );
     Color L  ( 0.0f, 0.0f, 0.0f );
 
-	// 乱数設定.
+    // 乱数設定.
     arg.random = rnd;
 
     for( s32 depth=0; /* NOTHING */; ++depth )

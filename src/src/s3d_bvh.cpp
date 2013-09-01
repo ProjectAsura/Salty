@@ -27,7 +27,7 @@ s32 Split( s3d::IShape** ppShapes, s32 size, f64 pivotVal, s32 axis )
         bbox = ppShapes[i]->GetBox();
 
         // 中心を取得.
-        centroid = ( bbox.min.v[axis] + bbox.max.v[axis] ) / 2.0;
+        centroid = ( bbox.min.a[axis] + bbox.max.a[axis] ) / 2.0;
 
         // ピボットと比較.
         if ( centroid < pivotVal )
@@ -129,7 +129,7 @@ void BVH::Init( IShape** ppShapes, const u32 numShapes )
     { axis = ( size.y > size.z ) ? 1 : 2; }
 
     // 分割.
-    s32 midPoint = Split( ppShapes, numShapes, pivot.v[axis], axis );
+    s32 midPoint = Split( ppShapes, numShapes, pivot.a[axis], axis );
 
     // ブランチ構築.
     pLeft  = BuildBranch( ppShapes, midPoint );
@@ -202,7 +202,7 @@ IShape* BVH::BuildBranch( IShape** ppShapes, const s32 numShapes )
     { axis = ( size.y > size.z ) ? 1 : 2; }
 
     // 中間値.
-    s32 midPoint = Split( ppShapes, numShapes, pivot.v[axis], axis );
+    s32 midPoint = Split( ppShapes, numShapes, pivot.a[axis], axis );
 
     // ブランチ構築.
     IShape* left  = BuildBranch( ppShapes, midPoint );

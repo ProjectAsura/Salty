@@ -52,5 +52,26 @@ typedef double              f64;
 #define S3D_DEBUG  0
 #endif
 
+#ifndef S3D_ALIGN
+    #if _MSC_VER
+        #define S3D_ALIGN( alignment )    __declspec( align(alignment) )
+    #else
+        #define S3D_ALIGN( alignment )    __attribute__( aligned(alignment) )
+    #endif
+#endif//S3D_ALIGN
+
+
+#if defined(_M_IX86) || defined(_M_AMD64)
+    #define S3D_IS_SSE2   (1)     // SSE2有効.
+#else
+    #define S3D_IS_SSE2   (0)     // SSE2無効.
+#endif
+
+#if defined(S3D_USE_SIMD)
+    #define S3D_IS_SIMD   (1)     // SIMD演算有効.
+#else
+    #define S3D_IS_SIMD   (0)     // SIMD演算無効.
+#endif// defined(S3D_USE_SIMD)
+
 
 #endif//__S3D_TYPEDEF_H__

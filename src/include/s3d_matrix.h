@@ -22,10 +22,26 @@ namespace s3d {
 struct Matrix
 {
 public:
-    f32 _11, _12, _13, _14;
-    f32 _21, _22, _23, _24;
-    f32 _31, _32, _33, _34;
-    f32 _41, _42, _43, _44;
+    union
+    {
+        struct 
+        {
+            f32 _11, _12, _13, _14;
+            f32 _21, _22, _23, _24;
+            f32 _31, _32, _33, _34;
+            f32 _41, _42, _43, _44;
+        };
+        f32     a[16];
+    #if S3D_IS_SIMD
+        struct
+        {
+            b128    v0;
+            b128    v1;
+            b128    v2;
+            b128    v3;
+        };
+    #endif
+    };
 
     Matrix();
     Matrix( 
@@ -33,6 +49,9 @@ public:
         const f32, const f32, const f32, const f32,
         const f32, const f32, const f32, const f32,
         const f32, const f32, const f32, const f32 );
+#if S3D_IS_SIMD
+    Matrix( const b128, const b128, const b128, const b128 );
+#endif//S3D_IS_SIMD
     Matrix( const Matrix& );
 
     Matrix& operator =  ( const Matrix& );

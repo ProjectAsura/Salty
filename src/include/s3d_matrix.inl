@@ -32,21 +32,48 @@ Matrix::Matrix
     const f32 m31, const f32 m32, const f32 m33, const f32 m34,
     const f32 m41, const f32 m42, const f32 m43, const f32 m44
 )
+#if S3D_IS_SIMD
+: v0( _mm_set_ps( m14, m13, m12, m11 ) )
+, v1( _mm_set_ps( m24, m23, m22, m21 ) )
+, v2( _mm_set_ps( m34, m33, m32, m31 ) )
+, v3( _mm_set_ps( m44, m43, m42, m41 ) )
+#else
 : _11( m11 ), _12( m12 ), _13( m13 ), _14( m14 )
 , _21( m21 ), _22( m22 ), _23( m23 ), _24( m24 )
 , _31( m31 ), _32( m32 ), _33( m33 ), _34( m34 )
 , _41( m41 ), _42( m42 ), _43( m43 ), _44( m44 )
+#endif
 { /* DO_NOTHING */ }
+
+#if S3D_IS_SIMD
+//------------------------------------------------------------------------------
+//      引数付きコンストラクタです.
+//------------------------------------------------------------------------------
+S3D_INLINE
+Matrix::Matrix( const b128 c0, const b128 c1, const b128 c2, const b128 c3 )
+: v0 ( c0 )
+, v1 ( c1 )
+, v2 ( c2 )
+, v3 ( c3 )
+{ /* DO_NOTHING */ }
+#endif//S3D_IS_SIMD
 
 //------------------------------------------------------------------------------
 //      コピーコンストラクタです.
 //------------------------------------------------------------------------------
 S3D_INLINE
 Matrix::Matrix( const Matrix& value )
+#if S3D_IS_SIMD
+: v0 ( value.v0 )
+, v1 ( value.v1 )
+, v2 ( value.v2 )
+, v3 ( value.v3 )
+#else
 : _11( value._11 ), _12( value._12 ), _13( value._13 ), _14( value._14 )
 , _21( value._21 ), _22( value._22 ), _23( value._23 ), _24( value._24 )
 , _31( value._31 ), _32( value._32 ), _33( value._33 ), _34( value._34 )
 , _41( value._41 ), _42( value._42 ), _43( value._43 ), _44( value._44 )
+#endif//S3D_IS_SIMD
 { /* DO_NOTHING */ }
 
 //------------------------------------------------------------------------------
@@ -55,10 +82,17 @@ Matrix::Matrix( const Matrix& value )
 S3D_INLINE
 Matrix& Matrix::operator = ( const Matrix& value )
 {
+#if S3D_IS_SIMD
+    v0 = value.v0;
+    v1 = value.v1;
+    v2 = value.v2;
+    v3 = value.v3;
+#else
     _11 = value._11; _12 = value._12; _13 = value._13; _14 = value._14;
     _21 = value._21; _22 = value._22; _23 = value._23; _24 = value._24;
     _31 = value._31; _32 = value._32; _33 = value._33; _34 = value._34;
     _41 = value._41; _42 = value._42; _43 = value._43; _44 = value._44;
+#endif//S3D_IS_SIMD
     return (*this);
 }
 
@@ -68,10 +102,17 @@ Matrix& Matrix::operator = ( const Matrix& value )
 S3D_INLINE
 Matrix& Matrix::operator += ( const Matrix& value )
 {
+#if S3D_IS_SIMD
+    v0 = _mm_add_ps( v0, value.v0 );
+    v1 = _mm_add_ps( v1, value.v1 );
+    v2 = _mm_add_ps( v2, value.v2 );
+    v3 = _mm_add_ps( v3, value.v3 );
+#else
     _11 += value._11; _12 += value._12; _13 += value._13; _14 += value._14;
     _21 += value._21; _22 += value._22; _23 += value._23; _24 += value._24;
     _31 += value._31; _32 += value._32; _33 += value._33; _34 += value._34;
     _41 += value._41; _42 += value._42; _43 += value._43; _44 += value._44;
+#endif//S3D_IS_SIMD
     return (*this);
 }
 
@@ -81,10 +122,17 @@ Matrix& Matrix::operator += ( const Matrix& value )
 S3D_INLINE
 Matrix& Matrix::operator -= ( const Matrix& value )
 {
+#if S3D_IS_SIMD
+    v0 = _mm_sub_ps( v0, value.v0 );
+    v1 = _mm_sub_ps( v1, value.v1 );
+    v2 = _mm_sub_ps( v2, value.v2 );
+    v3 = _mm_sub_ps( v3, value.v3 );
+#else
     _11 -= value._11; _12 -= value._12; _13 -= value._13; _14 -= value._14;
     _21 -= value._21; _22 -= value._22; _23 -= value._23; _24 -= value._24;
     _31 -= value._31; _32 -= value._32; _33 -= value._33; _34 -= value._34;
     _41 -= value._41; _42 -= value._42; _43 -= value._43; _44 -= value._44;
+#endif//S3D_IS_SIMD
     return (*this);
 }
 
@@ -94,6 +142,57 @@ Matrix& Matrix::operator -= ( const Matrix& value )
 S3D_INLINE
 Matrix& Matrix::operator *= ( const Matrix& value )
 {
+#if S3D_IS_SIMD
+    b128 r0 = _mm_set_ps( value._41, value._31, value._21, value._11 );
+    b128 r1 = _mm_set_ps( value._42, value._32, value._22, value._12 );
+    b128 r2 = _mm_set_ps( value._43, value._33, value._23, value._13 );
+    b128 r3 = _mm_set_ps( value._44, value._34, value._24, value._14 );
+
+    Vector4 m0 = _mm_mul_ps( v0, r0 );
+    Vector4 m1 = _mm_mul_ps( v0, r1 );
+    Vector4 m2 = _mm_mul_ps( v0, r2 );
+    Vector4 m3 = _mm_mul_ps( v0, r3 );
+
+    v0 = _mm_set_ps(
+        m3.x + m3.y + m3.z + m3.w,
+        m2.x + m2.y + m2.z + m2.w,
+        m1.x + m1.y + m1.z + m1.w,
+        m0.x + m0.y + m0.z + m0.w );
+
+    m0 = _mm_mul_ps( v1, r0 );
+    m1 = _mm_mul_ps( v1, r1 );
+    m2 = _mm_mul_ps( v1, r2 );
+    m3 = _mm_mul_ps( v1, r3 );
+
+    v1 = _mm_set_ps(
+        m3.x + m3.y + m3.z + m3.w,
+        m2.x + m2.y + m2.z + m2.w,
+        m1.x + m1.y + m1.z + m1.w,
+        m0.x + m0.y + m0.z + m0.w );
+
+    m0 = _mm_mul_ps( v2, r0 );
+    m1 = _mm_mul_ps( v2, r1 );
+    m2 = _mm_mul_ps( v2, r2 );
+    m3 = _mm_mul_ps( v2, r3 );
+
+    v2 = _mm_set_ps(
+        m3.x + m3.y + m3.z + m3.w,
+        m2.x + m2.y + m2.z + m2.w,
+        m1.x + m1.y + m1.z + m1.w,
+        m0.x + m0.y + m0.z + m0.w );
+
+    m0 = _mm_mul_ps( v3, r0 );
+    m1 = _mm_mul_ps( v3, r1 );
+    m2 = _mm_mul_ps( v3, r2 );
+    m3 = _mm_mul_ps( v3, r3 );
+
+    v3 = _mm_set_ps(
+        m3.x + m3.y + m3.z + m3.w,
+        m2.x + m2.y + m2.z + m2.w,
+        m1.x + m1.y + m1.z + m1.w,
+        m0.x + m0.y + m0.z + m0.w );
+
+#else
     {
         register f32 m11 = ( _11 * value._11 ) + ( _12 * value._21 ) + ( _13 * value._31 ) + ( _14 * value._41 );
         register f32 m12 = ( _11 * value._12 ) + ( _12 * value._22 ) + ( _13 * value._32 ) + ( _14 * value._42 );
@@ -141,6 +240,7 @@ Matrix& Matrix::operator *= ( const Matrix& value )
         _43 = m43;
         _44 = m44;
     }
+#endif//S3D_IS_SIMD
 
     return (*this);
 }
@@ -151,10 +251,18 @@ Matrix& Matrix::operator *= ( const Matrix& value )
 S3D_INLINE
 Matrix& Matrix::operator *= ( const f32 value )
 {
+#if S3D_IS_SIMD
+    b128 c = _mm_set_ps( value, value, value, value );
+    v0 = _mm_mul_ps( v0, c );
+    v1 = _mm_mul_ps( v1, c );
+    v2 = _mm_mul_ps( v2, c );
+    v3 = _mm_mul_ps( v3, c );
+#else
     _11 *= value; _12 *= value; _13 *= value; _14 *= value;
     _21 *= value; _22 *= value; _23 *= value; _24 *= value;
     _31 *= value; _32 *= value; _33 *= value; _34 *= value;
     _41 *= value; _42 *= value; _43 *= value; _44 *= value;
+#endif//S3D_IS_SIMD
     return (*this); 
 }
 
@@ -171,11 +279,20 @@ Matrix Matrix::operator + () const
 S3D_INLINE
 Matrix Matrix::operator - () const
 {
+#if S3D_IS_SIMD
+    b128 z = _mm_setzero_ps();
+    return Matrix(
+        _mm_sub_ps( z, v0 ),
+        _mm_sub_ps( z, v1 ),
+        _mm_sub_ps( z, v2 ),
+        _mm_sub_ps( z, v3 ) );
+#else
     return Matrix(
         -_11, -_12, -_13, -_14,
         -_21, -_22, -_23, -_24,
         -_31, -_32, -_33, -_34,
         -_41, -_42, -_43, -_44 );
+#endif//S3D_IS_SIMD
 }
 
 //------------------------------------------------------------------------------
@@ -184,11 +301,19 @@ Matrix Matrix::operator - () const
 S3D_INLINE
 Matrix Matrix::operator + ( const Matrix& value ) const
 {
+#if S3D_IS_SIMD
+    return Matrix(
+        _mm_add_ps( v0, value.v0 ),
+        _mm_add_ps( v1, value.v1 ),
+        _mm_add_ps( v2, value.v2 ),
+        _mm_add_ps( v3, value.v3 ) );
+#else
     return Matrix(
         _11 + value._11, _12 + value._12, _13 + value._13, _14 + value._14,
         _21 + value._21, _22 + value._22, _23 + value._23, _24 + value._24,
         _31 + value._31, _32 + value._32, _33 + value._33, _34 + value._34,
         _41 + value._41, _42 + value._42, _43 + value._43, _44 + value._44 );
+#endif//S3D_IS_SIMD
 }
 
 //------------------------------------------------------------------------------
@@ -197,11 +322,19 @@ Matrix Matrix::operator + ( const Matrix& value ) const
 S3D_INLINE
 Matrix Matrix::operator - ( const Matrix& value ) const
 {
+#if S3D_IS_SIMD
+    return Matrix(
+        _mm_sub_ps( v0, value.v0 ),
+        _mm_sub_ps( v1, value.v1 ),
+        _mm_sub_ps( v2, value.v2 ),
+        _mm_sub_ps( v3, value.v3 ) );
+#else
     return Matrix(
         _11 - value._11, _12 - value._12, _13 - value._13, _14 - value._14,
         _21 - value._21, _22 - value._22, _23 - value._23, _24 - value._24,
         _31 - value._31, _32 - value._32, _33 - value._33, _34 - value._34,
         _41 - value._41, _42 - value._42, _43 - value._43, _44 - value._44 );
+#endif//S3D_IS_SIMD
 }
 
 //------------------------------------------------------------------------------
@@ -210,6 +343,58 @@ Matrix Matrix::operator - ( const Matrix& value ) const
 S3D_INLINE
 Matrix Matrix::operator * ( const Matrix& value ) const
 {
+#if S3D_IS_SIMD
+    b128 r0 = _mm_set_ps( value._41, value._31, value._21, value._11 );
+    b128 r1 = _mm_set_ps( value._42, value._32, value._22, value._12 );
+    b128 r2 = _mm_set_ps( value._43, value._33, value._23, value._13 );
+    b128 r3 = _mm_set_ps( value._44, value._34, value._24, value._14 );
+
+    Vector4 m0 = _mm_mul_ps( v0, r0 );
+    Vector4 m1 = _mm_mul_ps( v0, r1 );
+    Vector4 m2 = _mm_mul_ps( v0, r2 );
+    Vector4 m3 = _mm_mul_ps( v0, r3 );
+
+    b128 e0 = _mm_set_ps(
+        m3.x + m3.y + m3.z + m3.w,
+        m2.x + m2.y + m2.z + m2.w,
+        m1.x + m1.y + m1.z + m1.w,
+        m0.x + m0.y + m0.z + m0.w );
+
+    m0 = _mm_mul_ps( v1, r0 );
+    m1 = _mm_mul_ps( v1, r1 );
+    m2 = _mm_mul_ps( v1, r2 );
+    m3 = _mm_mul_ps( v1, r3 );
+
+    b128 e1 = _mm_set_ps(
+        m3.x + m3.y + m3.z + m3.w,
+        m2.x + m2.y + m2.z + m2.w,
+        m1.x + m1.y + m1.z + m1.w,
+        m0.x + m0.y + m0.z + m0.w );
+
+    m0 = _mm_mul_ps( v2, r0 );
+    m1 = _mm_mul_ps( v2, r1 );
+    m2 = _mm_mul_ps( v2, r2 );
+    m3 = _mm_mul_ps( v2, r3 );
+
+    b128 e2 = _mm_set_ps(
+        m3.x + m3.y + m3.z + m3.w,
+        m2.x + m2.y + m2.z + m2.w,
+        m1.x + m1.y + m1.z + m1.w,
+        m0.x + m0.y + m0.z + m0.w );
+
+    m0 = _mm_mul_ps( v3, r0 );
+    m1 = _mm_mul_ps( v3, r1 );
+    m2 = _mm_mul_ps( v3, r2 );
+    m3 = _mm_mul_ps( v3, r3 );
+
+    b128 e3 = _mm_set_ps(
+        m3.x + m3.y + m3.z + m3.w,
+        m2.x + m2.y + m2.z + m2.w,
+        m1.x + m1.y + m1.z + m1.w,
+        m0.x + m0.y + m0.z + m0.w );
+
+    return Matrix( e0, e1, e2, e3 );
+#else
     return Matrix(
             ( _11 * value._11 ) + ( _12 * value._21 ) + ( _13 * value._31 ) + ( _14 * value._41 ),
             ( _11 * value._12 ) + ( _12 * value._22 ) + ( _13 * value._32 ) + ( _14 * value._42 ),
@@ -230,6 +415,7 @@ Matrix Matrix::operator * ( const Matrix& value ) const
             ( _41 * value._12 ) + ( _42 * value._22 ) + ( _43 * value._32 ) + ( _44 * value._42 ),
             ( _41 * value._13 ) + ( _42 * value._23 ) + ( _43 * value._33 ) + ( _44 * value._43 ),
             ( _41 * value._14 ) + ( _42 * value._24 ) + ( _43 * value._34 ) + ( _44 * value._44 ) );
+#endif//S3D_IS_SIMD
 }
 
 //------------------------------------------------------------------------------
@@ -238,11 +424,20 @@ Matrix Matrix::operator * ( const Matrix& value ) const
 S3D_INLINE
 Matrix Matrix::operator * ( const f32 value ) const
 {
+#if S3D_IS_SIMD
+    b128 c = _mm_set_ps( value, value, value, value );
+    return Matrix(
+        _mm_mul_ps( v0, c ),
+        _mm_mul_ps( v1, c ),
+        _mm_mul_ps( v2, c ),
+        _mm_mul_ps( v3, c ) );
+#else
     return Matrix(
         _11 * value, _12 * value, _13 * value, _14 * value,
         _21 * value, _22 * value, _23 * value, _24 * value,
         _31 * value, _32 * value, _33 * value, _34 * value,
         _41 * value, _42 * value, _43 * value, _44 * value );
+#endif//S3D_IS_SIMD
 }
 
 //------------------------------------------------------------------------------
@@ -251,20 +446,20 @@ Matrix Matrix::operator * ( const f32 value ) const
 S3D_INLINE
 f32 Matrix::Det() const
 {
-        return (
-           ( _11 * _22 * _33 * _44 ) + ( _11 * _23 * _34 * _42 ) +
-           ( _11 * _24 * _32 * _43 ) + ( _12 * _21 * _34 * _43 ) +
-           ( _12 * _23 * _31 * _44 ) + ( _12 * _24 * _33 * _41 ) +
-           ( _13 * _21 * _32 * _44 ) + ( _13 * _22 * _34 * _41 ) +
-           ( _13 * _24 * _31 * _42 ) + ( _14 * _21 * _33 * _42 ) +
-           ( _14 * _22 * _31 * _43 ) + ( _14 * _23 * _32 * _41 ) -
-           ( _11 * _22 * _34 * _43 ) - ( _11 * _23 * _32 * _44 ) -
-           ( _11 * _24 * _33 * _42 ) - ( _12 * _21 * _33 * _44 ) -
-           ( _12 * _23 * _34 * _41 ) - ( _12 * _24 * _31 * _43 ) -
-           ( _13 * _21 * _34 * _42 ) - ( _13 * _22 * _31 * _44 ) -
-           ( _13 * _24 * _32 * _41 ) - ( _14 * _21 * _32 * _43 ) -
-           ( _14 * _22 * _33 * _41 ) - ( _14 * _23 * _31 * _42 )
-        );
+    return (
+        ( _11 * _22 * _33 * _44 ) + ( _11 * _23 * _34 * _42 ) +
+        ( _11 * _24 * _32 * _43 ) + ( _12 * _21 * _34 * _43 ) +
+        ( _12 * _23 * _31 * _44 ) + ( _12 * _24 * _33 * _41 ) +
+        ( _13 * _21 * _32 * _44 ) + ( _13 * _22 * _34 * _41 ) +
+        ( _13 * _24 * _31 * _42 ) + ( _14 * _21 * _33 * _42 ) +
+        ( _14 * _22 * _31 * _43 ) + ( _14 * _23 * _32 * _41 ) -
+        ( _11 * _22 * _34 * _43 ) - ( _11 * _23 * _32 * _44 ) -
+        ( _11 * _24 * _33 * _42 ) - ( _12 * _21 * _33 * _44 ) -
+        ( _12 * _23 * _34 * _41 ) - ( _12 * _24 * _31 * _43 ) -
+        ( _13 * _21 * _34 * _42 ) - ( _13 * _22 * _31 * _44 ) -
+        ( _13 * _24 * _32 * _41 ) - ( _14 * _21 * _32 * _43 ) -
+        ( _14 * _22 * _33 * _41 ) - ( _14 * _23 * _31 * _42 )
+    );
 }
 
 //------------------------------------------------------------------------------

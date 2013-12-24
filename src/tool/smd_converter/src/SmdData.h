@@ -13,10 +13,10 @@
 /////////////////////////////////////////////////////////////////////////////////
 struct SMD_DATA_HEADER
 {
-    unsigned int numVertices;               //!< 頂点数です.
+    unsigned int numTriangles;              //!< 三角形数です.
     unsigned int numMaterials;              //!< マテリアル数です.
     unsigned int numTextures;               //!< テクスチャ数です.
-    unsigned int vertexStructureSize;       //!< 頂点構造体のサイズです.
+    unsigned int triangleStructureSize;     //!< 三角形構造体のサイズです.
     unsigned int materialStructureSize;     //!< マテリアル構造体のサイズです.
     unsigned int textureStructureSize;      //!< テクスチャ構造体のサイズです.
 };
@@ -198,7 +198,7 @@ struct SMD_MATERIAL
 ///////////////////////////////////////////////////////////////////////////////
 struct SMD_TEXTURE
 {
-    char        filename[ 256 ];        //!< ファイル名です.
+    char      filename[ 256 ];        //!< ファイル名です.
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -222,6 +222,8 @@ static const unsigned int  SMD_DATA_HEADER_SIZE     = sizeof( SMD_DATA_HEADER );
 
 //!< 頂点構造体のサイズです.
 static const unsigned int  SMD_VERTEX_STRUCT_SIZE   = sizeof( SMD_VERTEX );
+
+static const unsigned int  SMD_TRIANGLE_STRUCT_SIZE = sizeof( SMD_TRIANGLE );
 
 //!< 頂点インデックス構造体のサイズです.
 static const unsigned int  SMD_INDEX_STRUCT_SIZE    = sizeof( unsigned int );

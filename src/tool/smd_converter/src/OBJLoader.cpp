@@ -1334,10 +1334,10 @@ void OBJMESH::WriteDirect( FILE* pFile )
 
     // データヘッダーを設定.
     SMD_DATA_HEADER dataHeader;
-    dataHeader.numVertices  = m_NumVertices;
+    dataHeader.numTriangles = m_NumIndices / 3;
     dataHeader.numMaterials = m_NumMaterials;
     dataHeader.numTextures = (unsigned int)textureList.size();
-    dataHeader.vertexStructureSize   = SMD_VERTEX_STRUCT_SIZE;
+    dataHeader.triangleStructureSize = SMD_TRIANGLE_STRUCT_SIZE;
     dataHeader.materialStructureSize = SMD_MATERIAL_STRUCT_SIZE;
     dataHeader.textureStructureSize  = SMD_TEXTURE_STRUCT_SIZE;
 
@@ -1620,10 +1620,10 @@ void OBJMESH::WriteOptimize( FILE* pFile )
 
     // データヘッダーを設定.
     SMD_DATA_HEADER dataHeader;
-    dataHeader.numVertices  = m_NumVertices;
+    dataHeader.numTriangles  = m_NumIndices / 3;
     dataHeader.numMaterials = m_NumMaterials;
     dataHeader.numTextures = (unsigned int)textureList.size();
-    dataHeader.vertexStructureSize   = SMD_VERTEX_STRUCT_SIZE;
+    dataHeader.triangleStructureSize = SMD_TRIANGLE_STRUCT_SIZE;
     dataHeader.materialStructureSize = SMD_MATERIAL_STRUCT_SIZE;
     dataHeader.textureStructureSize  = SMD_TEXTURE_STRUCT_SIZE;
 

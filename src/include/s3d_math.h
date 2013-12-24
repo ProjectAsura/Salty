@@ -294,7 +294,7 @@ public:
     void Normalize()
     {
         register f32 mag = sqrtf( x * x + y * y );
-        assert( mag != 0.0f );
+        assert( mag > 0.0f );
         x /= mag;
         y /= mag;
     }
@@ -306,7 +306,7 @@ public:
     void SafeNormalize()
     {
         register f32 mag = sqrtf( x * x + y * y );
-        if ( mag != 0.0f )
+        if ( mag > 0.0f )
         {
             x /= mag;
             y /= mag;
@@ -333,7 +333,7 @@ public:
     Vector2 SafeUnitVector ( const Vector2& v)
     {
         register f32 mag = sqrtf( v.x * v.x + v.y * v.y );
-        if ( mag != 0.0f )
+        if ( mag > 0.0f )
         {
             return Vector2(
                 v.x / mag,
@@ -606,7 +606,7 @@ public:
     void Normalize()
     {
         register f32 mag = sqrtf( x * x + y * y + z * z );
-        assert( mag != 0.0f );
+        assert( mag > 0.0f );
         x /= mag;
         y /= mag;
         z /= mag;
@@ -619,7 +619,7 @@ public:
     void SafeNormalize()
     {
         register f32 mag = sqrtf( x * x + y * y + z * z );
-        if ( mag != 0.0f )
+        if ( mag > 0.0f )
         {
              x /= mag;
              y /= mag;
@@ -634,7 +634,7 @@ public:
     Vector3 UnitVector (const Vector3 &v)
     {
         register f32 mag = sqrtf( v.x * v.x + v.y * v.y + v.z * v.z );
-        assert( mag != 0.0f );
+        assert( mag > 0.0f );
         return Vector3(
             v.x / mag,
             v.y / mag,
@@ -648,7 +648,7 @@ public:
     Vector3 SafeUnitVector (const Vector3& v)
     {
         register f32 mag = sqrtf( v.x * v.x + v.y * v.y + v.z * v.z );
-        if ( mag != 0.0f )
+        if ( mag > 0.0f )
         {
             return Vector3(
                 v.x / mag,
@@ -1094,12 +1094,12 @@ public:
     #if S3D_IS_SIMD
         Vector4 t = _mm_mul_ps( v, v );
         register f32 mag = sqrtf( t.x + t.y + t.z + t.w );
-        assert( mag != 0.0f );
+        assert( mag > 0.0f );
         b128 c = _mm_set_ps( mag, mag, mag, mag );
         v = _mm_div_ps( v, c );
     #else
         register f32 mag = sqrtf( x * x + y * y + z * z + w * w );
-        assert( mag != 0.0f );
+        assert( mag > 0.0f );
         x /= mag;
         y /= mag;
         z /= mag;
@@ -1116,14 +1116,14 @@ public:
     #if S3D_IS_SIMD
         Vector4 t = _mm_mul_ps( v, v );
         register f32 mag = sqrtf( t.x + t.y + t.z + t.w );
-        if ( mag != 0.0f )
+        if ( mag > 0.0f )
         {
             b128 c = _mm_set_ps( mag, mag, mag, mag );
             v = _mm_div_ps( v, c );
         }
     #else
         register f32 mag = sqrtf( x * x + y * y + z * z + w * w );
-        if ( mag != 0.0f )
+        if ( mag > 0.0f )
         {
              x /= mag;
              y /= mag;
@@ -1142,12 +1142,12 @@ public:
     #if S3D_IS_SIMD
         Vector4 t = _mm_mul_ps( v.v, v.v );
         register f32 mag = sqrtf( t.x + t.y + t.z + t.w );
-        assert( mag != 0.0f );
+        assert( mag > 0.0f );
         b128 c = _mm_set_ps( mag, mag, mag, mag );
         return Vector4( _mm_div_ps( v.v, c ) );
     #else
         register f32 mag = sqrtf( v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w );
-        assert( mag != 0.0f );
+        assert( mag > 0.0f );
         return Vector4(
             v.x / mag,
             v.y / mag,
@@ -1165,14 +1165,14 @@ public:
     #if S3D_IS_SIMD
         Vector4 t = _mm_mul_ps( v.v, v.v );
         register f32 mag = sqrtf( t.x + t.y + t.z + t.w );
-        if ( mag != 0.0f )
+        if ( mag > 0.0f )
         {
             b128 c = _mm_set_ps( mag, mag, mag, mag );
             return Vector4( _mm_div_ps( v.v, c ) );
         }
     #else
         register f32 mag = sqrtf( v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w );
-        if ( mag != 0.0f )
+        if ( mag > 0.0f )
         {
             return Vector4(
                 v.x / mag,

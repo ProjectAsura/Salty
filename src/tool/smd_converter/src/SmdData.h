@@ -17,10 +17,12 @@ struct SMD_DATA_HEADER
     unsigned int numIndices;                //!< インデックス数です.
     unsigned int numMaterials;              //!< マテリアル数です.
     unsigned int numSubsets;                //!< サブセット数です.
+    unsigned int numTextures;               //!< テクスチャ数です.
     unsigned int vertexStructureSize;       //!< 頂点構造体のサイズです.
     unsigned int indexStructureSize;        //!< 頂点インデックス構造体のサイズです.
     unsigned int materialStructureSize;     //!< マテリアル構造体のサイズです.
     unsigned int subsetStructureSize;       //!< サブセット構造体のサイズです.
+    unsigned int textureStructureSize;      //!< テクスチャ構造体のサイズです.
 };
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -154,7 +156,15 @@ struct SMD_MATERIAL
     SMD_DVEC3   emissive;               //!< 自己照明色です.
     double      refractivity;           //!< 屈折率です.
     double      roughness;              //!< 面の粗さです.
-    char        diffuseMap[ 256 ];      //!< ディフューズマップ名です.
+    int         diffuseMap;             //!< ディフューズマップ名です.
+};
+
+///////////////////////////////////////////////////////////////////////////////
+//
+///////////////////////////////////////////////////////////////////////////////
+struct SMD_TEXTURE
+{
+    char        filename[ 256 ];        //!< ファイル名です.
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -187,6 +197,9 @@ static const unsigned int  SMD_MATERIAL_STRUCT_SIZE = sizeof( SMD_MATERIAL );
 
 //!< サブセット構造体のサイズです.
 static const unsigned int  SMD_SUBSET_STRUCT_SIZE   = sizeof( SMD_SUBSET );
+
+//!< テクスチャ構造体のサイズです.
+static const unsigned int  SMD_TEXTURE_STRUCT_SIZE  = sizeof( SMD_TEXTURE );
 
 
 

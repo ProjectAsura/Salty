@@ -32,12 +32,14 @@ int main( int argc, char **argv )
         config.height        = 576;
         config.numSamples    = 1024;
         config.numSubSamples = 2;
+        config.maxDepth      = 32;
     #else
         // デバッグ用.
         config.width         = 320;
         config.height        = 180;
         config.numSamples    = 512;
         config.numSubSamples = 2;
+        config.maxDepth      = 32;
     #endif
 
         s3d::App app;

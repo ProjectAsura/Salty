@@ -14,7 +14,6 @@
 #include <s3d_shape.h>
 #include <s3d_material.h>
 #include <s3d_bvh.h>
-#include <vector>
 
 
 namespace s3d {
@@ -28,13 +27,7 @@ public:
     //==================================================================================
     // public variables.
     //==================================================================================
-    //IShape**            m_pTriangle;
-    //IMaterial**         m_pMaterial;
-
-    //u32                 m_TriangleCount;
-    //u32                 m_MaterialCount;
-    std::vector<MeshTriangle>  m_pTriangle;
-    //std::vector<MeshMaterial> m_pMaterial;
+    Triangle*           m_pTriangles;
     IShape*             m_pBVH;
 
     //==================================================================================

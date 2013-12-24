@@ -88,12 +88,7 @@ BVH::BVH( IShape* pShape1, IShape* pShape2 )
 //--------------------------------------------------------------------------
 BVH::~BVH()
 {
-    if ( !pLeft->IsPrimitive() )
-    { delete pLeft; }
-
-    if ( !pRight->IsPrimitive() )
-    { delete pRight; }
-
+    /* 解放処理はDestroyBranch()で行います */
     pLeft  = nullptr;
     pRight = nullptr;
 }
@@ -212,5 +207,27 @@ IShape* BVH::BuildBranch( IShape** ppShapes, const s32 numShapes )
     return new BVH( left, right, bbox );
 }
 
+//--------------------------------------------------------------------------
+//      ブランチを破棄します.
+//--------------------------------------------------------------------------
+void BVH::DestroyBranch( BVH* pShape )
+{
+    if ( pShape == nullptr )
+    {
+        return;
+    }
+
+    if ( pShape->IsPrimitive() )
+    {
+        pShape = nullptr;
+        return;
+    }
+
+    DestroyBranch( (BVH*)pShape->pLeft );
+    DestroyBranch( (BVH*)pShape->pRight );
+
+    delete pShape;
+    pShape = nullptr;
+}
 
 } // namespace s3d

@@ -61,20 +61,19 @@ Color Radiance( const Ray &inRay, s3d::Random &rnd );
 //----------------------------------------------------------------------------------
 // Constant Values
 //----------------------------------------------------------------------------------
-static const s32 MAX_DEPTH = 32;        //!< 打ち切り深度.
+//static const s32 MAX_DEPTH = 32;        //!< 打ち切り深度.
 
 
 //----------------------------------------------------------------------------------
 // Global Varaibles.
 //----------------------------------------------------------------------------------
-bool    g_WatcherEnd    = false;        //!< ウォッチーの終了フラグ.
-bool    g_IsFinished    = false;        //!< レイトレ終了フラグ.
-u32     g_Width         = 0;            //!< 画像の横幅.
-u32     g_Height        = 0;            //!< 画像の縦幅.
-u32     g_NumSample     = 0;            //!< サンプル数.
-u32     g_NumSubSample  = 0;            //!< サブサンプル数.
-Color*  g_pRT           = nullptr;      //!< レンダーターゲット.
-Mutex   g_Mutex;                        //!< ミューテックス.
+bool        g_WatcherEnd    = false;        //!< ウォッチーの終了フラグ.
+bool        g_IsFinished    = false;        //!< レイトレ終了フラグ.
+bool        g_IsRendered    = false;
+bool        g_ForceExit     = false;
+Color*      g_pRT           = nullptr;      //!< レンダーターゲット.
+App::Config g_Config;                       //!< 設定です.
+Mutex       g_Mutex;                        //!< ミューテックス.
 
 // Lambert
 Matte g_Matte[] = {
@@ -123,24 +122,20 @@ Triangle g_Triangles[] = {
 
     // 上.
     Triangle( 
-        Vector3( 70.0, 50.0, 20.0 ),
-        Vector3( 50.0, 80.0, 10.0 ),
-        Vector3( 30.0, 50.0, 20.0 ),
-        g_pMaterials[4],
-        Vector2( 0.0, 0.0 ),
-        Vector2( 0.5, 1.0 ),
-        Vector2( 1.0, 0.0 )
+        Face3(
+            Vertex( Vector3( 70.0, 50.0, 20.0 ), Vector2( 0.0, 0.0 ) ), 
+            Vertex( Vector3( 50.0, 80.0, 10.0 ), Vector2( 0.5, 1.0 ) ),
+            Vertex( Vector3( 30.0, 50.0, 20.0 ), Vector2( 1.0, 0.0 ) ) ),
+        g_pMaterials[4]
     ), 
 
     // 左.
     Triangle( 
-        Vector3( 70.0, 30.0, 20.0 ),
-        Vector3( 50.0, 70.0, 10.0 ),
-        Vector3( 30.0, 30.0, 20.0 ),
-        g_pMaterials[4],
-        Vector2( 0.0, 0.0 ),
-        Vector2( 0.5, 1.0 ),
-        Vector2( 1.0, 0.0 )
+        Face3(
+            Vertex( Vector3( 70.0, 30.0, 20.0 ), Vector2( 0.0, 0.0 ) ),
+            Vertex( Vector3( 50.0, 70.0, 10.0 ), Vector2( 0.5, 1.0 ) ),
+            Vertex( Vector3( 30.0, 30.0, 20.0 ), Vector2( 1.0, 0.0 ) ) ),
+        g_pMaterials[4]
     ), 
 
 };
@@ -150,80 +145,62 @@ Quad g_Quads[] = {
 
     // 左.
     Quad( 
-            Vector3( 0,  0.0,  250.0 ),
-            Vector3( 0, 100.0, 250.0 ),
-            Vector3( 0, 100.0, 0.0 ),
-            Vector3( 0,  0.0,  0.0 ),
-            g_pMaterials[0],
-            Vector2( 0.0, 0.0 ),
-            Vector2( 0.0, 2.0 ),
-            Vector2( 2.0, 2.0 ),
-            Vector2( 2.0, 0.0 )
+        Face4(
+            Vertex( Vector3( 0,  0.0,  250.0 ), Vector2( 0.0, 0.0 ) ),
+            Vertex( Vector3( 0, 100.0, 250.0 ), Vector2( 0.0, 2.0 ) ),
+            Vertex( Vector3( 0, 100.0, 0.0 ),   Vector2( 2.0, 2.0 ) ),
+            Vertex( Vector3( 0,  0.0,  0.0 ),   Vector2( 2.0, 0.0 ) ) ),
+        g_pMaterials[0]
     ),
 
     // 奥.
     Quad(
-            Vector3( 0,   0.0,  0.0 ),
-            Vector3( 0, 100.0,  0.0 ),
-            Vector3( 100, 100.0,  0.0 ),
-            Vector3( 100,   0.0,  0.0 ),
-            g_pMaterials[0],
-            Vector2( 0.0, 0.0 ),
-            Vector2( 0.0, 2.0 ),
-            Vector2( 2.0, 2.0 ),
-            Vector2( 2.0, 0.0 )
+        Face4(
+            Vertex( Vector3( 0,   0.0,  0.0 ),   Vector2( 0.0, 0.0 ) ),
+            Vertex( Vector3( 0, 100.0,  0.0 ),   Vector2( 0.0, 2.0 ) ),
+            Vertex( Vector3( 100, 100.0,  0.0 ), Vector2( 2.0, 2.0 ) ),
+            Vertex( Vector3( 100,   0.0,  0.0 ), Vector2( 2.0, 0.0 ) ) ),
+        g_pMaterials[0]
     ),
 
     // 手前.
     Quad(
-            Vector3(  100,    0.0, 250.0 ),
-            Vector3(  100,  100.0, 250.0 ),
-            Vector3(  0,  100.0,  250.0 ),
-            Vector3(  0,    0.0,  250.0 ),
-            g_pMaterials[0],
-            Vector2( 0.0, 0.0 ),
-            Vector2( 0.0, 2.0 ),
-            Vector2( 2.0, 2.0 ),
-            Vector2( 2.0, 0.0 )
+        Face4(
+            Vertex( Vector3(  100,    0.0, 250.0 ), Vector2( 0.0, 0.0 ) ),
+            Vertex( Vector3(  100,  100.0, 250.0 ), Vector2( 0.0, 2.0 ) ),
+            Vertex( Vector3(  0,  100.0,  250.0 ),  Vector2( 2.0, 2.0 ) ),
+            Vertex( Vector3(  0,    0.0,  250.0 ),  Vector2( 2.0, 0.0 ) ) ),
+        g_pMaterials[0]
     ),
 
     // 右.
     Quad(
-            Vector3( 100,   0.0,  0.0 ),
-            Vector3( 100, 100.0,  0.0 ),
-            Vector3( 100, 100.0, 250.0 ),
-            Vector3( 100,  0.0, 250.0 ),
-            g_pMaterials[0],
-            Vector2( 0.0, 0.0 ),
-            Vector2( 0.0, 2.0 ),
-            Vector2( 2.0, 2.0 ),
-            Vector2( 2.0, 0.0 )
+        Face4(
+            Vertex( Vector3( 100,   0.0,  0.0 ),   Vector2( 0.0, 0.0 ) ),
+            Vertex( Vector3( 100, 100.0,  0.0 ),   Vector2( 0.0, 2.0 ) ),
+            Vertex( Vector3( 100, 100.0, 250.0 ),  Vector2( 2.0, 2.0 ) ),
+            Vertex( Vector3( 100,  0.0, 250.0 ),   Vector2( 2.0, 0.0 ) ) ),
+        g_pMaterials[0]
     ),
 
     // 上
     Quad(
-            Vector3( 100, 100.0, 250.0 ),
-            Vector3( 100, 100.0,  0.0 ),
-            Vector3( 0, 100.0,  0.0 ),
-            Vector3( 0, 100.0, 250.0 ),
-            g_pMaterials[0],
-            Vector2( 2.0, 0.0 ),
-            Vector2( 2.0, 2.0 ),
-            Vector2( 0.0, 2.0 ),
-            Vector2( 0.0, 0.0 )
+        Face4(
+            Vertex( Vector3( 100, 100.0, 250.0 ),  Vector2( 2.0, 0.0 ) ),
+            Vertex( Vector3( 100, 100.0,  0.0 ),   Vector2( 2.0, 2.0 ) ),
+            Vertex( Vector3( 0, 100.0,  0.0 ),     Vector2( 0.0, 2.0 ) ),
+            Vertex( Vector3( 0, 100.0, 250.0 ),    Vector2( 0.0, 0.0 ) ) ),
+        g_pMaterials[0]
    ),
 
     // 下.
     Quad(
-            Vector3( 0, 0.0, 250.0 ),
-            Vector3( 0, 0.0,  0.0 ),
-            Vector3( 100, 0.0,  0.0 ),
-            Vector3( 100, 0.0, 250.0 ),
-            g_pMaterials[1],
-            Vector2( 0.0, 0.0 ),
-            Vector2( 0.0, 3.0 ),
-            Vector2( 3.0, 3.0 ),
-            Vector2( 3.0, 0.0 )
+        Face4(
+            Vertex( Vector3( 0, 0.0, 250.0 ),      Vector2( 0.0, 0.0 ) ),
+            Vertex( Vector3( 0, 0.0,  0.0 ),       Vector2( 0.0, 3.0 ) ),
+            Vertex( Vector3( 100, 0.0,  0.0 ),     Vector2( 3.0, 3.0 ) ),
+            Vertex( Vector3( 100, 0.0, 250.0 ),    Vector2( 3.0, 0.0 ) ) ),
+        g_pMaterials[1]
    ),
 };
 
@@ -309,8 +286,8 @@ Color Radiance( const Ray &inRay, s3d::Random &rnd )
         arg.prob = pMaterial->GetThreshold();
 
         // 最大深度以上になったら，打ち切るために閾値を急激に下げる.
-        if ( depth > MAX_DEPTH )
-        { arg.prob *= powf( 0.5f, static_cast<f32>( depth - MAX_DEPTH ) ); }
+        if ( depth > g_Config.maxDepth )
+        { arg.prob *= powf( 0.5f, static_cast<f32>( depth - g_Config.maxDepth ) ); }
 
         // ロシアンルーレット!
         if ( arg.random.GetAsF32() >= arg.prob )
@@ -328,9 +305,9 @@ Color Radiance( const Ray &inRay, s3d::Random &rnd )
         ray.Update( record.position, arg.output );
 
         // 重みがゼロなら，以降の結果はゼロとなり無駄な処理になるので打ち切り.
-        if ( ( W.x <= 0.0f )
-          && ( W.y <= 0.0f )
-          && ( W.z <= 0.0f ) )
+        if ( ( W.x <= FLT_EPSILON )
+          && ( W.y <= FLT_EPSILON )
+          && ( W.z <= FLT_EPSILON ) )
         { break; }
     }
 
@@ -424,11 +401,12 @@ void PathTrace
     {
         // 終了フラグを立てる.
         g_IsFinished = true;
+        g_IsRendered = true;
     }
     g_Mutex.Unlock();
 
     // スレッドの終了を待機する.
-    for( u32 i=0; i<(UINT_MAX-10); ++i )
+    for( u32 i=0; i<(UINT_MAX-10); ++i )    // 無限ループ対策.
     {
         // ウォッチャーが終了するまで待ち.
         if ( g_WatcherEnd )
@@ -517,12 +495,12 @@ void TimeWatch( void* )
                     local_time.tm_sec );
 
                 // 結果をBMPファイルに出力.
-                SaveToBMP( filename, g_Width, g_Height, &g_pRT[0].x );
+                SaveToBMP( filename, g_Config.width, g_Config.height, &g_pRT[0].x );
             }
             else
             {
                 // 最終結果をBMPファイルに出力.
-                SaveToBMP( "img/frame/frame.bmp", g_Width, g_Height, &g_pRT[0].x );
+                SaveToBMP( "img/frame/frame.bmp", g_Config.width, g_Config.height, &g_pRT[0].x );
             }
 
             printf_s( "Captured. %lf hour\n", hour );
@@ -536,7 +514,7 @@ void TimeWatch( void* )
         if ( hour >= 1.0 )
         {
             // 最後のフレームをキャプチャー.
-            SaveToBMP( "img/final_frame.bmp", g_Width, g_Height, &g_pRT[0].x );
+            SaveToBMP( "img/final_frame.bmp", g_Config.width, g_Config.height, &g_pRT[0].x );
 
             g_Mutex.Lock();
             {
@@ -545,7 +523,7 @@ void TimeWatch( void* )
             g_Mutex.Unlock();
 
             // ループ脱出.
-            //break;
+            break;
         }
 #endif
 
@@ -554,20 +532,22 @@ void TimeWatch( void* )
         {
             printf_s( "Finished Rendering!!\n" );
 
+            g_IsRendered = true;
+
             FILE* pFile;
             errno_t err = fopen_s( &pFile, "result.txt", "w" );
 
             if ( err == 0 )
             {
                 fprintf( pFile, "Setting : \n" );
-                fprintf( pFile, "    width      = %d\n", g_Width );
-                fprintf( pFile, "    height     = %d\n", g_Height );
-                fprintf( pFile, "    sample     = %d\n", g_NumSample );
-                fprintf( pFile, "    sub sumple = %d\n", g_NumSubSample );
+                fprintf( pFile, "    width      = %d\n", g_Config.width );
+                fprintf( pFile, "    height     = %d\n", g_Config.height );
+                fprintf( pFile, "    sample     = %d\n", g_Config.numSamples );
+                fprintf( pFile, "    sub sumple = %d\n", g_Config.numSubSamples );
                 fprintf( pFile, "Rendering Time %lf (sec)\n", timer.GetElapsedTimeSec() );
                 fprintf( pFile, "               %lf (min)\n", timer.GetElapsedTimeMin() );
                 fprintf( pFile, "               %lf (hour)\n", timer.GetElapsedTimeHour() );
-                fprintf( pFile, "Per Pixel      %lf (msec)\n", timer.GetElapsedTimeMsec() / ( g_Width * g_Height ) );
+                fprintf( pFile, "Per Pixel      %lf (msec)\n", timer.GetElapsedTimeMsec() / ( g_Config.width * g_Config.height ) );
 
                 fclose( pFile );
             }
@@ -582,8 +562,8 @@ void TimeWatch( void* )
             break;
         }
 
-        // 100 msec 寝かせる.
-        Sleep( 100 );
+        // 1 sec 寝かせる.
+        Sleep( 1000 );
     }
 }
 
@@ -626,10 +606,7 @@ void App::Run( Config& config )
     _mkdir( "./img/frame" );
 
     // かっこ悪いけど, グローバルに格納.
-    g_Width        = config.width;
-    g_Height       = config.height;
-    g_NumSample    = config.numSamples;
-    g_NumSubSample = config.numSubSamples;
+    g_Config = config;
 
     // シェイプリスト.
     IShape* pShapes[] = {
@@ -657,12 +634,23 @@ void App::Run( Config& config )
     // レイトレ！
     PathTrace( config.width, config.height, config.numSamples, config.numSubSamples );
 
-    // メモリ解放.
-    if ( g_pBVH )
+    //// メモリ解放.
+    //if ( g_pBVH )
+    //{
+    //    delete g_pBVH;
+    //    g_pBVH = nullptr;
+    //}
+    BVH::DestroyBranch( (BVH*)g_pBVH );
+
+    if ( g_IsFinished )
     {
-        delete g_pBVH;
-        g_pBVH = nullptr;
+        MessageBoxA( nullptr, "レンダリングが正常終了しました!!", "レンダリング終了", MB_ICONINFORMATION | MB_OK );
     }
+    else
+    {
+        MessageBoxA( nullptr, "制限時間内にレンダリングが終了しませんでした...", "レンダリング未完", MB_ICONWARNING | MB_OK );
+    }
+
 }
 
 

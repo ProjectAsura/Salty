@@ -455,6 +455,8 @@ bool OBJMESH::LoadOBJFile(const char *filename)
         return false;
     }
 
+    bool isOptimize = false;
+
     //　ループ
     for( ;; )
     {
@@ -505,8 +507,22 @@ bool OBJMESH::LoadOBJFile(const char *filename)
         //　面
         else if ( 0 == strcmp( buf, "f" ) )
         {
+            if ( !isOptimize )
+            {
+                size_t size = positions.size();
+                positions.resize( size );
+
+                size = texcoords.size();
+                texcoords.resize( size );
+
+                size = normals.size();
+                normals.resize( size );
+
+                isOptimize = true;
+            }
+
             unsigned int iPosition, iTexCoord, iNormal;
-            unsigned int p[4] = {-1}, t[4] = {-1}, n[4] = {-1};    
+            unsigned int p[4] = {-1}, t[4] = {-1}, n[4] = {-1};
             OBJVERTEX vertex;
             dwFaceIndex++;
             dwFaceCount++;
@@ -644,20 +660,26 @@ bool OBJMESH::LoadOBJFile(const char *filename)
     //　ファイルを閉じる
     file.close();
 
-    //　頂点データをコピー
     m_NumVertices = t_vertices.size();
+    t_vertices.resize( m_NumVertices );
+
+    m_NumSubsets = t_subsets.size();
+    t_subsets.resize( m_NumSubsets );
+
+    m_NumIndices = t_indices.size();
+    t_indices.resize( m_NumIndices );
+
+    //　頂点データをコピー
     m_Vertices = new OBJVERTEX[ m_NumVertices ];
     for ( unsigned int i = 0; i<m_NumVertices; i++ )
     { m_Vertices[i] = t_vertices[i]; }
 
     //　サブセットデータをコピー
-    m_NumSubsets = t_subsets.size();
     m_Subsets = new OBJSUBSET[ m_NumSubsets ];
     for ( unsigned int i =0; i<m_NumSubsets; i++ )
     { m_Subsets[i] = t_subsets[i]; }
 
     //　インデックスデータをコピー
-    m_NumIndices = t_indices.size();
     m_Indices = new unsigned int [ m_NumIndices ];
     for ( unsigned int i = 0; i<m_NumIndices; i++ )
     { m_Indices[i] = t_indices[i]; }
@@ -686,17 +708,19 @@ bool OBJMESH::LoadOBJFile(const char *filename)
         }
     }
 
-    if ( m_IsExistNormal && m_IsExistTexCoord )
-    {
-        if ( !ComputeTangent() )
-        {
-            printf_s( "Error : ComputeTangent() Failed.\n" );
-        }
-    }
-    else
-    {
-        printf_s( "Info : Tangent Cannot Compute." );
-    }
+#if 0
+    //if ( m_IsExistNormal && m_IsExistTexCoord )
+    //{
+    //    if ( !ComputeTangent() )
+    //    {
+    //        printf_s( "Error : ComputeTangent() Failed.\n" );
+    //    }
+    //}
+    //else
+    //{
+    //    printf_s( "Info : Tangent Cannot Compute." );
+    //}
+#endif
 
     if ( !m_IsExistTexCoord )
     {
@@ -843,11 +867,15 @@ bool OBJMESH::LoadMTLFile( const char* filename )
     //　ファイルを閉じる
     file.close();
 
-    //　マテリアルデータをコピー
     m_NumMaterials = t_materials.size();
+    t_materials.resize( m_NumMaterials );
+
+    //　マテリアルデータをコピー
     m_Materials = new OBJMATERIAL[ m_NumMaterials ];
     for ( unsigned int i = 0; i<m_NumMaterials; i++ )
         m_Materials[i] = t_materials[i];
+
+    t_materials.clear();
 
     //　正常終了
     return true;
@@ -1272,6 +1300,7 @@ void OBJMESH::WriteDirect( FILE* pFile )
     dataHeader.indexStructureSize    = SMD_INDEX_STRUCT_SIZE;
     dataHeader.materialStructureSize = SMD_MATERIAL_STRUCT_SIZE;
     dataHeader.subsetStructureSize   = SMD_SUBSET_STRUCT_SIZE;
+    dataHeader.textureStructureSize  = SMD_TEXTURE_STRUCT_SIZE;
 
     // ファイルヘッダーを設定.
     SMD_FILE_HEADER fileHeader;
@@ -1333,6 +1362,33 @@ void OBJMESH::WriteDirect( FILE* pFile )
         fwrite( &m_Indices[ i ], sizeof( unsigned int ), 1, pFile );
     }
 
+    std::vector<SMD_TEXTURE> textureList;
+    for( size_t i=0; i<m_NumMaterials; ++i )
+    {
+        bool isFind = false;
+        for( size_t j=0; j<textureList.size(); ++j )
+        {
+            if ( strcmp( textureList[j].filename, m_Materials[i].diffuseMapName ) == 0 )
+            {
+                isFind = true;
+                break;
+            }
+        }
+
+        if ( !isFind )
+        {
+            SMD_TEXTURE texture;
+            strcpy( texture.filename, m_Materials[i].diffuseMapName );
+            textureList.push_back( texture );
+        }
+    }
+
+    if ( textureList.size() > 0 )
+    {
+        size_t size = textureList.size();
+        textureList.resize( size );
+    }
+
     // マテリアルデータを書き込み.
     for( size_t i=0; i<m_NumMaterials; ++i )
     {
@@ -1355,8 +1411,17 @@ void OBJMESH::WriteDirect( FILE* pFile )
         // 面の粗さ.
         material.roughness = m_Materials[ i ].roughness;
 
-        // テクスチャマップ名
-        strcpy( material.diffuseMap, m_Materials[ i ].diffuseMapName );
+        int textureIndex = -1;
+        for( size_t j=0; j<textureList.size(); ++j )
+        {
+            if ( strcmp( textureList[j].filename, m_Materials[i].diffuseMapName ) == 0 )
+            {
+                textureIndex = j;
+                break;
+            }
+        }
+
+        material.diffuseMap = textureIndex;
 
 #if 0
         //printf_s( "ambient  = ( %f, %f, %f )\n", material.ambientR, material.ambientG, material.ambientB );
@@ -1395,6 +1460,14 @@ void OBJMESH::WriteDirect( FILE* pFile )
 
         fwrite( &subset, sizeof( SMD_SUBSET ), 1, pFile );
     }
+
+    for( size_t j=0; j<textureList.size(); ++j )
+    {
+        SMD_TEXTURE texture = textureList[j];
+        fwrite( &texture, sizeof( SMD_TEXTURE ), 1, pFile );
+    }
+
+    textureList.clear();
 }
 
 //-----------------------------------------------------------------------
@@ -1515,6 +1588,7 @@ void OBJMESH::WriteOptimize( FILE* pFile )
     dataHeader.indexStructureSize    = SMD_INDEX_STRUCT_SIZE;
     dataHeader.materialStructureSize = SMD_MATERIAL_STRUCT_SIZE;
     dataHeader.subsetStructureSize   = SMD_SUBSET_STRUCT_SIZE;
+    dataHeader.textureStructureSize  = SMD_TEXTURE_STRUCT_SIZE;
 
     // ファイルヘッダーを設定.
     SMD_FILE_HEADER fileHeader;
@@ -1577,6 +1651,33 @@ void OBJMESH::WriteOptimize( FILE* pFile )
         }
     }
 
+    std::vector<SMD_TEXTURE> textureList;
+    for( size_t i=0; i<m_NumMaterials; ++i )
+    {
+        bool isFind = false;
+        for( size_t j=0; j<textureList.size(); ++j )
+        {
+            if ( strcmp( textureList[j].filename, m_Materials[i].diffuseMapName ) == 0 )
+            {
+                isFind = true;
+                break;
+            }
+        }
+
+        if ( !isFind )
+        {
+            SMD_TEXTURE texture;
+            strcpy( texture.filename, m_Materials[i].diffuseMapName );
+            textureList.push_back( texture );
+        }
+    }
+
+    if ( textureList.size() > 0 )
+    {
+        size_t size = textureList.size();
+        textureList.resize( size );
+    }
+
     // マテリアルデータを書き込み.
     for( size_t i=0; i<m_NumMaterials; ++i )
     {
@@ -1599,8 +1700,17 @@ void OBJMESH::WriteOptimize( FILE* pFile )
         // 面の粗さ
         material.roughness = m_Materials[ i ].roughness;
 
-        // テクスチャマップ名.
-        strcpy( material.diffuseMap, m_Materials[ i ].diffuseMapName );
+        int textureIndex = -1;
+        for( size_t j=0; j<textureList.size(); ++j )
+        {
+            if ( strcmp( textureList[j].filename, m_Materials[i].diffuseMapName ) == 0 )
+            {
+                textureIndex = j;
+                break;
+            }
+        }
+
+        material.diffuseMap = textureIndex;
 
 #if 0
         //printf_s( "ambient  = ( %f, %f, %f )\n", material.ambientR, material.ambientG, material.ambientB );
@@ -1639,6 +1749,14 @@ void OBJMESH::WriteOptimize( FILE* pFile )
 
         fwrite( &subset, sizeof( SMD_SUBSET ), 1, pFile );
     }
+
+    for( size_t j=0; j<textureList.size(); ++j )
+    {
+        SMD_TEXTURE texture = textureList[j];
+        fwrite( &texture, sizeof( SMD_TEXTURE ), 1, pFile );
+    }
+
+    textureList.clear();
 
     // 不要なメモリを解放.
     delete [] pSortedSubsets;

@@ -14,14 +14,10 @@
 struct SMD_DATA_HEADER
 {
     unsigned int numVertices;               //!< 頂点数です.
-    unsigned int numIndices;                //!< インデックス数です.
     unsigned int numMaterials;              //!< マテリアル数です.
-    unsigned int numSubsets;                //!< サブセット数です.
     unsigned int numTextures;               //!< テクスチャ数です.
     unsigned int vertexStructureSize;       //!< 頂点構造体のサイズです.
-    unsigned int indexStructureSize;        //!< 頂点インデックス構造体のサイズです.
     unsigned int materialStructureSize;     //!< マテリアル構造体のサイズです.
-    unsigned int subsetStructureSize;       //!< サブセット構造体のサイズです.
     unsigned int textureStructureSize;      //!< テクスチャ構造体のサイズです.
 };
 
@@ -64,6 +60,27 @@ struct SMD_DVEC4
     double   y;
     double   z;
     double   w;
+};
+
+struct SMD_FVEC2
+{
+    float   x;
+    float   y;
+};
+
+struct SMD_FVEC3
+{
+    float   x;
+    float   y;
+    float   z;
+};
+
+struct SMD_FVEC4
+{
+    float   x;
+    float   y;
+    float   z;
+    float   w;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -137,14 +154,31 @@ struct SMD_DMTX44
     double _41, _42, _43, _44;
 };
 
+struct SMD_FMTX44
+{
+    float   _11, _12, _13, _14;
+    float   _21, _22, _23, _24;
+    float   _31, _32, _33, _34;
+    float   _41, _42, _43, _44;
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 // SMD_VERTEX structure
 ///////////////////////////////////////////////////////////////////////////////
 struct SMD_VERTEX
 {
-    SMD_DVEC3   position;           //!< 位置座標です.
-    SMD_DVEC3   normal;             //!< 法線ベクトルです.
-    SMD_DVEC2   texcoord;           //!< テクスチャ座標です.
+    SMD_FVEC3   position;           //!< 位置座標です.
+    SMD_FVEC3   normal;             //!< 法線ベクトルです.
+    SMD_FVEC2   texcoord;           //!< テクスチャ座標です.
+};
+
+///////////////////////////////////////////////////////////////////////////////
+// SMD_TRIANGLE structure
+///////////////////////////////////////////////////////////////////////////////
+struct SMD_TRIANGLE
+{
+    SMD_VERTEX    vertex[3];        //!< 頂点座標です.
+    int           materialId;       //!< マテリアルインデックスです.
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -152,10 +186,10 @@ struct SMD_VERTEX
 ///////////////////////////////////////////////////////////////////////////////
 struct SMD_MATERIAL
 {
-    SMD_DVEC3   diffuse;                //!< 拡散反射色です.
-    SMD_DVEC3   emissive;               //!< 自己照明色です.
-    double      refractivity;           //!< 屈折率です.
-    double      roughness;              //!< 面の粗さです.
+    SMD_FVEC3   diffuse;                //!< 拡散反射色です.
+    SMD_FVEC3   emissive;               //!< 自己照明色です.
+    float       refractivity;           //!< 屈折率です.
+    float       roughness;              //!< 面の粗さです.
     int         diffuseMap;             //!< ディフューズマップ名です.
 };
 

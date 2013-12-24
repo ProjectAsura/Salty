@@ -1290,16 +1290,55 @@ OBJBOUNDINGSPHERE OBJMESH::GetSphere()
 //-----------------------------------------------------------------------
 void OBJMESH::WriteDirect( FILE* pFile )
 {
+    // テクスチャファイル名リストを生成します.
+    std::vector<SMD_TEXTURE> textureList;
+
+    // マテリアル数だけループします.
+    for (size_t i = 0; i<m_NumMaterials; ++i)
+    {
+        // 発見フラグをOFF.
+        bool isFind = false;
+
+        // すでにリストに登録されているかをチェックしながらリストを構築.
+        for (size_t j = 0; j<textureList.size(); ++j)
+        {
+            // 格納済みかチェック.
+            if (strcmp(textureList[j].filename, m_Materials[i].diffuseMapName) == 0)
+            {
+                // 発見フラグON.
+                isFind = true;
+
+                // ループを脱出.
+                break;
+            }
+        }
+
+        // 発見されていなければ追加する.
+        if (!isFind)
+        {
+            // データ設定.
+            SMD_TEXTURE texture;
+            strcpy(texture.filename, m_Materials[i].diffuseMapName);
+
+            // 末尾に格納.
+            textureList.push_back(texture);
+        }
+    }
+
+    // メモリサイズを最適化する.
+    if (textureList.size() > 0)
+    {
+        size_t size = textureList.size();
+        textureList.resize(size);
+    }
+
     // データヘッダーを設定.
     SMD_DATA_HEADER dataHeader;
     dataHeader.numVertices  = m_NumVertices;
-    dataHeader.numIndices   = m_NumIndices;
     dataHeader.numMaterials = m_NumMaterials;
-    dataHeader.numSubsets   = m_NumSubsets;
+    dataHeader.numTextures = (unsigned int)textureList.size();
     dataHeader.vertexStructureSize   = SMD_VERTEX_STRUCT_SIZE;
-    dataHeader.indexStructureSize    = SMD_INDEX_STRUCT_SIZE;
     dataHeader.materialStructureSize = SMD_MATERIAL_STRUCT_SIZE;
-    dataHeader.subsetStructureSize   = SMD_SUBSET_STRUCT_SIZE;
     dataHeader.textureStructureSize  = SMD_TEXTURE_STRUCT_SIZE;
 
     // ファイルヘッダーを設定.
@@ -1320,79 +1359,49 @@ void OBJMESH::WriteDirect( FILE* pFile )
     // ヘッダーを書き込み.
     fwrite( &fileHeader, sizeof( SMD_FILE_HEADER ), 1, pFile );
 
-    // 頂点データを書き込み.
-    for( size_t i=0; i<m_NumVertices; ++i )
+    // サブセットをデータを書き込み.
+    for (size_t i = 0; i<m_NumSubsets; ++i)
     {
-        SMD_VERTEX vertex;
-        ZeroMemory( &vertex, sizeof( SMD_VERTEX ) );
-
-        // 位置座標.
-        vertex.position.x = static_cast<double>( m_Vertices[ i ].position.x );
-        vertex.position.y = static_cast<double>( m_Vertices[ i ].position.y );
-        vertex.position.z = static_cast<double>( m_Vertices[ i ].position.z );
-        
-        // 法線ベクトル.
-        vertex.normal.x   = static_cast<double>( m_Vertices[ i ].normal.x );
-        vertex.normal.y   = static_cast<double>( m_Vertices[ i ].normal.y );
-        vertex.normal.z   = static_cast<double>( m_Vertices[ i ].normal.z );
-
-        // テクスチャ座標.
-        vertex.texcoord.x = static_cast<double>( m_Vertices[ i ].texcoord.x );
-        vertex.texcoord.y = static_cast<double>( m_Vertices[ i ].texcoord.y );
-
-#if 0
-        printf_s( "vertex[ %d ] : \n", i );
-        printf_s( "position = ( %f, %f, %f )\n", vertex.position.x, vertex.position.y, vertex.position.z );
-        printf_s( "normal   = ( %f, %f, %f )\n", vertex.normal.x, vertex.normal.y, vertex.normal.z );
-        printf_s( "tangent  = ( %f, %f, %f )\n", vertex.tangent.x, vertex.tangent.y, vertex.tangent.z );
-        printf_s( "texcoord = ( %f, %f )\n", vertex.texcoord.x, vertex.texcoord.y );
-        printf_s( "\n" );
-#endif
-
-        fwrite( &vertex, sizeof( SMD_VERTEX ), 1, pFile );
-    }
-
-    // 頂点インデックスを書き込み.
-    for( size_t i=0; i<m_NumIndices; ++i )
-    {
-#if 0
-        //printf_s( "index[ %d ] = %d\n", i, m_Indices[ i ] );
-#endif
-
-        fwrite( &m_Indices[ i ], sizeof( unsigned int ), 1, pFile );
-    }
-
-    std::vector<SMD_TEXTURE> textureList;
-    for( size_t i=0; i<m_NumMaterials; ++i )
-    {
-        bool isFind = false;
-        for( size_t j=0; j<textureList.size(); ++j )
+        for (size_t j = 0; j < m_Subsets[i].faceCount; j+=3)
         {
-            if ( strcmp( textureList[j].filename, m_Materials[i].diffuseMapName ) == 0 )
+            // 頂点インデックスを算出.
+            unsigned int idx = m_Subsets[i].faceStart + j;
+
+            // 格納用三角形データです.
+            SMD_TRIANGLE triangle;
+
+            // 頂点データを設定します.
+            for (size_t k = 0; k < 3; ++k)
             {
-                isFind = true;
-                break;
+                // 位置座標を設定.
+                triangle.vertex[k].position.x = m_Vertices[idx + k].position.x;
+                triangle.vertex[k].position.y = m_Vertices[idx + k].position.y;
+                triangle.vertex[k].position.z = m_Vertices[idx + k].position.z;
+
+                // 法線ベクトルを設定.
+                triangle.vertex[k].normal.x = m_Vertices[idx + k].normal.x;
+                triangle.vertex[k].normal.y = m_Vertices[idx + k].normal.y;
+                triangle.vertex[k].normal.z = m_Vertices[idx + k].normal.z;
+
+                // テクスチャ座標を設定.
+                triangle.vertex[k].texcoord.x = m_Vertices[idx + k].texcoord.x;
+                triangle.vertex[k].texcoord.y = m_Vertices[idx + k].texcoord.y;
             }
-        }
 
-        if ( !isFind )
-        {
-            SMD_TEXTURE texture;
-            strcpy( texture.filename, m_Materials[i].diffuseMapName );
-            textureList.push_back( texture );
-        }
-    }
+            // マテリアル番号を設定.
+            triangle.materialId = m_Subsets[i].materialIndex;
 
-    if ( textureList.size() > 0 )
-    {
-        size_t size = textureList.size();
-        textureList.resize( size );
+            // 三角形データを書き込み.
+            fwrite(&triangle, sizeof(SMD_TRIANGLE), 1, pFile);
+        }
     }
 
     // マテリアルデータを書き込み.
     for( size_t i=0; i<m_NumMaterials; ++i )
     {
         SMD_MATERIAL material;
+
+        // ゼロクリアする.
         ZeroMemory( &material, sizeof( SMD_MATERIAL ) );
 
         // 拡散反射色.
@@ -1411,16 +1420,22 @@ void OBJMESH::WriteDirect( FILE* pFile )
         // 面の粗さ.
         material.roughness = m_Materials[ i ].roughness;
 
+        // テクスチャインデックスを求める.
         int textureIndex = -1;
         for( size_t j=0; j<textureList.size(); ++j )
         {
+            // リストに登録されているかチェック.
             if ( strcmp( textureList[j].filename, m_Materials[i].diffuseMapName ) == 0 )
             {
+                // 発見したインデックスを設定.
                 textureIndex = j;
+
+                // ループ脱出.
                 break;
             }
         }
 
+        // テクスチャインデックスを設定する.
         material.diffuseMap = textureIndex;
 
 #if 0
@@ -1438,35 +1453,18 @@ void OBJMESH::WriteDirect( FILE* pFile )
         //printf_s( "\n" );
 #endif
 
+        // マテリアルデータを書き込む.
         fwrite( &material, sizeof( SMD_MATERIAL ), 1, pFile );
     }
 
-    // サブセットをデータを書き込み.
-    for( size_t i=0; i<m_NumSubsets; ++i )
-    {
-        SMD_SUBSET subset;
-        ZeroMemory( &subset, sizeof( SMD_SUBSET ) );
-
-        subset.indexOffset   = m_Subsets[ i ].faceStart;
-        subset.indexCount    = m_Subsets[ i ].faceCount;
-        subset.materialIndex = m_Subsets[ i ].materialIndex;
-    
-#if 0
-        //printf_s( "indexOffset  = %d\n", subset.indexOffset );
-        //printf_s( "indexCount   = %d\n", subset.indexCount );
-        //printf_s( "materalIndex = %d\n", subset.materialIndex );
-        //printf_s( "\n" );
-#endif
-
-        fwrite( &subset, sizeof( SMD_SUBSET ), 1, pFile );
-    }
-
+    // テクスチャファイル名を書き込む.
     for( size_t j=0; j<textureList.size(); ++j )
     {
         SMD_TEXTURE texture = textureList[j];
         fwrite( &texture, sizeof( SMD_TEXTURE ), 1, pFile );
     }
 
+    // 不要なメモリを破棄.
     textureList.clear();
 }
 
@@ -1578,16 +1576,55 @@ void OBJMESH::WriteOptimize( FILE* pFile )
     //}
 #endif
 
+    // テクスチャファイルリストを構築する.
+    std::vector<SMD_TEXTURE> textureList;
+
+    // マテリアル数だけループする.
+    for (size_t i = 0; i<m_NumMaterials; ++i)
+    {
+        // 発見フラグをOFF.
+        bool isFind = false;
+
+        // リストに登録されているかチェックしながらリストに登録する.
+        for (size_t j = 0; j<textureList.size(); ++j)
+        {
+            // リストに格納されているかチェック.
+            if (strcmp(textureList[j].filename, m_Materials[i].diffuseMapName) == 0)
+            {
+                // 発見フラグをON.
+                isFind = true;
+
+                // ループ脱出.
+                break;
+            }
+        }
+
+        // 発見されていなければ登録する.
+        if (!isFind)
+        {
+            // ファイル名を設定.
+            SMD_TEXTURE texture;
+            strcpy(texture.filename, m_Materials[i].diffuseMapName);
+
+            // 末尾に登録.
+            textureList.push_back(texture);
+        }
+    }
+
+    // メモリサイズを最適化.
+    if (textureList.size() > 0)
+    {
+        size_t size = textureList.size();
+        textureList.resize(size);
+    }
+
     // データヘッダーを設定.
     SMD_DATA_HEADER dataHeader;
     dataHeader.numVertices  = m_NumVertices;
-    dataHeader.numIndices   = m_NumIndices;
     dataHeader.numMaterials = m_NumMaterials;
-    dataHeader.numSubsets   = m_NumMaterials;
+    dataHeader.numTextures = (unsigned int)textureList.size();
     dataHeader.vertexStructureSize   = SMD_VERTEX_STRUCT_SIZE;
-    dataHeader.indexStructureSize    = SMD_INDEX_STRUCT_SIZE;
     dataHeader.materialStructureSize = SMD_MATERIAL_STRUCT_SIZE;
-    dataHeader.subsetStructureSize   = SMD_SUBSET_STRUCT_SIZE;
     dataHeader.textureStructureSize  = SMD_TEXTURE_STRUCT_SIZE;
 
     // ファイルヘッダーを設定.
@@ -1608,80 +1645,49 @@ void OBJMESH::WriteOptimize( FILE* pFile )
     // ヘッダーを書き込み.
     fwrite( &fileHeader, sizeof( SMD_FILE_HEADER ), 1, pFile );
 
-
-    // 頂点データはそのまま書き込み.
-    for( size_t i=0; i<m_NumVertices; ++i )
+    // 整形済みサブセットは最終的にはマテリアル数と一致するので，マテリアル数分だけループする.
+    for (size_t i = 0; i < m_NumMaterials; ++i)
     {
-        SMD_VERTEX vertex;
-        ZeroMemory( &vertex, sizeof( SMD_VERTEX ) );
+        // 頂点インデックスです.
+        unsigned int idx = pSortedSubsets[i].faceStart;
 
-        // 位置座標.
-        vertex.position.x = static_cast<double>( m_Vertices[ i ].position.x );
-        vertex.position.y = static_cast<double>( m_Vertices[ i ].position.y );
-        vertex.position.z = static_cast<double>( m_Vertices[ i ].position.z );
-        
-        // 法線ベクトル.
-        vertex.normal.x   = static_cast<double>( m_Vertices[ i ].normal.x );
-        vertex.normal.y   = static_cast<double>( m_Vertices[ i ].normal.y );
-        vertex.normal.z   = static_cast<double>( m_Vertices[ i ].normal.z );
-
-        // テクスチャ座標.
-        vertex.texcoord.x = static_cast<double>( m_Vertices[ i ].texcoord.x );
-        vertex.texcoord.y = static_cast<double>( m_Vertices[ i ].texcoord.y );
-
-#if 0
-        printf_s( "vertex[ %d ] : \n", i );
-        printf_s( "position = ( %f, %f, %f )\n", vertex.position.x, vertex.position.y, vertex.position.z );
-        printf_s( "normal   = ( %f, %f, %f )\n", vertex.normal.x, vertex.normal.y, vertex.normal.z );
-        printf_s( "tangent  = ( %f, %f, %f )\n", vertex.tangent.x, vertex.tangent.y, vertex.tangent.z );
-        printf_s( "texcoord = ( %f, %f )\n", vertex.texcoord.x, vertex.texcoord.y );
-        printf_s( "\n" );
-#endif
-
-        fwrite( &vertex, sizeof( SMD_VERTEX ), 1, pFile );
-    }
-
-    // インデックスデータはクイックソートしたデータを利用して書き込み.
-    for( size_t i=0; i<m_NumSubsets; ++i )
-    {
-        for( size_t j=0; j<pSubsets[ i ].faceCount; ++j )
+        // 頂点数だけ処理します.
+        for (size_t j = 0; j < pSortedSubsets[i].faceCount; j+=3)
         {
-            unsigned int index = m_Indices[ pSubsets[ i ].faceStart + j ];
-            fwrite( &index, sizeof( unsigned int ), 1, pFile );
-        }
-    }
+            // 格納用三角形データです.
+            SMD_TRIANGLE triangle;
 
-    std::vector<SMD_TEXTURE> textureList;
-    for( size_t i=0; i<m_NumMaterials; ++i )
-    {
-        bool isFind = false;
-        for( size_t j=0; j<textureList.size(); ++j )
-        {
-            if ( strcmp( textureList[j].filename, m_Materials[i].diffuseMapName ) == 0 )
+            // 頂点データを設定します.
+            for (size_t k = 0; k < 3; ++k)
             {
-                isFind = true;
-                break;
+                // 位置座標データを設定します.
+                triangle.vertex[k].position.x = m_Vertices[idx + k].position.x;
+                triangle.vertex[k].position.y = m_Vertices[idx + k].position.y;
+                triangle.vertex[k].position.z = m_Vertices[idx + k].position.z;
+
+                // 法線ベクトルデータを設定します.
+                triangle.vertex[k].normal.x = m_Vertices[idx + k].normal.x;
+                triangle.vertex[k].normal.y = m_Vertices[idx + k].normal.y;
+                triangle.vertex[k].normal.z = m_Vertices[idx + k].normal.z;
+
+                // テクスチャ座標データを設定します.
+                triangle.vertex[k].texcoord.x = m_Vertices[idx + k].texcoord.x;
+                triangle.vertex[k].texcoord.y = m_Vertices[idx + k].texcoord.y;
             }
-        }
 
-        if ( !isFind )
-        {
-            SMD_TEXTURE texture;
-            strcpy( texture.filename, m_Materials[i].diffuseMapName );
-            textureList.push_back( texture );
-        }
-    }
+            // マテリアルインデックスを設定します.
+            triangle.materialId = pSortedSubsets[i].materialIndex;
 
-    if ( textureList.size() > 0 )
-    {
-        size_t size = textureList.size();
-        textureList.resize( size );
+            // 三角形データを書き込みます.
+            fwrite(&triangle, sizeof(SMD_TRIANGLE), 1, pFile);
+        }
     }
 
     // マテリアルデータを書き込み.
     for( size_t i=0; i<m_NumMaterials; ++i )
     {
         SMD_MATERIAL material;
+        // ゼロクリア.
         ZeroMemory( &material, sizeof( SMD_MATERIAL ) );
 
         // 拡散反射色.
@@ -1700,6 +1706,7 @@ void OBJMESH::WriteOptimize( FILE* pFile )
         // 面の粗さ
         material.roughness = m_Materials[ i ].roughness;
 
+        // テクスチャインデックスを探し出す.
         int textureIndex = -1;
         for( size_t j=0; j<textureList.size(); ++j )
         {
@@ -1710,6 +1717,7 @@ void OBJMESH::WriteOptimize( FILE* pFile )
             }
         }
 
+        // テクスチャインデックスを設定.
         material.diffuseMap = textureIndex;
 
 #if 0
@@ -1727,35 +1735,18 @@ void OBJMESH::WriteOptimize( FILE* pFile )
         //printf_s( "\n" );
 #endif
 
+        // マテリアルデータを書き込みます.
         fwrite( &material, sizeof( SMD_MATERIAL ), 1, pFile );
     }
 
-    // サブセットをデータを書き込み.
-    for( size_t i=0; i<m_NumMaterials; ++i )
-    {
-        SMD_SUBSET subset;
-        ZeroMemory( &subset, sizeof( SMD_SUBSET ) );
-
-        subset.indexOffset   = pSortedSubsets[ i ].faceStart;
-        subset.indexCount    = pSortedSubsets[ i ].faceCount;
-        subset.materialIndex = pSortedSubsets[ i ].materialIndex;
-    
-#if 0
-        //printf_s( "indexOffset  = %d\n", subset.indexOffset );
-        //printf_s( "indexCount   = %d\n", subset.indexCount );
-        //printf_s( "materalIndex = %d\n", subset.materialIndex );
-        //printf_s( "\n" );
-#endif
-
-        fwrite( &subset, sizeof( SMD_SUBSET ), 1, pFile );
-    }
-
+    // テクスチャファイル名を書き出す.
     for( size_t j=0; j<textureList.size(); ++j )
     {
         SMD_TEXTURE texture = textureList[j];
         fwrite( &texture, sizeof( SMD_TEXTURE ), 1, pFile );
     }
 
+    // テクスチャリストを解放.
     textureList.clear();
 
     // 不要なメモリを解放.
@@ -1782,14 +1773,14 @@ bool OBJMESH::SaveToBinary( const char* filename )
         return false;
     }
 
-    // 最適化の必要がないのでそのまま書き込み.
     if ( m_NumMaterials == m_NumSubsets )
     {
+        // 最適化の必要がないのでそのまま書き込み.
         WriteDirect( pFile );
     }
-    // 最適化しながら書き込み.
     else
     {
+        // 最適化しながら書き込み.
         WriteOptimize( pFile );
     }
 

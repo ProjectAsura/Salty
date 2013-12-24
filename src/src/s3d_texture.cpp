@@ -13,6 +13,7 @@
 #include <cassert>
 #include <cstdio>
 
+
 namespace s3d {
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -38,7 +39,9 @@ Texture2D::Texture2D( const char* filename )
 , m_Size        ( 0 )
 , m_pPixels     ( nullptr )
 {
-    if ( filename != nullptr && filename[0] != 0 && filename[0] != '\0' )
+    if ( ( filename != nullptr )
+      && ( filename[0] != 0 )
+      && ( filename[0] != '\0' ) )
     {
         bool result = LoadFromFile( filename );
         assert( result == true );

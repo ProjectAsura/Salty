@@ -23,6 +23,7 @@ enum TEXTURE_ADDRESS_MODE
     TEXTURE_ADDRESS_WRAP = 0,       //!< 0.0 ～ 1.0 の範囲外の値の場合に，テクスチャ画像を繰り返し適用します.
     TEXTURE_ADDRESS_CLAMP,          //!< テクスチャ座標を 0.0 ～ 1.0 の範囲に制限します。範囲外の部分は淵部分が引き伸ばされます.
     TEXTURE_ADDRESS_BORADER,        //!< テクスチャ座標を 0.0 ～ 1.0 の範囲に制限します。範囲外の部分は境界色になります.
+    //TEXTURE_ADDRESS_MIRROR
 };
 
 

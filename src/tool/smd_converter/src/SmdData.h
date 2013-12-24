@@ -188,8 +188,6 @@ struct SMD_MATERIAL
 {
     SMD_FVEC3   diffuse;                //!< 拡散反射色です.
     SMD_FVEC3   emissive;               //!< 自己照明色です.
-    float       refractivity;           //!< 屈折率です.
-    float       roughness;              //!< 面の粗さです.
     int         diffuseMap;             //!< ディフューズマップ名です.
 };
 

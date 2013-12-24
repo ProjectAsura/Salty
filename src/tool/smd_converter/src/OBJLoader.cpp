@@ -809,16 +809,6 @@ bool OBJMESH::LoadMTLFile( const char* filename )
         {
             file >> t_materials[iMtlCount].shininess;
         }
-        // Refraction // Project Asura Original Tag.
-        else if ( 0 == strcmp( buf, "Rr" ) )
-        {
-            file >> t_materials[iMtlCount].refractivity;
-        }
-        // Roughness // Project Asura Original Tag.
-        else if ( 0 == strcmp( buf, "Kr" ) )
-        {
-            file >> t_materials[iMtlCount].roughness;
-        }
         // Ambient Map
         else if ( 0 == strcmp( buf, "map_Ka" ) )
         {
@@ -1414,12 +1404,6 @@ void OBJMESH::WriteDirect( FILE* pFile )
         material.emissive.y = m_Materials[ i ].emissive.y;
         material.emissive.z = m_Materials[ i ].emissive.z;
 
-        // 屈折率.
-        material.refractivity = m_Materials[ i ].refractivity;
-
-        // 面の粗さ.
-        material.roughness = m_Materials[ i ].roughness;
-
         // テクスチャインデックスを求める.
         int textureIndex = -1;
         for( size_t j=0; j<textureList.size(); ++j )
@@ -1699,12 +1683,6 @@ void OBJMESH::WriteOptimize( FILE* pFile )
         material.emissive.x = m_Materials[ i ].emissive.x;
         material.emissive.y = m_Materials[ i ].emissive.y;
         material.emissive.z = m_Materials[ i ].emissive.z;
-
-        // 屈折率.
-        material.refractivity = m_Materials[ i ].refractivity;
-
-        // 面の粗さ
-        material.roughness = m_Materials[ i ].roughness;
 
         // テクスチャインデックスを探し出す.
         int textureIndex = -1;

@@ -34,6 +34,7 @@
     <ClCompile Include="..\src\s3d_bmp.cpp" />
     <ClCompile Include="..\src\s3d_bvh.cpp" />
     <ClCompile Include="..\src\s3d_material.cpp" />
+    <ClCompile Include="..\src\s3d_mesh.cpp" />
     <ClCompile Include="..\src\s3d_mutex.cpp" />
     <ClCompile Include="..\src\s3d_onb.cpp" />
     <ClCompile Include="..\src\s3d_shape.cpp" />

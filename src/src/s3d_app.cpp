@@ -18,6 +18,7 @@
 #include <s3d_mutex.h>
 #include <s3d_onb.h>
 #include <s3d_bvh.h>
+#include <s3d_qbvh.h>
 #include <s3d_mesh.h>
 
 #include <iostream>
@@ -25,6 +26,38 @@
 #include <ctime>
 #include <process.h>
 
+
+namespace /* anonymous */ {
+
+//----------------------------------------------------------------------------
+//! @brief      CPUコアの数を取得します.
+//----------------------------------------------------------------------------
+u32 GetNumCPUCore()
+{
+    u32 numCore = 1;
+    
+#if S3D_NDEBUG // リリースビルド時のみ有効化.
+    HANDLE process = GetCurrentProcess();
+    
+    DWORD_PTR  processMask;
+    DWORD_PTR  systemMask;
+    BOOL succeeded = GetProcessAffinityMask( process, &processMask, &systemMask );
+    if ( succeeded != 0 )
+    {
+        for( u64 i=1; i<32; ++i )
+        {
+            if ( processMask & (DWORD_PTR)( 1 << i ) )
+            {
+                ++numCore;
+            }
+        }
+    }
+#endif//S3D_NDEBUG
+
+    return numCore;
+}
+
+} // namespace /* anonymous */
 
 namespace s3d {
 
@@ -72,13 +105,17 @@ bool        g_IsFinished    = false;        //!< レイトレ終了フラグ.
 bool        g_IsRendered    = false;
 bool        g_ForceExit     = false;
 Color*      g_pRT           = nullptr;      //!< レンダーターゲット.
-App::Config g_Config;                       //!< 設定です.
+Config      g_Config;                       //!< 設定です.
 Mutex       g_Mutex;                        //!< ミューテックス.
+
+Texture2D   g_TextureWall( "./res/texture/wall.bmp" );
+Texture2D   g_TextureTile( "./res/texture/tile.bmp" );
+TextureSampler g_Sampler = TextureSampler();
 
 // Lambert
 Matte g_Matte[] = {
-    Matte( Color( 0.75f, 0.75f, 0.75f ), "./res/texture/wall.bmp" ),
-    Matte( Color( 0.75f, 0.75f, 0.75f ), "./res/texture/tile.bmp" ),
+    Matte( Color( 0.75f, 0.75f, 0.75f ), Color( 0.0f, 0.0f, 0.0f ), &g_TextureWall, &g_Sampler ),
+    Matte( Color( 0.75f, 0.75f, 0.75f ), Color( 0.0f, 0.0f, 0.0f ), &g_TextureTile, &g_Sampler ),
     Matte( Color( 0.0f,  0.0f,  0.0f  ), Color( 36.0f, 36.0f, 36.0f ) ),
 };
 
@@ -89,9 +126,9 @@ Mirror g_Mirror[] = {
 };
 
 // Refraction (Crystal)
-Transparent g_Crystal[] = {
-    Transparent( 1.54f, Color( 0.75f, 0.25f, 0.25f ) ),
-    Transparent( 2.5f,  Color( 1.0f,  1.0f,  1.0f  ) ),
+Glass g_Crystal[] = {
+    Glass( 1.54f, Color( 0.75f, 0.25f, 0.25f ) ),
+    Glass( 2.5f,  Color( 1.0f,  1.0f,  1.0f  ) ),
 };
 
 // Phong
@@ -204,6 +241,8 @@ Quad g_Quads[] = {
    ),
 };
 
+Mesh g_Mesh;
+
 
 // 境界ボリューム階層.
 IShape* g_pBVH = nullptr;
@@ -280,14 +319,23 @@ Color Radiance( const Ray &inRay, s3d::Random &rnd )
         // 自己発光による放射輝度.
         L += Color::Mul( W, pMaterial->GetEmissive() );
 
+#if 0
+        /* 衝突判定のデバッグ */
+        //{
+        //    // 乱数を更新.
+        //    rnd = arg.random;
+        //    return pMaterial->GetDebugColor();
+        //}
+#endif
+
         // 色の反射率最大のものを得る。ロシアンルーレットで使う。
         // ロシアンルーレットの閾値は任意だが色の反射率等を使うとより良い ... らしい。
         // Memo : 閾値を平均とかにすると，うまい具合にばらけず偏ったりしたので上記を守るのが一番良さげ.
         arg.prob = pMaterial->GetThreshold();
 
         // 最大深度以上になったら，打ち切るために閾値を急激に下げる.
-        if ( depth > g_Config.maxDepth )
-        { arg.prob *= powf( 0.5f, static_cast<f32>( depth - g_Config.maxDepth ) ); }
+        if ( depth > g_Config.MaxDepth )
+        { arg.prob *= powf( 0.5f, static_cast<f32>( depth - g_Config.MaxDepth ) ); }
 
         // ロシアンルーレット!
         if ( arg.random.GetAsF32() >= arg.prob )
@@ -330,15 +378,20 @@ void PathTrace
     const s32 supersamples
 ) 
 {
+    u32 numCore = GetNumCPUCore();
+    if ( numCore > 1 )
+    {
+        numCore--;
+    }
+
     // カメラ更新.
     Camera camera;
     camera.Update( 
         Vector3( 50.0f, 52.0f, 220.0f ),
         Vector3( 50.0f, 50.0f, 180.0f ),
         Vector3( 0.0f, 1.0f, 0.0f ),
-        width,
-        height,
         F_PIDIV4,
+        (f32)width / (f32)height,
         1.0f );
 
     // レンダーターゲットのメモリを確保.
@@ -374,7 +427,7 @@ void PathTrace
         for (s32 s = 0; s < samples; s ++)
         {
         #if _OPENMP
-            #pragma omp parallel for schedule(dynamic, 1) num_threads(8)
+            #pragma omp parallel for schedule(dynamic, 1) num_threads(numCore)
         #endif
             // 縦方向のループ.
             for ( s32 y = 0; y < height; ++y ) 
@@ -472,7 +525,7 @@ void TimeWatch( void* )
 
         // レンダリング開始してからの時間を取得.
         timer.Stop();
-        f64 hour = timer.GetElapsedTimeHour();
+        f64 min = timer.GetElapsedTimeMin();
 
         // 59.9秒以上立ったらキャプチャー.
         if ( sec > 59.9 )
@@ -495,26 +548,27 @@ void TimeWatch( void* )
                     local_time.tm_sec );
 
                 // 結果をBMPファイルに出力.
-                SaveToBMP( filename, g_Config.width, g_Config.height, &g_pRT[0].x );
+                SaveToBMP( filename, g_Config.Width, g_Config.Height, &g_pRT[0].x );
             }
             else
             {
                 // 最終結果をBMPファイルに出力.
-                SaveToBMP( "img/frame/frame.bmp", g_Config.width, g_Config.height, &g_pRT[0].x );
+                SaveToBMP( "img/frame/frame.bmp", g_Config.Width, g_Config.Height, &g_pRT[0].x );
             }
 
-            printf_s( "Captured. %lf hour\n", hour );
+            printf_s( "Captured. %lf min\n", min );
 
             // タイマーを再スタート.
             captureTimer.Start();
         }
 
-#if 1
+#if 0
         // 1時間以上たった
-        if ( hour >= 1.0 )
+        if ( min >= 60.0 )
         {
             // 最後のフレームをキャプチャー.
-            SaveToBMP( "img/final_frame.bmp", g_Config.width, g_Config.height, &g_pRT[0].x );
+            SaveToBMP( "img/final_frame.bmp", g_Config.Width, g_Config.Height, &g_pRT[0].x );
+            printf_s( "Time Over...\n" );
 
             g_Mutex.Lock();
             {
@@ -540,14 +594,13 @@ void TimeWatch( void* )
             if ( err == 0 )
             {
                 fprintf( pFile, "Setting : \n" );
-                fprintf( pFile, "    width      = %d\n", g_Config.width );
-                fprintf( pFile, "    height     = %d\n", g_Config.height );
-                fprintf( pFile, "    sample     = %d\n", g_Config.numSamples );
-                fprintf( pFile, "    sub sumple = %d\n", g_Config.numSubSamples );
+                fprintf( pFile, "    width      = %d\n", g_Config.Width );
+                fprintf( pFile, "    height     = %d\n", g_Config.Height );
+                fprintf( pFile, "    sample     = %d\n", g_Config.NumSamples );
                 fprintf( pFile, "Rendering Time %lf (sec)\n", timer.GetElapsedTimeSec() );
                 fprintf( pFile, "               %lf (min)\n", timer.GetElapsedTimeMin() );
                 fprintf( pFile, "               %lf (hour)\n", timer.GetElapsedTimeHour() );
-                fprintf( pFile, "Per Pixel      %lf (msec)\n", timer.GetElapsedTimeMsec() / ( g_Config.width * g_Config.height ) );
+                fprintf( pFile, "Per Pixel      %lf (msec)\n", timer.GetElapsedTimeMsec() / ( g_Config.Width * g_Config.Height ) );
 
                 fclose( pFile );
             }
@@ -584,9 +637,9 @@ App::~App()
 { /* DO_NOTHING */ }
 
 //--------------------------------------------------------------------------------
-//      アプリケーションを実行します.s
+//      アプリケーションを実行します.
 //--------------------------------------------------------------------------------
-void App::Run( Config& config )
+void App::Run( const Config& config )
 {
     // 起動画面.
     ILOG( "//=================================================================" );
@@ -595,10 +648,9 @@ void App::Run( Config& config )
     ILOG( "//  Author : Pocol" );
     ILOG( "//=================================================================" );
     ILOG( " Configuration : " );
-    ILOG( "     width      = %d", config.width );
-    ILOG( "     height     = %d", config.height );
-    ILOG( "     sample     = %d", config.numSamples );
-    ILOG( "     sub sumple = %d", config.numSubSamples );
+    ILOG( "     width      = %d", config.Width );
+    ILOG( "     height     = %d", config.Height );
+    ILOG( "     sample     = %d", config.NumSamples );
     ILOG( "--------------------------------------------------------------------" );
 
     // 画像出力用ディレクトリ作成.
@@ -607,6 +659,17 @@ void App::Run( Config& config )
 
     // かっこ悪いけど, グローバルに格納.
     g_Config = config;
+
+    //const char filename[] = "res/mesh/sphere/sphere.smd";
+    //const char filename[] = "res/mesh/dosei/dosei.smd";
+    //const char filename[] = "res/mesh/dia/dia.smd";
+    //if ( !g_Mesh.LoadFromFile( filename ) )
+    //{
+    //    printf_s( "Error : Load Mesh Failed.\n" );
+    //    assert( false );
+    //    g_Mesh.Release();
+    //    return;
+    //}
 
     // シェイプリスト.
     IShape* pShapes[] = {
@@ -621,6 +684,7 @@ void App::Run( Config& config )
         &g_Spheres[1],
         &g_Spheres[2],
         &g_Triangles[0],
+        //&g_Mesh,
     };
 
 
@@ -628,19 +692,18 @@ void App::Run( Config& config )
     u32 numShapes = sizeof( pShapes ) / sizeof( pShapes[0] );
 
     // BVH構築.
-    g_pBVH = BVH::BuildBranch( pShapes, numShapes );
+    g_pBVH = QBVH::BuildBranch( pShapes, numShapes );
+    //g_pBVH = BVH::BuildBranch( pShapes, numShapes );
     assert( g_pBVH != nullptr );
 
     // レイトレ！
-    PathTrace( config.width, config.height, config.numSamples, config.numSubSamples );
+    PathTrace( config.Width, config.Height, config.NumSamples, config.NumSubSamples );
 
-    //// メモリ解放.
-    //if ( g_pBVH )
-    //{
-    //    delete g_pBVH;
-    //    g_pBVH = nullptr;
-    //}
-    BVH::DestroyBranch( (BVH*)g_pBVH );
+    //g_Mesh.Release();
+
+    // メモリ解放.
+    QBVH::DestroyBranch( (QBVH*)g_pBVH );
+    //BVH::DestroyBranch( (BVH*)g_pBVH );
 
     if ( g_IsFinished )
     {

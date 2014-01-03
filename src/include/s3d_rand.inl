@@ -85,7 +85,7 @@ f64 Random::GetAsF64()
 S3D_INLINE
 f32 Random::GetAsF32()
 {
-    return static_cast<f32>( GetAsF64() );
+    return static_cast<f32>( GetAsU32() ) / 0xffffffffui32;
 }
 
 //-------------------------------------------------------------------------------

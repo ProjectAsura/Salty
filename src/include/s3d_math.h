@@ -16,11 +16,6 @@
 #include <cfloat>
 #include <cassert>
 
-#if S3D_IS_SIMD
-#include <xmmintrin.h>
-#include <emmintrin.h>
-#endif//S3D_IS_SIMD
-
 
 namespace s3d {
 
@@ -52,16 +47,9 @@ const f32   F_PIDIV4    = 0.78539816339744830961566084581988f;    //!< π/4で�
 const f32   F_MAX       = 3.402823466e+38F;                       //!< f32型の最大値です.
 const f32   F_MIN       = 1.175494351e-38F;                       //!< f32型の最小値です.
 
-
-#if S3D_IS_SIMD
-typedef __m64       b64;
-typedef __m128      b128;
-
-#ifndef S3D_PERMUTE_PS
-#define S3D_PERMUTE_PS( v, c )      _mm_shuffle_ps( v, v, c )
-#endif//S3D_PERMUTE_PS
-
-#endif//S3D_IS_SIMD
+template< typename T > S3D_INLINE
+s32 Sign( const T val )
+{ return ( val > T(0) ) ? 1 : (( val < T(0) ) ? -1 : 0 ); }
 
 
 //------------------------------------------------------------------------------------------
@@ -98,6 +86,30 @@ f32 ToDeg( const f32 rad )
 S3D_INLINE
 bool IsNan( const f32 value )
 { return ( value != value ); }
+
+//------------------------------------------------------------------------------------------
+//! @brief      安全に平方根を求めます.
+//------------------------------------------------------------------------------------------
+S3D_INLINE
+f32 SafeSqrt( const f32 value )
+{
+    if ( value > FLT_EPSILON )
+    { return sqrtf( value ); }
+
+    return 0.0f;
+}
+
+//------------------------------------------------------------------------------------------
+//! @brief      安全に平方根を求めます.
+//------------------------------------------------------------------------------------------
+S3D_INLINE
+f64 SafeSqrt( const f64 value )
+{
+    if ( value > DBL_EPSILON )
+    { return sqrt( value ); }
+
+    return 0.0;
+}
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -1027,7 +1039,7 @@ public:
     Vector4 operator * (const f32 b) const
     {
     #if S3D_IS_SIMD
-        b128 s = _mm_set_ps( b, b, b, b );
+        b128 s = _mm_set1_ps( b );
         return Vector4( _mm_mul_ps( v, s ) );
     #else
         return Vector4(
@@ -1046,7 +1058,7 @@ public:
     {
         assert( b != 0.0 );
     #if S3D_IS_SIMD
-        b128 s = _mm_set_ps( b, b, b, b );
+        b128 s = _mm_set1_ps( b );
         return Vector4( _mm_div_ps( v, s ) );
     #else
         return Vector4(
@@ -1095,7 +1107,7 @@ public:
         Vector4 t = _mm_mul_ps( v, v );
         register f32 mag = sqrtf( t.x + t.y + t.z + t.w );
         assert( mag > 0.0f );
-        b128 c = _mm_set_ps( mag, mag, mag, mag );
+        b128 c = _mm_set1_ps( mag );
         v = _mm_div_ps( v, c );
     #else
         register f32 mag = sqrtf( x * x + y * y + z * z + w * w );
@@ -1118,7 +1130,7 @@ public:
         register f32 mag = sqrtf( t.x + t.y + t.z + t.w );
         if ( mag > 0.0f )
         {
-            b128 c = _mm_set_ps( mag, mag, mag, mag );
+            b128 c = _mm_set1_ps( mag );
             v = _mm_div_ps( v, c );
         }
     #else
@@ -1143,7 +1155,7 @@ public:
         Vector4 t = _mm_mul_ps( v.v, v.v );
         register f32 mag = sqrtf( t.x + t.y + t.z + t.w );
         assert( mag > 0.0f );
-        b128 c = _mm_set_ps( mag, mag, mag, mag );
+        b128 c = _mm_set1_ps( mag );
         return Vector4( _mm_div_ps( v.v, c ) );
     #else
         register f32 mag = sqrtf( v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w );
@@ -1167,7 +1179,7 @@ public:
         register f32 mag = sqrtf( t.x + t.y + t.z + t.w );
         if ( mag > 0.0f )
         {
-            b128 c = _mm_set_ps( mag, mag, mag, mag );
+            b128 c = _mm_set1_ps( mag );
             return Vector4( _mm_div_ps( v.v, c ) );
         }
     #else
@@ -1225,7 +1237,7 @@ public:
     #if S3D_IS_SIMD
         Vector4 t = _mm_mul_ps( n.v, i.v );
         register f32 _2dot = 2.0f * ( t.x + t.y + t.z + t.z );
-        b128 c = _mm_set_ps( _2dot, _2dot, _2dot, _2dot );
+        b128 c = _mm_set1_ps( _2dot );
         b128 b = _mm_mul_ps( c, n.v );
         return Vector4( _mm_sub_ps( i.v, b ) );
     #else
@@ -1282,7 +1294,7 @@ S3D_INLINE
 Vector4 operator * (const f32 f, const Vector4 &v)
 {
 #if S3D_IS_SIMD
-    b128 c = _mm_set_ps( f, f, f, f );
+    b128 c = _mm_set1_ps( f );
     return Vector4( _mm_mul_ps( c, v.v ) );
 #else
     return Vector4(
@@ -1330,13 +1342,84 @@ struct Ray
         dir.z = d.z;
 
         // ゼロ除算対策.
-        invDir.x = ( dir.x != 0.0f ) ? 1.0f / dir.x : 0.0f;
-        invDir.y = ( dir.y != 0.0f ) ? 1.0f / dir.y : 0.0f;
-        invDir.z = ( dir.z != 0.0f ) ? 1.0f / dir.z : 0.0f;
+        //invDir.x = ( dir.x != 0.0f ) ? 1.0f / dir.x : 0.0f;
+        //invDir.y = ( dir.y != 0.0f ) ? 1.0f / dir.y : 0.0f;
+        //invDir.z = ( dir.z != 0.0f ) ? 1.0f / dir.z : 0.0f;
+        invDir.x = 1.0f / dir.x;
+        invDir.y = 1.0f / dir.y;
+        invDir.z = 1.0f / dir.z;
 
-        sign[0] = ( dir.x > 0.0f ) ? 1 : 0;
-        sign[1] = ( dir.y > 0.0f ) ? 1 : 0;
-        sign[2] = ( dir.z > 0.0f ) ? 1 : 0;
+        sign[0] = ( dir.x > 0.0f ) ? 0 : 1;
+        sign[1] = ( dir.y > 0.0f ) ? 0 : 1;
+        sign[2] = ( dir.z > 0.0f ) ? 0 : 1;
+    }
+};
+
+struct RayQuad
+{
+    b128    pos[3];
+    b128    invDir[3];
+    s32     sign[3];
+
+    RayQuad( const Ray& ray )
+    {
+    #if S3D_IS_SIMD
+        pos[0] = _mm_set1_ps( ray.pos.x );
+        pos[1] = _mm_set1_ps( ray.pos.y );
+        pos[2] = _mm_set1_ps( ray.pos.z );
+
+        invDir[0] = _mm_set1_ps( ray.invDir.x );
+        invDir[1] = _mm_set1_ps( ray.invDir.y );
+        invDir[2] = _mm_set1_ps( ray.invDir.z );
+    #else
+        pos[0].m128_f32[0] = ray.pos.x;
+        pos[0].m128_f32[1] = ray.pos.x;
+        pos[0].m128_f32[2] = ray.pos.x;
+        pos[0].m128_f32[3] = ray.pos.x;
+
+        pos[1].m128_f32[0] = ray.pos.y;
+        pos[1].m128_f32[1] = ray.pos.y;
+        pos[1].m128_f32[2] = ray.pos.y;
+        pos[1].m128_f32[3] = ray.pos.y;
+
+        pos[2].m128_f32[0] = ray.pos.z;
+        pos[2].m128_f32[1] = ray.pos.z;
+        pos[2].m128_f32[2] = ray.pos.z;
+        pos[2].m128_f32[3] = ray.pos.z;
+
+        invDir[0].m128_f32[0] = ray.invDir.x;
+        invDir[0].m128_f32[1] = ray.invDir.x;
+        invDir[0].m128_f32[2] = ray.invDir.x;
+        invDir[0].m128_f32[3] = ray.invDir.x;
+
+        invDir[1].m128_f32[0] = ray.invDir.y;
+        invDir[1].m128_f32[1] = ray.invDir.y;
+        invDir[1].m128_f32[2] = ray.invDir.y;
+        invDir[1].m128_f32[3] = ray.invDir.y;
+
+        invDir[2].m128_f32[0] = ray.invDir.z;
+        invDir[2].m128_f32[1] = ray.invDir.z;
+        invDir[2].m128_f32[2] = ray.invDir.z;
+        invDir[2].m128_f32[3] = ray.invDir.z;
+    #endif
+        sign[0] = ray.sign[0];
+        sign[1] = ray.sign[1];
+        sign[2] = ray.sign[2];
+    }
+
+    RayQuad( const RayQuad& rayQuad )
+    {
+        pos[0] = rayQuad.pos[0];
+        pos[1] = rayQuad.pos[1];
+        pos[2] = rayQuad.pos[2];
+
+        invDir[0] = rayQuad.invDir[0];
+        invDir[1] = rayQuad.invDir[1];
+        invDir[2] = rayQuad.invDir[2];
+
+        sign[0] = rayQuad.sign[0];
+        sign[1] = rayQuad.sign[1];
+        sign[2] = rayQuad.sign[2];
     }
 };
 

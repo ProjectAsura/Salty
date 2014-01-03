@@ -1304,7 +1304,7 @@ void OBJMESH::WriteDirect( FILE* pFile )
         }
 
         // 発見されていなければ追加する.
-        if (!isFind)
+        if (!isFind && (strcmp(m_Materials[i].diffuseMapName, "\0") != 0) )
         {
             // データ設定.
             SMD_TEXTURE texture;
@@ -1584,7 +1584,7 @@ void OBJMESH::WriteOptimize( FILE* pFile )
         }
 
         // 発見されていなければ登録する.
-        if (!isFind)
+        if (!isFind && (strcmp(m_Materials[i].diffuseMapName, "\0") != 0) )
         {
             // ファイル名を設定.
             SMD_TEXTURE texture;
@@ -1747,7 +1747,7 @@ bool OBJMESH::SaveToBinary( const char* filename )
     errno_t err = fopen_s( &pFile, filename, "wb" );
     if ( err != 0 )
     {
-        printf_s( "Error : SaveToMsh() Failed. filename = %s", filename );
+        printf_s( "Error : SaveToBinary() File Open Failed. filename = %s", filename );
         return false;
     }
 

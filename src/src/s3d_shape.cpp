@@ -40,7 +40,7 @@ bool Sphere::IsHit(const Ray &ray, HitRecord& record ) const
     const f32 b  = Vector3::Dot(po, ray.dir);
     const f32 D4 = b * b - Vector3::Dot(po, po) + radius * radius;
 
-    if ( D4 < 0.0f )
+    if ( D4 <= 0.0f )
     { return false; }   // 交差しなかった.
 
     const f32 sqrt_D4 = sqrt(D4);
@@ -176,6 +176,7 @@ bool Triangle::IsHit( const Ray& ray, HitRecord& record ) const
         v0.normal.x * alpha + v1.normal.x * beta + v2.normal.x * gamma,
         v0.normal.y * alpha + v1.normal.y * beta + v2.normal.y * gamma,
         v0.normal.z * alpha + v1.normal.z * beta + v2.normal.z * gamma );
+    record.normal.Normalize();
 
     record.texcoord = Vector2(
         v0.texcoord.x * alpha + v1.texcoord.x * beta + v2.texcoord.x * gamma,
@@ -263,25 +264,25 @@ bool Quad::IsHitTriangle
     HitRecord&      record
 ) const
 {
-    register Vector3 e1 = b.pos - a.pos;
-    register Vector3 e2 = c.pos - a.pos;
-    register Vector3 s1 = Vector3::Cross( ray.dir, e2 );
-    register f32 div = Vector3::Dot( s1, e1 );
+    Vector3 e1 = b.pos - a.pos;
+    Vector3 e2 = c.pos - a.pos;
+    Vector3 s1 = Vector3::Cross( ray.dir, e2 );
+    f32 div = Vector3::Dot( s1, e1 );
     
     if ( -FLT_EPSILON <= div && div <= FLT_EPSILON )
     { return false; }
         
-    register Vector3 d = ray.pos - a.pos;
-    register f32 beta = Vector3::Dot( d, s1 ) / div;
+    Vector3 d = ray.pos - a.pos;
+    f32 beta = Vector3::Dot( d, s1 ) / div;
     if ( beta <= 0.0 || beta >= 1.0 )
     { return false; }
     
-    register Vector3 s2 = Vector3::Cross( d, e1 );
-    register f32 gamma = Vector3::Dot( ray.dir, s2 ) / div;
+    Vector3 s2 = Vector3::Cross( d, e1 );
+    f32 gamma = Vector3::Dot( ray.dir, s2 ) / div;
     if ( gamma <= 0.0 || ( beta + gamma ) >= 1.0 )
     { return false; }
     
-    register f32 dist = Vector3::Dot( e2, s2 ) / div;
+    f32 dist = Vector3::Dot( e2, s2 ) / div;
     
     if ( dist < F_HIT_MIN || dist > F_HIT_MAX )
     { return false; }
@@ -293,11 +294,12 @@ bool Quad::IsHitTriangle
     record.distance = dist;
     record.pShape   = this;
 
-    register f32 alpha = 1.0f - beta - gamma;
+    f32 alpha = 1.0f - beta - gamma;
     record.normal   = Vector3(
         a.normal.x * alpha + b.normal.x * beta + c.normal.x * gamma,
         a.normal.y * alpha + b.normal.y * beta + c.normal.y * gamma,
         a.normal.z * alpha + b.normal.z * beta + c.normal.z * gamma );
+    record.normal.Normalize();
 
     record.texcoord = Vector2(
         a.texcoord.x * alpha + b.texcoord.x * beta + c.texcoord.x * gamma,

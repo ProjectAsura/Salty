@@ -66,13 +66,13 @@ int main( int argc, char** argv )
                     std::string::size_type index = inputFileName.find_last_of( "." );
                     if ( index == std::string::npos )
                     {
-                        outputFileName = inputFileName + ".msh";
+                        outputFileName = inputFileName + ".smd";
                     }
                     else
                     {
                         outputFileName = inputFileName;
                         outputFileName = outputFileName.substr( 0, index );
-                        outputFileName += ".msh";
+                        outputFileName += ".smd";
                     }
                 }
             }

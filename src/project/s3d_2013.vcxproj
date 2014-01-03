@@ -71,8 +71,11 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;S3D_USE_SIMD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\include;$(ProjectDir)..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OpenMPSupport>true</OpenMPSupport>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -90,6 +93,9 @@
     <ClCompile Include="..\src\s3d_mesh.cpp" />
     <ClCompile Include="..\src\s3d_mutex.cpp" />
     <ClCompile Include="..\src\s3d_onb.cpp" />
+    <ClCompile Include="..\src\s3d_qbvh.cpp" />
+    <ClCompile Include="..\src\s3d_rendertarget.cpp" />
+    <ClCompile Include="..\src\s3d_scene.cpp" />
     <ClCompile Include="..\src\s3d_shape.cpp" />
     <ClCompile Include="..\src\s3d_texture.cpp" />
   </ItemGroup>
@@ -105,7 +111,10 @@
     <ClInclude Include="..\include\s3d_mesh.h" />
     <ClInclude Include="..\include\s3d_mutex.h" />
     <ClInclude Include="..\include\s3d_onb.h" />
+    <ClInclude Include="..\include\s3d_qbvh.h" />
     <ClInclude Include="..\include\s3d_rand.h" />
+    <ClInclude Include="..\include\s3d_rendertarget.h" />
+    <ClInclude Include="..\include\s3d_scene.h" />
     <ClInclude Include="..\include\s3d_shape.h" />
     <ClInclude Include="..\include\s3d_texture.h" />
     <ClInclude Include="..\include\s3d_timer.h" />

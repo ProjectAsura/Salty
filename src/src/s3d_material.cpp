@@ -30,8 +30,8 @@ namespace s3d {
 MaterialBase::MaterialBase()
 : emissive  ( 0.0f, 0.0f, 0.0f )
 , color     ( 0.0f, 0.0f, 0.0f )
-, texture   ()
-, sampler   ()
+, pTexture  ( nullptr )
+, pSampler  ( nullptr )
 , threshold ( 0.0 )
 { /* DO_NOTHING */ }
 
@@ -45,8 +45,8 @@ MaterialBase::MaterialBase
 )
 : emissive  ( _emissive )
 , color     ( _color )
-, texture   ()
-, sampler   ()
+, pTexture  ( nullptr )
+, pSampler  ( nullptr )
 {
     threshold = Max( color.x, color.y );
     threshold = Max( color.z, threshold );
@@ -57,15 +57,15 @@ MaterialBase::MaterialBase
 //--------------------------------------------------------------------------------
 MaterialBase::MaterialBase
 (
-    const Color&         _color,
-    const Color&         _emissive,
-    const char*          _filename,
-    const TextureSampler& _sampler
+    const Color&            _color,
+    const Color&            _emissive,
+    const Texture2D*        _pTexture,
+    const TextureSampler*   _pSampler
 )
 : emissive  ( _emissive )
 , color     ( _color )
-, texture   ( _filename )
-, sampler   ( _sampler )
+, pTexture  ( _pTexture )
+, pSampler  ( _pSampler )
 {
     threshold = Max( color.x, color.y );
     threshold = Max( color.z, threshold );
@@ -76,7 +76,8 @@ MaterialBase::MaterialBase
 //--------------------------------------------------------------------------------
 MaterialBase::~MaterialBase()
 {
-    texture.Release();
+    pTexture = nullptr;
+    pSampler = nullptr;
 }
 
 //--------------------------------------------------------------------------------
@@ -128,12 +129,12 @@ Matte::Matte
 //--------------------------------------------------------------------------------
 Matte::Matte
 (
-    const Color&        _color,
-    const char*         _filename,
-    const Color&        _emissive,
-    const TextureSampler& _sampler
+    const Color&            _color,
+    const Color&            _emissive,
+    const Texture2D*        _pTexture,
+    const TextureSampler*   _pSampler
 )
-: MaterialBase( _color, _emissive, _filename, _sampler )
+: MaterialBase( _color, _emissive, _pTexture, _pSampler )
 { /* DO_NOTHING */ }
 
 //--------------------------------------------------------------------------------
@@ -155,17 +156,22 @@ Color Matte::ComputeColor( ShadingArg& arg ) const
 
     // インポータンスサンプリング.
     const f32 phi = F_2PI * arg.random.GetAsF32();
-    const f32 r = sqrtf( arg.random.GetAsF32() );
+    const f32 r = SafeSqrt( arg.random.GetAsF32() );
     const f32 x = r * cosf( phi );
     const f32 y = r * sinf( phi );
-    const f32 z = sqrtf( 1 - x * x - y * y );
+    const f32 z = SafeSqrt( 1.0f - ( x * x ) - ( y * y ) );
 
     // 出射方向.
     Vector3 dir = Vector3::UnitVector( onb.u * x + onb.v * y + onb.w * z );
     arg.output = dir;
 
     // 重み更新 (飛ぶ方向が不定なので確率で割る必要あり).
-    return Color::Mul( color, texture.Sample( sampler, arg.texcoord ) ) / arg.prob;
+    if ( pTexture != nullptr && pSampler != nullptr )
+    {
+        return Color::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) ) / arg.prob;
+    }
+
+    return color / arg.prob;
 }
 
 
@@ -196,12 +202,12 @@ Mirror::Mirror
 //--------------------------------------------------------------------------------
 Mirror::Mirror
 (
-    const Color&         _color,
-    const char*          _filename,
-    const TextureSampler _sampler,
-    const Color&         _emissive
+    const Color&            _color,
+    const Color&            _emissive,
+    const Texture2D*        _pTexture,
+    const TextureSampler*   _pSampler
 )
-: MaterialBase( _color, _emissive, _filename, _sampler )
+: MaterialBase( _color, _emissive, _pTexture, _pSampler )
 { /* DO_NOTHING */ }
 
 //--------------------------------------------------------------------------------
@@ -225,18 +231,23 @@ Color Mirror::ComputeColor( ShadingArg& arg ) const
     arg.output = reflect;
 
     // 重み更新 (飛ぶ方向が確定しているので，確率100%).
-    return Vector3::Mul( color, texture.Sample( sampler, arg.texcoord ) );
+    if ( pTexture != nullptr && pSampler != nullptr )
+    {
+        return Vector3::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) );
+    }
+
+    return color;
 }
 
 
 //////////////////////////////////////////////////////////////////////////////////
-// Transparent structure
+// Glass structure
 //////////////////////////////////////////////////////////////////////////////////
 
 //--------------------------------------------------------------------------------
 //      コンストラクタです.
 //--------------------------------------------------------------------------------
-Transparent::Transparent()
+Glass::Glass()
 : MaterialBase()
 , ior( 1.0f )
 { /* DO_NOTHING */ }
@@ -244,7 +255,7 @@ Transparent::Transparent()
 //--------------------------------------------------------------------------------
 //      引数付きコンストラクタです.
 //--------------------------------------------------------------------------------
-Transparent::Transparent
+Glass::Glass
 (
     const f32    _ior,
     const Color& _color,
@@ -257,22 +268,22 @@ Transparent::Transparent
 //--------------------------------------------------------------------------------
 //      引数付きコンストラクタです.
 //--------------------------------------------------------------------------------
-Transparent::Transparent
+Glass::Glass
 (
-    const f32           _ior,
-    const Color&        _color,
-    const Color&        _emissive,
-    const char*         _filename,
-    const TextureSampler& _sampler
+    const f32               _ior,
+    const Color&            _color,
+    const Color&            _emissive,
+    const Texture2D*        _pTexture,
+    const TextureSampler*   _pSampler
 )
-: MaterialBase( _color, _emissive, _filename, _sampler )
+: MaterialBase( _color, _emissive, _pTexture, _pSampler )
 , ior( _ior )
 { /* DO_NOTHING */ }
 
 //--------------------------------------------------------------------------------
 //      色を求めます.
 //--------------------------------------------------------------------------------
-Color Transparent::ComputeColor( ShadingArg& arg ) const
+Color Glass::ComputeColor( ShadingArg& arg ) const
 {
     // 補正済み法線データ (レイの入出を考慮済み).
     const Vector3 normalMod = ( Vector3::Dot ( arg.normal, arg.input ) < 0.0 ) ? arg.normal : -arg.normal;
@@ -305,12 +316,17 @@ Color Transparent::ComputeColor( ShadingArg& arg ) const
         arg.output = reflect;
 
         // 重み更新 (飛ぶ方向が確定しているので，確率100%).
-        return Vector3::Mul( color, texture.Sample( sampler, arg.texcoord ) );
+        if ( pTexture != nullptr && pSampler != nullptr )
+        {
+            return Vector3::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) );
+        }
+
+        return color;
     }
 
     // 屈折ベクトル.
     Vector3 refract = Vector3::UnitVector(
-        arg.input * nnt - arg.normal * ( ( into ) ? 1.0f : -1.0f ) * ( ddn * nnt + sqrt(cos2t) ) );
+        arg.input * nnt - arg.normal * ( ( into ) ? 1.0f : -1.0f ) * ( ddn * nnt + SafeSqrt(cos2t) ) );
 
     // SchlickによるFresnelの反射係数の近似を使う
     const f32 a = nt - nc;
@@ -332,7 +348,12 @@ Color Transparent::ComputeColor( ShadingArg& arg ) const
         arg.output = reflect;
 
         // 重み更新.
-        return Vector3::Mul( color, texture.Sample( sampler, arg.texcoord ) ) * Re / ( P * arg.prob );
+        if ( pTexture != nullptr && pSampler != nullptr )
+        {
+            return Vector3::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) ) * Re / ( P * arg.prob );
+        }
+
+        return color * Re / ( P * arg.prob );
     }
     // 屈折の場合.
     else
@@ -341,7 +362,12 @@ Color Transparent::ComputeColor( ShadingArg& arg ) const
         arg.output = refract;
 
         // 重み更新.
-        return Vector3::Mul( color, texture.Sample( sampler, arg.texcoord ) ) * Tr / ( ( 1.0f - P ) * arg.prob );
+        if ( pTexture != nullptr && pSampler != nullptr )
+        {
+            return Vector3::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) ) * Tr / ( ( 1.0f - P ) * arg.prob );
+        }
+
+        return color * Tr / ( ( 1.0f - P ) * arg.prob );
     }
 }
 
@@ -357,8 +383,8 @@ Glossy::Glossy()
 : emissive  ( 0.0f, 0.0f, 0.0f )
 , specular  ( 0.0f, 0.0f, 0.0f )
 , power     ( 0.0f )
-, texture   ()
-, sampler   ()
+, pTexture  ( nullptr )
+, pSampler  ( nullptr )
 { /* DO_NOTHING */ }
 
 //--------------------------------------------------------------------------------
@@ -373,8 +399,29 @@ Glossy::Glossy
 : emissive  ( _emissive )
 , specular  ( _specular )
 , power     ( _power )
-, texture   ()
-, sampler   ()
+, pTexture  ( nullptr )
+, pSampler  ( nullptr )
+{
+    threshold = Max( specular.x, specular.y );
+    threshold = Max( specular.z, threshold );
+}
+
+//--------------------------------------------------------------------------------
+//      引数付きコンストラクタです.
+//--------------------------------------------------------------------------------
+Glossy::Glossy
+(
+    const Color&            _specular,
+    const f32               _power,
+    const Color&            _emissive,
+    const Texture2D*        _pTexture,
+    const TextureSampler*   _pSampler
+)
+: emissive( _emissive )
+, specular( _specular )
+, power   ( _power )
+, pTexture( _pTexture )
+, pSampler( _pSampler )
 {
     threshold = Max( specular.x, specular.y );
     threshold = Max( specular.z, threshold );
@@ -408,7 +455,7 @@ Color Glossy::ComputeColor( ShadingArg& arg ) const
         // インポータンスサンプリング.
         const f32 phi = F_2PI * arg.random.GetAsF32();
         const f32 cosTheta = powf( 1.0f - arg.random.GetAsF32(), 1.0f / ( power + 1.0f ) );
-        const f32 sinTheta = sqrtf( 1.0f - cosTheta * cosTheta );
+        const f32 sinTheta = SafeSqrt( 1.0f - ( cosTheta * cosTheta ) );
         const f32 x = cosf( phi ) * sinTheta;
         const f32 y = sinf( phi ) * sinTheta;
         const f32 z = cosTheta;
@@ -439,7 +486,12 @@ Color Glossy::ComputeColor( ShadingArg& arg ) const
     arg.output = dir;
 
     // 重み更新.
-    return Color::Mul( specular, texture.Sample( sampler, arg.texcoord ) ) * dots;
+    if ( pTexture != nullptr && pSampler != nullptr )
+    {
+        return Color::Mul( specular, pTexture->Sample( (*pSampler), arg.texcoord ) ) * dots;
+    }
+
+    return specular * dots;
 }
 
 

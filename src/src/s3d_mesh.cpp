@@ -10,6 +10,22 @@
 #include <s3d_mesh.h>
 #include <cstdio>
 #include <cstring>
+#include <string>
+#include <s3d_bvh.h>
+#include <s3d_qbvh.h>
+
+
+#ifndef DLOG
+    #if defined(DEBUG) || defined(_DEBUG)
+        #define DLOG( x, ... )   printf_s( "[File:%s, Line:%d] "x"\n", __FILE__, __LINE__ , ##__VA_ARGS__ )
+    #else
+        #define DLOG( x, ... )   void(0)
+    #endif
+#endif//DLOG
+
+#ifndef ILOG
+#define ILOG( x, ... )      printf_s( x"\n", ##__VA_ARGS__ )
+#endif//ILOG
 
 
 namespace /* anonymous */ {
@@ -89,13 +105,13 @@ struct SMD_TEXTURE
 namespace s3d {
 
 //////////////////////////////////////////////////////////////////////////////////////////
-// Mesh::Material
+// MeshMaterial
 //////////////////////////////////////////////////////////////////////////////////////////
 
 //----------------------------------------------------------------------------------------
 //      引数付きコンストラクタです.
 //----------------------------------------------------------------------------------------
-Mesh::Material::Material
+MeshMaterial::MeshMaterial
 (
     const Color&    diffuse,
     const Color&    emissive
@@ -112,7 +128,7 @@ Mesh::Material::Material
 //---------------------------------------------------------------------------------------
 //      自己照明成分を取得します.
 //---------------------------------------------------------------------------------------
-Color Mesh::Material::GetEmissive() const
+Color MeshMaterial::GetEmissive() const
 {
     return Emissive; 
 }
@@ -120,15 +136,20 @@ Color Mesh::Material::GetEmissive() const
 //---------------------------------------------------------------------------------------
 //      ロシアンルーレットの閾値を取得します.
 //---------------------------------------------------------------------------------------
-f32 Mesh::Material::GetThreshold() const
+f32 MeshMaterial::GetThreshold() const
 {
     return Threshold;
 }
 
+#if 1
+Color MeshMaterial::GetDebugColor() const
+{ return Diffuse; }
+#endif
+
 //---------------------------------------------------------------------------------------
 //      色を計算します.
 //---------------------------------------------------------------------------------------
-Color Mesh::Material::ComputeColor( ShadingArg& arg ) const
+Color MeshMaterial::ComputeColor( ShadingArg& arg ) const
 {
     // ========================
     // Lambert BRDF.
@@ -144,22 +165,29 @@ Color Mesh::Material::ComputeColor( ShadingArg& arg ) const
 
     // インポータンスサンプリング.
     const f32 phi = F_2PI * arg.random.GetAsF32( );
-    const f32 r = sqrtf( arg.random.GetAsF32( ) );
+    const f32 r = SafeSqrt( arg.random.GetAsF32( ) );
     const f32 x = r * cosf( phi );
     const f32 y = r * sinf( phi );
-    const f32 z = sqrtf( 1 - x * x - y * y );
+    const f32 z = SafeSqrt( 1.0f - ( x * x ) - ( y * y ) );
 
     // 出射方向.
     Vector3 dir = Vector3::UnitVector( onb.u * x + onb.v * y + onb.w * z );
     arg.output = dir;
 
     // 重み更新 (飛ぶ方向が不定なので確率で割る必要あり).
+    Color result;
     if ( pDiffuseMap != nullptr )
     {
-        return Color::Mul( Diffuse, pDiffuseMap->Sample( ( *pDiffuseSmp ), arg.texcoord ) ) / arg.prob;
+        result = Color::Mul( Diffuse, pDiffuseMap->Sample( ( *pDiffuseSmp ), arg.texcoord ) ) / arg.prob;
+        //ILOG( "MeshMaterial result = ( %f, %f, %f )", result.x, result.y, result.z );
+    }
+    else
+    {
+        result = Diffuse / arg.prob;
+        //ILOG( "MeshMaterial result = ( %f, %f, %f )", result.x, result.y, result.z );
     }
 
-    return Diffuse / arg.prob;
+    return result;
 }
 
 
@@ -193,7 +221,12 @@ Mesh::~Mesh()
 //----------------------------------------------------------------------------------------
 void Mesh::Release()
 {
-    BVH::DestroyBranch( (BVH*)m_pBVH );
+    if ( m_pBVH )
+    {
+        //BVH::DestroyBranch( (BVH*)m_pBVH );
+        QBVH::DestroyBranch( (QBVH*)m_pBVH );
+        m_pBVH = nullptr;
+    }
 
     if ( m_pTriangles )
     {
@@ -224,6 +257,17 @@ void Mesh::Release()
 bool Mesh::LoadFromFile( const char* filename )
 {
     FILE* pFile;
+
+    std::string dirPath;
+    {
+        std::string temp( filename );
+        
+        std::string::size_type idx = temp.rfind( "/" );
+        if ( idx != std::string::npos )
+        {
+            dirPath = temp.substr( 0, idx );
+        }
+    }
 
     // ファイルを開きします.
     errno_t err = fopen_s( &pFile, filename, "rb" );
@@ -275,6 +319,12 @@ bool Mesh::LoadFromFile( const char* filename )
     m_NumMaterials = fileHeader.DataHeader.NumMaterials;
     m_NumTextures  = fileHeader.DataHeader.NumTextures;
 
+#if 0
+    ILOG( "Num Triangle  : %d", m_NumTriangles );
+    ILOG( "Num Materials : %d", m_NumMaterials );
+    ILOG( "Num Textures  : %d", m_NumTextures );
+#endif
+
     // 三角形データのメモリを確保します.
     m_pTriangles = new Triangle[ m_NumTriangles ];
     if ( m_pTriangles == nullptr )
@@ -285,7 +335,7 @@ bool Mesh::LoadFromFile( const char* filename )
     }
 
     // マテリアルデータのメモリを確保します.
-    m_pMaterials = new Material[ m_NumMaterials ];
+    m_pMaterials = new MeshMaterial[ m_NumMaterials ];
     if ( m_pMaterials == nullptr )
     {
         fclose( pFile );
@@ -330,6 +380,23 @@ bool Mesh::LoadFromFile( const char* filename )
         {
             m_pTriangles[ i ].pMaterial = &m_pMaterials[ triangle.MaterialId ];
         }
+
+    #if 0
+        ILOG( "Triangle[%d] : ", i );
+        ILOG( "    v0 pos      ( %f, %f, %f )", m_pTriangles[ i ].v0.pos.x,      m_pTriangles[ i ].v0.pos.y,    m_pTriangles[ i ].v0.pos.z );
+        ILOG( "    v0 normal   ( %f, %f, %f )", m_pTriangles[ i ].v0.normal.x,   m_pTriangles[ i ].v0.normal.y, m_pTriangles[ i ].v0.normal.z );
+        ILOG( "    v0 texcoord ( %f, %f )",     m_pTriangles[ i ].v0.texcoord.x, m_pTriangles[ i ].v0.texcoord.y );
+        ILOG( "" );
+        ILOG( "    v1 pos      ( %f, %f, %f )", m_pTriangles[ i ].v1.pos.x,      m_pTriangles[ i ].v1.pos.y,    m_pTriangles[ i ].v1.pos.z );
+        ILOG( "    v1 normal   ( %f, %f, %f )", m_pTriangles[ i ].v1.normal.x,   m_pTriangles[ i ].v1.normal.y, m_pTriangles[ i ].v1.normal.z );
+        ILOG( "    v1 texcoord ( %f, %f )",     m_pTriangles[ i ].v1.texcoord.x, m_pTriangles[ i ].v1.texcoord.y );
+        ILOG( "" );
+        ILOG( "    v2 pos      ( %f, %f, %f )", m_pTriangles[ i ].v2.pos.x,      m_pTriangles[ i ].v2.pos.y,    m_pTriangles[ i ].v2.pos.z );
+        ILOG( "    v2 normal   ( %f, %f, %f )", m_pTriangles[ i ].v2.normal.x,   m_pTriangles[ i ].v2.normal.y, m_pTriangles[ i ].v2.normal.z );
+        ILOG( "    v2 texcoord ( %f, %f )",     m_pTriangles[ i ].v2.texcoord.x, m_pTriangles[ i ].v2.texcoord.y );
+        ILOG( "" );
+        ILOG( "    Material : 0x%x", m_pTriangles[ i ].pMaterial );
+    #endif
     }
 
     // マテリアルデータを読み込みます.
@@ -338,12 +405,21 @@ bool Mesh::LoadFromFile( const char* filename )
         SMD_MATERIAL material;
         fread( &material, sizeof( SMD_MATERIAL ), 1, pFile );
 
-        m_pMaterials[i] = Material( material.Diffuse, material.Emissive );
+        m_pMaterials[i] = MeshMaterial( material.Diffuse, material.Emissive );
         if ( material.DiffuseMap >= 0 )
         {
             m_pMaterials[ i ].pDiffuseMap = &m_pTextures[ material.DiffuseMap ];
             m_pMaterials[ i ].pDiffuseSmp = &m_DiffuseSmp;
         }
+
+    #if 0
+        ILOG( "Material[%d] : ", i );
+        ILOG( "    Emissive ( %f, %f, %f )", m_pMaterials[ i ].Emissive.x, m_pMaterials[ i ].Emissive.y, m_pMaterials[ i ].Emissive.z );
+        ILOG( "    Diffuse  ( %f, %f, %f )", m_pMaterials[ i ].Diffuse.x, m_pMaterials[ i ].Diffuse.y, m_pMaterials[ i ].Diffuse.z );
+        ILOG( "    DiffuseMap  : 0x%x", m_pMaterials[ i ].pDiffuseMap );
+        ILOG( "    DiffuseSmp  : 0x%x", m_pMaterials[ i ].pDiffuseSmp );
+        ILOG( "    Threshold : %f",     m_pMaterials[ i ].Threshold );
+    #endif
     }
 
     // テクスチャデータを読み込みます.
@@ -354,12 +430,30 @@ bool Mesh::LoadFromFile( const char* filename )
             SMD_TEXTURE texture;
             fread( &texture, sizeof( SMD_TEXTURE ), 1, pFile );
 
-            m_pTextures[ i ].LoadFromFile( texture.FileName );
+
+            std::string path = dirPath + "/" + texture.FileName;
+            if ( !m_pTextures[ i ].LoadFromFile( path.c_str() ) )
+            {
+                ILOG( "Warning : Texture Load Failed. filename = %s", path.c_str() );
+                for( u32 j=0; j<m_NumMaterials; ++j )
+                {
+                    if ( m_pMaterials[j].pDiffuseMap == (&m_pTextures[i]) )
+                    {
+                        m_pMaterials[j].pDiffuseMap = nullptr;
+                        m_pMaterials[j].pDiffuseSmp = nullptr;
+                    }
+                }
+            }
+        #if 0
+            ILOG( "Texture[%d] : ", i );
+            ILOG( "    File Name : %s", path.c_str() );
+        #endif
         }
     }
 
     // BVHを構築します.
-    m_pBVH = BVH::BuildBranch( (IShape**)&m_pTriangles, m_NumTriangles );
+    //m_pBVH = BVH::BuildBranch( m_pTriangles, m_NumTriangles );
+    m_pBVH = QBVH::BuildBranch( m_pTriangles, m_NumTriangles );
 
     return true;
 }
@@ -377,6 +471,11 @@ bool Mesh::IsHit( const Ray& ray, HitRecord& record ) const
 //----------------------------------------------------------------------------------------
 const IMaterial* Mesh::GetMaterial() const
 {
+    if ( m_pMaterials != nullptr )
+    {
+        return &m_pMaterials[0];
+    }
+
     return nullptr;
 }
 
@@ -393,7 +492,7 @@ BoundingBox Mesh::GetBox() const
 //----------------------------------------------------------------------------------------
 bool Mesh::IsPrimitive() const
 {
-    return false; 
+    return true; 
 }
 
 } // namespace s3d

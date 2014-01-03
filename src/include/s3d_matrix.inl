@@ -425,7 +425,7 @@ S3D_INLINE
 Matrix Matrix::operator * ( const f32 value ) const
 {
 #if S3D_IS_SIMD
-    b128 c = _mm_set_ps( value, value, value, value );
+    b128 c = _mm_set1_ps( value );
     return Matrix(
         _mm_mul_ps( v0, c ),
         _mm_mul_ps( v1, c ),

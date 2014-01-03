@@ -56,9 +56,8 @@ public:
         const Vector3 position,
         const Vector3 target,
         const Vector3 upward,
-        const s32     width,
-        const s32     height,
         const f32     fov,
+        const f32     aspectRatio,
         const f32     nearClip
     )
     {
@@ -66,16 +65,15 @@ public:
         m_Target    = target;
         m_Upward    = upward;
 
-        m_Width    = static_cast<f32>( width );
-        m_Height   = static_cast<f32>( height );
-        m_Fov      = fov;
-        m_NearClip = nearClip;
+        m_Fov         = fov;
+        m_AspectRatio = aspectRatio;
+        m_NearClip    = nearClip;
 
         // 視線ベクトルを求める.
         m_Direction = Vector3::UnitVector( m_Target - m_Position );
 
         // スクリーンを張るベクトル.
-        m_CX = Vector3::UnitVector( Vector3::Cross( m_Direction, m_Upward ) ) * m_Fov * m_Width / static_cast<f32>( m_Height );
+        m_CX = Vector3::UnitVector( Vector3::Cross( m_Direction, m_Upward ) ) * m_Fov * m_AspectRatio;
         m_CY = Vector3::UnitVector( Vector3::Cross( m_CX, m_Direction ) ) * m_Fov;
 
         // スクリーンの中心へのベクトル.
@@ -83,7 +81,7 @@ public:
     }
 
     //----------------------------------------------------------------------------------
-    //! @brief      レイを取得します.
+    //! @brief      スクリーンまでへのレイを取得します.
     //----------------------------------------------------------------------------------
     S3D_INLINE
     Ray GetRay( const f32 x, const f32 y )
@@ -113,9 +111,8 @@ private:
     Vector3 m_Upward;       //!< カメラの上向きベクトルです.
     Vector3 m_Direction;    //!< カメラの視線ベクトルです.
 
-    f32 m_Width;            //!< スクリーンの横幅です.
-    f32 m_Height;           //!< スクリーンの縦幅です.
     f32 m_Fov;              //!< 垂直画角です.
+    f32 m_AspectRatio;      //!< アスペクト比です.
     f32 m_NearClip;         //!< スクリーンまでの距離です.
 
     Vector3 m_CX;           //!< スクリーンX方向を構成するベクトルです.

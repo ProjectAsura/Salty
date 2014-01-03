@@ -48,8 +48,10 @@ typedef double              f64;
 
 #if defined(DEBUG) || defined(_DEBUG)
 #define S3D_DEBUG  1
+#define S3D_NDEBUG 0
 #else
 #define S3D_DEBUG  0
+#define S3D_NDEBUG 1
 #endif
 
 #ifndef S3D_ALIGN
@@ -59,6 +61,18 @@ typedef double              f64;
         #define S3D_ALIGN( alignment )    __attribute__( aligned(alignment) )
     #endif
 #endif//S3D_ALIGN
+
+#ifndef S3D_RELEASE
+#define S3D_RELEASE(x)     { if (x) { (x)->Release(); (x) = nullptr; } }
+#endif//S3D_RELEASE
+
+#ifndef S3D_DELETE
+#define S3D_DELETE(x)       { if (x) { delete (x); (x) = nullptr; } }
+#endif//S3D_DELETE
+
+#ifndef S3D_DELETE_ARRAY
+#define S3D_DELETE_ARRAY(x) { if (x) { delete[] (x); (x) = nullptr; } }
+#endif//S3D_DELETE_ARRAY
 
 
 #if defined(_M_IX86) || defined(_M_AMD64)
@@ -72,6 +86,45 @@ typedef double              f64;
 #else
     #define S3D_IS_SIMD   (0)     // SIMD演算無効.
 #endif// defined(S3D_USE_SIMD)
+
+
+#if S3D_IS_SIMD
+
+#include <xmmintrin.h>
+#include <emmintrin.h>
+
+typedef __m64       b64;
+typedef __m128      b128;
+
+#else
+
+typedef union S3D_ALIGN(8) _b64
+{
+    unsigned __int64    m64_u64;
+    float               m64_f32[2];
+    __int8              m64_i8[8];
+    __int16             m64_i16[4];
+    __int32             m64_i32[2];
+    __int64             m64_i64;
+    unsigned __int8     m64_u8[8];
+    unsigned __int16    m64_u16[4];
+    unsigned __int32    m64_u32[2];
+} b64;
+
+typedef union S3D_ALIGN(16) _b128
+{
+     float               m128_f32[4];
+     unsigned __int64    m128_u64[2];
+     __int8              m128_i8[16];
+     __int16             m128_i16[8];
+     __int32             m128_i32[4];
+     __int64             m128_i64[2];
+     unsigned __int8     m128_u8[16];
+     unsigned __int16    m128_u16[8];
+     unsigned __int32    m128_u32[4];
+} b128;
+
+#endif//S3D_IS_SIMD
 
 
 #endif//__S3D_TYPEDEF_H__

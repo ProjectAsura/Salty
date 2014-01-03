@@ -50,6 +50,11 @@ struct IMaterial
     //! @brief      シェーディングします.
     //-------------------------------------------------------------------------------
     virtual Color ComputeColor( ShadingArg& ) const = 0;
+
+#if 1
+    virtual Color GetDebugColor() const
+    { return Color( 1.0f, 0.0f, 0.0f ); }
+#endif
 };
 
 
@@ -58,11 +63,11 @@ struct IMaterial
 /////////////////////////////////////////////////////////////////////////////////////
 struct MaterialBase : public IMaterial
 {
-    Color           emissive;       //!< 自己発光カラーです.
-    Color           color;          //!< マテリアルカラーです.
-    Texture2D       texture;        //!< 2次元テクスチャです.
-    TextureSampler  sampler;        //!< テクスチャサンプラーです.
-    f32             threshold;      //!< 閾値です.
+    Color                   emissive;       //!< 自己発光カラーです.
+    Color                   color;          //!< マテリアルカラーです.
+    const Texture2D*        pTexture;        //!< 2次元テクスチャです.
+    const TextureSampler*   pSampler;        //!< テクスチャサンプラーです.
+    f32                     threshold;      //!< 閾値です.
 
     //---------------------------------------------------------------------------------
     //! @brief      コンストラクタです.
@@ -81,8 +86,8 @@ struct MaterialBase : public IMaterial
     (
         const Color&,
         const Color&,
-        const char*,
-        const TextureSampler& = TextureSampler()
+        const Texture2D*,
+        const TextureSampler*
     );
 
     //--------------------------------------------------------------------------------
@@ -104,6 +109,11 @@ struct MaterialBase : public IMaterial
     //! @brief      色を求めます.
     //--------------------------------------------------------------------------------
     virtual Color ComputeColor( ShadingArg& arg ) const;
+
+#if 1
+    virtual Color GetDebugColor() const
+    { return color; }
+#endif
 };
 
 
@@ -120,7 +130,7 @@ struct Matte : public MaterialBase
     //--------------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです.
     //--------------------------------------------------------------------------------
-    Matte( const Color&, const Color& = Color( 0.0f, 0.0f, 0.0f ) );
+    Matte( const Color&, const Color& );
 
     //--------------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです.
@@ -128,9 +138,9 @@ struct Matte : public MaterialBase
     Matte
     ( 
         const Color&,
-        const char*,
-        const Color&  = Color( 0.0f, 0.0f, 0.0f ),
-        const TextureSampler& = TextureSampler()
+        const Color&,
+        const Texture2D*,
+        const TextureSampler*
     );
 
     //--------------------------------------------------------------------------------
@@ -161,9 +171,9 @@ struct Mirror : public MaterialBase
     Mirror
     (
         const Color&,
-        const char*,
-        const TextureSampler = TextureSampler(),
-        const Color&         = Color( 0.0f, 0.0f, 0.0f )
+        const Color&,
+        const Texture2D*,
+        const TextureSampler*
     );
 
     //--------------------------------------------------------------------------------
@@ -174,21 +184,21 @@ struct Mirror : public MaterialBase
 
 
 //////////////////////////////////////////////////////////////////////////////////////
-// Transparent structure
+// Glass structure
 //////////////////////////////////////////////////////////////////////////////////////
-struct Transparent : public MaterialBase
+struct Glass : public MaterialBase
 {
     f32     ior;       //!< 屈折率です(Index Of Refraction).
 
     //--------------------------------------------------------------------------------
     //! @brief      コンストラクタです.
     //--------------------------------------------------------------------------------
-    Transparent();
+    Glass();
 
     //--------------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです.
     //--------------------------------------------------------------------------------
-    Transparent
+    Glass
     (
         const f32,
         const Color&,
@@ -198,13 +208,13 @@ struct Transparent : public MaterialBase
     //--------------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです.
     //--------------------------------------------------------------------------------
-    Transparent
+    Glass
     (
         const f32,
         const Color&,
         const Color&,
-        const char*,
-        const TextureSampler& _sampler = TextureSampler()
+        const Texture2D*,
+        const TextureSampler*
     );
 
     //--------------------------------------------------------------------------------
@@ -219,12 +229,12 @@ struct Transparent : public MaterialBase
 //////////////////////////////////////////////////////////////////////////////////////
 struct Glossy : public IMaterial
 {
-    Color           emissive;       //!< 自己発光カラーです.
-    Color           specular;       //!< 鏡面反射色です.
-    f32             power;          //!< 鏡面反射強度です.
-    f32             threshold;      //!<
-    Texture2D       texture;        //!< 2次元テクスチャです.
-    TextureSampler  sampler;        //!< テクスチャサンプラーです.
+    Color                   emissive;       //!< 自己発光カラーです.
+    Color                   specular;       //!< 鏡面反射色です.
+    f32                     power;          //!< 鏡面反射強度です.
+    f32                     threshold;      //!< 閾値です.
+    const Texture2D*        pTexture;       //!< 2次元テクスチャです.
+    const TextureSampler*   pSampler;       //!< テクスチャサンプラーです.
 
     //--------------------------------------------------------------------------------
     //! @brief      コンストラクタです.
@@ -248,9 +258,9 @@ struct Glossy : public IMaterial
     (
         const Color&,
         const f32,
-        const char*,
-        const Color&          = Color( 0.0f, 0.0f, 0.0f ),
-        const TextureSampler& = TextureSampler()
+        const Color&,
+        const Texture2D*,
+        const TextureSampler*
     );
 
     //--------------------------------------------------------------------------------
@@ -267,6 +277,11 @@ struct Glossy : public IMaterial
     //! @brief      色を求めます.
     //--------------------------------------------------------------------------------
     virtual Color ComputeColor( ShadingArg& ) const;
+
+#if 1
+    virtual Color GetDebugColor() const
+    { return Color( 0.0f, 1.0f, 0.0f ); }
+#endif
 };
 
 

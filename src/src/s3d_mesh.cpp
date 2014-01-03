@@ -472,9 +472,7 @@ bool Mesh::IsHit( const Ray& ray, HitRecord& record ) const
 const IMaterial* Mesh::GetMaterial() const
 {
     if ( m_pMaterials != nullptr )
-    {
-        return &m_pMaterials[0];
-    }
+    { return &m_pMaterials[0]; }
 
     return nullptr;
 }

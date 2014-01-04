@@ -12,7 +12,6 @@
 #include <cstring>
 #include <string>
 #include <s3d_bvh.h>
-#include <s3d_qbvh.h>
 
 
 #ifndef DLOG

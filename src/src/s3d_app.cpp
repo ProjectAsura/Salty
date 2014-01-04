@@ -18,7 +18,6 @@
 #include <s3d_mutex.h>
 #include <s3d_onb.h>
 #include <s3d_bvh.h>
-#include <s3d_qbvh.h>
 #include <s3d_mesh.h>
 
 #include <iostream>
@@ -663,6 +662,7 @@ void App::Run( const Config& config )
     //const char filename[] = "res/mesh/sphere/sphere.smd";
     //const char filename[] = "res/mesh/dosei/dosei.smd";
     //const char filename[] = "res/mesh/dia/dia.smd";
+    //const char filename[] = "res/mesh/applejack/applejack.smd";
     //if ( !g_Mesh.LoadFromFile( filename ) )
     //{
     //    printf_s( "Error : Load Mesh Failed.\n" );

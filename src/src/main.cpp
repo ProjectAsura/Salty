@@ -41,9 +41,9 @@ int main( int argc, char **argv )
         config.MaxDepth      = 32;
     #else
         // デバッグ用.
-        config.Width         = 640;
-        config.Height        = 360;
-        config.NumSamples    = 1024;
+        config.Width         = 160;
+        config.Height        = 90;
+        config.NumSamples    = 512;
         config.NumSubSamples = 2;
         config.MaxDepth      = 32;
     #endif

@@ -93,6 +93,7 @@
     <ClCompile Include="..\src\s3d_mesh.cpp" />
     <ClCompile Include="..\src\s3d_mutex.cpp" />
     <ClCompile Include="..\src\s3d_onb.cpp" />
+    <ClCompile Include="..\src\s3d_qrand.cpp" />
     <ClCompile Include="..\src\s3d_rendertarget.cpp" />
     <ClCompile Include="..\src\s3d_scene.cpp" />
     <ClCompile Include="..\src\s3d_shape.cpp" />
@@ -110,6 +111,7 @@
     <ClInclude Include="..\include\s3d_mesh.h" />
     <ClInclude Include="..\include\s3d_mutex.h" />
     <ClInclude Include="..\include\s3d_onb.h" />
+    <ClInclude Include="..\include\s3d_qrand.h" />
     <ClInclude Include="..\include\s3d_rand.h" />
     <ClInclude Include="..\include\s3d_rendertarget.h" />
     <ClInclude Include="..\include\s3d_scene.h" />

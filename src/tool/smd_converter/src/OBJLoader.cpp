@@ -1632,12 +1632,12 @@ void OBJMESH::WriteOptimize( FILE* pFile )
     // 整形済みサブセットは最終的にはマテリアル数と一致するので，マテリアル数分だけループする.
     for (size_t i = 0; i < m_NumMaterials; ++i)
     {
-        // 頂点インデックスです.
-        unsigned int idx = pSortedSubsets[i].faceStart;
-
         // 頂点数だけ処理します.
         for (size_t j = 0; j < pSortedSubsets[i].faceCount; j+=3)
         {
+            // 頂点インデックスです.
+            unsigned int idx = pSortedSubsets[i].faceStart + j;
+
             // 格納用三角形データです.
             SMD_TRIANGLE triangle;
 

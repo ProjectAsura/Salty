@@ -36,14 +36,14 @@ int main( int argc, char **argv )
         // 本番用.
         config.Width         = 1024;
         config.Height        = 576;
-        config.NumSamples    = 8192;
+        config.NumSamples    = 4096;
         config.NumSubSamples = 2;
         config.MaxDepth      = 32;
     #else
         // デバッグ用.
-        config.Width         = 640;
-        config.Height        = 320;
-        config.NumSamples    = 1024;
+        config.Width         = 320;
+        config.Height        = 180;
+        config.NumSamples    = 512;
         config.NumSubSamples = 2;
         config.MaxDepth      = 32;
     #endif

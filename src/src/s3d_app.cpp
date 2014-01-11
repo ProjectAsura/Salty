@@ -148,8 +148,8 @@ IMaterial* g_pMaterials[] = {
 
 // レンダリングするシーンデータ
 Sphere g_Spheres[] = {
-    Sphere( 16.5f,  Vector3( 20.0f, 16.5f,  27.0f ), g_pMaterials[6] ),    // 鏡
-    Sphere( 16.5f,  Vector3( 77.0f, 16.5f,  78.0f ), g_pMaterials[5] ),    // 水晶.
+    Sphere( 16.5f,  Vector3( 20.0f, 16.5f,  27.0f ), g_pMaterials[5] ),    // 水晶
+    Sphere( 16.5f,  Vector3( 77.0f, 16.5f,  78.0f ), g_pMaterials[6] ),    // 鏡.
     Sphere( 15.0f,  Vector3( 50.0f, 100.0f, 81.6f ), g_pMaterials[2] ),    // 照明
 };
 
@@ -250,25 +250,6 @@ IShape* g_pBVH = nullptr;
 ////////////////////////////////////////////////////////////////////////////////////
 // Functions
 ////////////////////////////////////////////////////////////////////////////////////
-
-//----------------------------------------------------------------------------------
-//! @brief      ロシアンルーレットに用いる閾値を求めます.
-//----------------------------------------------------------------------------------
-S3D_INLINE
-f32 ComputeThreshold( const Color& value )
-{
-    f32 result = value.x;
-    result = ( value.y > result ) ? value.y : result;
-    result = ( value.z > result ) ? value.z : result;
-
-    // 無限ループ対策
-    result = Min( result, 0.99f );
-
-    // ゼロ除算対策.
-    result = Max( result, FLT_EPSILON );
-
-    return result;
-}
 
 //----------------------------------------------------------------------------------
 //! @brief      シーンとの交差判定をおこないます.
@@ -659,11 +640,7 @@ void App::Run( const Config& config )
     // かっこ悪いけど, グローバルに格納.
     g_Config = config;
 
-    //const char filename[] = "res/mesh/sphere/sphere.smd";
     const char filename[] = "res/mesh/dosei/dosei.smd";
-    //const char filename[] = "res/mesh/dia/dia.smd";
-    //const char filename[] = "res/mesh/applejack/applejack.smd";
-    //const char filename[] = "res/mesh/box/box.smd";
     if ( !g_Mesh.LoadFromFile( filename ) )
     {
         printf_s( "Error : Load Mesh Failed.\n" );

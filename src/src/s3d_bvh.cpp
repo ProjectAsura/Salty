@@ -90,6 +90,9 @@ s3d::BoundingBox CreateMergedBox
     const u32     numShapes
 )
 {
+    if ( numShapes == 0 || ppShapes == nullptr )
+    { return s3d::BoundingBox(); }
+
     s3d::BoundingBox box = ppShapes[0]->GetBox();
 
     for( u32 i=1; i<numShapes; ++i )
@@ -107,6 +110,9 @@ s3d::BoundingBox CreateMergedBox
     const u32       numTriangles
 )
 {
+    if ( numTriangles == 0 || pTriangles == nullptr )
+    { return s3d::BoundingBox(); }
+
     s3d::BoundingBox box = pTriangles[0].GetBox();
 
     for( u32 i=1; i<numTriangles; ++i )
@@ -213,6 +219,9 @@ bool BVH::IsPrimitive() const
 //--------------------------------------------------------------------------
 IShape* BVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 {
+    if ( numShapes <= 0 )
+    { return nullptr; }
+
     // そのまま返却.
     if ( numShapes == 1 ) 
     { return ppShapes[0]; }
@@ -414,6 +423,9 @@ bool QBVH::IsPrimitive() const
 //--------------------------------------------------------------------------
 IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 {
+    //if ( numShapes <= 0 )
+    //{ return nullptr; }
+
     // そのまま返却.
     if ( numShapes == 1 )
     { return ppShapes[0]; }
@@ -479,14 +491,57 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     IShape* child2 = BuildBranch( ppChild[2], numChild[2] );
     IShape* child3 = BuildBranch( ppChild[3], numChild[3] );
 
+    BoundingBox slot[4];
+    u32 slotCount = 0;
+
     // チャイルドのAABBを求める.
-    BoundingBox box0 = CreateMergedBox( ppChild[0], numChild[0] );
-    BoundingBox box1 = CreateMergedBox( ppChild[1], numChild[1] );
-    BoundingBox box2 = CreateMergedBox( ppChild[2], numChild[2] );
-    BoundingBox box3 = CreateMergedBox( ppChild[3], numChild[3] );
+    if ( numChild[0] >= 1 )
+    {
+        slot[slotCount] = CreateMergedBox( ppChild[0], numChild[0] );
+        slotCount++;
+    }
+    if ( numChild[1] >= 1 )
+    {
+        slot[slotCount] = CreateMergedBox( ppChild[1], numChild[1] );
+        slotCount++;
+    }
+    if ( numChild[2] >= 1 )
+    {
+        slot[slotCount] = CreateMergedBox( ppChild[2], numChild[2] );
+        slotCount++;
+    }
+    if ( numChild[3] >= 1 )
+    {
+        slot[slotCount] = CreateMergedBox( ppChild[3], numChild[3] );
+        slotCount++;
+    }
+
+    BoundingBoxQuad quadBox;
+    switch( slotCount )
+    {
+        case 1:
+            { quadBox = BoundingBoxQuad( slot[0] ); }
+            break;
+
+        case 2:
+            { quadBox = BoundingBoxQuad( slot[0], slot[1] ); }
+            break;
+
+        case 3:
+            { quadBox = BoundingBoxQuad( slot[0], slot[1], slot[2] ); }
+            break;
+
+        case 4:
+            { quadBox = BoundingBoxQuad( slot[0], slot[1], slot[2], slot[3] ); }
+            break;
+
+        default:
+            assert( false );
+            break;
+    }
 
     // ノードとして生成.
-    return new(pBuf) QBVH( true, child0, child1, child2, child3, BoundingBoxQuad( box0, box1, box2, box3 ) );
+    return new(pBuf) QBVH( true, child0, child1, child2, child3, quadBox );
 }
 
 //--------------------------------------------------------------------------
@@ -494,6 +549,9 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 //--------------------------------------------------------------------------
 IShape* QBVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
 {
+    if ( numShapes <=0 )
+    { return nullptr; }
+
     // そのまま返却.
     if ( numShapes == 1 )
     { return (IShape*)&pShapes[0]; }
@@ -616,16 +674,16 @@ bool QBVH::HitFuncNode( const QBVH* pBVH, const Ray& ray, HitRecord& record )
     bool isHit2 = false;
     bool isHit3 = false;
 
-    if ( mask & 0x1 )
+    if ( ( mask & 0x1 ) && pBVH->pShape[0] != nullptr )
     { isHit0 = pBVH->pShape[0]->IsHit( ray, record ); }
 
-    if ( mask & 0x2 )
+    if ( ( mask & 0x2 ) && pBVH->pShape[1] != nullptr )
     { isHit1 = pBVH->pShape[1]->IsHit( ray, record ); }
 
-    if ( mask & 0x4 )
+    if ( ( mask & 0x4 ) && pBVH->pShape[2] != nullptr )
     { isHit2 = pBVH->pShape[2]->IsHit( ray, record ); }
 
-    if ( mask & 0x8 )
+    if ( ( mask & 0x8 ) && pBVH->pShape[3] != nullptr )
     { isHit3 = pBVH->pShape[3]->IsHit( ray, record ); }
 
     return ( isHit0 || isHit1 || isHit2 || isHit3 );
@@ -636,10 +694,16 @@ bool QBVH::HitFuncNode( const QBVH* pBVH, const Ray& ray, HitRecord& record )
 //--------------------------------------------------------------------------
 bool QBVH::HitFuncLeaf( const QBVH* pBVH, const Ray& ray, HitRecord& record )
 {
-    bool isHit0 = pBVH->pShape[0]->IsHit( ray, record );
-    bool isHit1 = pBVH->pShape[1]->IsHit( ray, record );
+    bool isHit0 = false;
+    bool isHit1 = false;
     bool isHit2 = false;
     bool isHit3 = false;
+
+    if ( pBVH->pShape[0] != nullptr )
+    { isHit0 = pBVH->pShape[0]->IsHit( ray, record ); }
+
+    if ( pBVH->pShape[1] != nullptr )
+    { isHit1 = pBVH->pShape[1]->IsHit( ray, record ); }
 
     if ( pBVH->pShape[2] != nullptr )
     { isHit2 = pBVH->pShape[2]->IsHit( ray, record ); }

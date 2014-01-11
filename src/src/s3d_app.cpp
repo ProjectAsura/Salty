@@ -660,16 +660,17 @@ void App::Run( const Config& config )
     g_Config = config;
 
     //const char filename[] = "res/mesh/sphere/sphere.smd";
-    //const char filename[] = "res/mesh/dosei/dosei.smd";
+    const char filename[] = "res/mesh/dosei/dosei.smd";
     //const char filename[] = "res/mesh/dia/dia.smd";
     //const char filename[] = "res/mesh/applejack/applejack.smd";
-    //if ( !g_Mesh.LoadFromFile( filename ) )
-    //{
-    //    printf_s( "Error : Load Mesh Failed.\n" );
-    //    assert( false );
-    //    g_Mesh.Release();
-    //    return;
-    //}
+    //const char filename[] = "res/mesh/box/box.smd";
+    if ( !g_Mesh.LoadFromFile( filename ) )
+    {
+        printf_s( "Error : Load Mesh Failed.\n" );
+        assert( false );
+        g_Mesh.Release();
+        return;
+    }
 
     // シェイプリスト.
     IShape* pShapes[] = {
@@ -680,11 +681,12 @@ void App::Run( const Config& config )
         &g_Quads[4],
         &g_Quads[5],
 
+        &g_Mesh,
+
         &g_Spheres[0],
-        &g_Spheres[1],
+        //&g_Spheres[1],
         &g_Spheres[2],
         &g_Triangles[0],
-        //&g_Mesh,
     };
 
 
@@ -699,7 +701,7 @@ void App::Run( const Config& config )
     // レイトレ！
     PathTrace( config.Width, config.Height, config.NumSamples, config.NumSubSamples );
 
-    //g_Mesh.Release();
+    g_Mesh.Release();
 
     // メモリ解放.
     QBVH::DestroyBranch( (QBVH*)g_pBVH );

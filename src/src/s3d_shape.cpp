@@ -40,7 +40,7 @@ bool Sphere::IsHit(const Ray &ray, HitRecord& record ) const
     const f32 b  = Vector3::Dot(po, ray.dir);
     const f32 D4 = b * b - Vector3::Dot(po, po) + radius * radius;
 
-    if ( D4 <= 0.0f )
+    if ( D4 < 0.0f )
     { return false; }   // 交差しなかった.
 
     const f32 sqrt_D4 = sqrt(D4);

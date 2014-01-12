@@ -48,6 +48,26 @@ struct HitRecord
 };
 
 
+//////////////////////////////////////////////////////////////////////////////////////
+// HitRecordEx structure
+//////////////////////////////////////////////////////////////////////////////////////
+struct HitRecordEx : public HitRecord
+{
+    s32         pixelIndex;         //!< ピクセル番号です.
+    s32         photonCount;        //!< フォトン数です.
+    f32         photonRadius;       //!< フォトンの半径です.
+    Vector3     flux;               //!< 光束です.
+
+    HitRecordEx()
+    : HitRecord     ()
+    , pixelIndex    ( 0 )
+    , photonCount   ( 0 )
+    , photonRadius  ( F_MAX )
+    , flux          ( 0.0f, 0.0f, 0.0f )
+    { /* DO_NOTHING */ }
+};
+
+
 /////////////////////////////////////////////////////////////////////////////////////
 // IShape interface
 /////////////////////////////////////////////////////////////////////////////////////
@@ -343,10 +363,9 @@ struct Quad : public IShape
         const Vertex&,
         const Vertex&,
         const Vertex&,
-       HitRecord&
+        HitRecord&
     ) const;
 };
-
 
 
 } // namespace s3d

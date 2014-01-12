@@ -65,8 +65,8 @@ struct MaterialBase : public IMaterial
 {
     Color                   emissive;       //!< 自己発光カラーです.
     Color                   color;          //!< マテリアルカラーです.
-    const Texture2D*        pTexture;        //!< 2次元テクスチャです.
-    const TextureSampler*   pSampler;        //!< テクスチャサンプラーです.
+    const Texture2D*        pTexture;       //!< 2次元テクスチャです.
+    const TextureSampler*   pSampler;       //!< テクスチャサンプラーです.
     f32                     threshold;      //!< 閾値です.
 
     //---------------------------------------------------------------------------------

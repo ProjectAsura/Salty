@@ -122,14 +122,14 @@ BoundingBox BoundingBox::Merge( const BoundingBox& box, const Vector3& p )
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-// BoundingBoxQuad structure
+// BoundingBox4 structure
 /////////////////////////////////////////////////////////////////////////////////////
 
 //-----------------------------------------------------------------------------------
 //      コンストラクタです.
 //-----------------------------------------------------------------------------------
 S3D_INLINE
-BoundingBoxQuad::BoundingBoxQuad()
+BoundingBox4::BoundingBox4()
 {
 #if S3D_IS_SIMD
     value[0][0] = _mm_set1_ps( F_MAX );
@@ -177,7 +177,7 @@ BoundingBoxQuad::BoundingBoxQuad()
 //      引数付きコンストラクタです.
 //-----------------------------------------------------------------------------------
 S3D_INLINE 
-BoundingBoxQuad::BoundingBoxQuad
+BoundingBox4::BoundingBox4
 (
     const BoundingBox& box0
 )
@@ -229,7 +229,7 @@ BoundingBoxQuad::BoundingBoxQuad
 //      引数付きコンストラクタです.
 //-----------------------------------------------------------------------------------
 S3D_INLINE
-BoundingBoxQuad::BoundingBoxQuad
+BoundingBox4::BoundingBox4
 (
     const BoundingBox& box0,
     const BoundingBox& box1
@@ -282,7 +282,7 @@ BoundingBoxQuad::BoundingBoxQuad
 //      引数付きコンストラクタです.
 //-----------------------------------------------------------------------------------
 S3D_INLINE
-BoundingBoxQuad::BoundingBoxQuad
+BoundingBox4::BoundingBox4
 (
     const BoundingBox& box0,
     const BoundingBox& box1,
@@ -335,7 +335,7 @@ BoundingBoxQuad::BoundingBoxQuad
 //      引数付きコンストラクタです.
 //-----------------------------------------------------------------------------------
 S3D_INLINE
-BoundingBoxQuad::BoundingBoxQuad
+BoundingBox4::BoundingBox4
 (
     const BoundingBox& box0,
     const BoundingBox& box1,
@@ -389,7 +389,7 @@ BoundingBoxQuad::BoundingBoxQuad
 //      引数付きコンストラクタです.
 //-----------------------------------------------------------------------------------
 S3D_INLINE
-BoundingBoxQuad::BoundingBoxQuad
+BoundingBox4::BoundingBox4
 (
     const b128& miniX,
     const b128& miniY,
@@ -413,7 +413,7 @@ BoundingBoxQuad::BoundingBoxQuad
 //      交差判定を行います.
 //-----------------------------------------------------------------------------------
 S3D_INLINE
-bool BoundingBoxQuad::IsHit( const RayQuad& ray, s32& mask ) const
+bool BoundingBox4::IsHit( const Ray4& ray, s32& mask ) const
 {
 #if S3D_IS_SIMD
     b128 tmin = _mm_set1_ps( F_HIT_MIN );
@@ -489,7 +489,7 @@ bool BoundingBoxQuad::IsHit( const RayQuad& ray, s32& mask ) const
 //      バウンディングボックスを取得します.
 //-----------------------------------------------------------------------------------
 S3D_INLINE
-BoundingBox BoundingBoxQuad::GetBox() const
+BoundingBox BoundingBox4::GetBox() const
 {
     Vector3 tmin( value[0][0].m128_f32[0], value[0][1].m128_f32[0], value[0][2].m128_f32[0] );
     Vector3 tmax( value[1][0].m128_f32[0], value[1][1].m128_f32[0], value[1][2].m128_f32[0] );
@@ -507,7 +507,7 @@ BoundingBox BoundingBoxQuad::GetBox() const
 //      2つの4バウンディングボックスをマージします.
 //-----------------------------------------------------------------------------------
 S3D_INLINE
-BoundingBoxQuad BoundingBoxQuad::Merge( const BoundingBoxQuad& a, const BoundingBoxQuad& b )
+BoundingBox4 BoundingBox4::Merge( const BoundingBox4& a, const BoundingBox4& b )
 {
 #if S3D_IS_SIMD
     b128 miniX = _mm_min_ps( a.value[0][0], b.value[0][0] );
@@ -518,7 +518,7 @@ BoundingBoxQuad BoundingBoxQuad::Merge( const BoundingBoxQuad& a, const Bounding
     b128 maxiY = _mm_max_ps( a.value[1][1], b.value[1][1] );
     b128 maxiZ = _mm_max_ps( a.value[1][2], b.value[1][2] );
 
-    return BoundingBoxQuad( miniX, miniY, miniZ, maxiX, maxiY, maxiZ );
+    return BoundingBox4( miniX, miniY, miniZ, maxiX, maxiY, maxiZ );
 #else
     b128 miniX = { 
         ( a.value[0][0].m128_f32[0] < b.value[0][0].m128_f32[0] ) ? a.value[0][0].m128_f32[0] : b.value[0][0].m128_f32[0],
@@ -558,7 +558,7 @@ BoundingBoxQuad BoundingBoxQuad::Merge( const BoundingBoxQuad& a, const Bounding
         ( a.value[1][2].m128_f32[3] > b.value[1][2].m128_f32[3] ) ? a.value[1][2].m128_f32[3] : b.value[1][2].m128_f32[3]
     };
 
-    return BoundingBoxQuad( miniX, miniY, miniZ, maxiX, maxiY, maxiZ );
+    return BoundingBox4( miniX, miniY, miniZ, maxiX, maxiY, maxiZ );
 #endif//S3D_IS_SIMD
 }
 

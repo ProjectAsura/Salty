@@ -219,11 +219,8 @@ bool BVH::IsPrimitive() const
 //--------------------------------------------------------------------------
 IShape* BVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 {
-    if ( numShapes <= 0 )
-    { return nullptr; }
-
     // そのまま返却.
-    if ( numShapes == 1 ) 
+    if ( numShapes <= 1 ) 
     { return ppShapes[0]; }
 
     // 左と右を入れたインスタンスを生成.
@@ -301,9 +298,7 @@ IShape* BVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
 void BVH::DestroyBranch( BVH* pShape )
 {
     if ( pShape == nullptr )
-    {
-        return;
-    }
+    { return; }
 
     if ( pShape->IsPrimitive() )
     {
@@ -320,7 +315,6 @@ void BVH::DestroyBranch( BVH* pShape )
 
 
 
-
 ////////////////////////////////////////////////////////////////////////////
 // QBVH structure
 ////////////////////////////////////////////////////////////////////////////
@@ -334,7 +328,7 @@ QBVH::QBVH()
     pShape[1] = nullptr;
     pShape[2] = nullptr;
     pShape[3] = nullptr;
-    pHitFunc = nullptr;
+    pHitFunc  = nullptr;
 }
 
 //--------------------------------------------------------------------------
@@ -359,7 +353,7 @@ QBVH::QBVH
     BoundingBox box2 = ( pShape3 == nullptr ) ? BoundingBox() : pShape3->GetBox();
     BoundingBox box3 = ( pShape4 == nullptr ) ? BoundingBox() : pShape4->GetBox();
 
-    box = BoundingBoxQuad( box0, box1, box2, box3 );
+    box = BoundingBox4( box0, box1, box2, box3 );
     pHitFunc = ( node ) ? HitFuncNode : HitFuncLeaf;
 }
 
@@ -373,7 +367,7 @@ QBVH::QBVH
     IShape* pShape2,
     IShape* pShape3,
     IShape* pShape4,
-    const BoundingBoxQuad& quadBox
+    const BoundingBox4& quadBox
 ): box( quadBox )
 {
     pShape[0] = pShape1;
@@ -423,11 +417,8 @@ bool QBVH::IsPrimitive() const
 //--------------------------------------------------------------------------
 IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 {
-    //if ( numShapes <= 0 )
-    //{ return nullptr; }
-
     // そのまま返却.
-    if ( numShapes == 1 )
+    if ( numShapes <= 1 )
     { return ppShapes[0]; }
 
     // 16byteアライメントでメモリを確保.
@@ -491,57 +482,14 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     IShape* child2 = BuildBranch( ppChild[2], numChild[2] );
     IShape* child3 = BuildBranch( ppChild[3], numChild[3] );
 
-    BoundingBox slot[4];
-    u32 slotCount = 0;
-
     // チャイルドのAABBを求める.
-    if ( numChild[0] >= 1 )
-    {
-        slot[slotCount] = CreateMergedBox( ppChild[0], numChild[0] );
-        slotCount++;
-    }
-    if ( numChild[1] >= 1 )
-    {
-        slot[slotCount] = CreateMergedBox( ppChild[1], numChild[1] );
-        slotCount++;
-    }
-    if ( numChild[2] >= 1 )
-    {
-        slot[slotCount] = CreateMergedBox( ppChild[2], numChild[2] );
-        slotCount++;
-    }
-    if ( numChild[3] >= 1 )
-    {
-        slot[slotCount] = CreateMergedBox( ppChild[3], numChild[3] );
-        slotCount++;
-    }
-
-    BoundingBoxQuad quadBox;
-    switch( slotCount )
-    {
-        case 1:
-            { quadBox = BoundingBoxQuad( slot[0] ); }
-            break;
-
-        case 2:
-            { quadBox = BoundingBoxQuad( slot[0], slot[1] ); }
-            break;
-
-        case 3:
-            { quadBox = BoundingBoxQuad( slot[0], slot[1], slot[2] ); }
-            break;
-
-        case 4:
-            { quadBox = BoundingBoxQuad( slot[0], slot[1], slot[2], slot[3] ); }
-            break;
-
-        default:
-            assert( false );
-            break;
-    }
+    BoundingBox box0 = CreateMergedBox( ppChild[0], numChild[0] );
+    BoundingBox box1 = CreateMergedBox( ppChild[1], numChild[1] );
+    BoundingBox box2 = CreateMergedBox( ppChild[2], numChild[2] );
+    BoundingBox box3 = CreateMergedBox( ppChild[3], numChild[3] );
 
     // ノードとして生成.
-    return new(pBuf) QBVH( true, child0, child1, child2, child3, quadBox );
+    return new(pBuf) QBVH( true, child0, child1, child2, child3, BoundingBox4( box0, box1, box2, box3 ) );
 }
 
 //--------------------------------------------------------------------------
@@ -549,11 +497,8 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 //--------------------------------------------------------------------------
 IShape* QBVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
 {
-    if ( numShapes <=0 )
-    { return nullptr; }
-
     // そのまま返却.
-    if ( numShapes == 1 )
+    if ( numShapes <= 1 )
     { return (IShape*)&pShapes[0]; }
 
     // 16byteアライメントでメモリを確保.
@@ -624,7 +569,7 @@ IShape* QBVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
     BoundingBox box3 = CreateMergedBox( ppChild[3], numChild[3] );
 
     // ノードとして生成.
-    return new(pBuf) QBVH( true, child0, child1, child2, child3, BoundingBoxQuad( box0, box1, box2, box3 ) );
+    return new(pBuf) QBVH( true, child0, child1, child2, child3, BoundingBox4( box0, box1, box2, box3 ) );
 }
 
 //--------------------------------------------------------------------------
@@ -665,7 +610,7 @@ bool QBVH::HitFuncNode( const QBVH* pBVH, const Ray& ray, HitRecord& record )
 {
     // まず子のバウンディングボックスと交差判定.
     s32 mask = 0;
-    if ( !pBVH->box.IsHit( RayQuad( ray ), mask ) )
+    if ( !pBVH->box.IsHit( Ray4( ray ), mask ) )
     { return false; }
 
     // 次にバウンディングボックスとヒットした子のみたどっていく.

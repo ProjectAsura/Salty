@@ -89,6 +89,7 @@
     <ClCompile Include="..\src\s3d_app.cpp" />
     <ClCompile Include="..\src\s3d_bmp.cpp" />
     <ClCompile Include="..\src\s3d_bvh.cpp" />
+    <ClCompile Include="..\src\s3d_hashgrid.cpp" />
     <ClCompile Include="..\src\s3d_material.cpp" />
     <ClCompile Include="..\src\s3d_mesh.cpp" />
     <ClCompile Include="..\src\s3d_mutex.cpp" />
@@ -105,6 +106,7 @@
     <ClInclude Include="..\include\s3d_box.h" />
     <ClInclude Include="..\include\s3d_bvh.h" />
     <ClInclude Include="..\include\s3d_camera.h" />
+    <ClInclude Include="..\include\s3d_hashgrid.h" />
     <ClInclude Include="..\include\s3d_material.h" />
     <ClInclude Include="..\include\s3d_math.h" />
     <ClInclude Include="..\include\s3d_matrix.h" />

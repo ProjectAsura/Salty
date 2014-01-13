@@ -55,14 +55,14 @@ struct HitRecordEx : public HitRecord
 {
     s32         pixelIndex;         //!< ピクセル番号です.
     s32         photonCount;        //!< フォトン数です.
-    f32         photonRadius;       //!< フォトンの半径です.
+    f32         radiusSq;           //!< フォトンの半径です.
     Vector3     flux;               //!< 光束です.
 
     HitRecordEx()
     : HitRecord     ()
     , pixelIndex    ( 0 )
     , photonCount   ( 0 )
-    , photonRadius  ( F_MAX )
+    , radiusSq      ( F_MAX )
     , flux          ( 0.0f, 0.0f, 0.0f )
     { /* DO_NOTHING */ }
 };

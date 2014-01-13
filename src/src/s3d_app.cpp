@@ -672,7 +672,6 @@ void App::Run( const Config& config )
 
     // BVH構築.
     g_pBVH = QBVH::BuildBranch( pShapes, numShapes );
-    //g_pBVH = BVH::BuildBranch( pShapes, numShapes );
     assert( g_pBVH != nullptr );
 
     // レイトレ！
@@ -682,7 +681,6 @@ void App::Run( const Config& config )
 
     // メモリ解放.
     QBVH::DestroyBranch( (QBVH*)g_pBVH );
-    //BVH::DestroyBranch( (BVH*)g_pBVH );
 
     if ( g_IsFinished )
     {

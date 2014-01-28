@@ -176,15 +176,9 @@ Color MeshMaterial::ComputeColor( ShadingArg& arg ) const
     // 重み更新 (飛ぶ方向が不定なので確率で割る必要あり).
     Color result;
     if ( pDiffuseMap != nullptr )
-    {
-        result = Color::Mul( Diffuse, pDiffuseMap->Sample( ( *pDiffuseSmp ), arg.texcoord ) ) / arg.prob;
-        //ILOG( "MeshMaterial result = ( %f, %f, %f )", result.x, result.y, result.z );
-    }
+    { result = Color::Mul( Diffuse, pDiffuseMap->Sample( ( *pDiffuseSmp ), arg.texcoord ) ) / arg.prob; }
     else
-    {
-        result = Diffuse / arg.prob;
-        //ILOG( "MeshMaterial result = ( %f, %f, %f )", result.x, result.y, result.z );
-    }
+    { result = Diffuse / arg.prob; }
 
     return result;
 }
@@ -222,7 +216,6 @@ void Mesh::Release()
 {
     if ( m_pBVH )
     {
-        //BVH::DestroyBranch( (BVH*)m_pBVH );
         QBVH::DestroyBranch( (QBVH*)m_pBVH );
         m_pBVH = nullptr;
     }
@@ -429,7 +422,6 @@ bool Mesh::LoadFromFile( const char* filename )
             SMD_TEXTURE texture;
             fread( &texture, sizeof( SMD_TEXTURE ), 1, pFile );
 
-
             std::string path = dirPath + "/" + texture.FileName;
             if ( !m_pTextures[ i ].LoadFromFile( path.c_str() ) )
             {
@@ -451,7 +443,6 @@ bool Mesh::LoadFromFile( const char* filename )
     }
 
     // BVHを構築します.
-    //m_pBVH = BVH::BuildBranch( m_pTriangles, m_NumTriangles );
     m_pBVH = QBVH::BuildBranch( m_pTriangles, m_NumTriangles );
 
     return true;

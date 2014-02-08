@@ -660,4 +660,591 @@ bool QBVH::HitFuncLeaf( const QBVH* pBVH, const Ray& ray, HitRecord& record )
 }
 
 
+////////////////////////////////////////////////////////////////////////////
+// OBVH structure
+////////////////////////////////////////////////////////////////////////////
+
+//--------------------------------------------------------------------------
+//      コンストラクタです.
+//--------------------------------------------------------------------------
+OBVH::OBVH()
+{
+    pShape[0] = nullptr;
+    pShape[1] = nullptr;
+    pShape[2] = nullptr;
+    pShape[3] = nullptr;
+    pShape[4] = nullptr;
+    pShape[5] = nullptr;
+    pShape[6] = nullptr;
+    pShape[7] = nullptr;
+    pHitFunc  = nullptr;
+}
+
+//--------------------------------------------------------------------------
+//      引数付きコンストラクタです.
+//--------------------------------------------------------------------------
+OBVH::OBVH
+(
+    bool node,
+    IShape* pShape1,
+    IShape* pShape2,
+    IShape* pShape3,
+    IShape* pShape4,
+    IShape* pShape5,
+    IShape* pShape6,
+    IShape* pShape7,
+    IShape* pShape8
+) 
+{
+    pShape[0] = pShape1;
+    pShape[1] = pShape2;
+    pShape[2] = pShape3;
+    pShape[3] = pShape4;
+    pShape[4] = pShape5;
+    pShape[5] = pShape6;
+    pShape[6] = pShape7;
+    pShape[7] = pShape8;
+
+    BoundingBox box0 = pShape1->GetBox();
+    BoundingBox box1 = pShape2->GetBox();
+    BoundingBox box2 = ( pShape3 == nullptr ) ? BoundingBox() : pShape3->GetBox();
+    BoundingBox box3 = ( pShape4 == nullptr ) ? BoundingBox() : pShape4->GetBox();
+    BoundingBox box4 = ( pShape5 == nullptr ) ? BoundingBox() : pShape5->GetBox();
+    BoundingBox box5 = ( pShape6 == nullptr ) ? BoundingBox() : pShape6->GetBox();
+    BoundingBox box6 = ( pShape7 == nullptr ) ? BoundingBox() : pShape7->GetBox();
+    BoundingBox box7 = ( pShape8 == nullptr ) ? BoundingBox() : pShape8->GetBox();
+
+
+    box = BoundingBox8( box0, box1, box2, box3, box4, box5, box6, box7 );
+    pHitFunc = ( node ) ? HitFuncNode : HitFuncLeaf;
+}
+
+//--------------------------------------------------------------------------
+//      引数付きコンストラクタです.
+//--------------------------------------------------------------------------
+OBVH::OBVH
+(
+    bool node,
+    IShape* pShape1, 
+    IShape* pShape2,
+    IShape* pShape3,
+    IShape* pShape4,
+    IShape* pShape5, 
+    IShape* pShape6,
+    IShape* pShape7,
+    IShape* pShape8,
+    const BoundingBox8& octBox
+): box( octBox )
+{
+    pShape[0] = pShape1;
+    pShape[1] = pShape2;
+    pShape[2] = pShape3;
+    pShape[3] = pShape4;
+    pShape[4] = pShape5;
+    pShape[5] = pShape6;
+    pShape[6] = pShape7;
+    pShape[7] = pShape8;
+    pHitFunc = ( node ) ? HitFuncNode : HitFuncLeaf;
+}
+
+//--------------------------------------------------------------------------
+//      デストラクタです.
+//--------------------------------------------------------------------------
+OBVH::~OBVH()
+{
+    pShape[0] = nullptr;
+    pShape[1] = nullptr;
+    pShape[2] = nullptr;
+    pShape[3] = nullptr;
+    pShape[4] = nullptr;
+    pShape[5] = nullptr;
+    pShape[6] = nullptr;
+    pShape[7] = nullptr;
+}
+
+//--------------------------------------------------------------------------
+//      交差判定を行います.
+//--------------------------------------------------------------------------
+bool OBVH::IsHit( const Ray& ray, HitRecord& record ) const
+{ return (*pHitFunc)( this, ray, record ); }
+
+//--------------------------------------------------------------------------
+//      マテリアルを取得します.
+//--------------------------------------------------------------------------
+IMaterial* OBVH::GetMaterial() const
+{ return nullptr; }
+
+//--------------------------------------------------------------------------
+//      バウンディングボックスを取得します.
+//--------------------------------------------------------------------------
+BoundingBox OBVH::GetBox() const
+{ return box.GetBox(); }
+
+//--------------------------------------------------------------------------
+//      基本図形かどうか判定します.
+//--------------------------------------------------------------------------
+bool OBVH::IsPrimitive() const
+{ return false; }
+
+//--------------------------------------------------------------------------
+//      ブランチを構築します.
+//--------------------------------------------------------------------------
+IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
+{
+    // そのまま返却.
+    if ( numShapes <= 1 )
+    { return ppShapes[0]; }
+
+    // 32byteアライメントでメモリを確保.
+    u8* pBuf = (u8*)_aligned_malloc( sizeof(OBVH), 32 );
+
+    // 葉として生成.
+    if ( numShapes == 2 )
+    { return new(pBuf) OBVH( false, ppShapes[0], ppShapes[1], nullptr, nullptr, nullptr, nullptr, nullptr, nullptr ); }
+    else if ( numShapes == 3 )
+    { return new(pBuf) OBVH( false, ppShapes[0], ppShapes[1], ppShapes[2], nullptr, nullptr, nullptr, nullptr, nullptr ); }
+    else if ( numShapes == 4 )
+    { return new(pBuf) OBVH( false, ppShapes[0], ppShapes[1], ppShapes[2], ppShapes[3], nullptr, nullptr, nullptr, nullptr ); }
+    else if ( numShapes == 5 )
+    { return new(pBuf) OBVH( false, ppShapes[0], ppShapes[1], ppShapes[2], ppShapes[3], ppShapes[4], nullptr, nullptr, nullptr ); }
+    else if ( numShapes == 6 )
+    { return new(pBuf) OBVH( false, ppShapes[0], ppShapes[1], ppShapes[2], ppShapes[3], ppShapes[4], ppShapes[5], nullptr, nullptr ); }
+    else if ( numShapes == 7 )
+    { return new(pBuf) OBVH( false, ppShapes[0], ppShapes[1], ppShapes[2], ppShapes[3], ppShapes[4], ppShapes[5], ppShapes[6], nullptr ); }
+    else if ( numShapes == 8 )
+    { return new(pBuf) OBVH( false, ppShapes[0], ppShapes[1], ppShapes[2], ppShapes[3], ppShapes[4], ppShapes[5], ppShapes[6], ppShapes[7] ); }
+
+    // -------------------------
+    //      1段階目.
+    // -------------------------
+    // AABBを求める.
+    BoundingBox bbox = CreateMergedBox( ppShapes, numShapes );
+
+    // ピボットを求める.
+    Vector3 pivot = ( bbox.max + bbox.min ) / 2.0f;
+
+    // AABBの各辺の長さを求める.
+    Vector3 size  = bbox.max - bbox.min;
+    s32 axis = GetAxisIndex( size );
+
+    // 中間値.
+    s32 midPoint = Split( ppShapes, numShapes, pivot.a[axis], axis );
+
+    // -------------------------
+    //      2段階目.
+    // -------------------------
+    // 更に分割するためにAABBを求める.
+    BoundingBox bboxL = CreateMergedBox( ppShapes, midPoint );
+    BoundingBox bboxR = CreateMergedBox( &ppShapes[midPoint], numShapes - midPoint );
+
+    // AABBの各辺の長さを求める.
+    Vector3 sizeL = bboxL.max - bboxL.min;
+    Vector3 sizeR = bboxR.max - bboxR.min;
+    s32 axisL = GetAxisIndex( sizeL );
+    s32 axisR = GetAxisIndex( sizeR );
+
+    // 更に分割するピボットを求める.
+    Vector3 pivotL = ( bboxL.max + bboxL.min ) / 2.0f;
+    Vector3 pivotR = ( bboxR.max + bboxR.min ) / 2.0f;
+
+    // 分割する.
+    s32 midPointL = Split( ppShapes, midPoint, pivotL.a[axisL], axisL );
+    s32 midPointR = Split( &ppShapes[midPoint], numShapes - midPoint, pivotR.a[axisR], axisR );
+
+    u32 idx[4] = {
+        0,
+        midPointL,
+        midPoint,
+        midPoint + midPointR
+    };
+
+    u32 num[4] = {
+        midPointL,
+        midPoint - midPointL,
+        midPointR,
+        numShapes - (midPoint + midPointR)
+    };
+
+
+    // -------------------------
+    //      3段階目.
+    // -------------------------
+
+    // 更に更に分割するためにAABBを求める.
+    BoundingBox bbox1 = CreateMergedBox( &ppShapes[idx[0]], num[0] );
+    BoundingBox bbox2 = CreateMergedBox( &ppShapes[idx[1]], num[1] );
+    BoundingBox bbox3 = CreateMergedBox( &ppShapes[idx[2]], num[2] );
+    BoundingBox bbox4 = CreateMergedBox( &ppShapes[idx[3]], num[3] );
+
+    // AABBの各辺の長さを求める.
+    Vector3 size1 = bbox1.max - bbox1.min;
+    Vector3 size2 = bbox2.max - bbox2.min;
+    Vector3 size3 = bbox3.max - bbox3.min;
+    Vector3 size4 = bbox4.max - bbox4.min;
+    s32 axis1 = GetAxisIndex( size1 );
+    s32 axis2 = GetAxisIndex( size2 );
+    s32 axis3 = GetAxisIndex( size3 );
+    s32 axis4 = GetAxisIndex( size4 );
+
+    // 更に更に分割するピボットを求める.
+    Vector3 pivot1 = ( bbox1.max + bbox1.min ) / 2.0f;
+    Vector3 pivot2 = ( bbox2.max + bbox2.min ) / 2.0f;
+    Vector3 pivot3 = ( bbox3.max + bbox3.min ) / 2.0f;
+    Vector3 pivot4 = ( bbox4.max + bbox4.min ) / 2.0f;
+
+    // 分割する.
+    s32 midPoint1 = Split( &ppShapes[idx[0]], num[0], pivot1.a[axis1], axis1 );
+    s32 midPoint2 = Split( &ppShapes[idx[1]], num[1], pivot2.a[axis2], axis2 );
+    s32 midPoint3 = Split( &ppShapes[idx[2]], num[2], pivot3.a[axis3], axis3 );
+    s32 midPoint4 = Split( &ppShapes[idx[3]], num[3], pivot4.a[axis4], axis4 );
+
+    IShape** ppChild[8] = {
+        &ppShapes[idx[0]],
+        &ppShapes[midPoint1],
+        &ppShapes[idx[1]],
+        &ppShapes[idx[1] + midPoint2],
+        &ppShapes[idx[2]],
+        &ppShapes[midPoint3],
+        &ppShapes[idx[3]],
+        &ppShapes[idx[3] + midPoint4]
+    };
+    u32 numChild[8] = {
+        midPoint1,
+        num[0] - midPoint1,
+        midPoint2,
+        num[1] - midPoint2,
+        midPoint3,
+        num[2] - midPoint3,
+        midPoint4,
+        numShapes - ( midPoint4 +  num[1] - midPoint2 )
+    };
+
+    // ブランチを生成.
+    IShape* child0 = BuildBranch( ppChild[0], numChild[0] );
+    IShape* child1 = BuildBranch( ppChild[1], numChild[1] );
+    IShape* child2 = BuildBranch( ppChild[2], numChild[2] );
+    IShape* child3 = BuildBranch( ppChild[3], numChild[3] );
+    IShape* child4 = BuildBranch( ppChild[4], numChild[4] );
+    IShape* child5 = BuildBranch( ppChild[5], numChild[5] );
+    IShape* child6 = BuildBranch( ppChild[6], numChild[6] );
+    IShape* child7 = BuildBranch( ppChild[7], numChild[7] );
+
+    // チャイルドのAABBを求める.
+    BoundingBox box0 = CreateMergedBox( ppChild[0], numChild[0] );
+    BoundingBox box1 = CreateMergedBox( ppChild[1], numChild[1] );
+    BoundingBox box2 = CreateMergedBox( ppChild[2], numChild[2] );
+    BoundingBox box3 = CreateMergedBox( ppChild[3], numChild[3] );
+    BoundingBox box4 = CreateMergedBox( ppChild[4], numChild[4] );
+    BoundingBox box5 = CreateMergedBox( ppChild[5], numChild[5] );
+    BoundingBox box6 = CreateMergedBox( ppChild[6], numChild[6] );
+    BoundingBox box7 = CreateMergedBox( ppChild[7], numChild[7] );
+
+    // ノードとして生成.
+    return new(pBuf) OBVH(
+        true,
+        child0,
+        child1,
+        child2,
+        child3,
+        child4,
+        child5,
+        child6,
+        child7,
+        BoundingBox8( box0, box1, box2, box3, box4, box5, box6, box7 ) );
+}
+
+//--------------------------------------------------------------------------
+//      ブランチを構築します(メッシュ用).
+//--------------------------------------------------------------------------
+IShape* OBVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
+{
+    // そのまま返却.
+    if ( numShapes <= 1 )
+    { return (IShape*)&pShapes[0]; }
+
+    // 32byteアライメントでメモリを確保.
+    u8* pBuf = (u8*)_aligned_malloc( sizeof(OBVH), 32 );
+
+    // 葉として生成.
+    if ( numShapes == 2 )
+    { return new(pBuf) OBVH( false, &pShapes[0], &pShapes[1], nullptr, nullptr, nullptr, nullptr, nullptr, nullptr ); }
+    else if ( numShapes == 3 )
+    { return new(pBuf) OBVH( false, &pShapes[0], &pShapes[1], &pShapes[2], nullptr, nullptr, nullptr, nullptr, nullptr ); }
+    else if ( numShapes == 4 )
+    { return new(pBuf) OBVH( false, &pShapes[0], &pShapes[1], &pShapes[2], &pShapes[3], nullptr, nullptr, nullptr, nullptr ); }
+    else if ( numShapes == 5 )
+    { return new(pBuf) OBVH( false, &pShapes[0], &pShapes[1], &pShapes[2], &pShapes[3], &pShapes[4], nullptr, nullptr, nullptr ); }
+    else if ( numShapes == 6 )
+    { return new(pBuf) OBVH( false, &pShapes[0], &pShapes[1], &pShapes[2], &pShapes[3], &pShapes[4], &pShapes[5], nullptr, nullptr ); }
+    else if ( numShapes == 7 )
+    { return new(pBuf) OBVH( false, &pShapes[0], &pShapes[1], &pShapes[2], &pShapes[3], &pShapes[4], &pShapes[5], &pShapes[6], nullptr ); }
+    else if ( numShapes == 8 )
+    { return new(pBuf) OBVH( false, &pShapes[0], &pShapes[1], &pShapes[2], &pShapes[3], &pShapes[4], &pShapes[5], &pShapes[6], &pShapes[7] ); }
+
+    // -------------------------
+    //      1段階目.
+    // -------------------------
+    // AABBを求める.
+    BoundingBox bbox = CreateMergedBox( pShapes, numShapes );
+
+    // ピボットを求める.
+    Vector3 pivot = ( bbox.max + bbox.min ) / 2.0f;
+
+    // AABBの各辺の長さを求める.
+    Vector3 size  = bbox.max - bbox.min;
+    s32 axis = GetAxisIndex( size );
+
+    // 中間値.
+    s32 midPoint = Split( pShapes, numShapes, pivot.a[axis], axis );
+
+    // -------------------------
+    //      2段階目.
+    // -------------------------
+    // 更に分割するためにAABBを求める.
+    BoundingBox bboxL = CreateMergedBox( pShapes, midPoint );
+    BoundingBox bboxR = CreateMergedBox( &pShapes[midPoint], numShapes - midPoint );
+
+    // AABBの各辺の長さを求める.
+    Vector3 sizeL = bboxL.max - bboxL.min;
+    Vector3 sizeR = bboxR.max - bboxR.min;
+    s32 axisL = GetAxisIndex( sizeL );
+    s32 axisR = GetAxisIndex( sizeR );
+
+    // 更に分割するピボットを求める.
+    Vector3 pivotL = ( bboxL.max + bboxL.min ) / 2.0f;
+    Vector3 pivotR = ( bboxR.max + bboxR.min ) / 2.0f;
+
+    // 分割する.
+    s32 midPointL = Split( pShapes, midPoint, pivotL.a[axisL], axisL );
+    s32 midPointR = Split( &pShapes[midPoint], numShapes - midPoint, pivotR.a[axisR], axisR );
+
+    u32 idx[4] = {
+        0,
+        midPointL,
+        midPoint,
+        midPoint + midPointR
+    };
+
+    u32 num[4] = {
+        midPointL,
+        midPoint - midPointL,
+        midPointR,
+        numShapes - (midPoint + midPointR)
+    };
+
+
+    // -------------------------
+    //      3段階目.
+    // -------------------------
+
+    // 更に更に分割するためにAABBを求める.
+    BoundingBox bbox1 = CreateMergedBox( &pShapes[idx[0]], num[0] );
+    BoundingBox bbox2 = CreateMergedBox( &pShapes[idx[1]], num[1] );
+    BoundingBox bbox3 = CreateMergedBox( &pShapes[idx[2]], num[2] );
+    BoundingBox bbox4 = CreateMergedBox( &pShapes[idx[3]], num[3] );
+
+    // AABBの各辺の長さを求める.
+    Vector3 size1 = bbox1.max - bbox1.min;
+    Vector3 size2 = bbox2.max - bbox2.min;
+    Vector3 size3 = bbox3.max - bbox3.min;
+    Vector3 size4 = bbox4.max - bbox4.min;
+    s32 axis1 = GetAxisIndex( size1 );
+    s32 axis2 = GetAxisIndex( size2 );
+    s32 axis3 = GetAxisIndex( size3 );
+    s32 axis4 = GetAxisIndex( size4 );
+
+    // 更に更に分割するピボットを求める.
+    Vector3 pivot1 = ( bbox1.max + bbox1.min ) / 2.0f;
+    Vector3 pivot2 = ( bbox2.max + bbox2.min ) / 2.0f;
+    Vector3 pivot3 = ( bbox3.max + bbox3.min ) / 2.0f;
+    Vector3 pivot4 = ( bbox4.max + bbox4.min ) / 2.0f;
+
+    // 分割する.
+    s32 midPoint1 = Split( &pShapes[idx[0]], num[0], pivot1.a[axis1], axis1 );
+    s32 midPoint2 = Split( &pShapes[idx[1]], num[1], pivot2.a[axis2], axis2 );
+    s32 midPoint3 = Split( &pShapes[idx[2]], num[2], pivot3.a[axis3], axis3 );
+    s32 midPoint4 = Split( &pShapes[idx[3]], num[3], pivot4.a[axis4], axis4 );
+
+    Triangle* ppChild[8] = {
+        &pShapes[idx[0]],
+        &pShapes[midPoint1],
+        &pShapes[idx[1]],
+        &pShapes[idx[1] + midPoint2],
+        &pShapes[idx[2]],
+        &pShapes[midPoint3],
+        &pShapes[idx[3]],
+        &pShapes[idx[3] + midPoint4]
+    };
+    u32 numChild[8] = {
+        midPoint1,
+        num[0] - midPoint1,
+        midPoint2,
+        num[1] - midPoint2,
+        midPoint3,
+        num[2] - midPoint3,
+        midPoint4,
+        numShapes - ( midPoint4 +  num[1] - midPoint2 )
+    };
+
+    // ブランチを生成.
+    IShape* child0 = BuildBranch( ppChild[0], numChild[0] );
+    IShape* child1 = BuildBranch( ppChild[1], numChild[1] );
+    IShape* child2 = BuildBranch( ppChild[2], numChild[2] );
+    IShape* child3 = BuildBranch( ppChild[3], numChild[3] );
+    IShape* child4 = BuildBranch( ppChild[4], numChild[4] );
+    IShape* child5 = BuildBranch( ppChild[5], numChild[5] );
+    IShape* child6 = BuildBranch( ppChild[6], numChild[6] );
+    IShape* child7 = BuildBranch( ppChild[7], numChild[7] );
+
+    // チャイルドのAABBを求める.
+    BoundingBox box0 = CreateMergedBox( ppChild[0], numChild[0] );
+    BoundingBox box1 = CreateMergedBox( ppChild[1], numChild[1] );
+    BoundingBox box2 = CreateMergedBox( ppChild[2], numChild[2] );
+    BoundingBox box3 = CreateMergedBox( ppChild[3], numChild[3] );
+    BoundingBox box4 = CreateMergedBox( ppChild[4], numChild[4] );
+    BoundingBox box5 = CreateMergedBox( ppChild[5], numChild[5] );
+    BoundingBox box6 = CreateMergedBox( ppChild[6], numChild[6] );
+    BoundingBox box7 = CreateMergedBox( ppChild[7], numChild[7] );
+
+    // ノードとして生成.
+    return new(pBuf) OBVH(
+        true,
+        child0,
+        child1,
+        child2,
+        child3,
+        child4,
+        child5,
+        child6,
+        child7,
+        BoundingBox8( box0, box1, box2, box3, box4, box5, box6, box7 ) );
+}
+
+//--------------------------------------------------------------------------
+//      ブランチを破棄します.
+//--------------------------------------------------------------------------
+void OBVH::DestroyBranch( OBVH* pShape )
+{
+    if ( pShape == nullptr )
+    { return; }
+
+    // 基本図形の場合は，作成元の方でメモリ解放を行うのでnullクリア.
+    if ( pShape->IsPrimitive() )
+    {
+        pShape = nullptr;
+        return;
+    }
+
+    // ブランチを破棄する.
+    DestroyBranch( (OBVH*)pShape->pShape[0] );
+    DestroyBranch( (OBVH*)pShape->pShape[1] );
+    DestroyBranch( (OBVH*)pShape->pShape[2] );
+    DestroyBranch( (OBVH*)pShape->pShape[3] );
+    DestroyBranch( (OBVH*)pShape->pShape[4] );
+    DestroyBranch( (OBVH*)pShape->pShape[5] );
+    DestroyBranch( (OBVH*)pShape->pShape[6] );
+    DestroyBranch( (OBVH*)pShape->pShape[7] );
+
+    // placemenet newしたので明示的にデストラクタを呼び出し.
+    pShape->~OBVH();
+
+    // _aligned_malloc()でメモリを確保したので，_aligned_free()で解放.
+    _aligned_free( pShape );
+
+    // nullクリア
+    pShape = nullptr;
+}
+
+//--------------------------------------------------------------------------
+//      ノードの交差判定を行います.
+//--------------------------------------------------------------------------
+bool OBVH::HitFuncNode( const OBVH* pBVH, const Ray& ray, HitRecord& record )
+{
+    // まず子のバウンディングボックスと交差判定.
+    s32 mask = 0;
+    if ( !pBVH->box.IsHit( Ray8( ray ), mask ) )
+    { return false; }
+
+    // 次にバウンディングボックスとヒットした子のみたどっていく.
+    bool isHit0 = false;
+    bool isHit1 = false;
+    bool isHit2 = false;
+    bool isHit3 = false;
+    bool isHit4 = false;
+    bool isHit5 = false;
+    bool isHit6 = false;
+    bool isHit7 = false;
+
+    if ( ( mask & 0x1 ) && pBVH->pShape[0] != nullptr )
+    { isHit0 = pBVH->pShape[0]->IsHit( ray, record ); }
+
+    if ( ( mask & 0x2 ) && pBVH->pShape[1] != nullptr )
+    { isHit1 = pBVH->pShape[1]->IsHit( ray, record ); }
+
+    if ( ( mask & 0x4 ) && pBVH->pShape[2] != nullptr )
+    { isHit2 = pBVH->pShape[2]->IsHit( ray, record ); }
+
+    if ( ( mask & 0x8 ) && pBVH->pShape[3] != nullptr )
+    { isHit3 = pBVH->pShape[3]->IsHit( ray, record ); }
+
+    if ( ( mask & 0x10 ) && pBVH->pShape[4] != nullptr )
+    { isHit4 = pBVH->pShape[4]->IsHit( ray, record ); }
+
+    if ( ( mask & 0x20 ) && pBVH->pShape[5] != nullptr )
+    { isHit5 = pBVH->pShape[5]->IsHit( ray, record ); }
+
+    if ( ( mask & 0x40 ) && pBVH->pShape[6] != nullptr )
+    { isHit6 = pBVH->pShape[6]->IsHit( ray, record ); }
+
+    if ( ( mask & 0x80 ) && pBVH->pShape[7] != nullptr )
+    { isHit7 = pBVH->pShape[7]->IsHit( ray, record ); }
+
+
+    return ( isHit0 || isHit1 || isHit2 || isHit3 || isHit4 || isHit5 || isHit6 || isHit7 );
+}
+
+//--------------------------------------------------------------------------
+//      葉の交差判定を行います.
+//--------------------------------------------------------------------------
+bool OBVH::HitFuncLeaf( const OBVH* pBVH, const Ray& ray, HitRecord& record )
+{
+    bool isHit0 = false;
+    bool isHit1 = false;
+    bool isHit2 = false;
+    bool isHit3 = false;
+    bool isHit4 = false;
+    bool isHit5 = false;
+    bool isHit6 = false;
+    bool isHit7 = false;
+
+    if ( pBVH->pShape[0] != nullptr )
+    { isHit0 = pBVH->pShape[0]->IsHit( ray, record ); }
+
+    if ( pBVH->pShape[1] != nullptr )
+    { isHit1 = pBVH->pShape[1]->IsHit( ray, record ); }
+
+    if ( pBVH->pShape[2] != nullptr )
+    { isHit2 = pBVH->pShape[2]->IsHit( ray, record ); }
+
+    if ( pBVH->pShape[3] != nullptr )
+    { isHit3 = pBVH->pShape[3]->IsHit( ray, record ); }
+
+    if ( pBVH->pShape[4] != nullptr )
+    { isHit4 = pBVH->pShape[4]->IsHit( ray, record ); }
+
+    if ( pBVH->pShape[5] != nullptr )
+    { isHit5 = pBVH->pShape[5]->IsHit( ray, record ); }
+
+    if ( pBVH->pShape[6] != nullptr )
+    { isHit6 = pBVH->pShape[6]->IsHit( ray, record ); }
+
+    if ( pBVH->pShape[7] != nullptr )
+    { isHit7 = pBVH->pShape[7]->IsHit( ray, record ); }
+
+
+    return ( isHit0 || isHit1 || isHit2 || isHit3 || isHit4 || isHit5 || isHit6 || isHit7 );
+}
+
+
+
 } // namespace s3d

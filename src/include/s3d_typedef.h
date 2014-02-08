@@ -81,6 +81,12 @@ typedef double              f64;
     #define S3D_IS_SSE2   (0)     // SSE2無効.
 #endif
 
+#if defined(__AVX__)
+    #define S3D_IS_AVX    (1)     // AVX有効.
+#else
+    #define S3D_IS_AVX    (0)     // AVX無効.
+#endif
+
 #if defined(S3D_USE_SIMD)
     #define S3D_IS_SIMD   (1)     // SIMD演算有効.
 #else
@@ -92,9 +98,15 @@ typedef double              f64;
 
 #include <xmmintrin.h>
 #include <emmintrin.h>
+#include <immintrin.h>
 
 typedef __m64       b64;
 typedef __m128      b128;
+typedef __m128d     b128d;
+typedef __m128i     b128i;
+typedef __m256      b256;
+typedef __m256d     b256d;
+typedef __m256i     b256i;
 
 #else
 
@@ -111,18 +123,63 @@ typedef union S3D_ALIGN(8) _b64
     unsigned __int32    m64_u32[2];
 } b64;
 
+
 typedef union S3D_ALIGN(16) _b128
 {
-     float               m128_f32[4];
-     unsigned __int64    m128_u64[2];
-     __int8              m128_i8[16];
-     __int16             m128_i16[8];
-     __int32             m128_i32[4];
-     __int64             m128_i64[2];
-     unsigned __int8     m128_u8[16];
-     unsigned __int16    m128_u16[8];
-     unsigned __int32    m128_u32[4];
+    float               m128_f32[4];
+    unsigned __int64    m128_u64[2];
+    __int8              m128_i8[16];
+    __int16             m128_i16[8];
+    __int32             m128_i32[4];
+    __int64             m128_i64[2];
+    unsigned __int8     m128_u8[16];
+    unsigned __int16    m128_u16[8];
+    unsigned __int32    m128_u32[4];
 } b128;
+
+
+typedef union S3D_ALIGN(16) _b128d
+{
+    double              m128_f64[2];
+};
+
+
+typedef union S3D_ALIGN(16) _b128i
+{
+    unsigned __int64    m128_u64[2];
+    __int8              m128_i8[16];
+    __int16             m128_i16[8];
+    __int32             m128_i32[4];
+    __int64             m128_i64[2];
+    unsigned __int8     m128_u8[16];
+    unsigned __int16    m128_u16[8];
+    unsigned __int32    m128_u32[4];
+} b128i;
+
+
+typedef union S3D_ALAIGN(32) _b256
+{
+    float               m256_f32[8];
+} b256;
+
+
+typedef union S3D_ALIGN(32) _b256d
+{
+    double              m256_f64[4];
+} b256d;
+
+
+typedef union S3D_ALIGN(32) _b256i
+{
+    __int8              m256i_i8[32];
+    __int16             m256i_i16[16];
+    __int32             m256i_i32[8];
+    __int64             m256i_i64[4];
+    unsigned __int8     m256i_u8[32];
+    unsigned __int16    m256i_u16[16];
+    unsigned __int32    m256i_u32[8];
+    unsigned __int64    m256i_u64[4];
+} b256i;
 
 #endif//S3D_IS_SIMD
 

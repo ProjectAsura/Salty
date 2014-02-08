@@ -1433,6 +1433,108 @@ struct Ray4
 };
 
 
+////////////////////////////////////////////////////////////////////////////////////////////
+// Ray4 structure
+////////////////////////////////////////////////////////////////////////////////////////////
+struct Ray8
+{
+    b256    pos[3];         //!< 位置座標です.
+    b256    invDir[3];      //!< 方向ベクトルの逆数です.
+    s32     sign[3];        //!< 方向ベクトルの符号です.
+
+    //-------------------------------------------------------------------------------------
+    //! @brief      コンストラクタです.
+    //-------------------------------------------------------------------------------------
+    Ray8( const Ray& ray )
+    {
+    #if S3D_IS_AVX
+        pos[0] = _mm256_set1_ps( ray.pos.x );
+        pos[1] = _mm256_set1_ps( ray.pos.y );
+        pos[2] = _mm256_set1_ps( ray.pos.z );
+
+        invDir[0] = _mm256_set1_ps( ray.invDir.x );
+        invDir[1] = _mm256_set1_ps( ray.invDir.y );
+        invDir[2] = _mm256_set1_ps( ray.invDir.z );
+    #else
+        pos[0].m256_f32[0] = ray.pos.x;
+        pos[0].m256_f32[1] = ray.pos.x;
+        pos[0].m256_f32[2] = ray.pos.x;
+        pos[0].m256_f32[3] = ray.pos.x;
+        pos[0].m256_f32[4] = ray.pos.x;
+        pos[0].m256_f32[5] = ray.pos.x;
+        pos[0].m256_f32[6] = ray.pos.x;
+        pos[0].m256_f32[7] = ray.pos.x;
+
+        pos[1].m256_f32[0] = ray.pos.y;
+        pos[1].m256_f32[1] = ray.pos.y;
+        pos[1].m256_f32[2] = ray.pos.y;
+        pos[1].m256_f32[3] = ray.pos.y;
+        pos[1].m256_f32[4] = ray.pos.y;
+        pos[1].m256_f32[5] = ray.pos.y;
+        pos[1].m256_f32[6] = ray.pos.y;
+        pos[1].m256_f32[7] = ray.pos.y;
+
+        pos[2].m256_f32[0] = ray.pos.z;
+        pos[2].m256_f32[1] = ray.pos.z;
+        pos[2].m256_f32[2] = ray.pos.z;
+        pos[2].m256_f32[3] = ray.pos.z;
+        pos[2].m256_f32[4] = ray.pos.z;
+        pos[2].m256_f32[5] = ray.pos.z;
+        pos[2].m256_f32[6] = ray.pos.z;
+        pos[2].m256_f32[7] = ray.pos.z;
+
+        invDir[0].m256_f32[0] = ray.invDir.x;
+        invDir[0].m256_f32[1] = ray.invDir.x;
+        invDir[0].m256_f32[2] = ray.invDir.x;
+        invDir[0].m256_f32[3] = ray.invDir.x;
+        invDir[0].m256_f32[4] = ray.invDir.x;
+        invDir[0].m256_f32[5] = ray.invDir.x;
+        invDir[0].m256_f32[6] = ray.invDir.x;
+        invDir[0].m256_f32[7] = ray.invDir.x;
+
+        invDir[1].m256_f32[0] = ray.invDir.y;
+        invDir[1].m256_f32[1] = ray.invDir.y;
+        invDir[1].m256_f32[2] = ray.invDir.y;
+        invDir[1].m256_f32[3] = ray.invDir.y;
+        invDir[1].m256_f32[4] = ray.invDir.y;
+        invDir[1].m256_f32[5] = ray.invDir.y;
+        invDir[1].m256_f32[6] = ray.invDir.y;
+        invDir[1].m256_f32[7] = ray.invDir.y;
+
+        invDir[2].m256_f32[0] = ray.invDir.z;
+        invDir[2].m256_f32[1] = ray.invDir.z;
+        invDir[2].m256_f32[2] = ray.invDir.z;
+        invDir[2].m256_f32[3] = ray.invDir.z;
+        invDir[2].m256_f32[4] = ray.invDir.z;
+        invDir[2].m256_f32[5] = ray.invDir.z;
+        invDir[2].m256_f32[6] = ray.invDir.z;
+        invDir[2].m256_f32[7] = ray.invDir.z;
+    #endif
+        sign[0] = ray.sign[0];
+        sign[1] = ray.sign[1];
+        sign[2] = ray.sign[2];
+    }
+
+    //-------------------------------------------------------------------------------------
+    //! @brief      コピーコンストラクタです.
+    //-------------------------------------------------------------------------------------
+    Ray8( const Ray8& rayOct )
+    {
+        pos[0] = rayOct.pos[0];
+        pos[1] = rayOct.pos[1];
+        pos[2] = rayOct.pos[2];
+
+        invDir[0] = rayOct.invDir[0];
+        invDir[1] = rayOct.invDir[1];
+        invDir[2] = rayOct.invDir[2];
+
+        sign[0] = rayOct.sign[0];
+        sign[1] = rayOct.sign[1];
+        sign[2] = rayOct.sign[2];
+    }
+};
+
+
 } // namespace s3d
 
 

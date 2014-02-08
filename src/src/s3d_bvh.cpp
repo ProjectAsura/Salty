@@ -244,9 +244,19 @@ IShape* BVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     // 中間値.
     s32 midPoint = Split( ppShapes, numShapes, pivot.a[axis], axis );
 
+    s32 idx[2] = {
+        0,
+        midPoint
+    };
+
+    u32 num[2] = {
+        midPoint,
+        numShapes - midPoint
+    };
+
     // ブランチ構築.
-    IShape* left  = BuildBranch( ppShapes, midPoint );
-    IShape* right = BuildBranch( &ppShapes[midPoint], numShapes - midPoint );
+    IShape* left  = BuildBranch( &ppShapes[idx[0]], num[0] );
+    IShape* right = BuildBranch( &ppShapes[idx[1]], num[1] );
 
     // インスタンスを返却.
     return new BVH( left, right, bbox );
@@ -284,9 +294,19 @@ IShape* BVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
     // 中間値.
     s32 midPoint = Split( pShapes, numShapes, pivot.a[axis], axis );
 
+    s32 idx[2] = {
+        0,
+        midPoint
+    };
+
+    s32 num[2] = {
+        midPoint,
+        numShapes - midPoint
+    };
+
     // ブランチ構築.
-    IShape* left  = BuildBranch( pShapes, midPoint );
-    IShape* right = BuildBranch( &pShapes[midPoint], numShapes - midPoint );
+    IShape* left  = BuildBranch( &pShapes[idx[0]], num[0] );
+    IShape* right = BuildBranch( &pShapes[idx[1]], num[1] );
 
     // インスタンスを返却.
     return new BVH( left, right, bbox );
@@ -445,9 +465,19 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     // 中間値.
     s32 midPoint = Split( ppShapes, numShapes, pivot.a[axis], axis );
 
+    s32 idx1[2] = {
+        0,
+        midPoint
+    };
+
+    s32 num1[2] = {
+        midPoint,
+        numShapes - midPoint
+    };
+
     // 更に分割するためにAABBを求める.
-    BoundingBox bboxL = CreateMergedBox( ppShapes, midPoint );
-    BoundingBox bboxR = CreateMergedBox( &ppShapes[midPoint], numShapes - midPoint );
+    BoundingBox bboxL = CreateMergedBox( &ppShapes[idx1[0]], num1[0] );
+    BoundingBox bboxR = CreateMergedBox( &ppShapes[idx1[1]], num1[1] );
 
     // AABBの各辺の長さを求める.
     Vector3 sizeL = bboxL.max - bboxL.min;
@@ -460,36 +490,43 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     Vector3 pivotR = ( bboxR.max + bboxR.min ) / 2.0;
 
     // 分割する.
-    s32 midPointL = Split( ppShapes, midPoint, pivotL.a[axisL], axisL );
-    s32 midPointR = Split( &ppShapes[midPoint], numShapes - midPoint, pivotR.a[axisR], axisR );
+    s32 midPointL = Split( &ppShapes[idx1[0]], num1[0], pivotL.a[axisL], axisL );
+    s32 midPointR = Split( &ppShapes[idx1[1]], num1[1], pivotR.a[axisR], axisR );
 
-    IShape** ppChild[4] = {
-        &ppShapes[0],
-        &ppShapes[midPointL],
-        &ppShapes[midPoint],
-        &ppShapes[midPoint + midPointR]
-    };
-    u32 numChild[4] = {
+    u32 idx2[4] = {
+        idx1[0],
         midPointL,
-        midPoint - midPointL,
+        idx1[1],
+        idx1[1] + midPointR
+    };
+
+    u32 num2[4] = {
+        midPointL,
+        num1[0] - midPointL,
         midPointR,
-        numShapes - (midPoint + midPointR)
+        num1[1] - midPointR
     };
 
     // ブランチを生成.
-    IShape* child0 = BuildBranch( ppChild[0], numChild[0] );
-    IShape* child1 = BuildBranch( ppChild[1], numChild[1] );
-    IShape* child2 = BuildBranch( ppChild[2], numChild[2] );
-    IShape* child3 = BuildBranch( ppChild[3], numChild[3] );
+    IShape* child0 = BuildBranch( &ppShapes[idx2[0]], num2[0] );
+    IShape* child1 = BuildBranch( &ppShapes[idx2[1]], num2[1] );
+    IShape* child2 = BuildBranch( &ppShapes[idx2[2]], num2[2] );
+    IShape* child3 = BuildBranch( &ppShapes[idx2[3]], num2[3] );
 
     // チャイルドのAABBを求める.
-    BoundingBox box0 = CreateMergedBox( ppChild[0], numChild[0] );
-    BoundingBox box1 = CreateMergedBox( ppChild[1], numChild[1] );
-    BoundingBox box2 = CreateMergedBox( ppChild[2], numChild[2] );
-    BoundingBox box3 = CreateMergedBox( ppChild[3], numChild[3] );
+    BoundingBox box0 = CreateMergedBox( &ppShapes[idx2[0]], num2[0] );
+    BoundingBox box1 = CreateMergedBox( &ppShapes[idx2[1]], num2[1] );
+    BoundingBox box2 = CreateMergedBox( &ppShapes[idx2[2]], num2[2] );
+    BoundingBox box3 = CreateMergedBox( &ppShapes[idx2[3]], num2[3] );
 
     // ノードとして生成.
-    return new(pBuf) QBVH( true, child0, child1, child2, child3, BoundingBox4( box0, box1, box2, box3 ) );
+    return new(pBuf) QBVH(
+        true,
+        child0,
+        child1,
+        child2,
+        child3,
+        BoundingBox4( box0, box1, box2, box3 ) );
 }
 
 //--------------------------------------------------------------------------
@@ -525,9 +562,19 @@ IShape* QBVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
     // 中間値.
     s32 midPoint = Split( pShapes, numShapes, pivot.a[axis], axis );
 
+    s32 idx1[2] = {
+        0,
+        midPoint
+    };
+
+    s32 num1[2] = {
+        midPoint,
+        numShapes - midPoint
+    };
+
     // 更に分割するためにAABBを求める.
-    BoundingBox bboxL = CreateMergedBox( pShapes, midPoint );
-    BoundingBox bboxR = CreateMergedBox( &pShapes[midPoint], numShapes - midPoint );
+    BoundingBox bboxL = CreateMergedBox( &pShapes[idx1[0]], num1[0] );
+    BoundingBox bboxR = CreateMergedBox( &pShapes[idx1[1]], num1[1] );
 
     // AABBの各辺の長さを求める.
     Vector3 sizeL = bboxL.max - bboxL.min;
@@ -540,36 +587,42 @@ IShape* QBVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
     Vector3 pivotR = ( bboxR.max + bboxR.min ) * 0.5f;
 
     // 分割する.
-    s32 midPointL = Split( pShapes, midPoint, pivotL.a[axisL], axisL );
-    s32 midPointR = Split( &pShapes[midPoint], numShapes - midPoint, pivotR.a[axisR], axisR );
+    s32 midPointL = Split( &pShapes[idx1[0]], num1[0], pivotL.a[axisL], axisL );
+    s32 midPointR = Split( &pShapes[idx1[1]], num1[1], pivotR.a[axisR], axisR );
 
-    Triangle* ppChild[4] = {
-        &pShapes[0],
-        &pShapes[midPointL],
-        &pShapes[midPoint],
-        &pShapes[midPoint + midPointR]
-    };
-    u32 numChild[4] = {
+    s32 idx2[4] = {
+        idx1[0],
         midPointL,
-        midPoint - midPointL,
-        midPointR,
-        numShapes - (midPoint + midPointR)
+        idx1[1],
+        idx1[1] + midPointR
     };
 
+    s32 num2[4] = {
+        midPointL,
+        num1[0] - midPointL,
+        midPointR,
+        num1[1] - midPointR
+    };
     // ブランチを生成.
-    IShape* child0 = BuildBranch( ppChild[0], numChild[0] );
-    IShape* child1 = BuildBranch( ppChild[1], numChild[1] );
-    IShape* child2 = BuildBranch( ppChild[2], numChild[2] );
-    IShape* child3 = BuildBranch( ppChild[3], numChild[3] );
+    IShape* child0 = BuildBranch( &pShapes[idx2[0]], num2[0] );
+    IShape* child1 = BuildBranch( &pShapes[idx2[1]], num2[1] );
+    IShape* child2 = BuildBranch( &pShapes[idx2[2]], num2[2] );
+    IShape* child3 = BuildBranch( &pShapes[idx2[3]], num2[3] );
 
     // チャイルドのAABBを求める.
-    BoundingBox box0 = CreateMergedBox( ppChild[0], numChild[0] );
-    BoundingBox box1 = CreateMergedBox( ppChild[1], numChild[1] );
-    BoundingBox box2 = CreateMergedBox( ppChild[2], numChild[2] );
-    BoundingBox box3 = CreateMergedBox( ppChild[3], numChild[3] );
+    BoundingBox box0 = CreateMergedBox( &pShapes[idx2[0]], num2[0] );
+    BoundingBox box1 = CreateMergedBox( &pShapes[idx2[1]], num2[1] );
+    BoundingBox box2 = CreateMergedBox( &pShapes[idx2[2]], num2[2] );
+    BoundingBox box3 = CreateMergedBox( &pShapes[idx2[3]], num2[3] );
 
     // ノードとして生成.
-    return new(pBuf) QBVH( true, child0, child1, child2, child3, BoundingBox4( box0, box1, box2, box3 ) );
+    return new(pBuf) QBVH(
+        true, 
+        child0,
+        child1,
+        child2,
+        child3,
+        BoundingBox4( box0, box1, box2, box3 ) );
 }
 
 //--------------------------------------------------------------------------
@@ -830,12 +883,22 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     // 中間値.
     s32 midPoint = Split( ppShapes, numShapes, pivot.a[axis], axis );
 
+    s32 idx1[2] = {
+        0,
+        midPoint
+    };
+
+    s32 num1[2] = {
+        midPoint,
+        numShapes - midPoint
+    };
+
     // -------------------------
     //      2段階目.
     // -------------------------
     // 更に分割するためにAABBを求める.
-    BoundingBox bboxL = CreateMergedBox( ppShapes, midPoint );
-    BoundingBox bboxR = CreateMergedBox( &ppShapes[midPoint], numShapes - midPoint );
+    BoundingBox bboxL = CreateMergedBox( &ppShapes[idx1[0]], num1[0] );
+    BoundingBox bboxR = CreateMergedBox( &ppShapes[idx1[1]], num1[1] );
 
     // AABBの各辺の長さを求める.
     Vector3 sizeL = bboxL.max - bboxL.min;
@@ -848,21 +911,21 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     Vector3 pivotR = ( bboxR.max + bboxR.min ) / 2.0f;
 
     // 分割する.
-    s32 midPointL = Split( ppShapes, midPoint, pivotL.a[axisL], axisL );
-    s32 midPointR = Split( &ppShapes[midPoint], numShapes - midPoint, pivotR.a[axisR], axisR );
+    s32 midPointL = Split( &ppShapes[idx1[0]], num1[0], pivotL.a[axisL], axisL );
+    s32 midPointR = Split( &ppShapes[idx1[1]], num1[1], pivotR.a[axisR], axisR );
 
-    u32 idx[4] = {
-        0,
+    u32 idx2[4] = {
+        idx1[0],
         midPointL,
-        midPoint,
-        midPoint + midPointR
+        idx1[1],
+        idx1[1] + midPointR
     };
 
-    u32 num[4] = {
+    u32 num2[4] = {
         midPointL,
-        midPoint - midPointL,
+        num1[0] - midPointL,
         midPointR,
-        numShapes - (midPoint + midPointR)
+        num1[1] - midPointR
     };
 
 
@@ -871,10 +934,10 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     // -------------------------
 
     // 更に更に分割するためにAABBを求める.
-    BoundingBox bbox1 = CreateMergedBox( &ppShapes[idx[0]], num[0] );
-    BoundingBox bbox2 = CreateMergedBox( &ppShapes[idx[1]], num[1] );
-    BoundingBox bbox3 = CreateMergedBox( &ppShapes[idx[2]], num[2] );
-    BoundingBox bbox4 = CreateMergedBox( &ppShapes[idx[3]], num[3] );
+    BoundingBox bbox1 = CreateMergedBox( &ppShapes[idx2[0]], num2[0] );
+    BoundingBox bbox2 = CreateMergedBox( &ppShapes[idx2[1]], num2[1] );
+    BoundingBox bbox3 = CreateMergedBox( &ppShapes[idx2[2]], num2[2] );
+    BoundingBox bbox4 = CreateMergedBox( &ppShapes[idx2[3]], num2[3] );
 
     // AABBの各辺の長さを求める.
     Vector3 size1 = bbox1.max - bbox1.min;
@@ -893,51 +956,52 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     Vector3 pivot4 = ( bbox4.max + bbox4.min ) / 2.0f;
 
     // 分割する.
-    s32 midPoint1 = Split( &ppShapes[idx[0]], num[0], pivot1.a[axis1], axis1 );
-    s32 midPoint2 = Split( &ppShapes[idx[1]], num[1], pivot2.a[axis2], axis2 );
-    s32 midPoint3 = Split( &ppShapes[idx[2]], num[2], pivot3.a[axis3], axis3 );
-    s32 midPoint4 = Split( &ppShapes[idx[3]], num[3], pivot4.a[axis4], axis4 );
+    s32 midPoint1 = Split( &ppShapes[idx2[0]], num2[0], pivot1.a[axis1], axis1 );
+    s32 midPoint2 = Split( &ppShapes[idx2[1]], num2[1], pivot2.a[axis2], axis2 );
+    s32 midPoint3 = Split( &ppShapes[idx2[2]], num2[2], pivot3.a[axis3], axis3 );
+    s32 midPoint4 = Split( &ppShapes[idx2[3]], num2[3], pivot4.a[axis4], axis4 );
 
-    IShape** ppChild[8] = {
-        &ppShapes[idx[0]],
-        &ppShapes[midPoint1],
-        &ppShapes[idx[1]],
-        &ppShapes[idx[1] + midPoint2],
-        &ppShapes[idx[2]],
-        &ppShapes[midPoint3],
-        &ppShapes[idx[3]],
-        &ppShapes[idx[3] + midPoint4]
-    };
-    u32 numChild[8] = {
+    s32 idx3[8] = {
+        idx2[0],
         midPoint1,
-        num[0] - midPoint1,
-        midPoint2,
-        num[1] - midPoint2,
+        idx2[1],
+        idx2[1] + midPoint2,
+        idx2[2],
         midPoint3,
-        num[2] - midPoint3,
+        idx2[3],
+        idx2[3] + midPoint4
+    };
+
+    s32 num3[8] = {
+        midPoint1,
+        num2[0] - midPoint1,
+        midPoint2,
+        num2[1] - midPoint2,
+        midPoint3,
+        num2[2] - midPoint3,
         midPoint4,
-        numShapes - ( midPoint4 +  num[1] - midPoint2 )
+        num2[3] - midPoint4,
     };
 
     // ブランチを生成.
-    IShape* child0 = BuildBranch( ppChild[0], numChild[0] );
-    IShape* child1 = BuildBranch( ppChild[1], numChild[1] );
-    IShape* child2 = BuildBranch( ppChild[2], numChild[2] );
-    IShape* child3 = BuildBranch( ppChild[3], numChild[3] );
-    IShape* child4 = BuildBranch( ppChild[4], numChild[4] );
-    IShape* child5 = BuildBranch( ppChild[5], numChild[5] );
-    IShape* child6 = BuildBranch( ppChild[6], numChild[6] );
-    IShape* child7 = BuildBranch( ppChild[7], numChild[7] );
+    IShape* child0 = BuildBranch( &ppShapes[idx3[0]], num3[0] );
+    IShape* child1 = BuildBranch( &ppShapes[idx3[1]], num3[1] );
+    IShape* child2 = BuildBranch( &ppShapes[idx3[2]], num3[2] );
+    IShape* child3 = BuildBranch( &ppShapes[idx3[3]], num3[3] );
+    IShape* child4 = BuildBranch( &ppShapes[idx3[4]], num3[4] );
+    IShape* child5 = BuildBranch( &ppShapes[idx3[5]], num3[5] );
+    IShape* child6 = BuildBranch( &ppShapes[idx3[6]], num3[6] );
+    IShape* child7 = BuildBranch( &ppShapes[idx3[7]], num3[7] );
 
     // チャイルドのAABBを求める.
-    BoundingBox box0 = CreateMergedBox( ppChild[0], numChild[0] );
-    BoundingBox box1 = CreateMergedBox( ppChild[1], numChild[1] );
-    BoundingBox box2 = CreateMergedBox( ppChild[2], numChild[2] );
-    BoundingBox box3 = CreateMergedBox( ppChild[3], numChild[3] );
-    BoundingBox box4 = CreateMergedBox( ppChild[4], numChild[4] );
-    BoundingBox box5 = CreateMergedBox( ppChild[5], numChild[5] );
-    BoundingBox box6 = CreateMergedBox( ppChild[6], numChild[6] );
-    BoundingBox box7 = CreateMergedBox( ppChild[7], numChild[7] );
+    BoundingBox box0 = CreateMergedBox( &ppShapes[idx3[0]], num3[0] );
+    BoundingBox box1 = CreateMergedBox( &ppShapes[idx3[1]], num3[1] );
+    BoundingBox box2 = CreateMergedBox( &ppShapes[idx3[2]], num3[2] );
+    BoundingBox box3 = CreateMergedBox( &ppShapes[idx3[3]], num3[3] );
+    BoundingBox box4 = CreateMergedBox( &ppShapes[idx3[4]], num3[4] );
+    BoundingBox box5 = CreateMergedBox( &ppShapes[idx3[5]], num3[5] );
+    BoundingBox box6 = CreateMergedBox( &ppShapes[idx3[6]], num3[6] );
+    BoundingBox box7 = CreateMergedBox( &ppShapes[idx3[7]], num3[7] );
 
     // ノードとして生成.
     return new(pBuf) OBVH(
@@ -997,12 +1061,22 @@ IShape* OBVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
     // 中間値.
     s32 midPoint = Split( pShapes, numShapes, pivot.a[axis], axis );
 
+    s32 idx1[2] = {
+        0,
+        midPoint
+    };
+
+    s32 num1[2] = {
+        midPoint,
+        numShapes - midPoint
+    };
+
     // -------------------------
     //      2段階目.
     // -------------------------
     // 更に分割するためにAABBを求める.
-    BoundingBox bboxL = CreateMergedBox( pShapes, midPoint );
-    BoundingBox bboxR = CreateMergedBox( &pShapes[midPoint], numShapes - midPoint );
+    BoundingBox bboxL = CreateMergedBox( &pShapes[idx1[0]], num1[0] );
+    BoundingBox bboxR = CreateMergedBox( &pShapes[idx1[1]], num1[1] );
 
     // AABBの各辺の長さを求める.
     Vector3 sizeL = bboxL.max - bboxL.min;
@@ -1015,21 +1089,21 @@ IShape* OBVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
     Vector3 pivotR = ( bboxR.max + bboxR.min ) / 2.0f;
 
     // 分割する.
-    s32 midPointL = Split( pShapes, midPoint, pivotL.a[axisL], axisL );
-    s32 midPointR = Split( &pShapes[midPoint], numShapes - midPoint, pivotR.a[axisR], axisR );
+    s32 midPointL = Split( &pShapes[idx1[0]], num1[0], pivotL.a[axisL], axisL );
+    s32 midPointR = Split( &pShapes[idx1[1]], num1[1], pivotR.a[axisR], axisR );
 
-    u32 idx[4] = {
-        0,
+    s32 idx2[4] = {
+        idx1[0],
         midPointL,
-        midPoint,
-        midPoint + midPointR
+        idx1[1],
+        idx1[1] + midPointR
     };
 
-    u32 num[4] = {
+    s32 num2[4] = {
         midPointL,
-        midPoint - midPointL,
+        num1[0] - midPointL,
         midPointR,
-        numShapes - (midPoint + midPointR)
+        num1[1] - midPointR
     };
 
 
@@ -1038,10 +1112,10 @@ IShape* OBVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
     // -------------------------
 
     // 更に更に分割するためにAABBを求める.
-    BoundingBox bbox1 = CreateMergedBox( &pShapes[idx[0]], num[0] );
-    BoundingBox bbox2 = CreateMergedBox( &pShapes[idx[1]], num[1] );
-    BoundingBox bbox3 = CreateMergedBox( &pShapes[idx[2]], num[2] );
-    BoundingBox bbox4 = CreateMergedBox( &pShapes[idx[3]], num[3] );
+    BoundingBox bbox1 = CreateMergedBox( &pShapes[idx2[0]], num2[0] );
+    BoundingBox bbox2 = CreateMergedBox( &pShapes[idx2[1]], num2[1] );
+    BoundingBox bbox3 = CreateMergedBox( &pShapes[idx2[2]], num2[2] );
+    BoundingBox bbox4 = CreateMergedBox( &pShapes[idx2[3]], num2[3] );
 
     // AABBの各辺の長さを求める.
     Vector3 size1 = bbox1.max - bbox1.min;
@@ -1060,51 +1134,52 @@ IShape* OBVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
     Vector3 pivot4 = ( bbox4.max + bbox4.min ) / 2.0f;
 
     // 分割する.
-    s32 midPoint1 = Split( &pShapes[idx[0]], num[0], pivot1.a[axis1], axis1 );
-    s32 midPoint2 = Split( &pShapes[idx[1]], num[1], pivot2.a[axis2], axis2 );
-    s32 midPoint3 = Split( &pShapes[idx[2]], num[2], pivot3.a[axis3], axis3 );
-    s32 midPoint4 = Split( &pShapes[idx[3]], num[3], pivot4.a[axis4], axis4 );
+    s32 midPoint1 = Split( &pShapes[idx2[0]], num2[0], pivot1.a[axis1], axis1 );
+    s32 midPoint2 = Split( &pShapes[idx2[1]], num2[1], pivot2.a[axis2], axis2 );
+    s32 midPoint3 = Split( &pShapes[idx2[2]], num2[2], pivot3.a[axis3], axis3 );
+    s32 midPoint4 = Split( &pShapes[idx2[3]], num2[3], pivot4.a[axis4], axis4 );
 
-    Triangle* ppChild[8] = {
-        &pShapes[idx[0]],
-        &pShapes[midPoint1],
-        &pShapes[idx[1]],
-        &pShapes[idx[1] + midPoint2],
-        &pShapes[idx[2]],
-        &pShapes[midPoint3],
-        &pShapes[idx[3]],
-        &pShapes[idx[3] + midPoint4]
-    };
-    u32 numChild[8] = {
+    s32 idx3[8] = {
+        idx2[0],
         midPoint1,
-        num[0] - midPoint1,
-        midPoint2,
-        num[1] - midPoint2,
+        idx2[1],
+        idx2[1] + midPoint2,
+        idx2[2],
         midPoint3,
-        num[2] - midPoint3,
+        idx2[3],
+        idx2[3] + midPoint4
+    };
+
+    s32 num3[8] = {
+        midPoint1,
+        num2[0] - midPoint1,
+        midPoint2,
+        num2[1] - midPoint2,
+        midPoint3,
+        num2[2] - midPoint3,
         midPoint4,
-        numShapes - ( midPoint4 +  num[1] - midPoint2 )
+        num2[3] - midPoint4,
     };
 
     // ブランチを生成.
-    IShape* child0 = BuildBranch( ppChild[0], numChild[0] );
-    IShape* child1 = BuildBranch( ppChild[1], numChild[1] );
-    IShape* child2 = BuildBranch( ppChild[2], numChild[2] );
-    IShape* child3 = BuildBranch( ppChild[3], numChild[3] );
-    IShape* child4 = BuildBranch( ppChild[4], numChild[4] );
-    IShape* child5 = BuildBranch( ppChild[5], numChild[5] );
-    IShape* child6 = BuildBranch( ppChild[6], numChild[6] );
-    IShape* child7 = BuildBranch( ppChild[7], numChild[7] );
+    IShape* child0 = BuildBranch( &pShapes[idx3[0]], num3[0] );
+    IShape* child1 = BuildBranch( &pShapes[idx3[1]], num3[1] );
+    IShape* child2 = BuildBranch( &pShapes[idx3[2]], num3[2] );
+    IShape* child3 = BuildBranch( &pShapes[idx3[3]], num3[3] );
+    IShape* child4 = BuildBranch( &pShapes[idx3[4]], num3[4] );
+    IShape* child5 = BuildBranch( &pShapes[idx3[5]], num3[5] );
+    IShape* child6 = BuildBranch( &pShapes[idx3[6]], num3[6] );
+    IShape* child7 = BuildBranch( &pShapes[idx3[7]], num3[7] );
 
     // チャイルドのAABBを求める.
-    BoundingBox box0 = CreateMergedBox( ppChild[0], numChild[0] );
-    BoundingBox box1 = CreateMergedBox( ppChild[1], numChild[1] );
-    BoundingBox box2 = CreateMergedBox( ppChild[2], numChild[2] );
-    BoundingBox box3 = CreateMergedBox( ppChild[3], numChild[3] );
-    BoundingBox box4 = CreateMergedBox( ppChild[4], numChild[4] );
-    BoundingBox box5 = CreateMergedBox( ppChild[5], numChild[5] );
-    BoundingBox box6 = CreateMergedBox( ppChild[6], numChild[6] );
-    BoundingBox box7 = CreateMergedBox( ppChild[7], numChild[7] );
+    BoundingBox box0 = CreateMergedBox( &pShapes[idx3[0]], num3[0] );
+    BoundingBox box1 = CreateMergedBox( &pShapes[idx3[1]], num3[1] );
+    BoundingBox box2 = CreateMergedBox( &pShapes[idx3[2]], num3[2] );
+    BoundingBox box3 = CreateMergedBox( &pShapes[idx3[3]], num3[3] );
+    BoundingBox box4 = CreateMergedBox( &pShapes[idx3[4]], num3[4] );
+    BoundingBox box5 = CreateMergedBox( &pShapes[idx3[5]], num3[5] );
+    BoundingBox box6 = CreateMergedBox( &pShapes[idx3[6]], num3[6] );
+    BoundingBox box7 = CreateMergedBox( &pShapes[idx3[7]], num3[7] );
 
     // ノードとして生成.
     return new(pBuf) OBVH(
@@ -1244,7 +1319,6 @@ bool OBVH::HitFuncLeaf( const OBVH* pBVH, const Ray& ray, HitRecord& record )
 
     return ( isHit0 || isHit1 || isHit2 || isHit3 || isHit4 || isHit5 || isHit6 || isHit7 );
 }
-
 
 
 } // namespace s3d

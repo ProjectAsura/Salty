@@ -124,7 +124,7 @@ f32 QRandom::GetAsF32()
     s32 base = m_Base;
     m_Base+=3;
 
-    assert( base < s_Primes.size() );
+    assert( size_t(base) < s_Primes.size() );
     const s32 p = s_Primes[ base ];
     f32 value   = 0.0f;
     f32 invBase = 1.0f / f32(p);
@@ -149,7 +149,7 @@ f64 QRandom::GetAsF64()
     s32 base = m_Base;
     m_Base+=3;
 
-    assert( base < s_Primes.size() );
+    assert( size_t(base) < s_Primes.size() );
     const s32 p = s_Primes[base];
     f64 value   = 0.0;
     f64 invBase = 1.0 / f64(p);

@@ -1447,7 +1447,7 @@ struct Ray8
     //-------------------------------------------------------------------------------------
     Ray8( const Ray& ray )
     {
-    #if S3D_IS_AVX
+    #if ( S3D_IS_SIMD && S3D_IS_AVX )
         pos[0] = _mm256_set1_ps( ray.pos.x );
         pos[1] = _mm256_set1_ps( ray.pos.y );
         pos[2] = _mm256_set1_ps( ray.pos.z );
@@ -1509,7 +1509,7 @@ struct Ray8
         invDir[2].m256_f32[5] = ray.invDir.z;
         invDir[2].m256_f32[6] = ray.invDir.z;
         invDir[2].m256_f32[7] = ray.invDir.z;
-    #endif
+    #endif// ( S3D_IS_SIMD && S3D_IS_AVX )
         sign[0] = ray.sign[0];
         sign[1] = ray.sign[1];
         sign[2] = ray.sign[2];

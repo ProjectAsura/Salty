@@ -121,6 +121,7 @@ BoundingBox BoundingBox::Merge( const BoundingBox& box, const Vector3& p )
     return BoundingBox( mini, maxi );
 }
 
+
 /////////////////////////////////////////////////////////////////////////////////////
 // BoundingBox4 structure
 /////////////////////////////////////////////////////////////////////////////////////
@@ -1349,26 +1350,26 @@ bool BoundingBox8::IsHit( const Ray8& ray, s32& mask ) const
         tmax.m256_f32[ i ] = s3d::Min( tmax.m256_f32[ i ], ( value[ idx1 ][ 2 ].m256_f32[ i ] - ray.pos[ 2 ].m256_f32[ i ] ) * ray.invDir[ 2 ].m256_f32[ i ] );
     }
 
-    b128 flg;
-    flg.m256_u32[0] = ( tmax.m256_f32[ 0 ] >= tmin.m256_f32[ 0 ] ) ? 0xffffffff : 0x0;
-    flg.m256_u32[1] = ( tmax.m256_f32[ 1 ] >= tmin.m256_f32[ 1 ] ) ? 0xffffffff : 0x0;
-    flg.m256_u32[2] = ( tmax.m256_f32[ 2 ] >= tmin.m256_f32[ 2 ] ) ? 0xffffffff : 0x0;
-    flg.m256_u32[3] = ( tmax.m256_f32[ 3 ] >= tmin.m256_f32[ 3 ] ) ? 0xffffffff : 0x0;
-    flg.m256_u32[0] = ( tmax.m256_f32[ 4 ] >= tmin.m256_f32[ 4 ] ) ? 0xffffffff : 0x0;
-    flg.m256_u32[1] = ( tmax.m256_f32[ 5 ] >= tmin.m256_f32[ 5 ] ) ? 0xffffffff : 0x0;
-    flg.m256_u32[2] = ( tmax.m256_f32[ 6 ] >= tmin.m256_f32[ 6 ] ) ? 0xffffffff : 0x0;
-    flg.m256_u32[3] = ( tmax.m256_f32[ 7 ] >= tmin.m256_f32[ 7 ] ) ? 0xffffffff : 0x0;
+    b256i flg;
+    flg.m256i_u32[0] = ( tmax.m256_f32[ 0 ] >= tmin.m256_f32[ 0 ] ) ? 0xffffffff : 0x0;
+    flg.m256i_u32[1] = ( tmax.m256_f32[ 1 ] >= tmin.m256_f32[ 1 ] ) ? 0xffffffff : 0x0;
+    flg.m256i_u32[2] = ( tmax.m256_f32[ 2 ] >= tmin.m256_f32[ 2 ] ) ? 0xffffffff : 0x0;
+    flg.m256i_u32[3] = ( tmax.m256_f32[ 3 ] >= tmin.m256_f32[ 3 ] ) ? 0xffffffff : 0x0;
+    flg.m256i_u32[0] = ( tmax.m256_f32[ 4 ] >= tmin.m256_f32[ 4 ] ) ? 0xffffffff : 0x0;
+    flg.m256i_u32[1] = ( tmax.m256_f32[ 5 ] >= tmin.m256_f32[ 5 ] ) ? 0xffffffff : 0x0;
+    flg.m256i_u32[2] = ( tmax.m256_f32[ 6 ] >= tmin.m256_f32[ 6 ] ) ? 0xffffffff : 0x0;
+    flg.m256i_u32[3] = ( tmax.m256_f32[ 7 ] >= tmin.m256_f32[ 7 ] ) ? 0xffffffff : 0x0;
 
 
     mask = (
-          Sign(flg.m256_u32[7]  << 7
-        | Sign(flg.m256_u32[6]) << 6 
-        | Sign(flg.m256_u32[5]) << 5 
-        | Sign(flg.m256_u32[4]) << 4 
-        | Sign(flg.m256_u32[3]) << 3 
-        | Sign(flg.m256_u32[2]) << 2 
-        | Sign(flg.m256_u32[1]) << 1 
-        | Sign(flg.m256_u32[0]) );
+          Sign(flg.m256i_u32[7]) << 7
+        | Sign(flg.m256i_u32[6]) << 6 
+        | Sign(flg.m256i_u32[5]) << 5 
+        | Sign(flg.m256i_u32[4]) << 4 
+        | Sign(flg.m256i_u32[3]) << 3 
+        | Sign(flg.m256i_u32[2]) << 2 
+        | Sign(flg.m256i_u32[1]) << 1 
+        | Sign(flg.m256i_u32[0]) );
     return ( mask > 0 );
 #endif// ( S3D_IS_SIMD && S3D_IS_AVX )
 }
@@ -1412,7 +1413,7 @@ BoundingBox8 BoundingBox8::Merge( const BoundingBox8& a, const BoundingBox8& b )
         ( a.value[0][0].m256_f32[0] < b.value[0][0].m256_f32[0] ) ? a.value[0][0].m256_f32[0] : b.value[0][0].m256_f32[0],
         ( a.value[0][0].m256_f32[1] < b.value[0][0].m256_f32[1] ) ? a.value[0][0].m256_f32[1] : b.value[0][0].m256_f32[1],
         ( a.value[0][0].m256_f32[2] < b.value[0][0].m256_f32[2] ) ? a.value[0][0].m256_f32[2] : b.value[0][0].m256_f32[2],
-        ( a.value[0][0].m256_f32[3] < b.value[0][0].m256_f32[3] ) ? a.value[0][0].m256_f32[3] : b.value[0][0].m256_f32[3]
+        ( a.value[0][0].m256_f32[3] < b.value[0][0].m256_f32[3] ) ? a.value[0][0].m256_f32[3] : b.value[0][0].m256_f32[3],
         ( a.value[0][0].m256_f32[4] < b.value[0][0].m256_f32[4] ) ? a.value[0][0].m256_f32[4] : b.value[0][0].m256_f32[4],
         ( a.value[0][0].m256_f32[5] < b.value[0][0].m256_f32[5] ) ? a.value[0][0].m256_f32[5] : b.value[0][0].m256_f32[5],
         ( a.value[0][0].m256_f32[6] < b.value[0][0].m256_f32[6] ) ? a.value[0][0].m256_f32[6] : b.value[0][0].m256_f32[6],
@@ -1422,7 +1423,7 @@ BoundingBox8 BoundingBox8::Merge( const BoundingBox8& a, const BoundingBox8& b )
         ( a.value[0][1].m256_f32[0] < b.value[0][1].m256_f32[0] ) ? a.value[0][1].m256_f32[0] : b.value[0][1].m256_f32[0],
         ( a.value[0][1].m256_f32[1] < b.value[0][1].m256_f32[1] ) ? a.value[0][1].m256_f32[1] : b.value[0][1].m256_f32[1],
         ( a.value[0][1].m256_f32[2] < b.value[0][1].m256_f32[2] ) ? a.value[0][1].m256_f32[2] : b.value[0][1].m256_f32[2],
-        ( a.value[0][1].m256_f32[3] < b.value[0][1].m256_f32[3] ) ? a.value[0][1].m256_f32[3] : b.value[0][1].m256_f32[3]
+        ( a.value[0][1].m256_f32[3] < b.value[0][1].m256_f32[3] ) ? a.value[0][1].m256_f32[3] : b.value[0][1].m256_f32[3],
         ( a.value[0][1].m256_f32[4] < b.value[0][1].m256_f32[4] ) ? a.value[0][1].m256_f32[4] : b.value[0][1].m256_f32[4],
         ( a.value[0][1].m256_f32[5] < b.value[0][1].m256_f32[5] ) ? a.value[0][1].m256_f32[5] : b.value[0][1].m256_f32[5],
         ( a.value[0][1].m256_f32[6] < b.value[0][1].m256_f32[6] ) ? a.value[0][1].m256_f32[6] : b.value[0][1].m256_f32[6],
@@ -1432,7 +1433,7 @@ BoundingBox8 BoundingBox8::Merge( const BoundingBox8& a, const BoundingBox8& b )
         ( a.value[0][2].m256_f32[0] < b.value[0][2].m256_f32[0] ) ? a.value[0][2].m256_f32[0] : b.value[0][2].m256_f32[0],
         ( a.value[0][2].m256_f32[1] < b.value[0][2].m256_f32[1] ) ? a.value[0][2].m256_f32[1] : b.value[0][2].m256_f32[1],
         ( a.value[0][2].m256_f32[2] < b.value[0][2].m256_f32[2] ) ? a.value[0][2].m256_f32[2] : b.value[0][2].m256_f32[2],
-        ( a.value[0][2].m256_f32[3] < b.value[0][2].m256_f32[3] ) ? a.value[0][2].m256_f32[3] : b.value[0][2].m256_f32[3]
+        ( a.value[0][2].m256_f32[3] < b.value[0][2].m256_f32[3] ) ? a.value[0][2].m256_f32[3] : b.value[0][2].m256_f32[3],
         ( a.value[0][2].m256_f32[4] < b.value[0][2].m256_f32[4] ) ? a.value[0][2].m256_f32[4] : b.value[0][2].m256_f32[4],
         ( a.value[0][2].m256_f32[5] < b.value[0][2].m256_f32[5] ) ? a.value[0][2].m256_f32[5] : b.value[0][2].m256_f32[5],
         ( a.value[0][2].m256_f32[6] < b.value[0][2].m256_f32[6] ) ? a.value[0][2].m256_f32[6] : b.value[0][2].m256_f32[6],
@@ -1443,7 +1444,7 @@ BoundingBox8 BoundingBox8::Merge( const BoundingBox8& a, const BoundingBox8& b )
         ( a.value[1][0].m256_f32[0] > b.value[1][0].m256_f32[0] ) ? a.value[1][0].m256_f32[0] : b.value[1][0].m256_f32[0],
         ( a.value[1][0].m256_f32[1] > b.value[1][0].m256_f32[1] ) ? a.value[1][0].m256_f32[1] : b.value[1][0].m256_f32[1],
         ( a.value[1][0].m256_f32[2] > b.value[1][0].m256_f32[2] ) ? a.value[1][0].m256_f32[2] : b.value[1][0].m256_f32[2],
-        ( a.value[1][0].m256_f32[3] > b.value[1][0].m256_f32[3] ) ? a.value[1][0].m256_f32[3] : b.value[1][0].m256_f32[3]
+        ( a.value[1][0].m256_f32[3] > b.value[1][0].m256_f32[3] ) ? a.value[1][0].m256_f32[3] : b.value[1][0].m256_f32[3],
         ( a.value[1][0].m256_f32[4] > b.value[1][0].m256_f32[4] ) ? a.value[1][0].m256_f32[4] : b.value[1][0].m256_f32[4],
         ( a.value[1][0].m256_f32[5] > b.value[1][0].m256_f32[5] ) ? a.value[1][0].m256_f32[5] : b.value[1][0].m256_f32[5],
         ( a.value[1][0].m256_f32[6] > b.value[1][0].m256_f32[6] ) ? a.value[1][0].m256_f32[6] : b.value[1][0].m256_f32[6],
@@ -1453,7 +1454,7 @@ BoundingBox8 BoundingBox8::Merge( const BoundingBox8& a, const BoundingBox8& b )
         ( a.value[1][1].m256_f32[0] > b.value[1][1].m256_f32[0] ) ? a.value[1][1].m256_f32[0] : b.value[1][1].m256_f32[0],
         ( a.value[1][1].m256_f32[1] > b.value[1][1].m256_f32[1] ) ? a.value[1][1].m256_f32[1] : b.value[1][1].m256_f32[1],
         ( a.value[1][1].m256_f32[2] > b.value[1][1].m256_f32[2] ) ? a.value[1][1].m256_f32[2] : b.value[1][1].m256_f32[2],
-        ( a.value[1][1].m256_f32[3] > b.value[1][1].m256_f32[3] ) ? a.value[1][1].m256_f32[3] : b.value[1][1].m256_f32[3]
+        ( a.value[1][1].m256_f32[3] > b.value[1][1].m256_f32[3] ) ? a.value[1][1].m256_f32[3] : b.value[1][1].m256_f32[3],
         ( a.value[1][1].m256_f32[4] > b.value[1][1].m256_f32[4] ) ? a.value[1][1].m256_f32[4] : b.value[1][1].m256_f32[4],
         ( a.value[1][1].m256_f32[5] > b.value[1][1].m256_f32[5] ) ? a.value[1][1].m256_f32[5] : b.value[1][1].m256_f32[5],
         ( a.value[1][1].m256_f32[6] > b.value[1][1].m256_f32[6] ) ? a.value[1][1].m256_f32[6] : b.value[1][1].m256_f32[6],
@@ -1463,7 +1464,7 @@ BoundingBox8 BoundingBox8::Merge( const BoundingBox8& a, const BoundingBox8& b )
         ( a.value[1][2].m256_f32[0] > b.value[1][2].m256_f32[0] ) ? a.value[1][2].m256_f32[0] : b.value[1][2].m256_f32[0],
         ( a.value[1][2].m256_f32[1] > b.value[1][2].m256_f32[1] ) ? a.value[1][2].m256_f32[1] : b.value[1][2].m256_f32[1],
         ( a.value[1][2].m256_f32[2] > b.value[1][2].m256_f32[2] ) ? a.value[1][2].m256_f32[2] : b.value[1][2].m256_f32[2],
-        ( a.value[1][2].m256_f32[3] > b.value[1][2].m256_f32[3] ) ? a.value[1][2].m256_f32[3] : b.value[1][2].m256_f32[3]
+        ( a.value[1][2].m256_f32[3] > b.value[1][2].m256_f32[3] ) ? a.value[1][2].m256_f32[3] : b.value[1][2].m256_f32[3],
         ( a.value[1][2].m256_f32[4] > b.value[1][2].m256_f32[4] ) ? a.value[1][2].m256_f32[4] : b.value[1][2].m256_f32[4],
         ( a.value[1][2].m256_f32[5] > b.value[1][2].m256_f32[5] ) ? a.value[1][2].m256_f32[5] : b.value[1][2].m256_f32[5],
         ( a.value[1][2].m256_f32[6] > b.value[1][2].m256_f32[6] ) ? a.value[1][2].m256_f32[6] : b.value[1][2].m256_f32[6],

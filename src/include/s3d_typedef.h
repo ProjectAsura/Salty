@@ -99,6 +99,7 @@ typedef double              f64;
 #include <xmmintrin.h>
 #include <emmintrin.h>
 #include <immintrin.h>
+#include <dvec.h>
 
 typedef __m64       b64;
 typedef __m128      b128;
@@ -141,7 +142,7 @@ typedef union S3D_ALIGN(16) _b128
 typedef union S3D_ALIGN(16) _b128d
 {
     double              m128_f64[2];
-};
+} b128d;
 
 
 typedef union S3D_ALIGN(16) _b128i
@@ -157,7 +158,7 @@ typedef union S3D_ALIGN(16) _b128i
 } b128i;
 
 
-typedef union S3D_ALAIGN(32) _b256
+typedef union S3D_ALIGN(32) _b256
 {
     float               m256_f32[8];
 } b256;

@@ -216,7 +216,9 @@ void Mesh::Release()
 {
     if ( m_pBVH )
     {
-        QBVH::DestroyBranch( (QBVH*)m_pBVH );
+        IDispose* pBVH = dynamic_cast<IDispose*>( m_pBVH );
+        if ( pBVH != nullptr )
+        { pBVH->Dispose(); }
         m_pBVH = nullptr;
     }
 
@@ -443,7 +445,7 @@ bool Mesh::LoadFromFile( const char* filename )
     }
 
     // BVHを構築します.
-    m_pBVH = QBVH::BuildBranch( m_pTriangles, m_NumTriangles );
+    m_pBVH = OBVH::BuildBranch( m_pTriangles, m_NumTriangles );
 
     return true;
 }

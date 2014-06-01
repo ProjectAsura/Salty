@@ -671,7 +671,7 @@ void App::Run( const Config& config )
     u32 numShapes = sizeof( pShapes ) / sizeof( pShapes[0] );
 
     // BVH構築.
-    g_pBVH = QBVH::BuildBranch( pShapes, numShapes );
+    g_pBVH = OBVH::BuildBranch( pShapes, numShapes );
     assert( g_pBVH != nullptr );
 
     // レイトレ！
@@ -680,7 +680,9 @@ void App::Run( const Config& config )
     g_Mesh.Release();
 
     // メモリ解放.
-    QBVH::DestroyBranch( (QBVH*)g_pBVH );
+    IDispose* pObj = dynamic_cast<IDispose*>( g_pBVH );
+    if ( pObj != nullptr )
+    { pObj->Dispose(); }
 
     if ( g_IsFinished )
     {

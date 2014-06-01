@@ -390,6 +390,54 @@ BoundingBox4::BoundingBox4
 //      引数付きコンストラクタです.
 //-----------------------------------------------------------------------------------
 S3D_INLINE
+BoundingBox4::BoundingBox4( const BoundingBox* box )
+{
+#if S3D_IS_SIMD
+    value[0][0] = _mm_set_ps( box[3].min.x, box[2].min.x, box[1].min.x, box[0].min.x );
+    value[0][1] = _mm_set_ps( box[3].min.y, box[2].min.y, box[1].min.y, box[0].min.y );
+    value[0][2] = _mm_set_ps( box[3].min.z, box[2].min.z, box[1].min.z, box[0].min.z );
+
+    value[1][0] = _mm_set_ps( box[3].max.x, box[2].max.x, box[1].max.x, box[0].max.x );
+    value[1][1] = _mm_set_ps( box[3].max.y, box[2].max.y, box[1].max.y, box[0].max.y );
+    value[1][2] = _mm_set_ps( box[3].max.z, box[2].max.z, box[1].max.z, box[0].max.z );
+#else
+    value[0][0].m128_f32[0] = box[0].min.x;
+    value[0][0].m128_f32[1] = box[1].min.x;
+    value[0][0].m128_f32[2] = box[2].min.x;
+    value[0][0].m128_f32[3] = box[3].min.x;
+
+    value[0][1].m128_f32[0] = box[0].min.y;
+    value[0][1].m128_f32[1] = box[1].min.y;
+    value[0][1].m128_f32[2] = box[2].min.y;
+    value[0][1].m128_f32[3] = box[3].min.y;
+
+    value[0][2].m128_f32[0] = box[0].min.z;
+    value[0][2].m128_f32[1] = box[1].min.z;
+    value[0][2].m128_f32[2] = box[2].min.z;
+    value[0][2].m128_f32[3] = box[3].min.z;
+
+
+    value[1][0].m128_f32[0] = box[0].max.x;
+    value[1][0].m128_f32[1] = box[1].max.x;
+    value[1][0].m128_f32[2] = box[2].max.x;
+    value[1][0].m128_f32[3] = box[3].max.x;
+
+    value[1][1].m128_f32[0] = box[0].max.y;
+    value[1][1].m128_f32[1] = box[1].max.y;
+    value[1][1].m128_f32[2] = box[2].max.y;
+    value[1][1].m128_f32[3] = box[3].max.y;
+
+    value[1][2].m128_f32[0] = box[0].max.z;
+    value[1][2].m128_f32[1] = box[1].max.z;
+    value[1][2].m128_f32[2] = box[2].max.z;
+    value[1][2].m128_f32[3] = box[3].max.z;
+#endif//S3D_IS_SIMD
+}
+
+//-----------------------------------------------------------------------------------
+//      引数付きコンストラクタです.
+//-----------------------------------------------------------------------------------
+S3D_INLINE
 BoundingBox4::BoundingBox4
 (
     const b128& miniX,
@@ -725,7 +773,7 @@ BoundingBox8::BoundingBox8
 )
 {
 #if ( S3D_IS_SIMD && S3D_IS_AVX )
-    value[0][0] = _mm256_set_ps( box0.min.x, box0.min.x, box0.min.x, box0.min.x, box0.min.x, box1.min.y, box1.min.x, box0.min.x );
+    value[0][0] = _mm256_set_ps( box0.min.x, box0.min.x, box0.min.x, box0.min.x, box0.min.x, box1.min.x, box1.min.x, box0.min.x );
     value[0][1] = _mm256_set_ps( box0.min.y, box0.min.y, box0.min.y, box0.min.y, box0.min.y, box0.min.y, box1.min.y, box0.min.y );
     value[0][2] = _mm256_set_ps( box0.min.z, box0.min.z, box0.min.z, box0.min.z, box0.min.z, box0.min.z, box1.min.z, box0.min.z );
 
@@ -802,7 +850,7 @@ BoundingBox8::BoundingBox8
 )
 {
 #if ( S3D_IS_SIMD && S3D_IS_AVX )
-    value[0][0] = _mm256_set_ps( box0.min.x, box0.min.x, box0.min.x, box0.min.x, box0.min.x, box2.min.y, box1.min.x, box0.min.x );
+    value[0][0] = _mm256_set_ps( box0.min.x, box0.min.x, box0.min.x, box0.min.x, box0.min.x, box2.min.x, box1.min.x, box0.min.x );
     value[0][1] = _mm256_set_ps( box0.min.y, box0.min.y, box0.min.y, box0.min.y, box0.min.y, box2.min.y, box1.min.y, box0.min.y );
     value[0][2] = _mm256_set_ps( box0.min.z, box0.min.z, box0.min.z, box0.min.z, box0.min.z, box2.min.z, box1.min.z, box0.min.z );
 
@@ -879,7 +927,7 @@ BoundingBox8::BoundingBox8
 )
 {
 #if ( S3D_IS_SIMD && S3D_IS_AVX )
-    value[0][0] = _mm256_set_ps( box0.min.x, box0.min.x, box0.min.x, box0.min.x, box3.min.x, box2.min.y, box1.min.x, box0.min.x );
+    value[0][0] = _mm256_set_ps( box0.min.x, box0.min.x, box0.min.x, box0.min.x, box3.min.x, box2.min.x, box1.min.x, box0.min.x );
     value[0][1] = _mm256_set_ps( box0.min.y, box0.min.y, box0.min.y, box0.min.y, box3.min.y, box2.min.y, box1.min.y, box0.min.y );
     value[0][2] = _mm256_set_ps( box0.min.z, box0.min.z, box0.min.z, box0.min.z, box3.min.z, box2.min.z, box1.min.z, box0.min.z );
 
@@ -957,7 +1005,7 @@ BoundingBox8::BoundingBox8
 )
 {
 #if ( S3D_IS_SIMD && S3D_IS_AVX )
-    value[0][0] = _mm256_set_ps( box0.min.x, box0.min.x, box0.min.x, box4.min.x, box3.min.x, box2.min.y, box1.min.x, box0.min.x );
+    value[0][0] = _mm256_set_ps( box0.min.x, box0.min.x, box0.min.x, box4.min.x, box3.min.x, box2.min.x, box1.min.x, box0.min.x );
     value[0][1] = _mm256_set_ps( box0.min.y, box0.min.y, box0.min.y, box4.min.y, box3.min.y, box2.min.y, box1.min.y, box0.min.y );
     value[0][2] = _mm256_set_ps( box0.min.z, box0.min.z, box0.min.z, box4.min.z, box3.min.z, box2.min.z, box1.min.z, box0.min.z );
 
@@ -1036,7 +1084,7 @@ BoundingBox8::BoundingBox8
 )
 {
 #if ( S3D_IS_SIMD && S3D_IS_AVX )
-    value[0][0] = _mm256_set_ps( box0.min.x, box0.min.x, box5.min.x, box4.min.x, box3.min.x, box2.min.y, box1.min.x, box0.min.x );
+    value[0][0] = _mm256_set_ps( box0.min.x, box0.min.x, box5.min.x, box4.min.x, box3.min.x, box2.min.x, box1.min.x, box0.min.x );
     value[0][1] = _mm256_set_ps( box0.min.y, box0.min.y, box5.min.y, box4.min.y, box3.min.y, box2.min.y, box1.min.y, box0.min.y );
     value[0][2] = _mm256_set_ps( box0.min.z, box0.min.z, box5.min.z, box4.min.z, box3.min.z, box2.min.z, box1.min.z, box0.min.z );
 
@@ -1116,7 +1164,7 @@ BoundingBox8::BoundingBox8
 )
 {
 #if ( S3D_IS_SIMD && S3D_IS_AVX )
-    value[0][0] = _mm256_set_ps( box0.min.x, box6.min.x, box5.min.x, box4.min.x, box3.min.x, box2.min.y, box1.min.x, box0.min.x );
+    value[0][0] = _mm256_set_ps( box0.min.x, box6.min.x, box5.min.x, box4.min.x, box3.min.x, box2.min.x, box1.min.x, box0.min.x );
     value[0][1] = _mm256_set_ps( box0.min.y, box6.min.y, box5.min.y, box4.min.y, box3.min.y, box2.min.y, box1.min.y, box0.min.y );
     value[0][2] = _mm256_set_ps( box0.min.z, box6.min.z, box5.min.z, box4.min.z, box3.min.z, box2.min.z, box1.min.z, box0.min.z );
 
@@ -1197,7 +1245,7 @@ BoundingBox8::BoundingBox8
 )
 {
 #if ( S3D_IS_SIMD && S3D_IS_AVX )
-    value[0][0] = _mm256_set_ps( box7.min.x, box6.min.x, box5.min.x, box4.min.x, box3.min.x, box2.min.y, box1.min.x, box0.min.x );
+    value[0][0] = _mm256_set_ps( box7.min.x, box6.min.x, box5.min.x, box4.min.x, box3.min.x, box2.min.x, box1.min.x, box0.min.x );
     value[0][1] = _mm256_set_ps( box7.min.y, box6.min.y, box5.min.y, box4.min.y, box3.min.y, box2.min.y, box1.min.y, box0.min.y );
     value[0][2] = _mm256_set_ps( box7.min.z, box6.min.z, box5.min.z, box4.min.z, box3.min.z, box2.min.z, box1.min.z, box0.min.z );
 
@@ -1261,6 +1309,78 @@ BoundingBox8::BoundingBox8
 #endif// ( S3D_IS_SIMD && S3D_IS_AVX )
 }
 
+
+//-----------------------------------------------------------------------------------
+//      引数付きコンストラクタです.
+//-----------------------------------------------------------------------------------
+S3D_INLINE
+BoundingBox8::BoundingBox8( const BoundingBox* box )
+{
+#if ( S3D_IS_SIMD && S3D_IS_AVX )
+    value[0][0] = _mm256_set_ps( box[7].min.x, box[6].min.x, box[5].min.x, box[4].min.x, box[3].min.x, box[2].min.x, box[1].min.x, box[0].min.x );
+    value[0][1] = _mm256_set_ps( box[7].min.y, box[6].min.y, box[5].min.y, box[4].min.y, box[3].min.y, box[2].min.y, box[1].min.y, box[0].min.y );
+    value[0][2] = _mm256_set_ps( box[7].min.z, box[6].min.z, box[5].min.z, box[4].min.z, box[3].min.z, box[2].min.z, box[1].min.z, box[0].min.z );
+
+    value[1][0] = _mm256_set_ps( box[7].max.x, box[6].max.x, box[5].max.x, box[4].max.x, box[3].max.x, box[2].max.x, box[1].max.x, box[0].max.x );
+    value[1][1] = _mm256_set_ps( box[7].max.y, box[6].max.y, box[5].max.y, box[4].max.y, box[3].max.y, box[2].max.y, box[1].max.y, box[0].max.y );
+    value[1][2] = _mm256_set_ps( box[7].max.z, box[6].max.z, box[5].max.z, box[4].max.z, box[3].max.z, box[2].max.z, box[1].max.z, box[0].max.z );
+#else
+    value[0][0].m256_f32[0] = box[0].min.x;
+    value[0][0].m256_f32[1] = box[1].min.x;
+    value[0][0].m256_f32[2] = box[2].min.x;
+    value[0][0].m256_f32[3] = box[3].min.x;
+    value[0][0].m256_f32[4] = box[4].min.x;
+    value[0][0].m256_f32[5] = box[5].min.x;
+    value[0][0].m256_f32[6] = box[6].min.x;
+    value[0][0].m256_f32[7] = box[7].min.x;
+
+    value[0][1].m256_f32[0] = box[0].min.y;
+    value[0][1].m256_f32[1] = box[1].min.y;
+    value[0][1].m256_f32[2] = box[2].min.y;
+    value[0][1].m256_f32[3] = box[3].min.y;
+    value[0][1].m256_f32[4] = box[4].min.y;
+    value[0][1].m256_f32[5] = box[5].min.y;
+    value[0][1].m256_f32[6] = box[6].min.y;
+    value[0][1].m256_f32[7] = box[7].min.y;
+
+    value[0][2].m256_f32[0] = box[0].min.z;
+    value[0][2].m256_f32[1] = box[1].min.z;
+    value[0][2].m256_f32[2] = box[2].min.z;
+    value[0][2].m256_f32[3] = box[3].min.z;
+    value[0][2].m256_f32[4] = box[4].min.z;
+    value[0][2].m256_f32[5] = box[5].min.z;
+    value[0][2].m256_f32[6] = box[6].min.z;
+    value[0][2].m256_f32[7] = box[7].min.z;
+
+    value[1][0].m256_f32[0] = box[0].max.x;
+    value[1][0].m256_f32[1] = box[1].max.x;
+    value[1][0].m256_f32[2] = box[2].max.x;
+    value[1][0].m256_f32[3] = box[3].max.x;
+    value[1][0].m256_f32[4] = box[4].max.x;
+    value[1][0].m256_f32[5] = box[5].max.x;
+    value[1][0].m256_f32[6] = box[6].max.x; 
+    value[1][0].m256_f32[7] = box[7].max.x;
+
+    value[1][1].m256_f32[0] = box[0].max.y;
+    value[1][1].m256_f32[1] = box[1].max.y;
+    value[1][1].m256_f32[2] = box[2].max.y;
+    value[1][1].m256_f32[3] = box[3].max.y;
+    value[1][1].m256_f32[4] = box[4].max.y;
+    value[1][1].m256_f32[5] = box[5].max.y;
+    value[1][1].m256_f32[6] = box[6].max.y;
+    value[1][1].m256_f32[7] = box[7].max.y;
+
+    value[1][2].m256_f32[0] = box[0].max.z;
+    value[1][2].m256_f32[1] = box[1].max.z;
+    value[1][2].m256_f32[2] = box[2].max.z;
+    value[1][2].m256_f32[3] = box[3].max.z;
+    value[1][2].m256_f32[4] = box[4].max.z;
+    value[1][2].m256_f32[5] = box[5].max.z;
+    value[1][2].m256_f32[6] = box[6].max.z;
+    value[1][2].m256_f32[7] = box[7].max.z;
+#endif// ( S3D_IS_SIMD && S3D_IS_AVX )
+}
+
 //-----------------------------------------------------------------------------------
 //      引数付きコンストラクタです.
 //-----------------------------------------------------------------------------------
@@ -1315,7 +1435,7 @@ bool BoundingBox8::IsHit( const Ray8& ray, s32& mask ) const
     tmin = _mm256_max_ps( tmin, _mm256_mul_ps( _mm256_sub_ps( value[ idx0 ][ 2 ], ray.pos[ 2 ] ), ray.invDir[ 2 ] ) );
     tmax = _mm256_min_ps( tmax, _mm256_mul_ps( _mm256_sub_ps( value[ idx1 ][ 2 ], ray.pos[ 2 ] ), ray.invDir[ 2 ] ) );
 
-    mask = _mm256_movemask_ps( _mm256_cmp_ps( tmax, tmin, _CMP_GT_OS ) );
+    mask = _mm256_movemask_ps( _mm256_cmp_ps( tmax, tmin, _CMP_GE_OS ) );
     return ( mask > 0 );
 #else
     b256 tmin = { F_HIT_MIN, F_HIT_MIN, F_HIT_MIN, F_HIT_MIN, F_HIT_MIN, F_HIT_MIN, F_HIT_MIN, F_HIT_MIN };

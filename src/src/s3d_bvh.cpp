@@ -466,7 +466,7 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 
     u32 idx2[4] = {
         idx1[0],
-        midPointL,
+        idx1[0] + midPointL,
         idx1[1],
         idx1[1] + midPointR
     };
@@ -551,7 +551,7 @@ IShape* QBVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
 
     s32 idx2[4] = {
         idx1[0],
-        midPointL,
+        idx1[0] + midPointL,
         idx1[1],
         idx1[1] + midPointR
     };

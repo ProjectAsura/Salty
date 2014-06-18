@@ -20,8 +20,9 @@ namespace s3d {
 //----------------------------------------------------------------------------------
 S3D_INLINE
 BoundingBox::BoundingBox()
-: min( F_MAX, F_MAX, F_MAX )
-, max( F_MIN, F_MIN, F_MIN )
+: min(  F_MAX,  F_MAX,  F_MAX )
+, max( -F_MAX, -F_MAX, -F_MAX )
+, isEmpty( true )
 { /* DO_NOTHING */ }
 
 //----------------------------------------------------------------------------------
@@ -31,6 +32,7 @@ S3D_INLINE
 BoundingBox::BoundingBox( const Vector3& value )
 : min( value )
 , max( value )
+, isEmpty( false )
 { /* DO_NOTHING */ }
 
 //----------------------------------------------------------------------------------
@@ -40,6 +42,7 @@ S3D_INLINE
 BoundingBox::BoundingBox( const Vector3& mini, const Vector3& maxi )
 : min( mini )
 , max( maxi )
+, isEmpty( false )
 { /* DO_NOTHING */ }
 
 //----------------------------------------------------------------------------------
@@ -49,6 +52,7 @@ S3D_INLINE
 BoundingBox::BoundingBox( const BoundingBox& value )
 : min( value.min )
 , max( value.max )
+, isEmpty( value.isEmpty )
 { /* DO_NOTHING */ }
 
 //----------------------------------------------------------------------------------
@@ -57,6 +61,9 @@ BoundingBox::BoundingBox( const BoundingBox& value )
 S3D_INLINE
 bool BoundingBox::IsHit( const Ray& ray ) const
 {
+    if ( isEmpty )
+    { return true; }
+
     const Vector3* v[ 2 ] = { &min, &max };
     f64 intervalMin = F_HIT_MIN;
     f64 intervalMax = F_HIT_MAX;
@@ -103,10 +110,23 @@ bool BoundingBox::IsHit( const Ray& ray ) const
 S3D_INLINE
 BoundingBox BoundingBox::Merge( const BoundingBox& a, const BoundingBox& b )
 {
-    Vector3 mini = Vector3::Min( a.min, b.min );
-    Vector3 maxi = Vector3::Max( a.max, b.max );
+    if ( !a.isEmpty && !b.isEmpty )
+    {
+        Vector3 mini = Vector3::Min( a.min, b.min );
+        Vector3 maxi = Vector3::Max( a.max, b.max );
 
-    return BoundingBox( mini, maxi );
+        return BoundingBox( mini, maxi );
+    }
+    else if ( a.isEmpty && !b.isEmpty )
+    {
+        return b;
+    }
+    else if ( !a.isEmpty && b.isEmpty )
+    { 
+        return a;
+    }
+
+    return a;
 }
 
 //-----------------------------------------------------------------------------------
@@ -115,10 +135,15 @@ BoundingBox BoundingBox::Merge( const BoundingBox& a, const BoundingBox& b )
 S3D_INLINE
 BoundingBox BoundingBox::Merge( const BoundingBox& box, const Vector3& p )
 {
-    Vector3 mini = Vector3::Min( box.min, p );
-    Vector3 maxi = Vector3::Max( box.max, p );
+    if ( !box.isEmpty )
+    {
+        Vector3 mini = Vector3::Min( box.min, p );
+        Vector3 maxi = Vector3::Max( box.max, p );
 
-    return BoundingBox( mini, maxi );
+        return BoundingBox( mini, maxi );
+    }
+
+    return BoundingBox( p );
 }
 
 
@@ -1482,14 +1507,14 @@ bool BoundingBox8::IsHit( const Ray8& ray, s32& mask ) const
 
 
     mask = (
-          Sign(flg.m256i_u32[7]) << 7
-        | Sign(flg.m256i_u32[6]) << 6 
-        | Sign(flg.m256i_u32[5]) << 5 
-        | Sign(flg.m256i_u32[4]) << 4 
-        | Sign(flg.m256i_u32[3]) << 3 
-        | Sign(flg.m256i_u32[2]) << 2 
-        | Sign(flg.m256i_u32[1]) << 1 
-        | Sign(flg.m256i_u32[0]) );
+          ( Sign(flg.m256i_u32[7]) > 0 ? 0x1 : 0x0 ) << 7
+        | ( Sign(flg.m256i_u32[6]) > 0 ? 0x1 : 0x0 ) << 6 
+        | ( Sign(flg.m256i_u32[5]) > 0 ? 0x1 : 0x0 ) << 5 
+        | ( Sign(flg.m256i_u32[4]) > 0 ? 0x1 : 0x0 ) << 4 
+        | ( Sign(flg.m256i_u32[3]) > 0 ? 0x1 : 0x0 ) << 3 
+        | ( Sign(flg.m256i_u32[2]) > 0 ? 0x1 : 0x0 ) << 2 
+        | ( Sign(flg.m256i_u32[1]) > 0 ? 0x1 : 0x0 ) << 1 
+        | ( Sign(flg.m256i_u32[0]) > 0 ? 0x1 : 0x0 ) );
     return ( mask > 0 );
 #endif// ( S3D_IS_SIMD && S3D_IS_AVX )
 }

@@ -251,11 +251,11 @@ IShape* BVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 
     // AABBの各辺の長さを求める.
     Vector3 size  = bbox.max - bbox.min;
-    s32 axis = 0;
-    if ( size.x > size.y )
-    { axis = ( size.x > size.z ) ? 0 : 2; }
-    else
-    { axis = ( size.y > size.z ) ? 1 : 2; }
+    s32 axis = GetAxisIndex( size );
+    //if ( size.x > size.y )
+    //{ axis = ( size.x > size.z ) ? 0 : 2; }
+    //else
+    //{ axis = ( size.y > size.z ) ? 1 : 2; }
 
     // 中間値.
     s32 midPoint = Split( ppShapes, numShapes, pivot.a[axis], axis );
@@ -301,11 +301,11 @@ IShape* BVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
     // AABBの各辺の長さを求める.
     Vector3 size  = bbox.max - bbox.min;
 
-    s32 axis = 0;
-    if ( size.x > size.y )
-    { axis = ( size.x > size.z ) ? 0 : 2; }
-    else
-    { axis = ( size.y > size.z ) ? 1 : 2; }
+    s32 axis = GetAxisIndex( size );
+    //if ( size.x > size.y )
+    //{ axis = ( size.x > size.z ) ? 0 : 2; }
+    //else
+    //{ axis = ( size.y > size.z ) ? 1 : 2; }
 
     // 中間値.
     s32 midPoint = Split( pShapes, numShapes, pivot.a[axis], axis );
@@ -646,7 +646,9 @@ OBVH::OBVH( IShape** ppShapes, const BoundingBox8& octBox )
 : box( octBox )
 {
     for( u32 i=0; i<8; ++i )
-    { pShape[ i ] = ppShapes[ i ]; }
+    {
+        pShape[ i ] = ppShapes[ i ];
+    }
 }
 
 ////--------------------------------------------------------------------------
@@ -713,6 +715,9 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     // そのまま返却.
     if ( numShapes <= 1 )
     { return ppShapes[0]; }
+
+    if ( numShapes <= 8 )
+    { return new Leaf( numShapes, ppShapes ); }
 
     // 32byteアライメントでメモリを確保.
     u8* pBuf = (u8*)_aligned_malloc( sizeof(OBVH), 32 );
@@ -813,11 +818,11 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 
     s32 idx3[8] = {
         idx2[0],
-        midPoint1,
+        idx2[0] + midPoint1,
         idx2[1],
         idx2[1] + midPoint2,
         idx2[2],
-        midPoint3,
+        idx2[2] + midPoint3,
         idx2[3],
         idx2[3] + midPoint4
     };
@@ -839,8 +844,9 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     for( u32 i=0; i<8; ++i )
     {
         box[ i ] = CreateMergedBox( &ppShapes[ idx3[ i ] ], num3[ i ] );
+
         if ( num3[ i ] == 0 )
-        { pShapes[ i ] = new NullShape(); }
+        { pShapes[ i ] = ppShapes[ idx3[ i ] ]; }
         else if ( num3[ i ] > 8 )
         { pShapes[ i ] = BuildBranch( &ppShapes[ idx3[ i ] ], num3[ i ] ); }
         else
@@ -858,6 +864,15 @@ IShape* OBVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
     // そのまま返却.
     if ( numShapes <= 1 )
     { return (IShape*)&pShapes[0]; }
+
+    if ( numShapes <= 8 )
+    {
+         IShape* ptr[ 8 ] = { nullptr };
+         for( u32 i=0; i<numShapes; ++i )
+         { ptr[ i ] = &pShapes[ i ]; }
+         
+        return new Leaf( numShapes, ptr ); 
+    }
 
     // 32byteアライメントでメモリを確保.
     u8* pBuf = (u8*)_aligned_malloc( sizeof(OBVH), 32 );
@@ -958,11 +973,11 @@ IShape* OBVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
 
     s32 idx3[8] = {
         idx2[0],
-        midPoint1,
+        idx2[0] + midPoint1,
         idx2[1],
         idx2[1] + midPoint2,
         idx2[2],
-        midPoint3,
+        idx2[2] + midPoint3,
         idx2[3],
         idx2[3] + midPoint4
     };

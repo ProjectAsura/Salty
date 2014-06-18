@@ -85,7 +85,9 @@ public:
             if ( ppShapes[ i ]->IsHit( ray, record ) )
             { result = true; }
         }
-        return result;
+        return result &&
+               ( record.distance > F_HIT_MIN ) &&
+               ( record.distance < F_HIT_MAX );
     }
 
     //--------------------------------------------------------------------------

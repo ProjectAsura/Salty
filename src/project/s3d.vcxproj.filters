@@ -36,9 +36,6 @@
     <ClInclude Include="..\include\s3d_typedef.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\s3d_mutex.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\s3d_timer.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -75,9 +72,6 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="..\src\s3d_shape.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\s3d_mutex.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="..\src\s3d_bvh.cpp">

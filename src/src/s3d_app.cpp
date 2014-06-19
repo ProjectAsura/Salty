@@ -15,15 +15,14 @@
 #include <s3d_shape.h>
 #include <s3d_material.h>
 #include <s3d_timer.h>
-#include <s3d_mutex.h>
 #include <s3d_onb.h>
 #include <s3d_bvh.h>
 #include <s3d_mesh.h>
-
 #include <iostream>
 #include <direct.h>
 #include <ctime>
 #include <process.h>
+#include <mutex>
 
 
 namespace /* anonymous */ {
@@ -105,7 +104,7 @@ bool        g_IsRendered    = false;
 bool        g_ForceExit     = false;
 Color*      g_pRT           = nullptr;      //!< レンダーターゲット.
 Config      g_Config;                       //!< 設定です.
-Mutex       g_Mutex;                        //!< ミューテックス.
+std::mutex  g_Mutex;                        //!< ミューテックス.
 
 Texture2D   g_TextureWall( "./res/texture/wall.bmp" );
 Texture2D   g_TextureTile( "./res/texture/tile.bmp" );
@@ -430,13 +429,13 @@ void PathTrace
         }
     }
 
-    g_Mutex.Lock();
+    g_Mutex.lock();
     {
         // 終了フラグを立てる.
         g_IsFinished = true;
         g_IsRendered = true;
     }
-    g_Mutex.Unlock();
+    g_Mutex.unlock();
 
     // スレッドの終了を待機する.
     for( u32 i=0; i<(UINT_MAX-10); ++i )    // 無限ループ対策.
@@ -542,9 +541,9 @@ void TimeWatch( void* )
             captureTimer.Start();
         }
 
-#if 0
-        // 1時間以上たった
-        if ( min >= 60.0 )
+    #if 0
+        // 30分以上たった
+        if ( min >= 30.0 )
         {
             // 最後のフレームをキャプチャー.
             SaveToBMP( "img/final_frame.bmp", g_Config.Width, g_Config.Height, &g_pRT[0].x );
@@ -559,7 +558,7 @@ void TimeWatch( void* )
             // ループ脱出.
             break;
         }
-#endif
+    #endif
 
         // レンダリングが正常終了している場合.
         if ( g_IsFinished )
@@ -585,11 +584,11 @@ void TimeWatch( void* )
                 fclose( pFile );
             }
 
-            g_Mutex.Lock();
+            g_Mutex.lock();
             {
                 g_WatcherEnd = true;
             }
-            g_Mutex.Unlock();
+            g_Mutex.unlock();
 
             // ループ脱出.
             break;

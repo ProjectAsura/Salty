@@ -28,7 +28,6 @@
     <ClInclude Include="..\include\s3d_math.h" />
     <ClInclude Include="..\include\s3d_matrix.h" />
     <ClInclude Include="..\include\s3d_mesh.h" />
-    <ClInclude Include="..\include\s3d_mutex.h" />
     <ClInclude Include="..\include\s3d_onb.h" />
     <ClInclude Include="..\include\s3d_rand.h" />
     <ClInclude Include="..\include\s3d_shape.h" />
@@ -43,7 +42,6 @@
     <ClCompile Include="..\src\s3d_bvh.cpp" />
     <ClCompile Include="..\src\s3d_material.cpp" />
     <ClCompile Include="..\src\s3d_mesh.cpp" />
-    <ClCompile Include="..\src\s3d_mutex.cpp" />
     <ClCompile Include="..\src\s3d_onb.cpp" />
     <ClCompile Include="..\src\s3d_shape.cpp" />
     <ClCompile Include="..\src\s3d_texture.cpp" />

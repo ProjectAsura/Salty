@@ -86,13 +86,8 @@ namespace s3d {
 //----------------------------------------------------------------------------------
 // Forward Declarations.
 //----------------------------------------------------------------------------------
-void TimeWatch( void* );
-Color Radiance( const Ray &inRay, s3d::Random &rnd );
-
-//----------------------------------------------------------------------------------
-// Constant Values
-//----------------------------------------------------------------------------------
-//static const s32 MAX_DEPTH = 32;        //!< 打ち切り深度.
+void    TimeWatch( void* );
+Color   Radiance( const Ray &inRay, s3d::Random &rnd );
 
 
 //----------------------------------------------------------------------------------
@@ -297,15 +292,6 @@ Color Radiance( const Ray &inRay, s3d::Random &rnd )
 
         // 自己発光による放射輝度.
         L += Color::Mul( W, pMaterial->GetEmissive() );
-
-#if 0
-        /* 衝突判定のデバッグ */
-        //{
-        //    // 乱数を更新.
-        //    rnd = arg.random;
-        //    return pMaterial->GetDebugColor();
-        //}
-#endif
 
         // 色の反射率最大のものを得る。ロシアンルーレットで使う。
         // ロシアンルーレットの閾値は任意だが色の反射率等を使うとより良い ... らしい。
@@ -541,7 +527,7 @@ void TimeWatch( void* )
             captureTimer.Start();
         }
 
-    #if 0
+    #if defined(NDEBUG) || defined(_NDEBUG)
         // 30分以上たった
         if ( min >= 30.0 )
         {
@@ -549,11 +535,11 @@ void TimeWatch( void* )
             SaveToBMP( "img/final_frame.bmp", g_Config.Width, g_Config.Height, &g_pRT[0].x );
             printf_s( "Time Over...\n" );
 
-            g_Mutex.Lock();
+            g_Mutex.lock();
             {
                 g_WatcherEnd = true;
             }
-            g_Mutex.Unlock();
+            g_Mutex.unlock();
 
             // ループ脱出.
             break;

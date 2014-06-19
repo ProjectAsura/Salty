@@ -1500,21 +1500,21 @@ bool BoundingBox8::IsHit( const Ray8& ray, s32& mask ) const
     flg.m256i_u32[1] = ( tmax.m256_f32[ 1 ] >= tmin.m256_f32[ 1 ] ) ? 0xffffffff : 0x0;
     flg.m256i_u32[2] = ( tmax.m256_f32[ 2 ] >= tmin.m256_f32[ 2 ] ) ? 0xffffffff : 0x0;
     flg.m256i_u32[3] = ( tmax.m256_f32[ 3 ] >= tmin.m256_f32[ 3 ] ) ? 0xffffffff : 0x0;
-    flg.m256i_u32[0] = ( tmax.m256_f32[ 4 ] >= tmin.m256_f32[ 4 ] ) ? 0xffffffff : 0x0;
-    flg.m256i_u32[1] = ( tmax.m256_f32[ 5 ] >= tmin.m256_f32[ 5 ] ) ? 0xffffffff : 0x0;
-    flg.m256i_u32[2] = ( tmax.m256_f32[ 6 ] >= tmin.m256_f32[ 6 ] ) ? 0xffffffff : 0x0;
-    flg.m256i_u32[3] = ( tmax.m256_f32[ 7 ] >= tmin.m256_f32[ 7 ] ) ? 0xffffffff : 0x0;
-
+    flg.m256i_u32[4] = ( tmax.m256_f32[ 4 ] >= tmin.m256_f32[ 4 ] ) ? 0xffffffff : 0x0;
+    flg.m256i_u32[5] = ( tmax.m256_f32[ 5 ] >= tmin.m256_f32[ 5 ] ) ? 0xffffffff : 0x0;
+    flg.m256i_u32[6] = ( tmax.m256_f32[ 6 ] >= tmin.m256_f32[ 6 ] ) ? 0xffffffff : 0x0;
+    flg.m256i_u32[7] = ( tmax.m256_f32[ 7 ] >= tmin.m256_f32[ 7 ] ) ? 0xffffffff : 0x0;
 
     mask = (
-          ( Sign(flg.m256i_u32[7]) > 0 ? 0x1 : 0x0 ) << 7
-        | ( Sign(flg.m256i_u32[6]) > 0 ? 0x1 : 0x0 ) << 6 
-        | ( Sign(flg.m256i_u32[5]) > 0 ? 0x1 : 0x0 ) << 5 
-        | ( Sign(flg.m256i_u32[4]) > 0 ? 0x1 : 0x0 ) << 4 
-        | ( Sign(flg.m256i_u32[3]) > 0 ? 0x1 : 0x0 ) << 3 
-        | ( Sign(flg.m256i_u32[2]) > 0 ? 0x1 : 0x0 ) << 2 
-        | ( Sign(flg.m256i_u32[1]) > 0 ? 0x1 : 0x0 ) << 1 
-        | ( Sign(flg.m256i_u32[0]) > 0 ? 0x1 : 0x0 ) );
+          ( Sign(flg.m256i_u32[7]) << 7 )
+        | ( Sign(flg.m256i_u32[6]) << 6 )
+        | ( Sign(flg.m256i_u32[5]) << 5 )
+        | ( Sign(flg.m256i_u32[4]) << 4 )
+        | ( Sign(flg.m256i_u32[3]) << 3 )
+        | ( Sign(flg.m256i_u32[2]) << 2 )
+        | ( Sign(flg.m256i_u32[1]) << 1 )
+        | ( Sign(flg.m256i_u32[0]) ) );
+
     return ( mask > 0 );
 #endif// ( S3D_IS_SIMD && S3D_IS_AVX )
 }

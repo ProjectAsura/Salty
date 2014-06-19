@@ -38,14 +38,14 @@ int main( int argc, char **argv )
         config.Height        = 576;
         config.NumSamples    = 4096;
         config.NumSubSamples = 2;
-        config.MaxDepth      = 32;
+        config.MaxDepth      = 16;
     #else
         // デバッグ用.
         config.Width         = 320;
         config.Height        = 180;
         config.NumSamples    = 512;
         config.NumSubSamples = 2;
-        config.MaxDepth      = 32;
+        config.MaxDepth      = 8;
     #endif
 
         s3d::App app;

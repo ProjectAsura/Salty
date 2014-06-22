@@ -10,12 +10,10 @@
 #include <s3d_app.h>
 #include <s3d_bmp.h>
 #include <s3d_math.h>
-#include <s3d_rand.h>
 #include <s3d_camera.h>
 #include <s3d_shape.h>
 #include <s3d_material.h>
 #include <s3d_timer.h>
-#include <s3d_onb.h>
 #include <s3d_bvh.h>
 #include <s3d_mesh.h>
 #include <iostream>

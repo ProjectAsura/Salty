@@ -11,7 +11,7 @@
 // Includes
 //-----------------------------------------------------------------------------
 #include <s3d_typedef.h>
-#include <s3d_rand.h>
+#include <s3d_math.h>
 #include <s3d_shape.h>
 #include <s3d_bvh.h>
 #include <s3d_camera.h>

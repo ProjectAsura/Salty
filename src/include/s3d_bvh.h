@@ -12,7 +12,6 @@
 //----------------------------------------------------------------------------
 #include <s3d_typedef.h>
 #include <s3d_math.h>
-#include <s3d_box.h>
 #include <s3d_shape.h>
 
 

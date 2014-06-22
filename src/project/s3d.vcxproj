@@ -21,15 +21,11 @@
   <ItemGroup>
     <ClInclude Include="..\include\s3d_app.h" />
     <ClInclude Include="..\include\s3d_bmp.h" />
-    <ClInclude Include="..\include\s3d_box.h" />
     <ClInclude Include="..\include\s3d_bvh.h" />
     <ClInclude Include="..\include\s3d_camera.h" />
     <ClInclude Include="..\include\s3d_material.h" />
     <ClInclude Include="..\include\s3d_math.h" />
-    <ClInclude Include="..\include\s3d_matrix.h" />
     <ClInclude Include="..\include\s3d_mesh.h" />
-    <ClInclude Include="..\include\s3d_onb.h" />
-    <ClInclude Include="..\include\s3d_rand.h" />
     <ClInclude Include="..\include\s3d_shape.h" />
     <ClInclude Include="..\include\s3d_texture.h" />
     <ClInclude Include="..\include\s3d_timer.h" />

@@ -12,7 +12,6 @@
 //-----------------------------------------------------------------------------------
 #include <s3d_math.h>
 #include <s3d_texture.h>
-#include <s3d_onb.h>
 
 
 namespace s3d {

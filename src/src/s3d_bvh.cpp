@@ -28,7 +28,7 @@ s32 Split( s3d::IShape** ppShapes, s32 size, f64 pivotVal, s32 axis )
         bbox = ppShapes[i]->GetBox();
 
         // 中心を取得.
-        centroid = ( bbox.min.a[axis] + bbox.max.a[axis] ) / 2.0;
+        centroid = ( bbox.mini.a[axis] + bbox.maxi.a[axis] ) / 2.0;
 
         // ピボットと比較.
         if ( centroid < pivotVal )
@@ -62,7 +62,7 @@ s32 Split( s3d::Triangle* pShapes, s32 size, f64 pivotVal, s32 axis )
         bbox = pShapes[i].GetBox();
 
         // 中心を取得.
-        centroid = ( bbox.min.a[axis] + bbox.max.a[axis] ) / 2.0;
+        centroid = ( bbox.mini.a[axis] + bbox.maxi.a[axis] ) / 2.0;
 
         // ピボットと比較.
         if ( centroid < pivotVal )
@@ -247,15 +247,11 @@ IShape* BVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     BoundingBox bbox = CreateMergedBox( ppShapes, numShapes );
 
     // ピボットを求める.
-    Vector3 pivot = ( bbox.max + bbox.min ) * 0.5f;
+    Vector3 pivot = ( bbox.maxi + bbox.mini ) * 0.5f;
 
     // AABBの各辺の長さを求める.
-    Vector3 size  = bbox.max - bbox.min;
+    Vector3 size  = bbox.maxi - bbox.mini;
     s32 axis = GetAxisIndex( size );
-    //if ( size.x > size.y )
-    //{ axis = ( size.x > size.z ) ? 0 : 2; }
-    //else
-    //{ axis = ( size.y > size.z ) ? 1 : 2; }
 
     // 中間値.
     s32 midPoint = Split( ppShapes, numShapes, pivot.a[axis], axis );
@@ -296,16 +292,12 @@ IShape* BVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
     BoundingBox bbox = CreateMergedBox( pShapes, numShapes );
 
     // ピボットを求める.
-    Vector3 pivot = ( bbox.max + bbox.min ) * 0.5f;
+    Vector3 pivot = ( bbox.maxi + bbox.mini ) * 0.5f;
 
     // AABBの各辺の長さを求める.
-    Vector3 size  = bbox.max - bbox.min;
+    Vector3 size  = bbox.maxi - bbox.mini;
 
     s32 axis = GetAxisIndex( size );
-    //if ( size.x > size.y )
-    //{ axis = ( size.x > size.z ) ? 0 : 2; }
-    //else
-    //{ axis = ( size.y > size.z ) ? 1 : 2; }
 
     // 中間値.
     s32 midPoint = Split( pShapes, numShapes, pivot.a[axis], axis );
@@ -427,10 +419,10 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     BoundingBox bbox = CreateMergedBox( ppShapes, numShapes );
 
     // ピボットを求める.
-    Vector3 pivot = ( bbox.max + bbox.min ) / 2.0;
+    Vector3 pivot = ( bbox.maxi + bbox.mini ) / 2.0;
 
     // AABBの各辺の長さを求める.
-    Vector3 size  = bbox.max - bbox.min;
+    Vector3 size  = bbox.maxi - bbox.mini;
     s32 axis = GetAxisIndex( size );
 
     // 中間値.
@@ -451,14 +443,14 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     BoundingBox bboxR = CreateMergedBox( &ppShapes[idx1[1]], num1[1] );
 
     // AABBの各辺の長さを求める.
-    Vector3 sizeL = bboxL.max - bboxL.min;
-    Vector3 sizeR = bboxR.max - bboxR.min;
+    Vector3 sizeL = bboxL.maxi - bboxL.mini;
+    Vector3 sizeR = bboxR.maxi - bboxR.mini;
     s32 axisL = GetAxisIndex( sizeL );
     s32 axisR = GetAxisIndex( sizeR );
 
     // 更に分割するピボットを求める.
-    Vector3 pivotL = ( bboxL.max + bboxL.min ) / 2.0;
-    Vector3 pivotR = ( bboxR.max + bboxR.min ) / 2.0;
+    Vector3 pivotL = ( bboxL.maxi + bboxL.mini ) / 2.0;
+    Vector3 pivotR = ( bboxR.maxi + bboxR.mini ) / 2.0;
 
     // 分割する.
     s32 midPointL = Split( &ppShapes[idx1[0]], num1[0], pivotL.a[axisL], axisL );
@@ -512,10 +504,10 @@ IShape* QBVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
     BoundingBox bbox = CreateMergedBox( pShapes, numShapes );
 
     // ピボットを求める.
-    Vector3 pivot = ( bbox.max + bbox.min ) * 0.5f;
+    Vector3 pivot = ( bbox.maxi + bbox.mini ) * 0.5f;
 
     // AABBの各辺の長さを求める.
-    Vector3 size  = bbox.max - bbox.min;
+    Vector3 size  = bbox.maxi - bbox.mini;
     s32 axis = GetAxisIndex( size );
 
     // 中間値.
@@ -536,14 +528,14 @@ IShape* QBVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
     BoundingBox bboxR = CreateMergedBox( &pShapes[idx1[1]], num1[1] );
 
     // AABBの各辺の長さを求める.
-    Vector3 sizeL = bboxL.max - bboxL.min;
-    Vector3 sizeR = bboxR.max - bboxR.min;
+    Vector3 sizeL = bboxL.maxi - bboxL.mini;
+    Vector3 sizeR = bboxR.maxi - bboxR.mini;
     s32 axisL = GetAxisIndex( sizeL );
     s32 axisR = GetAxisIndex( sizeR );
 
     // 更に分割するためのピボットを求める.
-    Vector3 pivotL = ( bboxL.max + bboxL.min ) * 0.5f;
-    Vector3 pivotR = ( bboxR.max + bboxR.min ) * 0.5f;
+    Vector3 pivotL = ( bboxL.maxi + bboxL.mini ) * 0.5f;
+    Vector3 pivotR = ( bboxR.maxi + bboxR.mini ) * 0.5f;
 
     // 分割する.
     s32 midPointL = Split( &pShapes[idx1[0]], num1[0], pivotL.a[axisL], axisL );
@@ -729,10 +721,10 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     BoundingBox bbox = CreateMergedBox( ppShapes, numShapes );
 
     // ピボットを求める.
-    Vector3 pivot = ( bbox.max + bbox.min ) / 2.0f;
+    Vector3 pivot = ( bbox.maxi + bbox.mini ) / 2.0f;
 
     // AABBの各辺の長さを求める.
-    Vector3 size  = bbox.max - bbox.min;
+    Vector3 size  = bbox.maxi - bbox.mini;
     s32 axis = GetAxisIndex( size );
 
     // 中間値.
@@ -756,14 +748,14 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     BoundingBox bboxR = CreateMergedBox( &ppShapes[idx1[1]], num1[1] );
 
     // AABBの各辺の長さを求める.
-    Vector3 sizeL = bboxL.max - bboxL.min;
-    Vector3 sizeR = bboxR.max - bboxR.min;
+    Vector3 sizeL = bboxL.maxi - bboxL.mini;
+    Vector3 sizeR = bboxR.maxi - bboxR.mini;
     s32 axisL = GetAxisIndex( sizeL );
     s32 axisR = GetAxisIndex( sizeR );
 
     // 更に分割するピボットを求める.
-    Vector3 pivotL = ( bboxL.max + bboxL.min ) / 2.0f;
-    Vector3 pivotR = ( bboxR.max + bboxR.min ) / 2.0f;
+    Vector3 pivotL = ( bboxL.maxi + bboxL.mini ) / 2.0f;
+    Vector3 pivotR = ( bboxR.maxi + bboxR.mini ) / 2.0f;
 
     // 分割する.
     s32 midPointL = Split( &ppShapes[idx1[0]], num1[0], pivotL.a[axisL], axisL );
@@ -795,20 +787,20 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     BoundingBox bbox4 = CreateMergedBox( &ppShapes[idx2[3]], num2[3] );
 
     // AABBの各辺の長さを求める.
-    Vector3 size1 = bbox1.max - bbox1.min;
-    Vector3 size2 = bbox2.max - bbox2.min;
-    Vector3 size3 = bbox3.max - bbox3.min;
-    Vector3 size4 = bbox4.max - bbox4.min;
+    Vector3 size1 = bbox1.maxi - bbox1.mini;
+    Vector3 size2 = bbox2.maxi - bbox2.mini;
+    Vector3 size3 = bbox3.maxi - bbox3.mini;
+    Vector3 size4 = bbox4.maxi - bbox4.mini;
     s32 axis1 = GetAxisIndex( size1 );
     s32 axis2 = GetAxisIndex( size2 );
     s32 axis3 = GetAxisIndex( size3 );
     s32 axis4 = GetAxisIndex( size4 );
 
     // 更に更に分割するピボットを求める.
-    Vector3 pivot1 = ( bbox1.max + bbox1.min ) / 2.0f;
-    Vector3 pivot2 = ( bbox2.max + bbox2.min ) / 2.0f;
-    Vector3 pivot3 = ( bbox3.max + bbox3.min ) / 2.0f;
-    Vector3 pivot4 = ( bbox4.max + bbox4.min ) / 2.0f;
+    Vector3 pivot1 = ( bbox1.maxi + bbox1.mini ) / 2.0f;
+    Vector3 pivot2 = ( bbox2.maxi + bbox2.mini ) / 2.0f;
+    Vector3 pivot3 = ( bbox3.maxi + bbox3.mini ) / 2.0f;
+    Vector3 pivot4 = ( bbox4.maxi + bbox4.mini ) / 2.0f;
 
     // 分割する.
     s32 midPoint1 = Split( &ppShapes[idx2[0]], num2[0], pivot1.a[axis1], axis1 );
@@ -884,10 +876,10 @@ IShape* OBVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
     BoundingBox bbox = CreateMergedBox( pShapes, numShapes );
 
     // ピボットを求める.
-    Vector3 pivot = ( bbox.max + bbox.min ) / 2.0f;
+    Vector3 pivot = ( bbox.maxi + bbox.mini ) / 2.0f;
 
     // AABBの各辺の長さを求める.
-    Vector3 size  = bbox.max - bbox.min;
+    Vector3 size  = bbox.maxi - bbox.mini;
     s32 axis = GetAxisIndex( size );
 
     // 中間値.
@@ -911,14 +903,14 @@ IShape* OBVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
     BoundingBox bboxR = CreateMergedBox( &pShapes[idx1[1]], num1[1] );
 
     // AABBの各辺の長さを求める.
-    Vector3 sizeL = bboxL.max - bboxL.min;
-    Vector3 sizeR = bboxR.max - bboxR.min;
+    Vector3 sizeL = bboxL.maxi - bboxL.mini;
+    Vector3 sizeR = bboxR.maxi - bboxR.mini;
     s32 axisL = GetAxisIndex( sizeL );
     s32 axisR = GetAxisIndex( sizeR );
 
     // 更に分割するピボットを求める.
-    Vector3 pivotL = ( bboxL.max + bboxL.min ) / 2.0f;
-    Vector3 pivotR = ( bboxR.max + bboxR.min ) / 2.0f;
+    Vector3 pivotL = ( bboxL.maxi + bboxL.mini ) / 2.0f;
+    Vector3 pivotR = ( bboxR.maxi + bboxR.mini ) / 2.0f;
 
     // 分割する.
     s32 midPointL = Split( &pShapes[idx1[0]], num1[0], pivotL.a[axisL], axisL );
@@ -950,20 +942,20 @@ IShape* OBVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
     BoundingBox bbox4 = CreateMergedBox( &pShapes[idx2[3]], num2[3] );
 
     // AABBの各辺の長さを求める.
-    Vector3 size1 = bbox1.max - bbox1.min;
-    Vector3 size2 = bbox2.max - bbox2.min;
-    Vector3 size3 = bbox3.max - bbox3.min;
-    Vector3 size4 = bbox4.max - bbox4.min;
+    Vector3 size1 = bbox1.maxi - bbox1.mini;
+    Vector3 size2 = bbox2.maxi - bbox2.mini;
+    Vector3 size3 = bbox3.maxi - bbox3.mini;
+    Vector3 size4 = bbox4.maxi - bbox4.mini;
     s32 axis1 = GetAxisIndex( size1 );
     s32 axis2 = GetAxisIndex( size2 );
     s32 axis3 = GetAxisIndex( size3 );
     s32 axis4 = GetAxisIndex( size4 );
 
     // 更に更に分割するピボットを求める.
-    Vector3 pivot1 = ( bbox1.max + bbox1.min ) / 2.0f;
-    Vector3 pivot2 = ( bbox2.max + bbox2.min ) / 2.0f;
-    Vector3 pivot3 = ( bbox3.max + bbox3.min ) / 2.0f;
-    Vector3 pivot4 = ( bbox4.max + bbox4.min ) / 2.0f;
+    Vector3 pivot1 = ( bbox1.maxi + bbox1.mini ) / 2.0f;
+    Vector3 pivot2 = ( bbox2.maxi + bbox2.mini ) / 2.0f;
+    Vector3 pivot3 = ( bbox3.maxi + bbox3.mini ) / 2.0f;
+    Vector3 pivot4 = ( bbox4.maxi + bbox4.mini ) / 2.0f;
 
     // 分割する.
     s32 midPoint1 = Split( &pShapes[idx2[0]], num2[0], pivot1.a[axis1], axis1 );

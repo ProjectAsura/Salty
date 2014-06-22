@@ -11,7 +11,6 @@
 // Includes
 //------------------------------------------------------------------------------------------
 #include <s3d_typedef.h>
-#include <s3d_rand.h>
 #include <cmath>
 #include <cfloat>
 #include <cassert>
@@ -22,8 +21,13 @@ namespace s3d {
 //------------------------------------------------------------------------------------------
 // Forward Declarations.
 //------------------------------------------------------------------------------------------
+struct  Vector2;
 struct  Vector3;
+struct  Vector4;
 struct  Ray;
+struct  Ray4;
+struct  Ray8;
+struct  Matrix;
 
 
 //------------------------------------------------------------------------------------------
@@ -47,6 +51,10 @@ const f32   F_PIDIV4    = 0.78539816339744830961566084581988f;    //!< π/4で�
 const f32   F_MAX       = 3.402823466e+38F;                       //!< f32型の最大値です.
 const f32   F_MIN       = 1.175494351e-38F;                       //!< f32型の最小値です.
 
+
+//------------------------------------------------------------------------------------------
+//! @brief      符号を求めます.
+//------------------------------------------------------------------------------------------
 template< typename T > S3D_INLINE
 s32 Sign( const T val )
 { return ( val > T(0) ) ? 1 : (( val < T(0) ) ? -1 : 0 ); }
@@ -1341,10 +1349,6 @@ struct Ray
         dir.y = d.y;
         dir.z = d.z;
 
-        // ゼロ除算対策.
-        //invDir.x = ( dir.x != 0.0f ) ? 1.0f / dir.x : 0.0f;
-        //invDir.y = ( dir.y != 0.0f ) ? 1.0f / dir.y : 0.0f;
-        //invDir.z = ( dir.z != 0.0f ) ? 1.0f / dir.z : 0.0f;
         invDir.x = 1.0f / dir.x;
         invDir.y = 1.0f / dir.y;
         invDir.z = 1.0f / dir.z;
@@ -1532,6 +1536,1696 @@ struct Ray8
         sign[1] = rayOct.sign[1];
         sign[2] = rayOct.sign[2];
     }
+};
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Matric structure
+//////////////////////////////////////////////////////////////////////////////////////////
+struct Matrix
+{
+public:
+    union
+    {
+        struct 
+        {
+            f32 _11, _12, _13, _14;
+            f32 _21, _22, _23, _24;
+            f32 _31, _32, _33, _34;
+            f32 _41, _42, _43, _44;
+        };
+        f32     a[16];
+    #if S3D_IS_SIMD
+        struct
+        {
+            b128    v0;
+            b128    v1;
+            b128    v2;
+            b128    v3;
+        };
+    #endif
+    };
+
+    Matrix()
+    { /* DO_NOTHING */ }
+
+    S3D_INLINE
+    Matrix
+    (
+        const f32 m11, const f32 m12, const f32 m13, const f32 m14,
+        const f32 m21, const f32 m22, const f32 m23, const f32 m24,
+        const f32 m31, const f32 m32, const f32 m33, const f32 m34,
+        const f32 m41, const f32 m42, const f32 m43, const f32 m44
+    )
+  #if S3D_IS_SIMD
+    : v0( _mm_set_ps( m14, m13, m12, m11 ) )
+    , v1( _mm_set_ps( m24, m23, m22, m21 ) )
+    , v2( _mm_set_ps( m34, m33, m32, m31 ) )
+    , v3( _mm_set_ps( m44, m43, m42, m41 ) )
+  #else
+    : _11( m11 ), _12( m12 ), _13( m13 ), _14( m14 )
+    , _21( m21 ), _22( m22 ), _23( m23 ), _24( m24 )
+    , _31( m31 ), _32( m32 ), _33( m33 ), _34( m34 )
+    , _41( m41 ), _42( m42 ), _43( m43 ), _44( m44 )
+  #endif//S3D_IS_SIMD
+    { /* DO_NOTHING */ }
+
+  #if S3D_IS_SIMD
+    S3D_INLINE
+    Matrix( const b128 c0, const b128 c1, const b128 c2, const b128 c3 )
+    : v0( c0 )
+    , v1( c1 )
+    , v2( c2 )
+    , v3( c3 )
+    { /* DO_NOTHING */ }
+  #endif//S3D_IS_SIMD
+
+    S3D_INLINE
+    Matrix( const Matrix& value)
+  #if S3D_IS_SIMD
+    : v0 ( value.v0 )
+    , v1 ( value.v1 )
+    , v2 ( value.v2 )
+    , v3 ( value.v3 )
+  #else
+    : _11( value._11 ), _12( value._12 ), _13( value._13 ), _14( value._14 )
+    , _21( value._21 ), _22( value._22 ), _23( value._23 ), _24( value._24 )
+    , _31( value._31 ), _32( value._32 ), _33( value._33 ), _34( value._34 )
+    , _41( value._41 ), _42( value._42 ), _43( value._43 ), _44( value._44 )
+  #endif//S3D_IS_SIMD
+    { /* DO_NOTHING */ }
+
+    S3D_INLINE
+    Matrix& operator =  ( const Matrix& value )
+    {
+    #if S3D_IS_SIMD
+        v0 = value.v0;
+        v1 = value.v1;
+        v2 = value.v2;
+        v3 = value.v3;
+    #else
+        _11 = value._11; _12 = value._12; _13 = value._13; _14 = value._14;
+        _21 = value._21; _22 = value._22; _23 = value._23; _24 = value._24;
+        _31 = value._31; _32 = value._32; _33 = value._33; _34 = value._34;
+        _41 = value._41; _42 = value._42; _43 = value._43; _44 = value._44;
+    #endif//S3D_IS_SIMD
+        return (*this);
+    }
+
+    S3D_INLINE
+    Matrix& operator += ( const Matrix& value )
+    {
+    #if S3D_IS_SIMD
+        v0 = _mm_add_ps( v0, value.v0 );
+        v1 = _mm_add_ps( v1, value.v1 );
+        v2 = _mm_add_ps( v2, value.v2 );
+        v3 = _mm_add_ps( v3, value.v3 );
+    #else
+        _11 += value._11; _12 += value._12; _13 += value._13; _14 += value._14;
+        _21 += value._21; _22 += value._22; _23 += value._23; _24 += value._24;
+        _31 += value._31; _32 += value._32; _33 += value._33; _34 += value._34;
+        _41 += value._41; _42 += value._42; _43 += value._43; _44 += value._44;
+    #endif//S3D_IS_SIMD
+        return (*this);
+    }
+
+    S3D_INLINE
+    Matrix& operator -= ( const Matrix& value )
+    {
+    #if S3D_IS_SIMD
+        v0 = _mm_sub_ps( v0, value.v0 );
+        v1 = _mm_sub_ps( v1, value.v1 );
+        v2 = _mm_sub_ps( v2, value.v2 );
+        v3 = _mm_sub_ps( v3, value.v3 );
+    #else
+        _11 -= value._11; _12 -= value._12; _13 -= value._13; _14 -= value._14;
+        _21 -= value._21; _22 -= value._22; _23 -= value._23; _24 -= value._24;
+        _31 -= value._31; _32 -= value._32; _33 -= value._33; _34 -= value._34;
+        _41 -= value._41; _42 -= value._42; _43 -= value._43; _44 -= value._44;
+    #endif//S3D_IS_SIMD
+        return (*this);
+    }
+
+    S3D_INLINE
+    Matrix& operator *= ( const Matrix& value )
+    {
+    #if S3D_IS_SIMD
+        b128 r0 = _mm_set_ps( value._41, value._31, value._21, value._11 );
+        b128 r1 = _mm_set_ps( value._42, value._32, value._22, value._12 );
+        b128 r2 = _mm_set_ps( value._43, value._33, value._23, value._13 );
+        b128 r3 = _mm_set_ps( value._44, value._34, value._24, value._14 );
+
+        Vector4 m0 = _mm_mul_ps( v0, r0 );
+        Vector4 m1 = _mm_mul_ps( v0, r1 );
+        Vector4 m2 = _mm_mul_ps( v0, r2 );
+        Vector4 m3 = _mm_mul_ps( v0, r3 );
+
+        v0 = _mm_set_ps(
+            m3.x + m3.y + m3.z + m3.w,
+            m2.x + m2.y + m2.z + m2.w,
+            m1.x + m1.y + m1.z + m1.w,
+            m0.x + m0.y + m0.z + m0.w );
+
+        m0 = _mm_mul_ps( v1, r0 );
+        m1 = _mm_mul_ps( v1, r1 );
+        m2 = _mm_mul_ps( v1, r2 );
+        m3 = _mm_mul_ps( v1, r3 );
+
+        v1 = _mm_set_ps(
+            m3.x + m3.y + m3.z + m3.w,
+            m2.x + m2.y + m2.z + m2.w,
+            m1.x + m1.y + m1.z + m1.w,
+            m0.x + m0.y + m0.z + m0.w );
+
+        m0 = _mm_mul_ps( v2, r0 );
+        m1 = _mm_mul_ps( v2, r1 );
+        m2 = _mm_mul_ps( v2, r2 );
+        m3 = _mm_mul_ps( v2, r3 );
+
+        v2 = _mm_set_ps(
+            m3.x + m3.y + m3.z + m3.w,
+            m2.x + m2.y + m2.z + m2.w,
+            m1.x + m1.y + m1.z + m1.w,
+            m0.x + m0.y + m0.z + m0.w );
+
+        m0 = _mm_mul_ps( v3, r0 );
+        m1 = _mm_mul_ps( v3, r1 );
+        m2 = _mm_mul_ps( v3, r2 );
+        m3 = _mm_mul_ps( v3, r3 );
+
+        v3 = _mm_set_ps(
+            m3.x + m3.y + m3.z + m3.w,
+            m2.x + m2.y + m2.z + m2.w,
+            m1.x + m1.y + m1.z + m1.w,
+            m0.x + m0.y + m0.z + m0.w );
+
+    #else
+        {
+            register f32 m11 = ( _11 * value._11 ) + ( _12 * value._21 ) + ( _13 * value._31 ) + ( _14 * value._41 );
+            register f32 m12 = ( _11 * value._12 ) + ( _12 * value._22 ) + ( _13 * value._32 ) + ( _14 * value._42 );
+            register f32 m13 = ( _11 * value._13 ) + ( _12 * value._23 ) + ( _13 * value._33 ) + ( _14 * value._43 );
+            register f32 m14 = ( _11 * value._14 ) + ( _12 * value._24 ) + ( _13 * value._34 ) + ( _14 * value._44 );
+
+            _11 = m11;
+            _12 = m12;
+            _13 = m13;
+            _14 = m14;
+        }
+
+        {
+            register f32 m21 = ( _21 * value._11 ) + ( _22 * value._21 ) + ( _23 * value._31 ) + ( _24 * value._41 );
+            register f32 m22 = ( _21 * value._12 ) + ( _22 * value._22 ) + ( _23 * value._32 ) + ( _24 * value._42 );
+            register f32 m23 = ( _21 * value._13 ) + ( _22 * value._23 ) + ( _23 * value._33 ) + ( _24 * value._43 );
+            register f32 m24 = ( _21 * value._14 ) + ( _22 * value._24 ) + ( _23 * value._34 ) + ( _24 * value._44 );
+
+            _21 = m21;
+            _22 = m22;
+            _23 = m23;
+            _24 = m24;
+        }
+
+        {
+            register f32 m31 = ( _31 * value._11 ) + ( _32 * value._21 ) + ( _33 * value._31 ) + ( _34 * value._41 );
+            register f32 m32 = ( _31 * value._12 ) + ( _32 * value._22 ) + ( _33 * value._32 ) + ( _34 * value._42 );
+            register f32 m33 = ( _31 * value._13 ) + ( _32 * value._23 ) + ( _33 * value._33 ) + ( _34 * value._43 );
+            register f32 m34 = ( _31 * value._14 ) + ( _32 * value._24 ) + ( _33 * value._34 ) + ( _34 * value._44 );
+
+            _31 = m31;
+            _32 = m32;
+            _33 = m33;
+            _34 = m34;
+        }
+
+        {
+            register f32 m41 = ( _41 * value._11 ) + ( _42 * value._21 ) + ( _43 * value._31 ) + ( _44 * value._41 );
+            register f32 m42 = ( _41 * value._12 ) + ( _42 * value._22 ) + ( _43 * value._32 ) + ( _44 * value._42 );
+            register f32 m43 = ( _41 * value._13 ) + ( _42 * value._23 ) + ( _43 * value._33 ) + ( _44 * value._43 );
+            register f32 m44 = ( _41 * value._14 ) + ( _42 * value._24 ) + ( _43 * value._34 ) + ( _44 * value._44 );
+
+            _41 = m41;
+            _42 = m42;
+            _43 = m43;
+            _44 = m44;
+        }
+    #endif//S3D_IS_SIMD
+
+        return (*this);
+    }
+
+    S3D_INLINE
+    Matrix& operator *= ( const f32 value )
+    {
+    #if S3D_IS_SIMD
+        b128 c = _mm_set_ps( value, value, value, value );
+        v0 = _mm_mul_ps( v0, c );
+        v1 = _mm_mul_ps( v1, c );
+        v2 = _mm_mul_ps( v2, c );
+        v3 = _mm_mul_ps( v3, c );
+    #else
+        _11 *= value; _12 *= value; _13 *= value; _14 *= value;
+        _21 *= value; _22 *= value; _23 *= value; _24 *= value;
+        _31 *= value; _32 *= value; _33 *= value; _34 *= value;
+        _41 *= value; _42 *= value; _43 *= value; _44 *= value;
+    #endif//S3D_IS_SIMD
+        return (*this); 
+    }
+
+    S3D_INLINE
+    Matrix operator + () const
+    { return (*this); }
+    
+    S3D_INLINE
+    Matrix operator - () const
+    {
+    #if S3D_IS_SIMD
+        b128 z = _mm_setzero_ps();
+        return Matrix(
+            _mm_sub_ps( z, v0 ),
+            _mm_sub_ps( z, v1 ),
+            _mm_sub_ps( z, v2 ),
+            _mm_sub_ps( z, v3 ) );
+    #else
+        return Matrix(
+            -_11, -_12, -_13, -_14,
+            -_21, -_22, -_23, -_24,
+            -_31, -_32, -_33, -_34,
+            -_41, -_42, -_43, -_44 );
+    #endif//S3D_IS_SIMD
+    }
+
+    S3D_INLINE
+    Matrix operator + ( const Matrix& value ) const
+    {
+    #if S3D_IS_SIMD
+        return Matrix(
+            _mm_add_ps( v0, value.v0 ),
+            _mm_add_ps( v1, value.v1 ),
+            _mm_add_ps( v2, value.v2 ),
+            _mm_add_ps( v3, value.v3 ) );
+    #else
+        return Matrix(
+            _11 + value._11, _12 + value._12, _13 + value._13, _14 + value._14,
+            _21 + value._21, _22 + value._22, _23 + value._23, _24 + value._24,
+            _31 + value._31, _32 + value._32, _33 + value._33, _34 + value._34,
+            _41 + value._41, _42 + value._42, _43 + value._43, _44 + value._44 );
+    #endif//S3D_IS_SIMD
+    }
+
+    S3D_INLINE
+    Matrix operator - ( const Matrix& value ) const
+    {
+    #if S3D_IS_SIMD
+        return Matrix(
+            _mm_sub_ps( v0, value.v0 ),
+            _mm_sub_ps( v1, value.v1 ),
+            _mm_sub_ps( v2, value.v2 ),
+            _mm_sub_ps( v3, value.v3 ) );
+    #else
+        return Matrix(
+            _11 - value._11, _12 - value._12, _13 - value._13, _14 - value._14,
+            _21 - value._21, _22 - value._22, _23 - value._23, _24 - value._24,
+            _31 - value._31, _32 - value._32, _33 - value._33, _34 - value._34,
+            _41 - value._41, _42 - value._42, _43 - value._43, _44 - value._44 );
+    #endif//S3D_IS_SIMD
+    }
+
+    S3D_INLINE
+    Matrix operator * ( const Matrix& value ) const
+    {
+    #if S3D_IS_SIMD
+        b128 r0 = _mm_set_ps( value._41, value._31, value._21, value._11 );
+        b128 r1 = _mm_set_ps( value._42, value._32, value._22, value._12 );
+        b128 r2 = _mm_set_ps( value._43, value._33, value._23, value._13 );
+        b128 r3 = _mm_set_ps( value._44, value._34, value._24, value._14 );
+
+        Vector4 m0 = _mm_mul_ps( v0, r0 );
+        Vector4 m1 = _mm_mul_ps( v0, r1 );
+        Vector4 m2 = _mm_mul_ps( v0, r2 );
+        Vector4 m3 = _mm_mul_ps( v0, r3 );
+
+        b128 e0 = _mm_set_ps(
+            m3.x + m3.y + m3.z + m3.w,
+            m2.x + m2.y + m2.z + m2.w,
+            m1.x + m1.y + m1.z + m1.w,
+            m0.x + m0.y + m0.z + m0.w );
+
+        m0 = _mm_mul_ps( v1, r0 );
+        m1 = _mm_mul_ps( v1, r1 );
+        m2 = _mm_mul_ps( v1, r2 );
+        m3 = _mm_mul_ps( v1, r3 );
+
+        b128 e1 = _mm_set_ps(
+            m3.x + m3.y + m3.z + m3.w,
+            m2.x + m2.y + m2.z + m2.w,
+            m1.x + m1.y + m1.z + m1.w,
+            m0.x + m0.y + m0.z + m0.w );
+
+        m0 = _mm_mul_ps( v2, r0 );
+        m1 = _mm_mul_ps( v2, r1 );
+        m2 = _mm_mul_ps( v2, r2 );
+        m3 = _mm_mul_ps( v2, r3 );
+
+        b128 e2 = _mm_set_ps(
+            m3.x + m3.y + m3.z + m3.w,
+            m2.x + m2.y + m2.z + m2.w,
+            m1.x + m1.y + m1.z + m1.w,
+            m0.x + m0.y + m0.z + m0.w );
+
+        m0 = _mm_mul_ps( v3, r0 );
+        m1 = _mm_mul_ps( v3, r1 );
+        m2 = _mm_mul_ps( v3, r2 );
+        m3 = _mm_mul_ps( v3, r3 );
+
+        b128 e3 = _mm_set_ps(
+            m3.x + m3.y + m3.z + m3.w,
+            m2.x + m2.y + m2.z + m2.w,
+            m1.x + m1.y + m1.z + m1.w,
+            m0.x + m0.y + m0.z + m0.w );
+
+        return Matrix( e0, e1, e2, e3 );
+    #else
+        return Matrix(
+                ( _11 * value._11 ) + ( _12 * value._21 ) + ( _13 * value._31 ) + ( _14 * value._41 ),
+                ( _11 * value._12 ) + ( _12 * value._22 ) + ( _13 * value._32 ) + ( _14 * value._42 ),
+                ( _11 * value._13 ) + ( _12 * value._23 ) + ( _13 * value._33 ) + ( _14 * value._43 ),
+                ( _11 * value._14 ) + ( _12 * value._24 ) + ( _13 * value._34 ) + ( _14 * value._44 ),
+
+                ( _21 * value._11 ) + ( _22 * value._21 ) + ( _23 * value._31 ) + ( _24 * value._41 ),
+                ( _21 * value._12 ) + ( _22 * value._22 ) + ( _23 * value._32 ) + ( _24 * value._42 ),
+                ( _21 * value._13 ) + ( _22 * value._23 ) + ( _23 * value._33 ) + ( _24 * value._43 ),
+                ( _21 * value._14 ) + ( _22 * value._24 ) + ( _23 * value._34 ) + ( _24 * value._44 ),
+
+                ( _31 * value._11 ) + ( _32 * value._21 ) + ( _33 * value._31 ) + ( _34 * value._41 ),
+                ( _31 * value._12 ) + ( _32 * value._22 ) + ( _33 * value._32 ) + ( _34 * value._42 ),
+                ( _31 * value._13 ) + ( _32 * value._23 ) + ( _33 * value._33 ) + ( _34 * value._43 ),
+                ( _31 * value._14 ) + ( _32 * value._24 ) + ( _33 * value._34 ) + ( _34 * value._44 ),
+
+                ( _41 * value._11 ) + ( _42 * value._21 ) + ( _43 * value._31 ) + ( _44 * value._41 ),
+                ( _41 * value._12 ) + ( _42 * value._22 ) + ( _43 * value._32 ) + ( _44 * value._42 ),
+                ( _41 * value._13 ) + ( _42 * value._23 ) + ( _43 * value._33 ) + ( _44 * value._43 ),
+                ( _41 * value._14 ) + ( _42 * value._24 ) + ( _43 * value._34 ) + ( _44 * value._44 ) );
+    #endif//S3D_IS_SIMD
+    }
+
+    S3D_INLINE
+    Matrix operator * ( const f32 value ) const
+    {
+    #if S3D_IS_SIMD
+        b128 c = _mm_set1_ps( value );
+        return Matrix(
+            _mm_mul_ps( v0, c ),
+            _mm_mul_ps( v1, c ),
+            _mm_mul_ps( v2, c ),
+            _mm_mul_ps( v3, c ) );
+    #else
+        return Matrix(
+            _11 * value, _12 * value, _13 * value, _14 * value,
+            _21 * value, _22 * value, _23 * value, _24 * value,
+            _31 * value, _32 * value, _33 * value, _34 * value,
+            _41 * value, _42 * value, _43 * value, _44 * value );
+    #endif//S3D_IS_SIMD
+    }
+
+    S3D_INLINE
+    f32 Det() const
+    {
+        return (
+            ( _11 * _22 * _33 * _44 ) + ( _11 * _23 * _34 * _42 ) +
+            ( _11 * _24 * _32 * _43 ) + ( _12 * _21 * _34 * _43 ) +
+            ( _12 * _23 * _31 * _44 ) + ( _12 * _24 * _33 * _41 ) +
+            ( _13 * _21 * _32 * _44 ) + ( _13 * _22 * _34 * _41 ) +
+            ( _13 * _24 * _31 * _42 ) + ( _14 * _21 * _33 * _42 ) +
+            ( _14 * _22 * _31 * _43 ) + ( _14 * _23 * _32 * _41 ) -
+            ( _11 * _22 * _34 * _43 ) - ( _11 * _23 * _32 * _44 ) -
+            ( _11 * _24 * _33 * _42 ) - ( _12 * _21 * _33 * _44 ) -
+            ( _12 * _23 * _34 * _41 ) - ( _12 * _24 * _31 * _43 ) -
+            ( _13 * _21 * _34 * _42 ) - ( _13 * _22 * _31 * _44 ) -
+            ( _13 * _24 * _32 * _41 ) - ( _14 * _21 * _32 * _43 ) -
+            ( _14 * _22 * _33 * _41 ) - ( _14 * _23 * _31 * _42 )
+        );
+    }
+
+    S3D_INLINE
+    static Matrix Invert( const Matrix& value )
+    {
+        Matrix result;
+        register f32 det = value.Det();
+
+        result._11 = ( value._22 * value._33 * value._44 ) + ( value._23 * value._34 * value._42 ) + ( value._24 * value._32 * value._43 )
+                   - ( value._22 * value._34 * value._43 ) - ( value._23 * value._32 * value._44 ) - ( value._24 * value._33 * value._42 ) / det;
+        result._12 = ( value._12 * value._34 * value._43 ) + ( value._13 * value._32 * value._44 ) + ( value._14 * value._33 * value._42 )
+                   - ( value._12 * value._33 * value._44 ) - ( value._13 * value._34 * value._42 ) - ( value._14 * value._32 * value._43 ) / det;
+        result._13 = ( value._12 * value._23 * value._44 ) + ( value._13 * value._24 * value._42 ) + ( value._14 * value._22 * value._43 )
+                   - ( value._12 * value._24 * value._43 ) - ( value._13 * value._22 * value._44 ) - ( value._14 * value._23 * value._42 ) / det;
+        result._14 = ( value._12 * value._24 * value._33 ) + ( value._13 * value._22 * value._34 ) + ( value._14 * value._23 * value._32 )
+                   - ( value._12 * value._23 * value._34 ) - ( value._13 * value._24 * value._32 ) - ( value._14 * value._22 * value._33 ) / det;
+
+        result._21 = ( value._21 * value._34 * value._43 ) + ( value._23 * value._31 * value._44 ) + ( value._24 * value._33 * value._41 )
+                   - ( value._21 * value._33 * value._44 ) - ( value._23 * value._34 * value._41 ) - ( value._24 * value._31 * value._43 ) / det;
+        result._22 = ( value._11 * value._33 * value._44 ) + ( value._13 * value._34 * value._41 ) + ( value._14 * value._31 * value._43 )
+                   - ( value._11 * value._34 * value._43 ) - ( value._13 * value._31 * value._44 ) - ( value._14 * value._33 * value._41 ) / det;
+        result._23 = ( value._11 * value._24 * value._43 ) + ( value._13 * value._21 * value._44 ) + ( value._14 * value._23 * value._41 )
+                   - ( value._11 * value._23 * value._44 ) - ( value._13 * value._24 * value._41 ) - ( value._14 * value._21 * value._43 ) / det;
+        result._24 = ( value._11 * value._23 * value._34 ) + ( value._13 * value._24 * value._31 ) + ( value._14 * value._21 * value._33 )
+                   - ( value._11 * value._24 * value._33 ) - ( value._13 * value._21 * value._34 ) - ( value._14 * value._23 * value._31 ) / det;
+
+        result._31 = ( value._21 * value._32 * value._44 ) + ( value._22 * value._34 * value._41 ) + ( value._24 * value._31 * value._42 )
+                   - ( value._21 * value._34 * value._42 ) - ( value._22 * value._31 * value._44 ) - ( value._24 * value._32 * value._41 ) / det;
+        result._32 = ( value._11 * value._34 * value._42 ) + ( value._12 * value._31 * value._44 ) + ( value._14 * value._32 * value._41 )
+                   - ( value._11 * value._32 * value._44 ) - ( value._12 * value._34 * value._41 ) - ( value._14 * value._31 * value._42 ) / det;
+        result._33 = ( value._11 * value._22 * value._44 ) + ( value._12 * value._24 * value._41 ) + ( value._14 * value._21 * value._42 )
+                   - ( value._11 * value._24 * value._42 ) - ( value._12 * value._21 * value._44 ) - ( value._14 * value._22 * value._41 ) / det;
+        result._34 = ( value._11 * value._24 * value._32 ) + ( value._12 * value._21 * value._34 ) + ( value._14 * value._22 * value._31 )
+                   - ( value._11 * value._22 * value._34 ) - ( value._12 * value._24 * value._31 ) - ( value._14 * value._21 * value._32 ) / det;
+
+        result._41 = ( value._21 * value._33 * value._42 ) + ( value._22 * value._31 * value._43 ) + ( value._23 * value._32 * value._41 )
+                   - ( value._21 * value._32 * value._43 ) - ( value._22 * value._33 * value._41 ) - ( value._23 * value._31 * value._42 ) / det;
+        result._42 = ( value._11 * value._32 * value._43 ) + ( value._12 * value._33 * value._41 ) + ( value._13 * value._31 * value._42 )
+                   - ( value._11 * value._33 * value._42 ) - ( value._12 * value._31 * value._43 ) - ( value._13 * value._32 * value._41 ) / det;
+        result._43 = ( value._11 * value._23 * value._42 ) + ( value._12 * value._21 * value._43 ) + ( value._13 * value._22 * value._41 )
+                   - ( value._11 * value._22 * value._43 ) - ( value._12 * value._23 * value._41 ) - ( value._13 * value._21 * value._42 ) / det;
+        result._44 = ( value._11 * value._22 * value._33 ) + ( value._12 * value._23 * value._31 ) + ( value._13 * value._21 * value._32 )
+                   - ( value._11 * value._23 * value._32 ) - ( value._12 * value._21 * value._33 ) - ( value._13 * value._22 * value._31 ) / det;
+
+        return result;
+    }
+
+    S3D_INLINE
+    static Matrix Transpose ( const Matrix& value )
+    {
+        return Matrix(
+            value._11, value._21, value._31, value._41,
+            value._12, value._22, value._32, value._42,
+            value._13, value._23, value._33, value._43,
+            value._14, value._24, value._34, value._44 );
+    }
+
+    S3D_INLINE
+    static Matrix Identity()
+    {
+        return Matrix(
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f );
+    }
+
+    S3D_INLINE
+    static Matrix Translate( const f32 x, const f32 y, const f32 z )
+    {
+        return Matrix(
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            x,    y,    z,    1.0f );
+    }
+
+    S3D_INLINE
+    static Matrix Scale( const f32 x, const f32 y, const f32 z )
+    {
+        return Matrix(
+            x,    0.0f, 0.0f, 0.0f,
+            0.0f, y,    0.0f, 0.0f,
+            0.0f, 0.0f, z,    0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f );
+    }
+
+    S3D_INLINE
+    static Matrix RotateX( const f32 rad )
+    {
+        register f32 cosRad = cosf( rad );
+        register f32 sinRad = sinf( rad );
+        return Matrix(
+            1.0f,    0.0f,   0.0f, 0.0f,
+            0.0f,  cosRad, sinRad, 0.0f,
+            0.0f, -sinRad, cosRad, 0.0f,
+            0.0f,    0.0f,   0.0f, 1.0f );
+    }
+
+    S3D_INLINE
+    static Matrix RotateY( const f32 rad )
+    {
+        register f32 cosRad = cosf( rad );
+        register f32 sinRad = sinf( rad );
+        return Matrix(
+            cosRad,  0.0f, -sinRad, 0.0f,
+            0.0f,    1.0f,    0.0f, 0.0f,
+            sinRad,  0.0f,  cosRad, 0.0f,
+            0.0f,    0.0f,    0.0f, 1.0f );
+    }
+
+    S3D_INLINE
+    static Matrix RotateZ( const f32 rad )
+    {
+        register f32 cosRad = cosf( rad );
+        register f32 sinRad = sinf( rad );
+        return Matrix(
+            cosRad, sinRad, 0.0f, 0.0f,
+            sinRad, cosRad, 0.0f, 0.0f,
+            0.0f,     0.0f, 1.0f, 0.0f,
+            0.0f,     0.0f, 0.0f, 1.0f );
+    }
+
+    S3D_INLINE
+    static Matrix Rotate( const f32 x, const f32 y, const f32 z, const f32 rad )
+    {
+        Matrix result;
+
+        register f32 sinRad = sinf(rad);
+        register f32 cosRad = cosf(rad);
+        register f32 a = 1.0f -cosRad;
+    
+        register f32 ab = x * y * a;
+        register f32 bc = y * z * a;
+        register f32 ca = z * x * a;
+        register f32 tx = x * x;
+        register f32 ty = y * y;
+        register f32 tz = z * z;
+
+        result._11 = tx + cosRad * (1.0f - tx);
+        result._12 = ab + z * sinRad;
+        result._13 = ca - y * sinRad;
+        result._14 = 0.0f;
+
+        result._21 = ab - z * sinRad;
+        result._22 = ty + cosRad * (1.0f - ty);
+        result._23 = bc + x * sinRad;
+        result._24 = 0.0f;
+
+        result._31 = ca + y * sinRad;
+        result._32 = bc - x * sinRad;
+        result._33 = tz + cosRad * (1.0f - tz);
+        result._34 = 0.0f;
+
+        result._41 = 0.0f;
+        result._42 = 0.0f;
+        result._43 = 0.0f;
+        result._44 = 1.0f;
+
+        return result;
+    }
+
+    S3D_INLINE
+    static Matrix LookAt( const Vector3& position, const Vector3& target, const Vector3& upward )
+    {
+        Vector3 zaxis = Vector3::UnitVector( target - position );
+        Vector3 xaxis = Vector3::UnitVector( Vector3::Cross( upward, zaxis ) );
+        Vector3 yaxis = Vector3::UnitVector( Vector3::Cross( zaxis, xaxis ) );
+
+        return Matrix(
+            xaxis.x, yaxis.x, zaxis.x, 0.0f,
+            xaxis.y, yaxis.y, zaxis.y, 0.0f,
+            xaxis.z, yaxis.z, zaxis.z, 0.0f,
+
+            -Vector3::Dot( xaxis, position ),
+            -Vector3::Dot( yaxis, position ),
+            -Vector3::Dot( zaxis, position ),
+            1.0 );
+    }
+
+    S3D_INLINE
+    static Matrix PersFov( const f32 fieldOfView, const f32 aspectRatio, const f32 nearClip, const f32 farClip )
+    {
+        register f32 diff = farClip - nearClip;
+        register f32 yScale = 1.0f / tanf( fieldOfView * 0.5f );
+        register f32 xScale = yScale / aspectRatio;
+
+        Matrix result;
+        result._11 = xScale;
+        result._12 = 0.0f;
+        result._13 = 0.0f;
+        result._14 = 0.0f;
+
+        result._21 = 0.0f;
+        result._22 = yScale;
+        result._23 = 0.0f;
+        result._24 = 0.0f;
+
+        result._31 = 0.0f;
+        result._32 = 0.0f;
+        result._33 = farClip / diff;
+        result._34 = -1.0f;
+
+        result._41 = 0.0f;
+        result._42 = 0.0f;
+        result._43 = - (nearClip * farClip) / diff;
+        result._44 = 0.0f;
+
+        return result;
+    }
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+// BoundingBox structure
+/////////////////////////////////////////////////////////////////////////////////////
+struct BoundingBox
+{
+public:
+    Vector3 mini;        //!< 最小値です.
+    Vector3 maxi;        //!< 最大値です.
+    bool    isEmpty;
+
+    //-------------------------------------------------------------------------------
+    //! @brief      コンストラクタです.
+    //-------------------------------------------------------------------------------
+    S3D_INLINE
+    BoundingBox()
+    : mini(  F_MAX,  F_MAX,  F_MAX )
+    , maxi( -F_MAX, -F_MAX, -F_MAX )
+    , isEmpty( true )
+    { /* DO_NOTHING */ }
+
+    //-------------------------------------------------------------------------------
+    //! @brief      引数付きコンストラクタです.
+    //-------------------------------------------------------------------------------
+    S3D_INLINE
+    BoundingBox( const Vector3& value )
+    : mini( value )
+    , maxi( value )
+    , isEmpty( false )
+    { /* DO_NOTHING */ }
+
+    //-------------------------------------------------------------------------------
+    //! @brief      引数付きコンストラクタです.
+    //-------------------------------------------------------------------------------
+    S3D_INLINE
+    BoundingBox( const Vector3& _mini, const Vector3& _maxi )
+    : mini( _mini )
+    , maxi( _maxi )
+    , isEmpty( false )
+    { /* DO_NOTHING */ }
+
+    //-------------------------------------------------------------------------------
+    //! @brief      コピーコンストラクタです.
+    //-------------------------------------------------------------------------------
+    S3D_INLINE
+    BoundingBox( const BoundingBox& value )
+    : mini( value.mini )
+    , maxi( value.maxi )
+    , isEmpty( value.isEmpty )
+    { /* DO_NOTHING */ }
+
+    //-------------------------------------------------------------------------------
+    //! @brief      交差判定を行います.
+    //-------------------------------------------------------------------------------
+    S3D_INLINE
+    bool IsHit( const Ray& ray ) const
+    {
+        if ( isEmpty )
+        { return true; }
+
+        const Vector3* v[ 2 ] = { &mini, &maxi };
+        f64 intervalMin = F_HIT_MIN;
+        f64 intervalMax = F_HIT_MAX;
+
+        s32 idx0, idx1;
+        f64 t0, t1;
+
+        // X軸方向.
+        idx0 = ray.sign[ 0 ];
+        idx1 = 1 - idx0;
+        t0 = ( v[ idx0 ]->x - ray.pos.x ) * ray.invDir.x;
+        t1 = ( v[ idx1 ]->x - ray.pos.x ) * ray.invDir.x;
+        intervalMin = ( t0 > intervalMin ) ? t0 : intervalMin;
+        intervalMax = ( t1 < intervalMax ) ? t1 : intervalMax;
+        if ( intervalMin > intervalMax )
+        { return false; }
+
+        // Y軸方向.
+        idx0 = ray.sign[ 1 ];
+        idx1 = 1 - idx0;
+        t0 = ( v[ idx0 ]->y - ray.pos.y ) * ray.invDir.y;
+        t1 = ( v[ idx1 ]->y - ray.pos.y ) * ray.invDir.y;
+        intervalMin = ( t0 > intervalMin ) ? t0 : intervalMin;
+        intervalMax = ( t1 < intervalMax ) ? t1 : intervalMax;
+        if ( intervalMin > intervalMax )
+        { return false; }
+
+        // Z軸方向.
+        idx0 = ray.sign[ 2 ];
+        idx1 = 1 - idx0;
+        t0 = ( v[ idx0 ]->z - ray.pos.z ) * ray.invDir.z;
+        t1 = ( v[ idx1 ]->z - ray.pos.z ) * ray.invDir.z;
+        intervalMin = ( t0 > intervalMin ) ? t0 : intervalMin;
+        intervalMax = ( t1 < intervalMax ) ? t1 : intervalMax;
+        if ( intervalMin > intervalMax )
+        { return false; }
+
+        return true;
+    }
+
+    //-------------------------------------------------------------------------------
+    //! @brief      2つのバウンディングボックスをマージします.
+    //-------------------------------------------------------------------------------
+    S3D_INLINE
+    static BoundingBox Merge( const BoundingBox& a, const BoundingBox& b )
+    {
+        if ( !a.isEmpty && !b.isEmpty )
+        {
+            Vector3 mini = Vector3::Min( a.mini, b.mini );
+            Vector3 maxi = Vector3::Max( a.maxi, b.maxi );
+
+            return BoundingBox( mini, maxi );
+        }
+        else if ( a.isEmpty && !b.isEmpty )
+        { return b; }
+        else if ( !a.isEmpty && b.isEmpty )
+        { return a; }
+
+        return a;
+    }
+
+    //-------------------------------------------------------------------------------
+    //! @brief      バウンディングボックスと点をマージします.
+    //-------------------------------------------------------------------------------
+    S3D_INLINE
+    static BoundingBox Merge( const BoundingBox& box, const Vector3& p )
+    {
+        if ( !box.isEmpty )
+        {
+            Vector3 mini = Vector3::Min( box.mini, p );
+            Vector3 maxi = Vector3::Max( box.maxi, p );
+
+            return BoundingBox( mini, maxi );
+        }
+        return BoundingBox( p );
+    }
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+// BoundingBox4 structure
+/////////////////////////////////////////////////////////////////////////////////////
+struct BoundingBox4
+{
+public:
+    b128 value[2][3];       // 最大・最小値です( 0:min, 1:max ).
+
+    //--------------------------------------------------------------------------------
+    //! @brief      コンストラクタです.
+    //--------------------------------------------------------------------------------
+    S3D_INLINE
+    BoundingBox4()
+    {
+    #if S3D_IS_SIMD
+        value[0][0] = _mm_set1_ps( F_MAX );
+        value[0][1] = _mm_set1_ps( F_MAX );
+        value[0][2] = _mm_set1_ps( F_MAX );
+
+        value[1][0] = _mm_set1_ps( F_MIN );
+        value[1][1] = _mm_set1_ps( F_MIN );
+        value[1][2] = _mm_set1_ps( F_MIN );
+    #else
+        value[0][0].m128_f32[0] = F_MAX;    // Empty
+        value[0][0].m128_f32[1] = F_MAX;    // Empty
+        value[0][0].m128_f32[2] = F_MAX;    // Empty
+        value[0][0].m128_f32[3] = F_MAX;    // Empty
+
+        value[0][1].m128_f32[0] = F_MAX;    // Empty
+        value[0][1].m128_f32[1] = F_MAX;    // Empty
+        value[0][1].m128_f32[2] = F_MAX;    // Empty
+        value[0][1].m128_f32[3] = F_MAX;    // Empty
+
+        value[0][2].m128_f32[0] = F_MAX;    // Empty
+        value[0][2].m128_f32[1] = F_MAX;    // Empty
+        value[0][2].m128_f32[2] = F_MAX;    // Empty
+        value[0][2].m128_f32[3] = F_MAX;    // Empty
+
+
+        value[1][0].m128_f32[0] = F_MIN;    // Empty
+        value[1][0].m128_f32[1] = F_MIN;    // Empty
+        value[1][0].m128_f32[2] = F_MIN;    // Empty
+        value[1][0].m128_f32[3] = F_MIN;    // Empty
+
+        value[1][1].m128_f32[0] = F_MIN;    // Empty
+        value[1][1].m128_f32[1] = F_MIN;    // Empty
+        value[1][1].m128_f32[2] = F_MIN;    // Empty
+        value[1][1].m128_f32[3] = F_MIN;    // Empty
+
+        value[1][2].m128_f32[0] = F_MIN;    // Empty
+        value[1][2].m128_f32[1] = F_MIN;    // Empty
+        value[1][2].m128_f32[2] = F_MIN;    // Empty
+        value[1][2].m128_f32[3] = F_MIN;    // Empty
+    #endif//S3D_IS_SIMD
+    }
+
+    //--------------------------------------------------------------------------------
+    //! @brief      引数付きコンストラクタです.
+    //--------------------------------------------------------------------------------
+    S3D_INLINE
+    BoundingBox4
+    (
+        const BoundingBox& box0,
+        const BoundingBox& box1,
+        const BoundingBox& box2,
+        const BoundingBox& box3
+    )
+    {
+    #if S3D_IS_SIMD
+        value[0][0] = _mm_set_ps( box3.mini.x, box2.mini.x, box1.mini.x, box0.mini.x );
+        value[0][1] = _mm_set_ps( box3.mini.y, box2.mini.y, box1.mini.y, box0.mini.y );
+        value[0][2] = _mm_set_ps( box3.mini.z, box2.mini.z, box1.mini.z, box0.mini.z );
+
+        value[1][0] = _mm_set_ps( box3.maxi.x, box2.maxi.x, box1.maxi.x, box0.maxi.x );
+        value[1][1] = _mm_set_ps( box3.maxi.y, box2.maxi.y, box1.maxi.y, box0.maxi.y );
+        value[1][2] = _mm_set_ps( box3.maxi.z, box2.maxi.z, box1.maxi.z, box0.maxi.z );
+    #else
+        value[0][0].m128_f32[0] = box0.min.x;
+        value[0][0].m128_f32[1] = box1.min.x;
+        value[0][0].m128_f32[2] = box2.min.x;
+        value[0][0].m128_f32[3] = box3.min.x;
+
+        value[0][1].m128_f32[0] = box0.min.y;
+        value[0][1].m128_f32[1] = box1.min.y;
+        value[0][1].m128_f32[2] = box2.min.y;
+        value[0][1].m128_f32[3] = box3.min.y;
+
+        value[0][2].m128_f32[0] = box0.min.z;
+        value[0][2].m128_f32[1] = box1.min.z;
+        value[0][2].m128_f32[2] = box2.min.z;
+        value[0][2].m128_f32[3] = box3.min.z;
+
+
+        value[1][0].m128_f32[0] = box0.max.x;
+        value[1][0].m128_f32[1] = box1.max.x;
+        value[1][0].m128_f32[2] = box2.max.x;
+        value[1][0].m128_f32[3] = box3.max.x;
+
+        value[1][1].m128_f32[0] = box0.max.y;
+        value[1][1].m128_f32[1] = box1.max.y;
+        value[1][1].m128_f32[2] = box2.max.y;
+        value[1][1].m128_f32[3] = box3.max.y;
+
+        value[1][2].m128_f32[0] = box0.max.z;
+        value[1][2].m128_f32[1] = box1.max.z;
+        value[1][2].m128_f32[2] = box2.max.z;
+        value[1][2].m128_f32[3] = box3.max.z;
+    #endif//S3D_IS_SIMD
+    }
+
+    //--------------------------------------------------------------------------------
+    //! @brief      引数付きコンストラクタです.
+    //--------------------------------------------------------------------------------
+    S3D_INLINE
+    BoundingBox4( const BoundingBox* box )
+    {
+    #if S3D_IS_SIMD
+        value[0][0] = _mm_set_ps( box[3].mini.x, box[2].mini.x, box[1].mini.x, box[0].mini.x );
+        value[0][1] = _mm_set_ps( box[3].mini.y, box[2].mini.y, box[1].mini.y, box[0].mini.y );
+        value[0][2] = _mm_set_ps( box[3].mini.z, box[2].mini.z, box[1].mini.z, box[0].mini.z );
+
+        value[1][0] = _mm_set_ps( box[3].maxi.x, box[2].maxi.x, box[1].maxi.x, box[0].maxi.x );
+        value[1][1] = _mm_set_ps( box[3].maxi.y, box[2].maxi.y, box[1].maxi.y, box[0].maxi.y );
+        value[1][2] = _mm_set_ps( box[3].maxi.z, box[2].maxi.z, box[1].maxi.z, box[0].maxi.z );
+    #else
+        value[0][0].m128_f32[0] = box[0].min.x;
+        value[0][0].m128_f32[1] = box[1].min.x;
+        value[0][0].m128_f32[2] = box[2].min.x;
+        value[0][0].m128_f32[3] = box[3].min.x;
+
+        value[0][1].m128_f32[0] = box[0].min.y;
+        value[0][1].m128_f32[1] = box[1].min.y;
+        value[0][1].m128_f32[2] = box[2].min.y;
+        value[0][1].m128_f32[3] = box[3].min.y;
+
+        value[0][2].m128_f32[0] = box[0].min.z;
+        value[0][2].m128_f32[1] = box[1].min.z;
+        value[0][2].m128_f32[2] = box[2].min.z;
+        value[0][2].m128_f32[3] = box[3].min.z;
+
+
+        value[1][0].m128_f32[0] = box[0].max.x;
+        value[1][0].m128_f32[1] = box[1].max.x;
+        value[1][0].m128_f32[2] = box[2].max.x;
+        value[1][0].m128_f32[3] = box[3].max.x;
+
+        value[1][1].m128_f32[0] = box[0].max.y;
+        value[1][1].m128_f32[1] = box[1].max.y;
+        value[1][1].m128_f32[2] = box[2].max.y;
+        value[1][1].m128_f32[3] = box[3].max.y;
+
+        value[1][2].m128_f32[0] = box[0].max.z;
+        value[1][2].m128_f32[1] = box[1].max.z;
+        value[1][2].m128_f32[2] = box[2].max.z;
+        value[1][2].m128_f32[3] = box[3].max.z;
+    #endif//S3D_IS_SIMD
+    }
+
+    //--------------------------------------------------------------------------------
+    //! @brief      引数付きコンストラクタです.
+    //--------------------------------------------------------------------------------
+    S3D_INLINE
+    BoundingBox4
+    (
+        const b128& miniX,
+        const b128& miniY,
+        const b128& miniZ,
+
+        const b128& maxiX,
+        const b128& maxiY,
+        const b128& maxiZ
+    )
+    {
+        value[0][0] = miniX;
+        value[0][1] = miniY;
+        value[0][2] = miniZ;
+
+        value[1][0] = maxiX;
+        value[1][1] = maxiY;
+        value[1][2] = maxiZ;
+    }
+
+    //--------------------------------------------------------------------------------
+    //! @brief      交差判定を行います.
+    //--------------------------------------------------------------------------------
+    S3D_INLINE
+    bool IsHit( const Ray4& ray, s32& mask ) const
+    {
+    #if S3D_IS_SIMD
+        b128 tmin = _mm_set1_ps( F_HIT_MIN );
+        b128 tmax = _mm_set1_ps( F_HIT_MAX );
+
+        s32 idx0, idx1;
+
+        // X軸.
+        idx0 = ray.sign[ 0 ];
+        idx1 = 1 - idx0;
+        tmin = _mm_max_ps( tmin, _mm_mul_ps( _mm_sub_ps( value[ idx0 ][ 0 ], ray.pos[ 0 ] ), ray.invDir[ 0 ] ) );
+        tmax = _mm_min_ps( tmax, _mm_mul_ps( _mm_sub_ps( value[ idx1 ][ 0 ], ray.pos[ 0 ] ), ray.invDir[ 0 ] ) );
+
+        // Y軸.
+        idx0 = ray.sign[ 1 ];
+        idx1 = 1 - idx0;
+        tmin = _mm_max_ps( tmin, _mm_mul_ps( _mm_sub_ps( value[ idx0 ][ 1 ], ray.pos[ 1 ] ), ray.invDir[ 1 ] ) );
+        tmax = _mm_min_ps( tmax, _mm_mul_ps( _mm_sub_ps( value[ idx1 ][ 1 ], ray.pos[ 1 ] ), ray.invDir[ 1 ] ) );
+
+        // Z軸.
+        idx0 = ray.sign[ 2 ];
+        idx1 = 1 - idx0;
+        tmin = _mm_max_ps( tmin, _mm_mul_ps( _mm_sub_ps( value[ idx0 ][ 2 ], ray.pos[ 2 ] ), ray.invDir[ 2 ] ) );
+        tmax = _mm_min_ps( tmax, _mm_mul_ps( _mm_sub_ps( value[ idx1 ][ 2 ], ray.pos[ 2 ] ), ray.invDir[ 2 ] ) );
+
+        mask = _mm_movemask_ps( _mm_cmpge_ps( tmax, tmin ) );
+        return ( mask > 0 );
+    #else
+        b128 tmin = { F_HIT_MIN, F_HIT_MIN, F_HIT_MIN, F_HIT_MIN };
+        b128 tmax = { F_HIT_MAX, F_HIT_MAX, F_HIT_MAX, F_HIT_MAX };
+
+        s32 idx0, idx1;
+
+        // X軸
+        idx0 = ray.sign[ 0 ];
+        idx1 = 1 - idx0;
+        for ( u32 i=0; i<4; ++i )
+        {
+            tmin.m128_f32[ i ] = s3d::Max( tmin.m128_f32[ i ], ( value[ idx0 ][ 0 ].m128_f32[ i ] - ray.pos[ 0 ].m128_f32[ i ] ) * ray.invDir[ 0 ].m128_f32[ i ] );
+            tmax.m128_f32[ i ] = s3d::Min( tmax.m128_f32[ i ], ( value[ idx1 ][ 0 ].m128_f32[ i ] - ray.pos[ 0 ].m128_f32[ i ] ) * ray.invDir[ 0 ].m128_f32[ i ] );
+        }
+
+        // Y軸
+        idx0 = ray.sign[ 1 ];
+        idx1 = 1 - idx0;
+        for ( u32 i=0; i<4; ++i )
+        {
+            tmin.m128_f32[ i ] = s3d::Max( tmin.m128_f32[ i ], ( value[ idx0 ][ 1 ].m128_f32[ i ] - ray.pos[ 1 ].m128_f32[ i ] ) * ray.invDir[ 1 ].m128_f32[ i ] );
+            tmax.m128_f32[ i ] = s3d::Min( tmax.m128_f32[ i ], ( value[ idx1 ][ 1 ].m128_f32[ i ] - ray.pos[ 1 ].m128_f32[ i ] ) * ray.invDir[ 1 ].m128_f32[ i ] );
+        }
+
+        // Z軸
+        idx0 = ray.sign[ 2 ];
+        idx1 = 1 - idx0;
+        for ( u32 i=0; i<4; ++i )
+        {
+            tmin.m128_f32[ i ] = s3d::Max( tmin.m128_f32[ i ], ( value[ idx0 ][ 2 ].m128_f32[ i ] - ray.pos[ 2 ].m128_f32[ i ] ) * ray.invDir[ 2 ].m128_f32[ i ] );
+            tmax.m128_f32[ i ] = s3d::Min( tmax.m128_f32[ i ], ( value[ idx1 ][ 2 ].m128_f32[ i ] - ray.pos[ 2 ].m128_f32[ i ] ) * ray.invDir[ 2 ].m128_f32[ i ] );
+        }
+
+        b128 flg;
+        flg.m128_u32[0] = ( tmax.m128_f32[ 0 ] >= tmin.m128_f32[ 0 ] ) ? 0xffffffff : 0x0;
+        flg.m128_u32[1] = ( tmax.m128_f32[ 1 ] >= tmin.m128_f32[ 1 ] ) ? 0xffffffff : 0x0;
+        flg.m128_u32[2] = ( tmax.m128_f32[ 2 ] >= tmin.m128_f32[ 2 ] ) ? 0xffffffff : 0x0;
+        flg.m128_u32[3] = ( tmax.m128_f32[ 3 ] >= tmin.m128_f32[ 3 ] ) ? 0xffffffff : 0x0;
+
+        mask = ( Sign(flg.m128_u32[3]) << 3 | Sign(flg.m128_u32[2]) << 2 | Sign(flg.m128_u32[1]) << 1 | Sign(flg.m128_u32[0]) );
+        return ( mask > 0 );
+    #endif
+    }
+
+    //--------------------------------------------------------------------------------
+    //! @brief      バウンディングボックスを取得します.
+    //--------------------------------------------------------------------------------
+    S3D_INLINE
+    BoundingBox GetBox() const
+    {
+        Vector3 tmin( value[0][0].m128_f32[0], value[0][1].m128_f32[0], value[0][2].m128_f32[0] );
+        Vector3 tmax( value[1][0].m128_f32[0], value[1][1].m128_f32[0], value[1][2].m128_f32[0] );
+
+        for( u32 i=1; i<4; ++i )
+        {
+            tmin = Vector3::Min( tmin, Vector3( value[0][0].m128_f32[i], value[0][1].m128_f32[i], value[0][2].m128_f32[i] ) );
+            tmax = Vector3::Max( tmax, Vector3( value[1][0].m128_f32[i], value[1][1].m128_f32[i], value[1][2].m128_f32[i] ) );
+        }
+
+        return BoundingBox( tmin, tmax );
+    }
+
+    //--------------------------------------------------------------------------------
+    //! @brief      2つの4バウンディングボックスをマージします.
+    //--------------------------------------------------------------------------------
+    S3D_INLINE
+    static BoundingBox4 Merge( const BoundingBox4& a, const BoundingBox4& b )
+    {
+    #if S3D_IS_SIMD
+        b128 miniX = _mm_min_ps( a.value[0][0], b.value[0][0] );
+        b128 miniY = _mm_min_ps( a.value[0][1], b.value[0][1] );
+        b128 miniZ = _mm_min_ps( a.value[0][2], b.value[0][2] );
+
+        b128 maxiX = _mm_max_ps( a.value[1][0], b.value[1][0] );
+        b128 maxiY = _mm_max_ps( a.value[1][1], b.value[1][1] );
+        b128 maxiZ = _mm_max_ps( a.value[1][2], b.value[1][2] );
+
+        return BoundingBox4( miniX, miniY, miniZ, maxiX, maxiY, maxiZ );
+    #else
+        b128 miniX = { 
+            ( a.value[0][0].m128_f32[0] < b.value[0][0].m128_f32[0] ) ? a.value[0][0].m128_f32[0] : b.value[0][0].m128_f32[0],
+            ( a.value[0][0].m128_f32[1] < b.value[0][0].m128_f32[1] ) ? a.value[0][0].m128_f32[1] : b.value[0][0].m128_f32[1],
+            ( a.value[0][0].m128_f32[2] < b.value[0][0].m128_f32[2] ) ? a.value[0][0].m128_f32[2] : b.value[0][0].m128_f32[2],
+            ( a.value[0][0].m128_f32[3] < b.value[0][0].m128_f32[3] ) ? a.value[0][0].m128_f32[3] : b.value[0][0].m128_f32[3]
+        };
+        b128 miniY = { 
+            ( a.value[0][1].m128_f32[0] < b.value[0][1].m128_f32[0] ) ? a.value[0][1].m128_f32[0] : b.value[0][1].m128_f32[0],
+            ( a.value[0][1].m128_f32[1] < b.value[0][1].m128_f32[1] ) ? a.value[0][1].m128_f32[1] : b.value[0][1].m128_f32[1],
+            ( a.value[0][1].m128_f32[2] < b.value[0][1].m128_f32[2] ) ? a.value[0][1].m128_f32[2] : b.value[0][1].m128_f32[2],
+            ( a.value[0][1].m128_f32[3] < b.value[0][1].m128_f32[3] ) ? a.value[0][1].m128_f32[3] : b.value[0][1].m128_f32[3]
+        };
+        b128 miniZ = { 
+            ( a.value[0][2].m128_f32[0] < b.value[0][2].m128_f32[0] ) ? a.value[0][2].m128_f32[0] : b.value[0][2].m128_f32[0],
+            ( a.value[0][2].m128_f32[1] < b.value[0][2].m128_f32[1] ) ? a.value[0][2].m128_f32[1] : b.value[0][2].m128_f32[1],
+            ( a.value[0][2].m128_f32[2] < b.value[0][2].m128_f32[2] ) ? a.value[0][2].m128_f32[2] : b.value[0][2].m128_f32[2],
+            ( a.value[0][2].m128_f32[3] < b.value[0][2].m128_f32[3] ) ? a.value[0][2].m128_f32[3] : b.value[0][2].m128_f32[3]
+        };
+
+        b128 maxiX = { 
+            ( a.value[1][0].m128_f32[0] > b.value[1][0].m128_f32[0] ) ? a.value[1][0].m128_f32[0] : b.value[1][0].m128_f32[0],
+            ( a.value[1][0].m128_f32[1] > b.value[1][0].m128_f32[1] ) ? a.value[1][0].m128_f32[1] : b.value[1][0].m128_f32[1],
+            ( a.value[1][0].m128_f32[2] > b.value[1][0].m128_f32[2] ) ? a.value[1][0].m128_f32[2] : b.value[1][0].m128_f32[2],
+            ( a.value[1][0].m128_f32[3] > b.value[1][0].m128_f32[3] ) ? a.value[1][0].m128_f32[3] : b.value[1][0].m128_f32[3]
+        };
+        b128 maxiY = { 
+            ( a.value[1][1].m128_f32[0] > b.value[1][1].m128_f32[0] ) ? a.value[1][1].m128_f32[0] : b.value[1][1].m128_f32[0],
+            ( a.value[1][1].m128_f32[1] > b.value[1][1].m128_f32[1] ) ? a.value[1][1].m128_f32[1] : b.value[1][1].m128_f32[1],
+            ( a.value[1][1].m128_f32[2] > b.value[1][1].m128_f32[2] ) ? a.value[1][1].m128_f32[2] : b.value[1][1].m128_f32[2],
+            ( a.value[1][1].m128_f32[3] > b.value[1][1].m128_f32[3] ) ? a.value[1][1].m128_f32[3] : b.value[1][1].m128_f32[3]
+        };
+        b128 maxiZ = { 
+            ( a.value[1][2].m128_f32[0] > b.value[1][2].m128_f32[0] ) ? a.value[1][2].m128_f32[0] : b.value[1][2].m128_f32[0],
+            ( a.value[1][2].m128_f32[1] > b.value[1][2].m128_f32[1] ) ? a.value[1][2].m128_f32[1] : b.value[1][2].m128_f32[1],
+            ( a.value[1][2].m128_f32[2] > b.value[1][2].m128_f32[2] ) ? a.value[1][2].m128_f32[2] : b.value[1][2].m128_f32[2],
+            ( a.value[1][2].m128_f32[3] > b.value[1][2].m128_f32[3] ) ? a.value[1][2].m128_f32[3] : b.value[1][2].m128_f32[3]
+        };
+
+        return BoundingBox4( miniX, miniY, miniZ, maxiX, maxiY, maxiZ );
+#endif//S3D_IS_SIMD
+    }
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+// BoundingBox8 structure
+/////////////////////////////////////////////////////////////////////////////////////
+struct BoundingBox8
+{
+public:
+    b256 value[2][3];       // 最大・最小値です( 0:min, 1:max ).
+
+    //--------------------------------------------------------------------------------
+    //! @brief      コンストラクタです.
+    //--------------------------------------------------------------------------------
+    S3D_INLINE
+    BoundingBox8()
+    {
+    #if ( S3D_IS_SIMD && S3D_IS_AVX )
+        value[0][0] = _mm256_set1_ps( F_MAX );
+        value[0][1] = _mm256_set1_ps( F_MAX );
+        value[0][2] = _mm256_set1_ps( F_MAX );
+
+        value[1][0] = _mm256_set1_ps( F_MIN );
+        value[1][1] = _mm256_set1_ps( F_MIN );
+        value[1][2] = _mm256_set1_ps( F_MIN );
+    #else
+        value[0][0].m256_f32[0] = F_MAX;    // Empty
+        value[0][0].m256_f32[1] = F_MAX;    // Empty
+        value[0][0].m256_f32[2] = F_MAX;    // Empty
+        value[0][0].m256_f32[3] = F_MAX;    // Empty
+        value[0][0].m256_f32[4] = F_MAX;    // Empty
+        value[0][0].m256_f32[5] = F_MAX;    // Empty
+        value[0][0].m256_f32[6] = F_MAX;    // Empty
+        value[0][0].m256_f32[7] = F_MAX;    // Empty
+
+        value[0][1].m256_f32[0] = F_MAX;    // Empty
+        value[0][1].m256_f32[1] = F_MAX;    // Empty
+        value[0][1].m256_f32[2] = F_MAX;    // Empty
+        value[0][1].m256_f32[3] = F_MAX;    // Empty
+        value[0][1].m256_f32[4] = F_MAX;    // Empty
+        value[0][1].m256_f32[5] = F_MAX;    // Empty
+        value[0][1].m256_f32[6] = F_MAX;    // Empty
+        value[0][1].m256_f32[7] = F_MAX;    // Empty
+
+        value[0][2].m256_f32[0] = F_MAX;    // Empty
+        value[0][2].m256_f32[1] = F_MAX;    // Empty
+        value[0][2].m256_f32[2] = F_MAX;    // Empty
+        value[0][2].m256_f32[3] = F_MAX;    // Empty
+        value[0][2].m256_f32[4] = F_MAX;    // Empty
+        value[0][2].m256_f32[5] = F_MAX;    // Empty
+        value[0][2].m256_f32[6] = F_MAX;    // Empty
+        value[0][2].m256_f32[7] = F_MAX;    // Empty
+
+        value[1][0].m256_f32[0] = F_MIN;    // Empty
+        value[1][0].m256_f32[1] = F_MIN;    // Empty
+        value[1][0].m256_f32[2] = F_MIN;    // Empty
+        value[1][0].m256_f32[3] = F_MIN;    // Empty
+        value[1][0].m256_f32[4] = F_MIN;    // Empty
+        value[1][0].m256_f32[5] = F_MIN;    // Empty
+        value[1][0].m256_f32[6] = F_MIN;    // Empty
+        value[1][0].m256_f32[7] = F_MIN;    // Empty
+
+        value[1][1].m256_f32[0] = F_MIN;    // Empty
+        value[1][1].m256_f32[1] = F_MIN;    // Empty
+        value[1][1].m256_f32[2] = F_MIN;    // Empty
+        value[1][1].m256_f32[3] = F_MIN;    // Empty
+        value[1][1].m256_f32[4] = F_MIN;    // Empty
+        value[1][1].m256_f32[5] = F_MIN;    // Empty
+        value[1][1].m256_f32[6] = F_MIN;    // Empty
+        value[1][1].m256_f32[7] = F_MIN;    // Empty
+
+        value[1][2].m256_f32[0] = F_MIN;    // Empty
+        value[1][2].m256_f32[1] = F_MIN;    // Empty
+        value[1][2].m256_f32[2] = F_MIN;    // Empty
+        value[1][2].m256_f32[3] = F_MIN;    // Empty
+        value[1][2].m256_f32[4] = F_MIN;    // Empty
+        value[1][2].m256_f32[5] = F_MIN;    // Empty
+        value[1][2].m256_f32[6] = F_MIN;    // Empty
+        value[1][2].m256_f32[7] = F_MIN;    // Empty
+    #endif// ( S3D_IS_SIMD && S3D_IS_AVX )
+    }
+
+    //--------------------------------------------------------------------------------
+    //! @brief      引数付きコンストラクタです.
+    //--------------------------------------------------------------------------------
+    S3D_INLINE
+    BoundingBox8
+    (
+        const BoundingBox& box0,
+        const BoundingBox& box1,
+        const BoundingBox& box2,
+        const BoundingBox& box3,
+        const BoundingBox& box4,
+        const BoundingBox& box5,
+        const BoundingBox& box6,
+        const BoundingBox& box7
+    )
+    {
+    #if ( S3D_IS_SIMD && S3D_IS_AVX )
+        value[0][0] = _mm256_set_ps( box7.mini.x, box6.mini.x, box5.mini.x, box4.mini.x, box3.mini.x, box2.mini.x, box1.mini.x, box0.mini.x );
+        value[0][1] = _mm256_set_ps( box7.mini.y, box6.mini.y, box5.mini.y, box4.mini.y, box3.mini.y, box2.mini.y, box1.mini.y, box0.mini.y );
+        value[0][2] = _mm256_set_ps( box7.mini.z, box6.mini.z, box5.mini.z, box4.mini.z, box3.mini.z, box2.mini.z, box1.mini.z, box0.mini.z );
+
+        value[1][0] = _mm256_set_ps( box7.maxi.x, box6.maxi.x, box5.maxi.x, box4.maxi.x, box3.maxi.x, box2.maxi.x, box1.maxi.x, box0.maxi.x );
+        value[1][1] = _mm256_set_ps( box7.maxi.y, box6.maxi.y, box5.maxi.y, box4.maxi.y, box3.maxi.y, box2.maxi.y, box1.maxi.y, box0.maxi.y );
+        value[1][2] = _mm256_set_ps( box7.maxi.z, box6.maxi.z, box5.maxi.z, box4.maxi.z, box3.maxi.z, box2.maxi.z, box1.maxi.z, box0.maxi.z );
+    #else
+        value[0][0].m256_f32[0] = box0.mini.x;
+        value[0][0].m256_f32[1] = box1.mini.x;
+        value[0][0].m256_f32[2] = box2.mini.x;
+        value[0][0].m256_f32[3] = box3.mini.x;
+        value[0][0].m256_f32[4] = box4.mini.x;
+        value[0][0].m256_f32[5] = box5.mini.x;
+        value[0][0].m256_f32[6] = box6.mini.x;
+        value[0][0].m256_f32[7] = box7.mini.x;
+
+        value[0][1].m256_f32[0] = box0.mini.y;
+        value[0][1].m256_f32[1] = box1.mini.y;
+        value[0][1].m256_f32[2] = box2.mini.y;
+        value[0][1].m256_f32[3] = box3.mini.y;
+        value[0][1].m256_f32[4] = box4.mini.y;
+        value[0][1].m256_f32[5] = box5.mini.y;
+        value[0][1].m256_f32[6] = box6.mini.y;
+        value[0][1].m256_f32[7] = box7.mini.y;
+
+        value[0][2].m256_f32[0] = box0.mini.z;
+        value[0][2].m256_f32[1] = box1.mini.z;
+        value[0][2].m256_f32[2] = box2.mini.z;
+        value[0][2].m256_f32[3] = box3.mini.z;
+        value[0][2].m256_f32[4] = box4.mini.z;
+        value[0][2].m256_f32[5] = box5.mini.z;
+        value[0][2].m256_f32[6] = box6.mini.z;
+        value[0][2].m256_f32[7] = box7.mini.z;
+
+        value[1][0].m256_f32[0] = box0.maxi.x;
+        value[1][0].m256_f32[1] = box1.maxi.x;
+        value[1][0].m256_f32[2] = box2.maxi.x;
+        value[1][0].m256_f32[3] = box3.maxi.x;
+        value[1][0].m256_f32[4] = box4.maxi.x;
+        value[1][0].m256_f32[5] = box5.maxi.x;
+        value[1][0].m256_f32[6] = box6.maxi.x; 
+        value[1][0].m256_f32[7] = box7.maxi.x;
+
+        value[1][1].m256_f32[0] = box0.maxi.y;
+        value[1][1].m256_f32[1] = box1.maxi.y;
+        value[1][1].m256_f32[2] = box2.maxi.y;
+        value[1][1].m256_f32[3] = box3.maxi.y;
+        value[1][1].m256_f32[4] = box4.maxi.y;
+        value[1][1].m256_f32[5] = box5.maxi.y;
+        value[1][1].m256_f32[6] = box6.maxi.y;
+        value[1][1].m256_f32[7] = box7.maxi.y;
+
+        value[1][2].m256_f32[0] = box0.maxi.z;
+        value[1][2].m256_f32[1] = box1.maxi.z;
+        value[1][2].m256_f32[2] = box2.maxi.z;
+        value[1][2].m256_f32[3] = box3.maxi.z;
+        value[1][2].m256_f32[4] = box4.maxi.z;
+        value[1][2].m256_f32[5] = box5.maxi.z;
+        value[1][2].m256_f32[6] = box6.maxi.z;
+        value[1][2].m256_f32[7] = box7.maxi.z;
+    #endif// ( S3D_IS_SIMD && S3D_IS_AVX )
+    }
+
+    //--------------------------------------------------------------------------------
+    //! @brief      引数付きコンストラクタです.
+    //--------------------------------------------------------------------------------
+    S3D_INLINE
+    BoundingBox8( const BoundingBox* box )
+    {
+    #if ( S3D_IS_SIMD && S3D_IS_AVX )
+        value[0][0] = _mm256_set_ps( box[7].mini.x, box[6].mini.x, box[5].mini.x, box[4].mini.x, box[3].mini.x, box[2].mini.x, box[1].mini.x, box[0].mini.x );
+        value[0][1] = _mm256_set_ps( box[7].mini.y, box[6].mini.y, box[5].mini.y, box[4].mini.y, box[3].mini.y, box[2].mini.y, box[1].mini.y, box[0].mini.y );
+        value[0][2] = _mm256_set_ps( box[7].mini.z, box[6].mini.z, box[5].mini.z, box[4].mini.z, box[3].mini.z, box[2].mini.z, box[1].mini.z, box[0].mini.z );
+
+        value[1][0] = _mm256_set_ps( box[7].maxi.x, box[6].maxi.x, box[5].maxi.x, box[4].maxi.x, box[3].maxi.x, box[2].maxi.x, box[1].maxi.x, box[0].maxi.x );
+        value[1][1] = _mm256_set_ps( box[7].maxi.y, box[6].maxi.y, box[5].maxi.y, box[4].maxi.y, box[3].maxi.y, box[2].maxi.y, box[1].maxi.y, box[0].maxi.y );
+        value[1][2] = _mm256_set_ps( box[7].maxi.z, box[6].maxi.z, box[5].maxi.z, box[4].maxi.z, box[3].maxi.z, box[2].maxi.z, box[1].maxi.z, box[0].maxi.z );
+    #else
+        value[0][0].m256_f32[0] = box[0].mini.x;
+        value[0][0].m256_f32[1] = box[1].mini.x;
+        value[0][0].m256_f32[2] = box[2].mini.x;
+        value[0][0].m256_f32[3] = box[3].mini.x;
+        value[0][0].m256_f32[4] = box[4].mini.x;
+        value[0][0].m256_f32[5] = box[5].mini.x;
+        value[0][0].m256_f32[6] = box[6].mini.x;
+        value[0][0].m256_f32[7] = box[7].mini.x;
+
+        value[0][1].m256_f32[0] = box[0].mini.y;
+        value[0][1].m256_f32[1] = box[1].mini.y;
+        value[0][1].m256_f32[2] = box[2].mini.y;
+        value[0][1].m256_f32[3] = box[3].mini.y;
+        value[0][1].m256_f32[4] = box[4].mini.y;
+        value[0][1].m256_f32[5] = box[5].mini.y;
+        value[0][1].m256_f32[6] = box[6].mini.y;
+        value[0][1].m256_f32[7] = box[7].mini.y;
+
+        value[0][2].m256_f32[0] = box[0].mini.z;
+        value[0][2].m256_f32[1] = box[1].mini.z;
+        value[0][2].m256_f32[2] = box[2].mini.z;
+        value[0][2].m256_f32[3] = box[3].mini.z;
+        value[0][2].m256_f32[4] = box[4].mini.z;
+        value[0][2].m256_f32[5] = box[5].mini.z;
+        value[0][2].m256_f32[6] = box[6].mini.z;
+        value[0][2].m256_f32[7] = box[7].mini.z;
+
+        value[1][0].m256_f32[0] = box[0].maxi.x;
+        value[1][0].m256_f32[1] = box[1].maxi.x;
+        value[1][0].m256_f32[2] = box[2].maxi.x;
+        value[1][0].m256_f32[3] = box[3].maxi.x;
+        value[1][0].m256_f32[4] = box[4].maxi.x;
+        value[1][0].m256_f32[5] = box[5].maxi.x;
+        value[1][0].m256_f32[6] = box[6].maxi.x; 
+        value[1][0].m256_f32[7] = box[7].maxi.x;
+
+        value[1][1].m256_f32[0] = box[0].maxi.y;
+        value[1][1].m256_f32[1] = box[1].maxi.y;
+        value[1][1].m256_f32[2] = box[2].maxi.y;
+        value[1][1].m256_f32[3] = box[3].maxi.y;
+        value[1][1].m256_f32[4] = box[4].maxi.y;
+        value[1][1].m256_f32[5] = box[5].maxi.y;
+        value[1][1].m256_f32[6] = box[6].maxi.y;
+        value[1][1].m256_f32[7] = box[7].maxi.y;
+
+        value[1][2].m256_f32[0] = box[0].maxi.z;
+        value[1][2].m256_f32[1] = box[1].maxi.z;
+        value[1][2].m256_f32[2] = box[2].maxi.z;
+        value[1][2].m256_f32[3] = box[3].maxi.z;
+        value[1][2].m256_f32[4] = box[4].maxi.z;
+        value[1][2].m256_f32[5] = box[5].maxi.z;
+        value[1][2].m256_f32[6] = box[6].maxi.z;
+        value[1][2].m256_f32[7] = box[7].maxi.z;
+    #endif// ( S3D_IS_SIMD && S3D_IS_AVX )
+    }
+
+    //--------------------------------------------------------------------------------
+    //! @brief      引数付きコンストラクタです.
+    //--------------------------------------------------------------------------------
+    S3D_INLINE
+    BoundingBox8
+    (
+        const b256& miniX,
+        const b256& miniY,
+        const b256& miniZ,
+
+        const b256& maxiX,
+        const b256& maxiY,
+        const b256& maxiZ
+    )
+    {
+        value[0][0] = miniX;
+        value[0][1] = miniY;
+        value[0][2] = miniZ;
+
+        value[1][0] = maxiX;
+        value[1][1] = maxiY;
+        value[1][2] = maxiZ;
+    }
+
+    //--------------------------------------------------------------------------------
+    //! @brief      交差判定を行います.
+    //--------------------------------------------------------------------------------
+    bool IsHit( const Ray8& ray, s32& mask ) const
+    {
+    #if ( S3D_IS_SIMD && S3D_IS_AVX )
+        b256 tmin = _mm256_set1_ps( F_HIT_MIN );
+        b256 tmax = _mm256_set1_ps( F_HIT_MAX );
+
+        s32 idx0, idx1;
+
+        // X軸.
+        idx0 = ray.sign[ 0 ];
+        idx1 = 1 - idx0;
+        tmin = _mm256_max_ps( tmin, _mm256_mul_ps( _mm256_sub_ps( value[ idx0 ][ 0 ], ray.pos[ 0 ] ), ray.invDir[ 0 ] ) );
+        tmax = _mm256_min_ps( tmax, _mm256_mul_ps( _mm256_sub_ps( value[ idx1 ][ 0 ], ray.pos[ 0 ] ), ray.invDir[ 0 ] ) );
+
+        // Y軸.
+        idx0 = ray.sign[ 1 ];
+        idx1 = 1 - idx0;
+        tmin = _mm256_max_ps( tmin, _mm256_mul_ps( _mm256_sub_ps( value[ idx0 ][ 1 ], ray.pos[ 1 ] ), ray.invDir[ 1 ] ) );
+        tmax = _mm256_min_ps( tmax, _mm256_mul_ps( _mm256_sub_ps( value[ idx1 ][ 1 ], ray.pos[ 1 ] ), ray.invDir[ 1 ] ) );
+
+        // Z軸.
+        idx0 = ray.sign[ 2 ];
+        idx1 = 1 - idx0;
+        tmin = _mm256_max_ps( tmin, _mm256_mul_ps( _mm256_sub_ps( value[ idx0 ][ 2 ], ray.pos[ 2 ] ), ray.invDir[ 2 ] ) );
+        tmax = _mm256_min_ps( tmax, _mm256_mul_ps( _mm256_sub_ps( value[ idx1 ][ 2 ], ray.pos[ 2 ] ), ray.invDir[ 2 ] ) );
+
+        mask = _mm256_movemask_ps( _mm256_cmp_ps( tmax, tmin, _CMP_GE_OS ) );
+        return ( mask > 0 );
+    #else
+        b256 tmin = { F_HIT_MIN, F_HIT_MIN, F_HIT_MIN, F_HIT_MIN, F_HIT_MIN, F_HIT_MIN, F_HIT_MIN, F_HIT_MIN };
+        b256 tmax = { F_HIT_MAX, F_HIT_MAX, F_HIT_MAX, F_HIT_MAX, F_HIT_MAX, F_HIT_MAX, F_HIT_MAX, F_HIT_MAX };
+
+        s32 idx0, idx1;
+
+        // X軸
+        idx0 = ray.sign[ 0 ];
+        idx1 = 1 - idx0;
+        for ( u32 i=0; i<8; ++i )
+        {
+            tmin.m256_f32[ i ] = s3d::Max( tmin.m256_f32[ i ], ( value[ idx0 ][ 0 ].m256_f32[ i ] - ray.pos[ 0 ].m256_f32[ i ] ) * ray.invDir[ 0 ].m256_f32[ i ] );
+            tmax.m256_f32[ i ] = s3d::Min( tmax.m256_f32[ i ], ( value[ idx1 ][ 0 ].m256_f32[ i ] - ray.pos[ 0 ].m256_f32[ i ] ) * ray.invDir[ 0 ].m256_f32[ i ] );
+        }
+
+        // Y軸
+        idx0 = ray.sign[ 1 ];
+        idx1 = 1 - idx0;
+        for ( u32 i=0; i<8; ++i )
+        {
+            tmin.m256_f32[ i ] = s3d::Max( tmin.m256_f32[ i ], ( value[ idx0 ][ 1 ].m256_f32[ i ] - ray.pos[ 1 ].m256_f32[ i ] ) * ray.invDir[ 1 ].m256_f32[ i ] );
+            tmax.m256_f32[ i ] = s3d::Min( tmax.m256_f32[ i ], ( value[ idx1 ][ 1 ].m256_f32[ i ] - ray.pos[ 1 ].m256_f32[ i ] ) * ray.invDir[ 1 ].m256_f32[ i ] );
+        }
+
+        // Z軸
+        idx0 = ray.sign[ 2 ];
+        idx1 = 1 - idx0;
+        for ( u32 i=0; i<8; ++i )
+        {
+            tmin.m256_f32[ i ] = s3d::Max( tmin.m256_f32[ i ], ( value[ idx0 ][ 2 ].m256_f32[ i ] - ray.pos[ 2 ].m256_f32[ i ] ) * ray.invDir[ 2 ].m256_f32[ i ] );
+            tmax.m256_f32[ i ] = s3d::Min( tmax.m256_f32[ i ], ( value[ idx1 ][ 2 ].m256_f32[ i ] - ray.pos[ 2 ].m256_f32[ i ] ) * ray.invDir[ 2 ].m256_f32[ i ] );
+        }
+
+        b256i flg;
+        flg.m256i_u32[0] = ( tmax.m256_f32[ 0 ] >= tmin.m256_f32[ 0 ] ) ? 0xffffffff : 0x0;
+        flg.m256i_u32[1] = ( tmax.m256_f32[ 1 ] >= tmin.m256_f32[ 1 ] ) ? 0xffffffff : 0x0;
+        flg.m256i_u32[2] = ( tmax.m256_f32[ 2 ] >= tmin.m256_f32[ 2 ] ) ? 0xffffffff : 0x0;
+        flg.m256i_u32[3] = ( tmax.m256_f32[ 3 ] >= tmin.m256_f32[ 3 ] ) ? 0xffffffff : 0x0;
+        flg.m256i_u32[4] = ( tmax.m256_f32[ 4 ] >= tmin.m256_f32[ 4 ] ) ? 0xffffffff : 0x0;
+        flg.m256i_u32[5] = ( tmax.m256_f32[ 5 ] >= tmin.m256_f32[ 5 ] ) ? 0xffffffff : 0x0;
+        flg.m256i_u32[6] = ( tmax.m256_f32[ 6 ] >= tmin.m256_f32[ 6 ] ) ? 0xffffffff : 0x0;
+        flg.m256i_u32[7] = ( tmax.m256_f32[ 7 ] >= tmin.m256_f32[ 7 ] ) ? 0xffffffff : 0x0;
+
+        mask = (
+              ( Sign(flg.m256i_u32[7]) << 7 )
+            | ( Sign(flg.m256i_u32[6]) << 6 )
+            | ( Sign(flg.m256i_u32[5]) << 5 )
+            | ( Sign(flg.m256i_u32[4]) << 4 )
+            | ( Sign(flg.m256i_u32[3]) << 3 )
+            | ( Sign(flg.m256i_u32[2]) << 2 )
+            | ( Sign(flg.m256i_u32[1]) << 1 )
+            | ( Sign(flg.m256i_u32[0]) ) );
+
+        return ( mask > 0 );
+    #endif// ( S3D_IS_SIMD && S3D_IS_AVX )
+    }
+
+    //--------------------------------------------------------------------------------
+    //! @brief      バウンディングボックスを取得します.
+    //--------------------------------------------------------------------------------
+    S3D_INLINE
+    BoundingBox GetBox() const
+    {
+        Vector3 tmin( value[0][0].m256_f32[0], value[0][1].m256_f32[0], value[0][2].m256_f32[0] );
+        Vector3 tmax( value[1][0].m256_f32[0], value[1][1].m256_f32[0], value[1][2].m256_f32[0] );
+
+        for( u32 i=1; i<8; ++i )
+        {
+            tmin = Vector3::Min( tmin, Vector3( value[0][0].m256_f32[i], value[0][1].m256_f32[i], value[0][2].m256_f32[i] ) );
+            tmax = Vector3::Max( tmax, Vector3( value[1][0].m256_f32[i], value[1][1].m256_f32[i], value[1][2].m256_f32[i] ) );
+        }
+
+        return BoundingBox( tmin, tmax );
+    }
+
+    //--------------------------------------------------------------------------------
+    //! @brief      2つの4バウンディングボックスをマージします.
+    //--------------------------------------------------------------------------------
+    S3D_INLINE
+    static BoundingBox8 Merge( const BoundingBox8& a, const BoundingBox8& b )
+    {
+    #if ( S3D_IS_SIMD && S3D_IS_AVX )
+        b256 miniX = _mm256_min_ps( a.value[0][0], b.value[0][0] );
+        b256 miniY = _mm256_min_ps( a.value[0][1], b.value[0][1] );
+        b256 miniZ = _mm256_min_ps( a.value[0][2], b.value[0][2] );
+
+        b256 maxiX = _mm256_max_ps( a.value[1][0], b.value[1][0] );
+        b256 maxiY = _mm256_max_ps( a.value[1][1], b.value[1][1] );
+        b256 maxiZ = _mm256_max_ps( a.value[1][2], b.value[1][2] );
+
+        return BoundingBox8( miniX, miniY, miniZ, maxiX, maxiY, maxiZ );
+    #else
+        b256 miniX = { 
+            ( a.value[0][0].m256_f32[0] < b.value[0][0].m256_f32[0] ) ? a.value[0][0].m256_f32[0] : b.value[0][0].m256_f32[0],
+            ( a.value[0][0].m256_f32[1] < b.value[0][0].m256_f32[1] ) ? a.value[0][0].m256_f32[1] : b.value[0][0].m256_f32[1],
+            ( a.value[0][0].m256_f32[2] < b.value[0][0].m256_f32[2] ) ? a.value[0][0].m256_f32[2] : b.value[0][0].m256_f32[2],
+            ( a.value[0][0].m256_f32[3] < b.value[0][0].m256_f32[3] ) ? a.value[0][0].m256_f32[3] : b.value[0][0].m256_f32[3],
+            ( a.value[0][0].m256_f32[4] < b.value[0][0].m256_f32[4] ) ? a.value[0][0].m256_f32[4] : b.value[0][0].m256_f32[4],
+            ( a.value[0][0].m256_f32[5] < b.value[0][0].m256_f32[5] ) ? a.value[0][0].m256_f32[5] : b.value[0][0].m256_f32[5],
+            ( a.value[0][0].m256_f32[6] < b.value[0][0].m256_f32[6] ) ? a.value[0][0].m256_f32[6] : b.value[0][0].m256_f32[6],
+            ( a.value[0][0].m256_f32[7] < b.value[0][0].m256_f32[7] ) ? a.value[0][0].m256_f32[7] : b.value[0][0].m256_f32[7]
+        };
+        b256 miniY = { 
+            ( a.value[0][1].m256_f32[0] < b.value[0][1].m256_f32[0] ) ? a.value[0][1].m256_f32[0] : b.value[0][1].m256_f32[0],
+            ( a.value[0][1].m256_f32[1] < b.value[0][1].m256_f32[1] ) ? a.value[0][1].m256_f32[1] : b.value[0][1].m256_f32[1],
+            ( a.value[0][1].m256_f32[2] < b.value[0][1].m256_f32[2] ) ? a.value[0][1].m256_f32[2] : b.value[0][1].m256_f32[2],
+            ( a.value[0][1].m256_f32[3] < b.value[0][1].m256_f32[3] ) ? a.value[0][1].m256_f32[3] : b.value[0][1].m256_f32[3],
+            ( a.value[0][1].m256_f32[4] < b.value[0][1].m256_f32[4] ) ? a.value[0][1].m256_f32[4] : b.value[0][1].m256_f32[4],
+            ( a.value[0][1].m256_f32[5] < b.value[0][1].m256_f32[5] ) ? a.value[0][1].m256_f32[5] : b.value[0][1].m256_f32[5],
+            ( a.value[0][1].m256_f32[6] < b.value[0][1].m256_f32[6] ) ? a.value[0][1].m256_f32[6] : b.value[0][1].m256_f32[6],
+            ( a.value[0][1].m256_f32[7] < b.value[0][1].m256_f32[7] ) ? a.value[0][1].m256_f32[7] : b.value[0][1].m256_f32[7]
+        };
+        b256 miniZ = { 
+            ( a.value[0][2].m256_f32[0] < b.value[0][2].m256_f32[0] ) ? a.value[0][2].m256_f32[0] : b.value[0][2].m256_f32[0],
+            ( a.value[0][2].m256_f32[1] < b.value[0][2].m256_f32[1] ) ? a.value[0][2].m256_f32[1] : b.value[0][2].m256_f32[1],
+            ( a.value[0][2].m256_f32[2] < b.value[0][2].m256_f32[2] ) ? a.value[0][2].m256_f32[2] : b.value[0][2].m256_f32[2],
+            ( a.value[0][2].m256_f32[3] < b.value[0][2].m256_f32[3] ) ? a.value[0][2].m256_f32[3] : b.value[0][2].m256_f32[3],
+            ( a.value[0][2].m256_f32[4] < b.value[0][2].m256_f32[4] ) ? a.value[0][2].m256_f32[4] : b.value[0][2].m256_f32[4],
+            ( a.value[0][2].m256_f32[5] < b.value[0][2].m256_f32[5] ) ? a.value[0][2].m256_f32[5] : b.value[0][2].m256_f32[5],
+            ( a.value[0][2].m256_f32[6] < b.value[0][2].m256_f32[6] ) ? a.value[0][2].m256_f32[6] : b.value[0][2].m256_f32[6],
+            ( a.value[0][2].m256_f32[7] < b.value[0][2].m256_f32[7] ) ? a.value[0][2].m256_f32[7] : b.value[0][2].m256_f32[7]
+        };
+
+        b256 maxiX = { 
+            ( a.value[1][0].m256_f32[0] > b.value[1][0].m256_f32[0] ) ? a.value[1][0].m256_f32[0] : b.value[1][0].m256_f32[0],
+            ( a.value[1][0].m256_f32[1] > b.value[1][0].m256_f32[1] ) ? a.value[1][0].m256_f32[1] : b.value[1][0].m256_f32[1],
+            ( a.value[1][0].m256_f32[2] > b.value[1][0].m256_f32[2] ) ? a.value[1][0].m256_f32[2] : b.value[1][0].m256_f32[2],
+            ( a.value[1][0].m256_f32[3] > b.value[1][0].m256_f32[3] ) ? a.value[1][0].m256_f32[3] : b.value[1][0].m256_f32[3],
+            ( a.value[1][0].m256_f32[4] > b.value[1][0].m256_f32[4] ) ? a.value[1][0].m256_f32[4] : b.value[1][0].m256_f32[4],
+            ( a.value[1][0].m256_f32[5] > b.value[1][0].m256_f32[5] ) ? a.value[1][0].m256_f32[5] : b.value[1][0].m256_f32[5],
+            ( a.value[1][0].m256_f32[6] > b.value[1][0].m256_f32[6] ) ? a.value[1][0].m256_f32[6] : b.value[1][0].m256_f32[6],
+            ( a.value[1][0].m256_f32[7] > b.value[1][0].m256_f32[7] ) ? a.value[1][0].m256_f32[7] : b.value[1][0].m256_f32[7]
+        };
+        b256 maxiY = { 
+            ( a.value[1][1].m256_f32[0] > b.value[1][1].m256_f32[0] ) ? a.value[1][1].m256_f32[0] : b.value[1][1].m256_f32[0],
+            ( a.value[1][1].m256_f32[1] > b.value[1][1].m256_f32[1] ) ? a.value[1][1].m256_f32[1] : b.value[1][1].m256_f32[1],
+            ( a.value[1][1].m256_f32[2] > b.value[1][1].m256_f32[2] ) ? a.value[1][1].m256_f32[2] : b.value[1][1].m256_f32[2],
+            ( a.value[1][1].m256_f32[3] > b.value[1][1].m256_f32[3] ) ? a.value[1][1].m256_f32[3] : b.value[1][1].m256_f32[3],
+            ( a.value[1][1].m256_f32[4] > b.value[1][1].m256_f32[4] ) ? a.value[1][1].m256_f32[4] : b.value[1][1].m256_f32[4],
+            ( a.value[1][1].m256_f32[5] > b.value[1][1].m256_f32[5] ) ? a.value[1][1].m256_f32[5] : b.value[1][1].m256_f32[5],
+            ( a.value[1][1].m256_f32[6] > b.value[1][1].m256_f32[6] ) ? a.value[1][1].m256_f32[6] : b.value[1][1].m256_f32[6],
+            ( a.value[1][1].m256_f32[7] > b.value[1][1].m256_f32[7] ) ? a.value[1][1].m256_f32[7] : b.value[1][1].m256_f32[7]
+        };
+        b256 maxiZ = { 
+            ( a.value[1][2].m256_f32[0] > b.value[1][2].m256_f32[0] ) ? a.value[1][2].m256_f32[0] : b.value[1][2].m256_f32[0],
+            ( a.value[1][2].m256_f32[1] > b.value[1][2].m256_f32[1] ) ? a.value[1][2].m256_f32[1] : b.value[1][2].m256_f32[1],
+            ( a.value[1][2].m256_f32[2] > b.value[1][2].m256_f32[2] ) ? a.value[1][2].m256_f32[2] : b.value[1][2].m256_f32[2],
+            ( a.value[1][2].m256_f32[3] > b.value[1][2].m256_f32[3] ) ? a.value[1][2].m256_f32[3] : b.value[1][2].m256_f32[3],
+            ( a.value[1][2].m256_f32[4] > b.value[1][2].m256_f32[4] ) ? a.value[1][2].m256_f32[4] : b.value[1][2].m256_f32[4],
+            ( a.value[1][2].m256_f32[5] > b.value[1][2].m256_f32[5] ) ? a.value[1][2].m256_f32[5] : b.value[1][2].m256_f32[5],
+            ( a.value[1][2].m256_f32[6] > b.value[1][2].m256_f32[6] ) ? a.value[1][2].m256_f32[6] : b.value[1][2].m256_f32[6],
+            ( a.value[1][2].m256_f32[7] > b.value[1][2].m256_f32[7] ) ? a.value[1][2].m256_f32[7] : b.value[1][2].m256_f32[7]
+        };
+
+        return BoundingBox8( miniX, miniY, miniZ, maxiX, maxiY, maxiZ );
+    #endif// ( S3D_IS_SIMD && S3D_IS_AVX )
+    }
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Random class
+///////////////////////////////////////////////////////////////////////////////
+class Random
+{
+    //==========================================================================
+    // list of friend classes and methods.
+    //==========================================================================
+    /* NOTHING */
+
+public:
+    //==========================================================================
+    // public variables.
+    //==========================================================================
+    /* NOTHING */
+
+    //==========================================================================
+    // public methods.
+    //==========================================================================
+    Random()
+    { /* DO_NOTHING */ }
+
+    S3D_INLINE
+    Random( const u32 seed ) 
+    { SetSeed( seed ); }
+
+    S3D_INLINE
+    Random( const Random& value )
+    : m_X( value.m_X )
+    , m_Y( value.m_Y )
+    , m_Z( value.m_Z )
+    , m_W( value.m_W )
+    { /* DO_NOTHING */ }
+
+    S3D_INLINE
+    void SetSeed( const u32 seed )
+    {
+        // 超越数設定.
+        m_X = 123456789;
+        m_Y = 362436069;
+        m_Z = 521288629;
+        m_W = ( seed <= 0 ) ? 88675123 : seed;
+    }
+
+    S3D_INLINE
+    u32 GetAsU32()
+    {
+        u32 t = m_X ^ ( m_X << 11 );
+        m_X   = m_Y;
+        m_Y   = m_Z;
+        m_Z   = m_W;
+        m_W   = ( m_W ^ ( m_W >> 19 ) ) ^ ( t ^ ( t >> 8 ) );
+        return m_W;
+    }
+
+    S3D_INLINE
+    f64 GetAsF64()
+    { return static_cast<f64>( GetAsU32() ) / 0xffffffffui32; }
+
+    S3D_INLINE
+    f32 GetAsF32()
+    { return static_cast<f32>( GetAsU32() ) / 0xffffffffui32; }
+
+    S3D_INLINE
+    Random& operator = ( const Random& value )
+    {
+        m_X = value.m_X;
+        m_Y = value.m_Y;
+        m_Z = value.m_Z;
+        m_W = value.m_W;
+        return (*this);
+    }
+
+protected:
+    //==========================================================================
+    // protected variables.
+    //==========================================================================
+    /* NOTHING */
+
+    //==========================================================================
+    // protected methods.
+    //==========================================================================
+    /* NOTHING */
+
+private:
+    //==========================================================================
+    // private variables.
+    //==========================================================================
+    u32 m_X;
+    u32 m_Y;
+    u32 m_Z;
+    u32 m_W;
+
+    //==========================================================================
+    // private methods.
+    //==========================================================================
+    /* NOTHING */
+};
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+// OrthonormalBasis structure
+///////////////////////////////////////////////////////////////////////////////////////
+struct OrthonormalBasis
+{
+public:
+    Vector3 u;
+    Vector3 v;
+    Vector3 w;
+
+    OrthonormalBasis();
+    OrthonormalBasis( const Vector3&, const Vector3&, const Vector3& );
+
+    void InitFromU( const Vector3& );
+    void InitFromV( const Vector3& );
+    void InitFromW( const Vector3& );
+
+    void InitFromUV( const Vector3&, const Vector3& );
+    void InitFromVU( const Vector3&, const Vector3& );
+
+    void InitFromUW( const Vector3&, const Vector3& );
+    void InitFromWU( const Vector3&, const Vector3& );
+
+    void InitFromVW( const Vector3&, const Vector3& );
+    void InitFromWV( const Vector3&, const Vector3& );
+
+    bool operator == ( const OrthonormalBasis& ) const;
+    bool operator != ( const OrthonormalBasis& ) const;
 };
 
 

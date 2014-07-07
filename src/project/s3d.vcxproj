@@ -26,6 +26,7 @@
     <ClInclude Include="..\include\s3d_material.h" />
     <ClInclude Include="..\include\s3d_math.h" />
     <ClInclude Include="..\include\s3d_mesh.h" />
+    <ClInclude Include="..\include\s3d_separator.h" />
     <ClInclude Include="..\include\s3d_shape.h" />
     <ClInclude Include="..\include\s3d_texture.h" />
     <ClInclude Include="..\include\s3d_timer.h" />

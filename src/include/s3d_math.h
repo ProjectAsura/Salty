@@ -122,7 +122,6 @@ f64 SafeSqrt( const f64 value )
     return 0.0;
 }
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////
 // Vector2 structure
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -2484,36 +2483,36 @@ public:
         value[1][1] = _mm_set_ps( box3.maxi.y, box2.maxi.y, box1.maxi.y, box0.maxi.y );
         value[1][2] = _mm_set_ps( box3.maxi.z, box2.maxi.z, box1.maxi.z, box0.maxi.z );
     #else
-        value[0][0].m128_f32[0] = box0.min.x;
-        value[0][0].m128_f32[1] = box1.min.x;
-        value[0][0].m128_f32[2] = box2.min.x;
-        value[0][0].m128_f32[3] = box3.min.x;
+        value[0][0].m128_f32[0] = box0.mini.x;
+        value[0][0].m128_f32[1] = box1.mini.x;
+        value[0][0].m128_f32[2] = box2.mini.x;
+        value[0][0].m128_f32[3] = box3.mini.x;
 
-        value[0][1].m128_f32[0] = box0.min.y;
-        value[0][1].m128_f32[1] = box1.min.y;
-        value[0][1].m128_f32[2] = box2.min.y;
-        value[0][1].m128_f32[3] = box3.min.y;
+        value[0][1].m128_f32[0] = box0.mini.y;
+        value[0][1].m128_f32[1] = box1.mini.y;
+        value[0][1].m128_f32[2] = box2.mini.y;
+        value[0][1].m128_f32[3] = box3.mini.y;
 
-        value[0][2].m128_f32[0] = box0.min.z;
-        value[0][2].m128_f32[1] = box1.min.z;
-        value[0][2].m128_f32[2] = box2.min.z;
-        value[0][2].m128_f32[3] = box3.min.z;
+        value[0][2].m128_f32[0] = box0.mini.z;
+        value[0][2].m128_f32[1] = box1.mini.z;
+        value[0][2].m128_f32[2] = box2.mini.z;
+        value[0][2].m128_f32[3] = box3.mini.z;
 
 
-        value[1][0].m128_f32[0] = box0.max.x;
-        value[1][0].m128_f32[1] = box1.max.x;
-        value[1][0].m128_f32[2] = box2.max.x;
-        value[1][0].m128_f32[3] = box3.max.x;
+        value[1][0].m128_f32[0] = box0.maxi.x;
+        value[1][0].m128_f32[1] = box1.maxi.x;
+        value[1][0].m128_f32[2] = box2.maxi.x;
+        value[1][0].m128_f32[3] = box3.maxi.x;
 
-        value[1][1].m128_f32[0] = box0.max.y;
-        value[1][1].m128_f32[1] = box1.max.y;
-        value[1][1].m128_f32[2] = box2.max.y;
-        value[1][1].m128_f32[3] = box3.max.y;
+        value[1][1].m128_f32[0] = box0.maxi.y;
+        value[1][1].m128_f32[1] = box1.maxi.y;
+        value[1][1].m128_f32[2] = box2.maxi.y;
+        value[1][1].m128_f32[3] = box3.maxi.y;
 
-        value[1][2].m128_f32[0] = box0.max.z;
-        value[1][2].m128_f32[1] = box1.max.z;
-        value[1][2].m128_f32[2] = box2.max.z;
-        value[1][2].m128_f32[3] = box3.max.z;
+        value[1][2].m128_f32[0] = box0.maxi.z;
+        value[1][2].m128_f32[1] = box1.maxi.z;
+        value[1][2].m128_f32[2] = box2.maxi.z;
+        value[1][2].m128_f32[3] = box3.maxi.z;
     #endif//S3D_IS_SIMD
     }
 
@@ -2532,36 +2531,36 @@ public:
         value[1][1] = _mm_set_ps( box[3].maxi.y, box[2].maxi.y, box[1].maxi.y, box[0].maxi.y );
         value[1][2] = _mm_set_ps( box[3].maxi.z, box[2].maxi.z, box[1].maxi.z, box[0].maxi.z );
     #else
-        value[0][0].m128_f32[0] = box[0].min.x;
-        value[0][0].m128_f32[1] = box[1].min.x;
-        value[0][0].m128_f32[2] = box[2].min.x;
-        value[0][0].m128_f32[3] = box[3].min.x;
+        value[0][0].m128_f32[0] = box[0].mini.x;
+        value[0][0].m128_f32[1] = box[1].mini.x;
+        value[0][0].m128_f32[2] = box[2].mini.x;
+        value[0][0].m128_f32[3] = box[3].mini.x;
 
-        value[0][1].m128_f32[0] = box[0].min.y;
-        value[0][1].m128_f32[1] = box[1].min.y;
-        value[0][1].m128_f32[2] = box[2].min.y;
-        value[0][1].m128_f32[3] = box[3].min.y;
+        value[0][1].m128_f32[0] = box[0].mini.y;
+        value[0][1].m128_f32[1] = box[1].mini.y;
+        value[0][1].m128_f32[2] = box[2].mini.y;
+        value[0][1].m128_f32[3] = box[3].mini.y;
 
-        value[0][2].m128_f32[0] = box[0].min.z;
-        value[0][2].m128_f32[1] = box[1].min.z;
-        value[0][2].m128_f32[2] = box[2].min.z;
-        value[0][2].m128_f32[3] = box[3].min.z;
+        value[0][2].m128_f32[0] = box[0].mini.z;
+        value[0][2].m128_f32[1] = box[1].mini.z;
+        value[0][2].m128_f32[2] = box[2].mini.z;
+        value[0][2].m128_f32[3] = box[3].mini.z;
 
 
-        value[1][0].m128_f32[0] = box[0].max.x;
-        value[1][0].m128_f32[1] = box[1].max.x;
-        value[1][0].m128_f32[2] = box[2].max.x;
-        value[1][0].m128_f32[3] = box[3].max.x;
+        value[1][0].m128_f32[0] = box[0].maxi.x;
+        value[1][0].m128_f32[1] = box[1].maxi.x;
+        value[1][0].m128_f32[2] = box[2].maxi.x;
+        value[1][0].m128_f32[3] = box[3].maxi.x;
 
-        value[1][1].m128_f32[0] = box[0].max.y;
-        value[1][1].m128_f32[1] = box[1].max.y;
-        value[1][1].m128_f32[2] = box[2].max.y;
-        value[1][1].m128_f32[3] = box[3].max.y;
+        value[1][1].m128_f32[0] = box[0].maxi.y;
+        value[1][1].m128_f32[1] = box[1].maxi.y;
+        value[1][1].m128_f32[2] = box[2].maxi.y;
+        value[1][1].m128_f32[3] = box[3].maxi.y;
 
-        value[1][2].m128_f32[0] = box[0].max.z;
-        value[1][2].m128_f32[1] = box[1].max.z;
-        value[1][2].m128_f32[2] = box[2].max.z;
-        value[1][2].m128_f32[3] = box[3].max.z;
+        value[1][2].m128_f32[0] = box[0].maxi.z;
+        value[1][2].m128_f32[1] = box[1].maxi.z;
+        value[1][2].m128_f32[2] = box[2].maxi.z;
+        value[1][2].m128_f32[3] = box[3].maxi.z;
     #endif//S3D_IS_SIMD
     }
 
@@ -3391,6 +3390,40 @@ public:
     //--------------------------------------------------------------------------------------
     bool operator != ( const OrthonormalBasis& ) const;
 };
+
+
+//------------------------------------------------------------------------------------------
+//! @brief      三角形の表面積を求めます.
+//------------------------------------------------------------------------------------------
+S3D_INLINE
+f32 SurfaceArea( const Vector3& a, const Vector3& b, const Vector3& c )
+{
+   f32 X = ( b.y - a.y ) * ( c.z - a.z ) - ( c.y - a.y ) * ( b.z - a.z );
+   f32 Y = ( b.z - a.z ) * ( c.x - a.x ) - ( c.z - a.z ) * ( b.x - a.x );
+   f32 Z = ( b.x - a.x ) * ( c.y - a.y ) - ( c.x - a.x ) * ( b.y - a.y );
+   return 0.5f * sqrtf( ( X * X ) + ( Y * Y ) + ( Z * Z ) );
+}
+
+//------------------------------------------------------------------------------------------
+//! @brief      バウンディングボックスの表面積を求めます.
+//------------------------------------------------------------------------------------------
+S3D_INLINE
+f32 SurfaceArea( const BoundingBox& box )
+{
+    f32 X = fabs( box.maxi.x - box.mini.x );
+    f32 Y = fabs( box.maxi.y - box.mini.y );
+    f32 Z = fabs( box.maxi.z - box.mini.z );
+    return 2.0f * ( ( X * Y ) + ( X * Z ) + ( Y * Z ) );
+}
+
+//------------------------------------------------------------------------------------------
+//! @brief      バウンディングスフィアの表面積を求めます.
+//------------------------------------------------------------------------------------------
+S3D_INLINE
+f32 SurfaceArea( const f32 radius )
+{
+    return 4.0f * F_PI * ( radius * radius );
+}
 
 
 } // namespace s3d

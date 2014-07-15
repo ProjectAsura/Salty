@@ -14,6 +14,41 @@
 #include <cassert>
 
 
+//---------------------------------------------------------------------------
+//! @brief      2つのグループに分けます.
+//!
+//! @param[in,out]  pArray      配列の先頭ポインタ.
+//! @param[in]      size        配列のサイズ.
+//! @param[in]      func        比較関数.
+//! @return     グループの境目の配列インデックスを返却します.
+//! @memo       std::partitionを参考にして実装.
+//---------------------------------------------------------------------------
+template<typename T, class Func>
+S3D_INLINE size_t Partition( T* pArray, size_t size, Func func )
+{
+    size_t first = 0;
+    size_t last  = size;
+    for( ; ; first++ )
+    {
+        for( ; first != size && func( pArray[ first ] ); ++first )
+        { /* SKIP */ }
+
+        if ( first == last )
+            break;
+
+        for( ; first != --last && !func( pArray[ last ] ); )
+        { /* SKIP */ }
+
+        if ( first == last )
+            break;
+
+        std::swap( pArray[ first ], pArray[ last ] );
+    }
+
+    return first;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // MortonCodeSeparator class
 /////////////////////////////////////////////////////////////////////////////

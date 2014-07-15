@@ -349,6 +349,8 @@ bool Mesh::LoadFromFile( const char* filename )
         }
     }
 
+    m_Center = Vector3( 0.0f, 0.0f, 0.0f );
+
     // 三角形データを読み込みます.
     for ( u32 i = 0; i < m_NumTriangles; ++i )
     {
@@ -359,16 +361,19 @@ bool Mesh::LoadFromFile( const char* filename )
         m_pTriangles[ i ].v0.pos      = triangle.Vertex[ 0 ].Position;
         m_pTriangles[ i ].v0.texcoord = triangle.Vertex[ 0 ].TexCoord;
         m_pTriangles[ i ].v0.normal   = triangle.Vertex[ 0 ].Normal;
+        m_Center += triangle.Vertex[ 0 ].Position;
 
         // 頂点1
         m_pTriangles[ i ].v1.pos      = triangle.Vertex[ 1 ].Position;
         m_pTriangles[ i ].v1.texcoord = triangle.Vertex[ 1 ].TexCoord;
         m_pTriangles[ i ].v1.normal   = triangle.Vertex[ 1 ].Normal;
+        m_Center += triangle.Vertex[ 1 ].Position;
 
         // 頂点2
         m_pTriangles[ i ].v2.pos      = triangle.Vertex[ 2 ].Position;
         m_pTriangles[ i ].v2.texcoord = triangle.Vertex[ 2 ].TexCoord;
         m_pTriangles[ i ].v2.normal   = triangle.Vertex[ 2 ].Normal;
+        m_Center += triangle.Vertex[ 2 ].Position;
 
         if ( triangle.MaterialId >= 0 )
         {
@@ -392,6 +397,8 @@ bool Mesh::LoadFromFile( const char* filename )
         ILOG( "    Material : 0x%x", m_pTriangles[ i ].pMaterial );
     #endif
     }
+
+    m_Center /= ( m_NumTriangles * 3.0f );
 
     // マテリアルデータを読み込みます.
     for ( u32 i = 0; i < m_NumMaterials; ++i )
@@ -484,5 +491,11 @@ bool Mesh::IsPrimitive() const
 {
     return true; 
 }
+
+//----------------------------------------------------------------------------------------
+//      中心座標を取得します.
+//----------------------------------------------------------------------------------------
+Vector3 Mesh::GetCenter() const
+{ return m_Center; }
 
 } // namespace s3d

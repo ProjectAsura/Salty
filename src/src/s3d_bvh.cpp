@@ -81,45 +81,6 @@ s32 Split( s3d::Triangle* pShapes, s32 size, f64 pivotVal, s32 axis )
     return result;
 }
 
-//---------------------------------------------------------------------------
-//      マージしたバウンディングボックスを生成します.
-//---------------------------------------------------------------------------
-s3d::BoundingBox CreateMergedBox
-(
-    s3d::IShape** ppShapes,
-    const u32     numShapes
-)
-{
-    if ( numShapes == 0 || ppShapes == nullptr )
-    { return s3d::BoundingBox(); }
-
-    s3d::BoundingBox box = ppShapes[0]->GetBox();
-
-    for( u32 i=1; i<numShapes; ++i )
-    { box = s3d::BoundingBox::Merge( box, ppShapes[i]->GetBox() ); }
-
-    return box;
-}
-
-//---------------------------------------------------------------------------
-//      マージしたバウンディングボックスを生成します(メッシュ用).
-//---------------------------------------------------------------------------
-s3d::BoundingBox CreateMergedBox
-(
-    s3d::Triangle*  pTriangles,
-    const u32       numTriangles
-)
-{
-    if ( numTriangles == 0 || pTriangles == nullptr )
-    { return s3d::BoundingBox(); }
-
-    s3d::BoundingBox box = pTriangles[0].GetBox();
-
-    for( u32 i=1; i<numTriangles; ++i )
-    { box = s3d::BoundingBox::Merge( box, pTriangles[i].GetBox() ); }
-
-    return box;
-}
 
 //---------------------------------------------------------------------------
 //      最も長い軸を示すインデックスを取得します.
@@ -229,6 +190,12 @@ BoundingBox BVH::GetBox() const
 //--------------------------------------------------------------------------
 bool BVH::IsPrimitive() const
 { return false; }
+
+//--------------------------------------------------------------------------
+//      中心座標を取得します.
+//--------------------------------------------------------------------------
+Vector3 BVH::GetCenter() const
+{ return ( pLeft->GetCenter() + pRight->GetCenter() ) / 2.0f; }
 
 //--------------------------------------------------------------------------
 //      ブランチを構築します.
@@ -402,6 +369,19 @@ BoundingBox QBVH::GetBox() const
 //--------------------------------------------------------------------------
 bool QBVH::IsPrimitive() const
 { return false; }
+
+//--------------------------------------------------------------------------
+//      中心座標を取得します.
+//--------------------------------------------------------------------------
+Vector3 QBVH::GetCenter() const
+{
+    Vector3 result = pShape[0]->GetCenter();
+    for( u32 i=1; i<4; ++i )
+    { result += pShape[i]->GetCenter(); }
+    result /= 4;
+
+    return result;
+}
 
 //--------------------------------------------------------------------------
 //      ブランチを構築します.
@@ -683,6 +663,18 @@ BoundingBox OBVH::GetBox() const
 //--------------------------------------------------------------------------
 bool OBVH::IsPrimitive() const
 { return false; }
+
+//--------------------------------------------------------------------------
+//      中心座標を取得します.
+//--------------------------------------------------------------------------
+Vector3 OBVH::GetCenter() const
+{
+    Vector3 result = pShape[0]->GetCenter();
+    for( u32 i=1; i<8; ++i )
+    { result += pShape[i]->GetCenter(); }
+    result /= 8;
+    return result;
+}
 
 //--------------------------------------------------------------------------
 //      ブランチを構築します.

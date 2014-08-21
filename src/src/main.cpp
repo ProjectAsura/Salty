@@ -32,7 +32,7 @@ int main( int argc, char **argv )
         // アプリケーションの構成設定.
         s3d::Config config;
 
-    #if 1
+    #if 0
         // 本番用.
         config.Width         = 1024;
         config.Height        = 576;

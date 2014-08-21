@@ -551,7 +551,7 @@ Vector3 Leaf::GetCenter() const
     Vector3 result = ppShapes[ 0 ]->GetCenter();
     for( u32 i=1; i<size; ++i )
     { result += ppShapes[i]->GetCenter(); }
-    result /= size;
+    result /= f32( size );
     return result;
 }
 

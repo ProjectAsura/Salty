@@ -16,34 +16,25 @@ namespace /* anonymous */ {
 #define DIV_BIT 10
 #define DIV_NUM 1024
 
-static inline u32 partby2(u32 n)
+static inline u32 GetMortonCode(u32 x, u32 y, u32 z)
 {
-    n = (n ^ (n<<16)) & 0xff0000ff;
-    n = (n ^ (n<< 8)) & 0x0300f00f;
-    n = (n ^ (n<< 4)) & 0x030c30c3;
-    n = (n ^ (n<< 2)) & 0x09249249;
-    return n;
+    return ( ( s3d::Part1By2( x ) << 2 ) |
+             ( s3d::Part1By2( y ) << 1 ) |
+             ( s3d::Part1By2( z ) << 0 ) );
 }
 
-static inline u32 get_morton_code(u32 x, u32 y, u32 z)
-{
-    return ( partby2(x) << 2) |
-            (partby2(y) << 1) |
-            (partby2(z) );
-}
-
-static inline u32 get_morton_code(const s3d::Vector3& p, const s3d::BoundingBox& box )
+static inline u32 GetMortonCode(const s3d::Vector3& p, const s3d::BoundingBox& box )
 {
     auto ix = (u32)( DIV_NUM * (( p.x - box.mini.x ) / ( box.maxi.x - box.mini.x )));
     auto iy = (u32)( DIV_NUM * (( p.y - box.mini.y ) / ( box.maxi.y - box.mini.y )));
     auto iz = (u32)( DIV_NUM * (( p.z - box.mini.z ) / ( box.maxi.z - box.mini.z )));
-    return get_morton_code( ix, iy, iz );
+    return GetMortonCode( ix, iy, iz );
 }
 
 
-struct separator
+struct Separator
 {
-    separator(s32 _level, const u32* _codes)
+    Separator(s32 _level, const u32* _codes)
     : pCodes(_codes)
     {
         s32 p = 3 * DIV_BIT - 1 - _level;
@@ -172,7 +163,7 @@ IShape* PLBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     auto indices = new u32 [ numShapes ];
     for( u32 i=0; i<numShapes; ++i )
     {
-        morton_codes[i] = get_morton_code( ppShapes[i]->GetCenter(), box );
+        morton_codes[i] = GetMortonCode( ppShapes[i]->GetCenter(), box );
         indices[i] = i;
     }
 
@@ -188,7 +179,15 @@ IShape* PLBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 }
 
 
-IShape* PLBVH::InternalBuildBranch( const u32* pMortonCodes, u32* pIndices, IShape** ppShapes, u32 a, u32 b, s32 level )
+IShape* PLBVH::InternalBuildBranch
+(
+    const u32*  pMortonCodes,
+    u32*        pIndices,
+    IShape**    ppShapes,
+    u32         a,
+    u32         b,
+    s32         level
+)
 {
     if ( ( b - a ) == 0 )
     { return new NullShape(); }
@@ -201,9 +200,9 @@ IShape* PLBVH::InternalBuildBranch( const u32* pMortonCodes, u32* pIndices, ISha
 
     u32* pA = pIndices + a;
     u32* pB = pIndices + b;
-    u32* pC = std::partition( pA, pB, separator( level, pMortonCodes ) );
+    u32* pC = std::partition( pA, pB, Separator( level, pMortonCodes ) );
 
-    u32 c = a + ( pC - pA );
+    u32 c = a + (u32)( pC - pA );
 
     u32 range[2][2] = {
         { a, c },

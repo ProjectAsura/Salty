@@ -138,7 +138,7 @@ private:
     u32                 m_NumTriangles;     //!< 三角形数です.
     u32                 m_NumMaterials;     //!< マテリアル数です.
     u32                 m_NumTextures;      //!< テクスチャ数です.
-    Triangle*           m_pTriangles;       //!< 三角形リストです.
+    IShape**            m_pTriangles;       //!< 三角形リストです.
     MeshMaterial*       m_pMaterials;       //!< マテリアルリストです.
     Texture2D*          m_pTextures;        //!< テクスチャリストです.
     TextureSampler      m_DiffuseSmp;       //!< ディフューズマップのサンプラーです.

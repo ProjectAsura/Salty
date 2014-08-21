@@ -224,21 +224,15 @@ void Mesh::Release()
 
     if ( m_pTriangles )
     {
-        delete [] m_pTriangles;
-        m_pTriangles = nullptr;
+        for( u32 i=0; i<m_NumTriangles; ++i )
+        {
+            S3D_DELETE( m_pTriangles[i] );
+        }
+        S3D_DELETE_ARRAY( m_pTriangles );
     }
 
-    if ( m_pMaterials )
-    {
-        delete [] m_pMaterials;
-        m_pMaterials = nullptr;
-    }
-
-    if ( m_pTextures )
-    {
-        delete [] m_pTextures;
-        m_pTextures = nullptr;
-    }
+    S3D_DELETE_ARRAY( m_pMaterials );
+    S3D_DELETE_ARRAY( m_pTextures );
 
     m_NumTriangles = 0;
     m_NumMaterials = 0;
@@ -320,7 +314,7 @@ bool Mesh::LoadFromFile( const char* filename )
 #endif
 
     // 三角形データのメモリを確保します.
-    m_pTriangles = new Triangle[ m_NumTriangles ];
+    m_pTriangles = new IShape* [ m_NumTriangles ];
     if ( m_pTriangles == nullptr )
     {
         fclose( pFile );
@@ -357,28 +351,31 @@ bool Mesh::LoadFromFile( const char* filename )
         SMD_TRIANGLE triangle;
         fread( &triangle, sizeof( SMD_TRIANGLE ), 1, pFile );
 
+        auto tri = new Triangle();
         // 頂点0
-        m_pTriangles[ i ].v0.pos      = triangle.Vertex[ 0 ].Position;
-        m_pTriangles[ i ].v0.texcoord = triangle.Vertex[ 0 ].TexCoord;
-        m_pTriangles[ i ].v0.normal   = triangle.Vertex[ 0 ].Normal;
+        tri->v0.pos      = triangle.Vertex[ 0 ].Position;
+        tri->v0.texcoord = triangle.Vertex[ 0 ].TexCoord;
+        tri->v0.normal   = triangle.Vertex[ 0 ].Normal;
         m_Center += triangle.Vertex[ 0 ].Position;
 
         // 頂点1
-        m_pTriangles[ i ].v1.pos      = triangle.Vertex[ 1 ].Position;
-        m_pTriangles[ i ].v1.texcoord = triangle.Vertex[ 1 ].TexCoord;
-        m_pTriangles[ i ].v1.normal   = triangle.Vertex[ 1 ].Normal;
+        tri->v1.pos      = triangle.Vertex[ 1 ].Position;
+        tri->v1.texcoord = triangle.Vertex[ 1 ].TexCoord;
+        tri->v1.normal   = triangle.Vertex[ 1 ].Normal;
         m_Center += triangle.Vertex[ 1 ].Position;
 
         // 頂点2
-        m_pTriangles[ i ].v2.pos      = triangle.Vertex[ 2 ].Position;
-        m_pTriangles[ i ].v2.texcoord = triangle.Vertex[ 2 ].TexCoord;
-        m_pTriangles[ i ].v2.normal   = triangle.Vertex[ 2 ].Normal;
+        tri->v2.pos      = triangle.Vertex[ 2 ].Position;
+        tri->v2.texcoord = triangle.Vertex[ 2 ].TexCoord;
+        tri->v2.normal   = triangle.Vertex[ 2 ].Normal;
         m_Center += triangle.Vertex[ 2 ].Position;
 
         if ( triangle.MaterialId >= 0 )
         {
-            m_pTriangles[ i ].pMaterial = &m_pMaterials[ triangle.MaterialId ];
+            tri->pMaterial = &m_pMaterials[ triangle.MaterialId ];
         }
+
+        m_pTriangles[ i ] = tri;
 
     #if 0
         ILOG( "Triangle[%d] : ", i );

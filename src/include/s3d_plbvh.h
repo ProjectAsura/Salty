@@ -81,7 +81,16 @@ private:
     //-------------------------------------------------------------------------
     PLBVH( IShape*, IShape*, const BoundingBox& );
 
-    static IShape* InternalBuildBranch( const u32* pMortonCodes, u32* pIndices, IShape** ppShapes, u32 a, u32 b, s32 level );
+    //-------------------------------------------------------------------------
+    //! @brief      ÉuÉâÉìÉ`ÇçÏê¨ÇµÇ‹Ç∑.
+    //-------------------------------------------------------------------------
+    static IShape* InternalBuildBranch( 
+        const u32*  pMortonCodes,
+        u32*        pIndices,
+        IShape**    ppShapes,
+        u32         a,
+        u32         b,
+        s32         level );
 
 };
 

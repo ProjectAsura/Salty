@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <new>
+#include <vector>
 
 
 namespace /* anonymous */ {
@@ -33,7 +34,7 @@ struct RGBE
 };
 
 S3D_INLINE
-s3d::Vector3 RGBEToVec3( const RGBE val )
+s3d::Vector3 RGBEToVec3( const RGBE& val )
 {
     s3d::Vector3 result;
     if ( val.e )
@@ -53,6 +54,30 @@ s3d::Vector3 RGBEToVec3( const RGBE val )
 }
 
 S3D_INLINE
+RGBE Vec3ToRGBE( const s3d::Vector3& val )
+{
+    RGBE result;
+    double d = s3d::Max( val.x, s3d::Max( val.y, val.z ) );
+
+    if ( d <= 1e-32 )
+    {
+        result.r = 0;
+        result.g = 0;
+        result.b = 0;
+        result.e = 0;
+        return result;
+    }
+
+    int e;
+    double m = frexp(d, &e); // d = m * 2^e
+    d = m * 256.0 / d;
+
+    result.r = (u32)(val.x * d);
+    result.g = (u32)(val.y * d);
+    result.b = (u32)(val.z * d);
+    result.e = (u32)(e + 128);
+    return result;
+}
 
 void WriteHdrHeader( FILE* pFile, s32 width, s32 height, f32 gamma, f32 exposure )
 {
@@ -123,7 +148,6 @@ bool ReadOldColors( FILE* pFile, RGBE* pLine, s32 count )
     auto shift = 0;
     while( 0 < count )
     {
-        RGBE val;
         pLine[0].r = getc( pFile );
         pLine[0].g = getc( pFile );
         pLine[0].b = getc( pFile );
@@ -176,7 +200,7 @@ bool ReadColor( FILE* pFile, RGBE* pLine, s32 count )
     pLine[0].g = getc( pFile );
     pLine[0].b = getc( pFile );
 
-    if ( ( i == getc( pFile ) ) == EOF )
+    if ( ( i = getc( pFile ) ) == EOF )
         return false;
 
     if ( pLine[0].g != 2 || pLine[0].b & 128 )
@@ -282,6 +306,40 @@ bool SaveToHDR( const char* filename, const s32 width, const s32 height, const f
     { return false; }
 
     WriteHdrHeader( pFile, width, height, gamma, exposure );
+
+    for( auto i = height -1; i >= 0; i-- )
+    {
+        std::vector<RGBE> line;
+        line.resize(width);
+        for( auto j=0; j<width; ++j )
+        {
+            auto p = Vec3ToRGBE( Vector3(
+                                    pPixels[ j + 0 + i * width * 3 ],
+                                    pPixels[ j + 1 + i * width * 3 ],
+                                    pPixels[ j + 2 + i * width * 3 ] ) );
+            line[j] = p;
+        }
+
+        fprintf_s( pFile, "%c%c", 0x02, 0x02 );
+        fprintf_s( pFile, "%c%c", (width >>8) & 0xFF, width & 0xFF );
+
+        for( auto k=0; k<4; ++k )
+        {
+            for( auto cursor = 0; cursor < width; )
+            {
+                const auto cursor_move = std::min( 127, width - cursor );
+                fprintf_s( pFile, "%c", cursor_move );
+
+                for( auto l = cursor; l < cursor + cursor_move; ++l )
+                { fprintf_s( pFile, "%c", line[l].v[k] ); }
+                cursor += cursor_move;
+            }
+        }
+
+        line.clear();
+    }
+
+    fclose( pFile );
 
     return true;
 }

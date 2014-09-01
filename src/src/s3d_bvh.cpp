@@ -203,12 +203,12 @@ Vector3 BVH::GetCenter() const
 IShape* BVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 {
     // そのまま返却.
-    if ( numShapes <= 1 ) 
-    { return ppShapes[0]; }
+    if ( numShapes == 0 ) 
+    { return new NullShape(); }
 
     // 左と右を入れたインスタンスを生成.
-    if ( numShapes == 2 )
-    { return new BVH( ppShapes[0], ppShapes[1] ); }
+    if ( numShapes <= 2 )
+    { return new Leaf( numShapes, ppShapes ); }
 
     // AABBを求める.
     BoundingBox bbox = CreateMergedBox( ppShapes, numShapes );
@@ -248,12 +248,12 @@ IShape* BVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 IShape* BVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
 {
     // そのまま返却.
-    if ( numShapes == 1 ) 
-    { return (IShape*)&pShapes[0]; }
+    if ( numShapes == 0 ) 
+    { return new NullShape(); }
 
     // 左と右を入れたインスタンスを生成.
-    if ( numShapes == 2 )
-    { return new BVH( &pShapes[0], &pShapes[1] ); }
+    if ( numShapes <= 2 )
+    { return new Leaf( numShapes, (IShape**)&pShapes[0] ); }
 
     // AABBを求める.
     BoundingBox bbox = CreateMergedBox( pShapes, numShapes );
@@ -341,15 +341,22 @@ bool QBVH::IsHit( const Ray& ray, HitRecord& record ) const
     // まず子のバウンディングボックスと交差判定.
     s32 mask = 0;
     if ( !box.IsHit( Ray4( ray ), mask ) )
-    { return false; }
+    { return record.distance < F_MAX; }
 
     // 次にバウンディングボックスとヒットした子のみたどっていく.
-    bool isHit0 = ( mask & 0x1 ) ? pShape[ 0 ]->IsHit( ray, record ) : false;
-    bool isHit1 = ( mask & 0x2 ) ? pShape[ 1 ]->IsHit( ray, record ) : false;
-    bool isHit2 = ( mask & 0x4 ) ? pShape[ 2 ]->IsHit( ray, record ) : false;
-    bool isHit3 = ( mask & 0x8 ) ? pShape[ 3 ]->IsHit( ray, record ) : false;
-
-    return ( isHit0 || isHit1 || isHit2 || isHit3 );
+    HitRecord rec;
+    for( auto i=0; i<4; ++i )
+    {
+        if ( mask & ( 0x1 << i ) )
+        {
+            if ( pShape[i]->IsHit( ray, rec ) )
+            {
+                if ( rec.distance < record.distance )
+                { record = rec; }
+            }
+        }
+    }
+    return record.distance < F_MAX;
 }
 
 //--------------------------------------------------------------------------
@@ -389,8 +396,11 @@ Vector3 QBVH::GetCenter() const
 IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 {
     // そのまま返却.
-    if ( numShapes <= 1 )
-    { return ppShapes[0]; }
+    if ( numShapes == 0 )
+    { return new NullShape(); }
+
+    if ( numShapes <= 4 )
+    { return new Leaf( numShapes, ppShapes ); }
 
     // 16byteアライメントでメモリを確保.
     u8* pBuf = (u8*)_aligned_malloc( sizeof(QBVH), 16 );
@@ -474,8 +484,11 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 IShape* QBVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
 {
     // そのまま返却.
-    if ( numShapes <= 1 )
-    { return (IShape*)&pShapes[0]; }
+    if ( numShapes == 0 )
+    { return new NullShape(); }
+
+    if ( numShapes <= 4 )
+    { return new Leaf( numShapes, (IShape**)&pShapes[0] ); }
 
     // 16byteアライメントでメモリを確保.
     u8* pBuf = (u8*)_aligned_malloc( sizeof(QBVH), 16 );
@@ -618,9 +631,7 @@ OBVH::OBVH( IShape** ppShapes, const BoundingBox8& octBox )
 : box( octBox )
 {
     for( u32 i=0; i<8; ++i )
-    {
-        pShape[ i ] = ppShapes[ i ];
-    }
+    { pShape[ i ] = ppShapes[ i ]; }
 }
 
 //--------------------------------------------------------------------------
@@ -631,19 +642,23 @@ bool OBVH::IsHit( const Ray& ray, HitRecord& record ) const
     // まず子のバウンディングボックスと交差判定.
     s32 mask = 0;
     if ( !box.IsHit( Ray8( ray ), mask ) )
-    { return false; }
+    { return record.distance < F_MAX; }
 
     // 次にバウンディングボックスとヒットした子のみたどっていく.
-    bool isHit0 = ( mask & 0x1  ) ? pShape[ 0 ]->IsHit( ray, record ) : false;
-    bool isHit1 = ( mask & 0x2  ) ? pShape[ 1 ]->IsHit( ray, record ) : false;
-    bool isHit2 = ( mask & 0x4  ) ? pShape[ 2 ]->IsHit( ray, record ) : false;
-    bool isHit3 = ( mask & 0x8  ) ? pShape[ 3 ]->IsHit( ray, record ) : false;
-    bool isHit4 = ( mask & 0x10 ) ? pShape[ 4 ]->IsHit( ray, record ) : false;
-    bool isHit5 = ( mask & 0x20 ) ? pShape[ 5 ]->IsHit( ray, record ) : false;
-    bool isHit6 = ( mask & 0x40 ) ? pShape[ 6 ]->IsHit( ray, record ) : false;
-    bool isHit7 = ( mask & 0x80 ) ? pShape[ 7 ]->IsHit( ray, record ) : false;
+    HitRecord rec;
+    for( auto i=0; i<8; ++i )
+    {
+        if ( mask & ( 0x1 << i ) )
+        {
+            if ( pShape[i]->IsHit( ray, rec ) )
+            {
+                if ( rec.distance < record.distance )
+                { record = rec; }
+            }
+        }
+    }
 
-    return ( isHit0 || isHit1 || isHit2 || isHit3 || isHit4 || isHit5 || isHit6 || isHit7 );
+    return record.distance < F_MAX;
 }
 
 //--------------------------------------------------------------------------
@@ -682,8 +697,8 @@ Vector3 OBVH::GetCenter() const
 IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 {
     // そのまま返却.
-    if ( numShapes <= 1 )
-    { return ppShapes[0]; }
+    if ( numShapes == 0 )
+    { return new NullShape(); }
 
     if ( numShapes <= 8 )
     { return new Leaf( numShapes, ppShapes ); }
@@ -831,8 +846,8 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 IShape* OBVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
 {
     // そのまま返却.
-    if ( numShapes <= 1 )
-    { return (IShape*)&pShapes[0]; }
+    if ( numShapes == 0 )
+    { return new NullShape(); }
 
     if ( numShapes <= 8 )
     {

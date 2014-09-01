@@ -579,8 +579,8 @@ void TimeWatch( void* )
             break;
         }
 
-        // 1 sec 寝かせる.
-        Sleep( 1000 );
+        // 30 sec 寝かせる.
+        Sleep( 30000 );
     }
 }
 
@@ -655,7 +655,7 @@ void App::Run( const Config& config )
     u32 numShapes = sizeof( pShapes ) / sizeof( pShapes[0] );
 
     // BVH構築.
-    g_pBVH = PLQBVH::BuildBranch( pShapes, numShapes );
+    g_pBVH = PLOBVH::BuildBranch( pShapes, numShapes );
     assert( g_pBVH != nullptr );
 
     // レイトレ！

@@ -508,15 +508,17 @@ void Leaf::Dispose()
 //-------------------------------------------------------------------------------------
 bool Leaf::IsHit( const Ray& ray, HitRecord& record ) const
 {
-    bool result = false;
+    HitRecord rec;
     for( u32 i=0; i<size; ++i )
     { 
-        if ( ppShapes[ i ]->IsHit( ray, record ) )
-        { result = true; }
+        if ( ppShapes[ i ]->IsHit( ray, rec ) )
+        {
+            if ( rec.distance < record.distance )
+            { record = rec; }
+        }
     }
-    return result &&
-            ( record.distance > F_HIT_MIN ) &&
-            ( record.distance < F_HIT_MAX );
+
+    return record.distance < F_MAX;
 }
 
 //-------------------------------------------------------------------------------------

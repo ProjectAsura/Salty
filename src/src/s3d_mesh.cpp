@@ -450,7 +450,7 @@ bool Mesh::LoadFromFile( const char* filename )
     }
 
     // BVHを構築します.
-    m_pBVH = PLQBVH::BuildBranch( m_pTriangles, m_NumTriangles );
+    m_pBVH = OBVH::BuildBranch( m_pTriangles, m_NumTriangles );
 
     return true;
 }

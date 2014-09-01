@@ -54,7 +54,7 @@ struct Separator
     : pCodes(_codes)
     {
         s32 p = 3 * DIV_BIT - 1 - _level;
-        mask = 1 << p;
+        mask = 0x1 << p;
     }
 
     //------------------------------------------------------------------------------------------------
@@ -68,6 +68,7 @@ struct Separator
     u32        mask;        //!< ビットマスクです.
     const u32* pCodes;      //!< モートンコードです.
 };
+
 
 } // namespace /* anonymous */
 
@@ -83,7 +84,7 @@ namespace s3d {
 //      コンストラクタです.
 //----------------------------------------------------------------------------------------------------
 PLBVH::PLBVH()
-: box  ()
+: box   ()
 , pLeft ( nullptr )
 , pRight( nullptr )
 { /* DO_NOTHING */ }
@@ -92,7 +93,7 @@ PLBVH::PLBVH()
 //      引数付きコンストラクタです.
 //----------------------------------------------------------------------------------------------------
 PLBVH::PLBVH( IShape* pShape1, IShape* pShape2, const BoundingBox& bbox )
-: box  ( bbox )
+: box   ( bbox )
 , pLeft ( pShape1 )
 , pRight( pShape2 )
 { /* DO_NOTHING */ }
@@ -116,7 +117,7 @@ void PLBVH::Dispose()
     { pLeft = nullptr; }
     else
     {
-        PLBVH* pBVH = dynamic_cast<PLBVH*>( pLeft );
+        auto pBVH = dynamic_cast<IDispose*>( pLeft );
         if ( pBVH != nullptr )
         { pBVH->Dispose(); }
     }
@@ -125,7 +126,7 @@ void PLBVH::Dispose()
     { pRight = nullptr; }
     else
     {
-        PLBVH* pBVH = dynamic_cast<PLBVH*>( pRight );
+        auto pBVH = dynamic_cast<IDispose*>( pRight );
         if ( pBVH != nullptr )
         { pBVH->Dispose(); }
     }
@@ -139,12 +140,22 @@ void PLBVH::Dispose()
 bool PLBVH::IsHit( const Ray& ray, HitRecord& record ) const
 {
     if ( !box.IsHit( ray ) )
-    { return false; }
+    { return record.distance < F_MAX; }
 
-    bool isHit1 = pRight->IsHit( ray, record );
-    bool isHit2 = pLeft->IsHit( ray, record );
+    HitRecord rec;
+    if ( pRight->IsHit( ray, rec ) )
+    {
+        if (rec.distance < record.distance)
+        { record = rec; }
+    }
 
-    return ( isHit1 || isHit2 );
+    if ( pLeft->IsHit( ray, rec ) )
+    {
+        if (rec.distance < record.distance)
+        { record = rec; }
+    }
+
+    return record.distance < F_MAX;
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -188,11 +199,8 @@ IShape* PLBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 
     auto result = InternalBuildBranch( morton_codes, indices, ppShapes, 0, numShapes, 0 );
 
-    delete [] indices;
-    indices = nullptr;
-
-    delete [] morton_codes;
-    morton_codes = nullptr;
+    S3D_DELETE_ARRAY( indices );
+    S3D_DELETE_ARRAY( morton_codes );
 
     return result;
 }
@@ -213,10 +221,7 @@ IShape* PLBVH::InternalBuildBranch
     if ( ( b - a ) == 0 )
     { return new NullShape(); }
 
-    if ( ( b - a ) == 1 )
-    { return ppShapes[a]; }
-
-    if ( level >= DIV_BIT * 3 )
+    if ( (b -  a) <= 2 || level >= DIV_BIT * 3 )
     { return new Leaf( ( b - a ), &ppShapes[a] ); }
 
     u32* pA = pIndices + a;
@@ -317,9 +322,7 @@ bool PLQBVH::IsHit( const Ray& ray, HitRecord& record ) const
             if ( pShape[i]->IsHit( ray, rec ) )
             {
                 if ( rec.distance < record.distance )
-                {
-                    record = rec;
-                }
+                { record = rec; }
             }
         }
     }
@@ -357,6 +360,9 @@ Vector3 PLQBVH::GetCenter() const
     return result;
 }
 
+//---------------------------------------------------------------------------------------------------
+//      ブランチを構築します.
+//---------------------------------------------------------------------------------------------------
 IShape* PLQBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 {
     auto box = CreateMergedBox( ppShapes, numShapes );
@@ -419,6 +425,205 @@ IShape* PLQBVH::InternalBuildBranch
     return new( buf ) PLQBVH( pNode );
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// PLOBVH structure
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//----------------------------------------------------------------------------------------------------
+//      コンストラクタです.
+//----------------------------------------------------------------------------------------------------
+PLOBVH::PLOBVH()
+: box()
+{
+    for( u32 i=0; i<8; ++i )
+    { pShape[ i ] = nullptr; }
+}
+
+//------------------------------------------------------------------------------------------------------
+//      引数付きコンストラクタです.
+//------------------------------------------------------------------------------------------------------
+PLOBVH::PLOBVH( IShape** ppShapes )
+{
+    for( auto i=0; i<8; ++i )
+    { pShape[i] = ppShapes[i]; }
+
+    box = BoundingBox8( 
+        pShape[0]->GetBox(),
+        pShape[1]->GetBox(),
+        pShape[2]->GetBox(),
+        pShape[3]->GetBox(),
+        pShape[4]->GetBox(),
+        pShape[5]->GetBox(),
+        pShape[6]->GetBox(),
+        pShape[7]->GetBox());
+}
+
+//----------------------------------------------------------------------------------------------------
+//      引数付きコンストラクタです.
+//----------------------------------------------------------------------------------------------------
+PLOBVH::PLOBVH( IShape** _ppShapes, const BoundingBox8& _box )
+: box( _box )
+{
+    for( u32 i=0; i<8; ++i )
+    {  pShape[ i ] = _ppShapes[ i ]; }
+}
+
+//----------------------------------------------------------------------------------------------------
+//      破棄処理を行います.
+//----------------------------------------------------------------------------------------------------
+void PLOBVH::Dispose()
+{
+    for( u32 i=0; i<8; ++i )
+    {
+        if ( pShape[i] )
+        {
+            if ( pShape[i]->IsPrimitive() )
+            { pShape[i] = nullptr; }
+            else
+            {
+                auto* disposable = dynamic_cast<IDispose*>( pShape[i] );
+                if ( disposable )
+                { disposable->Dispose(); }
+            }
+        }
+    }
+
+    _aligned_free( this );
+}
+
+//----------------------------------------------------------------------------------------------------
+//      衝突判定処理を行います.
+//----------------------------------------------------------------------------------------------------
+bool PLOBVH::IsHit( const Ray& ray, HitRecord& record ) const
+{
+    s32 mask;
+    if ( !box.IsHit( Ray8(ray), mask ) )
+    { return record.distance < F_MAX; }
+
+    HitRecord rec;
+    for( u32 i=0; i<8; ++i )
+    {
+        if ( mask & ( 0x1 << i ) )
+        {
+            if ( pShape[i]->IsHit( ray, rec ) )
+            {
+                if ( rec.distance < record.distance )
+                { record = rec; }
+            }
+        }
+    }
+
+    return record.distance < F_MAX;
+}
+
+//----------------------------------------------------------------------------------------------------
+//      マテリアルを取得します.
+//----------------------------------------------------------------------------------------------------
+IMaterial* PLOBVH::GetMaterial() const
+{ return nullptr; }
+
+//----------------------------------------------------------------------------------------------------
+//      バウンディングボックスを取得します.
+//----------------------------------------------------------------------------------------------------
+BoundingBox PLOBVH::GetBox() const
+{ return box.GetBox(); }
+
+//----------------------------------------------------------------------------------------------------
+//      基本図形を取得します.
+//----------------------------------------------------------------------------------------------------
+bool PLOBVH::IsPrimitive() const
+{ return false; }
+
+//----------------------------------------------------------------------------------------------------
+//      中心座標を取得します.
+//----------------------------------------------------------------------------------------------------
+Vector3 PLOBVH::GetCenter() const
+{
+    auto result = pShape[0]->GetCenter();
+    for( u32 i=1; i<8; ++i )
+    { result += pShape[i]->GetCenter(); }
+    result /= 8.0f;
+    return result;
+}
+
+//---------------------------------------------------------------------------------------------------
+//      ブランチを構築します.
+//---------------------------------------------------------------------------------------------------
+IShape* PLOBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
+{
+    auto box = CreateMergedBox( ppShapes, numShapes );
+    auto morton_codes = new u32 [ numShapes ];
+    auto indices      = new u32 [ numShapes ];
+
+    for( u32 i=0; i<numShapes; ++i )
+    {
+        morton_codes[ i ] = GetMortonCode( ppShapes[ i ]->GetCenter(), box );
+        indices[ i ] = i;
+    }
+
+    auto branch = InternalBuildBranch( morton_codes, indices, ppShapes, 0, numShapes, 0 );
+
+    S3D_DELETE_ARRAY( indices );
+    S3D_DELETE_ARRAY( morton_codes );
+
+    return branch;
+}
+
+//----------------------------------------------------------------------------------------------------
+//          ブランチを構築する内部処理です.
+//----------------------------------------------------------------------------------------------------
+IShape* PLOBVH::InternalBuildBranch
+(
+    const u32*  pMortonCodes,
+    u32*        pIndices,
+    IShape**    ppShapes,
+    u32         a,
+    u32         b,
+    s32         level
+)
+{
+    if ( ( b - a ) == 0 )
+    { return new NullShape(); }
+
+    if ( ( b - a ) <= 8 || level >= DIV_BIT * 3 )
+    { return new Leaf( ( b - a ), &ppShapes[a] ); }
+
+    u32* pA = pIndices + a;
+    u32* pB = pIndices + b;
+    u32* pC = std::partition( pA, pB, Separator( level, pMortonCodes ) );
+
+    u32* pD = std::partition( pA, pC, Separator( level + 1, pMortonCodes ) );
+    u32* pE = std::partition( pC, pB, Separator( level + 1, pMortonCodes ) );
+
+    u32* pF = std::partition( pA, pD, Separator( level + 2, pMortonCodes ) );
+    u32* pG = std::partition( pD, pC, Separator( level + 2, pMortonCodes ) );
+    u32* pH = std::partition( pC, pE, Separator( level + 2, pMortonCodes ) );
+    u32* pI = std::partition( pE, pB, Separator( level + 2, pMortonCodes ) );
+
+    u32 f = a + ( pF - pA );
+    u32 d = a + ( pD - pA );
+    u32 g = a + ( pG - pA );
+    u32 c = a + ( pC - pA );
+    u32 h = c + ( pH - pC );
+    u32 e = c + ( pE - pC );
+    u32 i = c + ( pI - pC );
+
+    IShape* pNode[8];
+    pNode[0] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, a, f, level + 1 );
+    pNode[1] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, f, d, level + 1 );
+    pNode[2] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, d, g, level + 1 );
+    pNode[3] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, g, c, level + 1 );
+    pNode[4] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, c, h, level + 1 );
+    pNode[5] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, h, e, level + 1 );
+    pNode[6] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, e, i, level + 1 );
+    pNode[7] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, i, b, level + 1 );
+
+    auto buf = _aligned_malloc( sizeof(PLOBVH), 32 );
+    assert( buf != nullptr );
+
+    return new( buf ) PLOBVH( pNode );
+}
 
 
 } // namespace s3d

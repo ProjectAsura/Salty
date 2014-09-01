@@ -12,6 +12,7 @@
 #include <cstring>
 #include <string>
 #include <s3d_bvh.h>
+#include <s3d_plbvh.h>
 
 
 #ifndef DLOG
@@ -449,7 +450,7 @@ bool Mesh::LoadFromFile( const char* filename )
     }
 
     // BVHを構築します.
-    m_pBVH = OBVH::BuildBranch( m_pTriangles, m_NumTriangles );
+    m_pBVH = PLQBVH::BuildBranch( m_pTriangles, m_NumTriangles );
 
     return true;
 }

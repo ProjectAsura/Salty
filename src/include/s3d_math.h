@@ -1684,7 +1684,7 @@ public:
     //! @brief      引数付きコンストラクタです.
     //--------------------------------------------------------------------------------------
     S3D_INLINE
-    Matrix( const b128 c0, const b128 c1, const b128 c2, const b128 c3 )
+    Matrix( const b128& c0, const b128& c1, const b128& c2, const b128& c3 )
     : v0( c0 )
     , v1( c1 )
     , v2( c2 )

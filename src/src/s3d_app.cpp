@@ -15,6 +15,7 @@
 #include <s3d_material.h>
 #include <s3d_timer.h>
 #include <s3d_bvh.h>
+#include <s3d_plbvh.h>
 #include <s3d_mesh.h>
 #include <iostream>
 #include <direct.h>
@@ -654,7 +655,7 @@ void App::Run( const Config& config )
     u32 numShapes = sizeof( pShapes ) / sizeof( pShapes[0] );
 
     // BVH構築.
-    g_pBVH = OBVH::BuildBranch( pShapes, numShapes );
+    g_pBVH = PLQBVH::BuildBranch( pShapes, numShapes );
     assert( g_pBVH != nullptr );
 
     // レイトレ！
@@ -669,11 +670,11 @@ void App::Run( const Config& config )
 
     if ( g_IsFinished )
     {
-        MessageBoxA( nullptr, "レンダリングが正常終了しました!!", "レンダリング終了", MB_ICONINFORMATION | MB_OK );
+        MessageBoxA( nullptr, "Rendering Completed", "レンダリング終了", MB_ICONINFORMATION | MB_OK );
     }
     else
     {
-        MessageBoxA( nullptr, "制限時間内にレンダリングが終了しませんでした...", "レンダリング未完", MB_ICONWARNING | MB_OK );
+        MessageBoxA( nullptr, "Rendering Implcomplete", "レンダリング未完", MB_ICONWARNING | MB_OK );
     }
 
 }

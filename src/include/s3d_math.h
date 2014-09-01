@@ -2834,9 +2834,9 @@ public:
         value[0][1] = _mm256_set1_ps( F_MAX );
         value[0][2] = _mm256_set1_ps( F_MAX );
 
-        value[1][0] = _mm256_set1_ps( F_MIN );
-        value[1][1] = _mm256_set1_ps( F_MIN );
-        value[1][2] = _mm256_set1_ps( F_MIN );
+        value[1][0] = _mm256_set1_ps( -F_MAX );
+        value[1][1] = _mm256_set1_ps( -F_MAX );
+        value[1][2] = _mm256_set1_ps( -F_MAX );
     #else
         value[0][0].m256_f32[0] = F_MAX;    // Empty
         value[0][0].m256_f32[1] = F_MAX;    // Empty
@@ -2865,32 +2865,32 @@ public:
         value[0][2].m256_f32[6] = F_MAX;    // Empty
         value[0][2].m256_f32[7] = F_MAX;    // Empty
 
-        value[1][0].m256_f32[0] = F_MIN;    // Empty
-        value[1][0].m256_f32[1] = F_MIN;    // Empty
-        value[1][0].m256_f32[2] = F_MIN;    // Empty
-        value[1][0].m256_f32[3] = F_MIN;    // Empty
-        value[1][0].m256_f32[4] = F_MIN;    // Empty
-        value[1][0].m256_f32[5] = F_MIN;    // Empty
-        value[1][0].m256_f32[6] = F_MIN;    // Empty
-        value[1][0].m256_f32[7] = F_MIN;    // Empty
+        value[1][0].m256_f32[0] = -F_MAX;    // Empty
+        value[1][0].m256_f32[1] = -F_MAX;    // Empty
+        value[1][0].m256_f32[2] = -F_MAX;    // Empty
+        value[1][0].m256_f32[3] = -F_MAX;    // Empty
+        value[1][0].m256_f32[4] = -F_MAX;    // Empty
+        value[1][0].m256_f32[5] = -F_MAX;    // Empty
+        value[1][0].m256_f32[6] = -F_MAX;    // Empty
+        value[1][0].m256_f32[7] = -F_MAX;    // Empty
 
-        value[1][1].m256_f32[0] = F_MIN;    // Empty
-        value[1][1].m256_f32[1] = F_MIN;    // Empty
-        value[1][1].m256_f32[2] = F_MIN;    // Empty
-        value[1][1].m256_f32[3] = F_MIN;    // Empty
-        value[1][1].m256_f32[4] = F_MIN;    // Empty
-        value[1][1].m256_f32[5] = F_MIN;    // Empty
-        value[1][1].m256_f32[6] = F_MIN;    // Empty
-        value[1][1].m256_f32[7] = F_MIN;    // Empty
+        value[1][1].m256_f32[0] = -F_MAX;    // Empty
+        value[1][1].m256_f32[1] = -F_MAX;    // Empty
+        value[1][1].m256_f32[2] = -F_MAX;    // Empty
+        value[1][1].m256_f32[3] = -F_MAX;    // Empty
+        value[1][1].m256_f32[4] = -F_MAX;    // Empty
+        value[1][1].m256_f32[5] = -F_MAX;    // Empty
+        value[1][1].m256_f32[6] = -F_MAX;    // Empty
+        value[1][1].m256_f32[7] = -F_MAX;    // Empty
 
-        value[1][2].m256_f32[0] = F_MIN;    // Empty
-        value[1][2].m256_f32[1] = F_MIN;    // Empty
-        value[1][2].m256_f32[2] = F_MIN;    // Empty
-        value[1][2].m256_f32[3] = F_MIN;    // Empty
-        value[1][2].m256_f32[4] = F_MIN;    // Empty
-        value[1][2].m256_f32[5] = F_MIN;    // Empty
-        value[1][2].m256_f32[6] = F_MIN;    // Empty
-        value[1][2].m256_f32[7] = F_MIN;    // Empty
+        value[1][2].m256_f32[0] = -F_MAX;    // Empty
+        value[1][2].m256_f32[1] = -F_MAX;    // Empty
+        value[1][2].m256_f32[2] = -F_MAX;    // Empty
+        value[1][2].m256_f32[3] = -F_MAX;    // Empty
+        value[1][2].m256_f32[4] = -F_MAX;    // Empty
+        value[1][2].m256_f32[5] = -F_MAX;    // Empty
+        value[1][2].m256_f32[6] = -F_MAX;    // Empty
+        value[1][2].m256_f32[7] = -F_MAX;    // Empty
     #endif// ( S3D_IS_SIMD && S3D_IS_AVX )
     }
 

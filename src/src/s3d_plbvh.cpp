@@ -610,14 +610,14 @@ IShape* PLOBVH::InternalBuildBranch
     u32 i = c + ( pI - pC );
 
     IShape* pNode[8];
-    pNode[0] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, a, f, level + 1 );
-    pNode[1] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, f, d, level + 1 );
-    pNode[2] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, d, g, level + 1 );
-    pNode[3] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, g, c, level + 1 );
-    pNode[4] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, c, h, level + 1 );
-    pNode[5] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, h, e, level + 1 );
-    pNode[6] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, e, i, level + 1 );
-    pNode[7] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, i, b, level + 1 );
+    pNode[0] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, a, f, level + 3 );
+    pNode[1] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, f, d, level + 3 );
+    pNode[2] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, d, g, level + 3 );
+    pNode[3] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, g, c, level + 3 );
+    pNode[4] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, c, h, level + 3 );
+    pNode[5] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, h, e, level + 3 );
+    pNode[6] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, e, i, level + 3 );
+    pNode[7] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, i, b, level + 3 );
 
     auto buf = _aligned_malloc( sizeof(PLOBVH), 32 );
     assert( buf != nullptr );

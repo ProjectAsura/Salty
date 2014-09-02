@@ -555,18 +555,18 @@ IShape* QBVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
     {
         box[ i ] = CreateMergedBox( &pShapes[ idx2[ i ] ], num2[ i ] );
 
-        if ( num2[ i ] == 0 )
-        { pTris[ i ] = new NullShape(); }
-        else if ( num2[ i ] > 4 )
+        //if ( num2[ i ] == 0 )
+        //{ pTris[ i ] = new NullShape(); }
+        //else if ( num2[ i ] > 4 )
         { pTris[ i ] = BuildBranch( &pShapes[ idx2[ i ] ], num2[ i ] ); }
-        else
-        {
-            IShape* ptr[4] = { nullptr };
-            for( s32 j=0; j<num2[ i ]; ++j )
-            { ptr[ j ] =  &pShapes[ idx2[ i ] + j ]; }
+        //else
+        //{
+        //    IShape* ptr[4] = { nullptr };
+        //    for( s32 j=0; j<num2[ i ]; ++j )
+        //    { ptr[ j ] =  &pShapes[ idx2[ i ] + j ]; }
 
-            pTris[ i ] = new Leaf( num2[ i ], ptr );
-        }
+        //    pTris[ i ] = new Leaf( num2[ i ], ptr );
+        //}
     }
 
     return new (pBuf) QBVH( pTris, BoundingBox4( box ) );
@@ -829,12 +829,12 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     {
         box[ i ] = CreateMergedBox( &ppShapes[ idx3[ i ] ], num3[ i ] );
 
-        if ( num3[ i ] == 0 )
-        { pShapes[ i ] = ppShapes[ idx3[ i ] ]; }
-        else if ( num3[ i ] > 8 )
+        //if ( num3[ i ] == 0 )
+        //{ pShapes[ i ] = ppShapes[ idx3[ i ] ]; }
+        //else if ( num3[ i ] > 8 )
         { pShapes[ i ] = BuildBranch( &ppShapes[ idx3[ i ] ], num3[ i ] ); }
-        else
-        { pShapes[ i ] = new Leaf( num3[ i ], &ppShapes[ idx3[ i ] ] ); }
+        //else
+        //{ pShapes[ i ] = new Leaf( num3[ i ], &ppShapes[ idx3[ i ] ] ); }
     }
 
     return new (pBuf) OBVH( pShapes, box );
@@ -983,18 +983,18 @@ IShape* OBVH::BuildBranch( Triangle* pShapes, const u32 numShapes )
     for( u32 i=0; i<8; ++i )
     {
         box[ i ] = CreateMergedBox( &pShapes[ idx3[ i ] ], num3[ i ] );
-        if ( num3[ i ] == 0 )
-        { pTris[ i ] = new NullShape(); }
-        else if ( num3[ i ] > 8 )
+        //if ( num3[ i ] == 0 )
+        //{ pTris[ i ] = new NullShape(); }
+        //else if ( num3[ i ] > 8 )
         { pTris[ i ] = BuildBranch( &pShapes[ idx3[ i ] ], num3[ i ] ); }
-        else
-        {
-            IShape* ptr[ 8 ] = { nullptr };
-            for( s32 j=0; j<num3[ i ]; ++j )
-            { ptr[ j ] = &pShapes[ idx3[ i ] + j ]; }
+        //else
+        //{
+        //    IShape* ptr[ 8 ] = { nullptr };
+        //    for( s32 j=0; j<num3[ i ]; ++j )
+        //    { ptr[ j ] = &pShapes[ idx3[ i ] + j ]; }
 
-            pTris[ i ] = new Leaf( num3[ i ], ptr );
-        }
+        //    pTris[ i ] = new Leaf( num3[ i ], ptr );
+        //}
     }
 
     return new (pBuf) OBVH( pTris, box );

@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------------
 #include <s3d_app.h>
 #include <s3d_bmp.h>
+#include <s3d_hdr.h>
 #include <s3d_math.h>
 #include <s3d_camera.h>
 #include <s3d_shape.h>
@@ -655,7 +656,7 @@ void App::Run( const Config& config )
     u32 numShapes = sizeof( pShapes ) / sizeof( pShapes[0] );
 
     // BVH構築.
-    g_pBVH = QBVH::BuildBranch( pShapes, numShapes );
+    g_pBVH = OBVH::BuildBranch( pShapes, numShapes );
     assert( g_pBVH != nullptr );
 
     // レイトレ！

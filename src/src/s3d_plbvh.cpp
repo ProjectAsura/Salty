@@ -187,7 +187,6 @@ Vector3 PLBVH::GetCenter() const
 //----------------------------------------------------------------------------------------------------
 IShape* PLBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 {
-
     auto box = CreateMergedBox( ppShapes, numShapes );
     auto morton_codes = new u32 [ numShapes ];
     auto indices = new u32 [ numShapes ];
@@ -409,9 +408,9 @@ IShape* PLQBVH::InternalBuildBranch
     u32* pD = std::partition( pA, pC, Separator( level + 1, pMortonCodes ) );
     u32* pE = std::partition( pC, pB, Separator( level + 1, pMortonCodes ) );
 
-    u32 c = a + ( pC - pA );
-    u32 d = a + ( pD - pA );
-    u32 e = c + ( pE - pC );
+    u32 c = a + (u32)( pC - pA );
+    u32 d = a + (u32)( pD - pA );
+    u32 e = c + (u32)( pE - pC );
 
     IShape* pNode[4];
     pNode[0] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, a, d, level + 2 );
@@ -601,13 +600,13 @@ IShape* PLOBVH::InternalBuildBranch
     u32* pH = std::partition( pC, pE, Separator( level + 2, pMortonCodes ) );
     u32* pI = std::partition( pE, pB, Separator( level + 2, pMortonCodes ) );
 
-    u32 f = a + ( pF - pA );
-    u32 d = a + ( pD - pA );
-    u32 g = a + ( pG - pA );
-    u32 c = a + ( pC - pA );
-    u32 h = c + ( pH - pC );
-    u32 e = c + ( pE - pC );
-    u32 i = c + ( pI - pC );
+    u32 f = a + (u32)( pF - pA );
+    u32 d = a + (u32)( pD - pA );
+    u32 g = a + (u32)( pG - pA );
+    u32 c = a + (u32)( pC - pA );
+    u32 h = c + (u32)( pH - pC );
+    u32 e = c + (u32)( pE - pC );
+    u32 i = c + (u32)( pI - pC );
 
     IShape* pNode[8];
     pNode[0] = InternalBuildBranch( pMortonCodes, pIndices, ppShapes, a, f, level + 3 );

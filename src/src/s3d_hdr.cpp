@@ -1,12 +1,12 @@
-﻿//---------------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------------------
 // File : s3d_hdr.cpp
 // Desc : HDR File Module.
 // Copyright(c) Project Asura. All right reserved.
-//---------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
 
-//---------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
 // Includes
-//---------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
 #include <s3d_hdr.h>
 #include <s3d_math.h>
 #include <cstdio>
@@ -18,6 +18,9 @@
 
 namespace /* anonymous */ {
 
+////////////////////////////////////////////////////////////////////////////////////////////
+// RGBE structure
+////////////////////////////////////////////////////////////////////////////////////////////
 struct RGBE
 {
     union
@@ -33,6 +36,9 @@ struct RGBE
     };
 };
 
+//------------------------------------------------------------------------------------------
+//      RGBE形式からVector3形式に変換します.
+//------------------------------------------------------------------------------------------
 S3D_INLINE
 s3d::Vector3 RGBEToVec3( const RGBE& val )
 {
@@ -53,6 +59,9 @@ s3d::Vector3 RGBEToVec3( const RGBE& val )
     return result;
 }
 
+//------------------------------------------------------------------------------------------
+//      Vector3形式からRGBE形式に変換します.
+//------------------------------------------------------------------------------------------
 S3D_INLINE
 RGBE Vec3ToRGBE( const s3d::Vector3& val )
 {
@@ -79,17 +88,23 @@ RGBE Vec3ToRGBE( const s3d::Vector3& val )
     return result;
 }
 
+//------------------------------------------------------------------------------------------
+//      HDRファイルのヘッダを書き込みます.
+//------------------------------------------------------------------------------------------
 void WriteHdrHeader( FILE* pFile, s32 width, s32 height, f32 gamma, f32 exposure )
 {
     fprintf_s( pFile, "#?RADIANCE\n" );
-    fprintf_s( pFile, "Made with 0% pure HDR Shop.\n" );
-    fprintf_s( pFile, "GAMMA=%f\n", gamma );
-    fprintf_s( pFile, "EXPOSURE=%f\n", exposure );
+    fprintf_s( pFile, "# Made with 0%% pure HDR Shop.\n" );
     fprintf_s( pFile, "FORMAT=32-bit_rle_rgbe\n" );
+    fprintf_s( pFile, "GAMMA=%f\n", gamma );
+    fprintf_s( pFile, "EXPOSURE=%lf\n", exposure );
     fprintf_s( pFile, "\n" );
     fprintf_s( pFile, "-Y %d +X %d\n", height, width ); // w行のデータがh列ある.
 }
 
+//------------------------------------------------------------------------------------------
+//      HDRファイルのヘッダを読み込みします.
+//------------------------------------------------------------------------------------------
 bool ReadHdrHeader( FILE* pFile, s32& width, s32& height, f32& gamma, f32& exposure )
 {
     char buf[ 256 ];
@@ -143,6 +158,9 @@ bool ReadHdrHeader( FILE* pFile, s32& width, s32& height, f32& gamma, f32& expos
     }
 }
 
+//------------------------------------------------------------------------------------------
+//      旧形式のカラーを読み取ります.
+//------------------------------------------------------------------------------------------
 bool ReadOldColors( FILE* pFile, RGBE* pLine, s32 count )
 {
     auto shift = 0;
@@ -182,6 +200,9 @@ bool ReadOldColors( FILE* pFile, RGBE* pLine, s32 count )
     return true;
 }
 
+//------------------------------------------------------------------------------------------
+//      カラーを読み取ります.
+//------------------------------------------------------------------------------------------
 bool ReadColor( FILE* pFile, RGBE* pLine, s32 count )
 {
     if ( count < 8 || 0x7fff < count )
@@ -239,6 +260,9 @@ bool ReadColor( FILE* pFile, RGBE* pLine, s32 count )
     return ( feof( pFile ) ? false : true );
 }
 
+//------------------------------------------------------------------------------------------
+//      HDRデータを読み取ります.
+//------------------------------------------------------------------------------------------
 bool ReadHdrData( FILE* pFile, const s32 width, const s32 height, f32** ppPixels )
 {
     auto pLines = new(std::nothrow) RGBE [ width * height ];
@@ -279,6 +303,9 @@ bool ReadHdrData( FILE* pFile, const s32 width, const s32 height, f32** ppPixels
 
 namespace s3d {
 
+//------------------------------------------------------------------------------------------
+//      HDRファイルからデータをロードします.
+//------------------------------------------------------------------------------------------
 bool LoadFromHDR( const char* filename, s32& width, s32& height, f32& gamma, f32& exposure, f32** ppPixels )
 {
     FILE* pFile;
@@ -298,6 +325,9 @@ bool LoadFromHDR( const char* filename, s32& width, s32& height, f32& gamma, f32
     return true;
 }
 
+//------------------------------------------------------------------------------------------
+//      HDRファイルにデータをセーブします.
+//------------------------------------------------------------------------------------------
 bool SaveToHDR( const char* filename, const s32 width, const s32 height, const f32 gamma, const f32 exposure, const f32* pPixels )
 {
     FILE* pFile;
@@ -307,16 +337,16 @@ bool SaveToHDR( const char* filename, const s32 width, const s32 height, const f
 
     WriteHdrHeader( pFile, width, height, gamma, exposure );
 
-    for( auto i = height -1; i >= 0; i-- )
+    for( auto i = 0; i < height; i++ )
     {
         std::vector<RGBE> line;
         line.resize(width);
-        for( auto j=0; j<width; ++j )
+        for( auto j=width -1; j>=0; --j )
         {
             auto p = Vec3ToRGBE( Vector3(
-                                    pPixels[ j + 0 + i * width * 3 ],
-                                    pPixels[ j + 1 + i * width * 3 ],
-                                    pPixels[ j + 2 + i * width * 3 ] ) );
+                                    pPixels[ (j * 3 + 0) + (i * width * 3) ],
+                                    pPixels[ (j * 3 + 1) + (i * width * 3) ],
+                                    pPixels[ (j * 3 + 2) + (i * width * 3) ] ) );
             line[j] = p;
         }
 

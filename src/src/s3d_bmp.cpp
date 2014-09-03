@@ -124,7 +124,7 @@ void WriteBmp( FILE* pFile, const s32 width, const s32 height, const f32* pPixel
 
     for ( int i=height-1; i>=0; --i )
     {
-        for( int j=width-1; j>=0; --j )
+        for( int j=0; j<width; ++j )
         {
             s32 index = ( i * width * 3 ) + ( j * 3 );
 

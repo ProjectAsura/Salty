@@ -14,7 +14,7 @@
 #include <s3d_camera.h>
 #include <s3d_shape.h>
 #include <s3d_material.h>
-#include <s3d_tonemapping.h>
+#include <s3d_filter.h>
 #include <s3d_timer.h>
 #include <s3d_bvh.h>
 #include <s3d_plbvh.h>
@@ -429,6 +429,8 @@ void PathTrace
         // 一つのサブピクセルあたりsamples回サンプリングする
         for (s32 s = 0; s < samples; s ++)
         {
+            printf_s( "\r%5.2f%% Completed. ", 100.0f * ( sy * supersamples * samples + sx * samples + s ) / numSamples ); 
+
         #if _OPENMP
             #pragma omp parallel for schedule(dynamic, 1) num_threads(numCore)
         #endif
@@ -506,7 +508,7 @@ void TimeWatch()
             Capture( "img/frame/frame");
 
             // ログを表示.
-            printf_s( "Captured. %lf min\n", min );
+            printf_s( "Captured. %5.2lf min\n", min );
 
             // タイマーを再スタート.
             captureTimer.Start();

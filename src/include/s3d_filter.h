@@ -1,11 +1,11 @@
 ﻿//------------------------------------------------------------------------------------------------
-// File : s3d_tonemap.h
-// Desc : Tone Mapping Module.
+// File : s3d_filter.h
+// Desc : Filter Module.
 // Copyright(c) Project Asura. All right reserved.
 //------------------------------------------------------------------------------------------------
 
-#ifndef __S3D_TONE_MAPPING_H__
-#define __S3D_TONE_MAPPING_H__
+#ifndef __S3D_FILTER_H__
+#define __S3D_FILTER_H__
 
 //------------------------------------------------------------------------------------------------
 // Includes
@@ -29,4 +29,4 @@ std::vector<Vector3> ToneMapping( const s32 width, const s32 height, const Vecto
 
 } // namespace s3d
 
-#endif//__S3D_TONE_MAPPING_H__
+#endif//__S3D_FILTER_H__

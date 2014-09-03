@@ -18,7 +18,6 @@
 #endif
 #include <s3d_app.h>
 
-
 //-----------------------------------------------------------------------------
 //! @brief      メインエントリーポイントです.
 //-----------------------------------------------------------------------------
@@ -32,13 +31,13 @@ int main( int argc, char **argv )
         // アプリケーションの構成設定.
         s3d::Config config;
 
-    #if 0
+    #if 1
         // 本番用.
-        config.Width         = 1024;
-        config.Height        = 576;
-        config.NumSamples    = 4096;
+        config.Width         = 960;
+        config.Height        = 540;
+        config.NumSamples    = 2048;
         config.NumSubSamples = 2;
-        config.MaxDepth      = 16;
+        config.MaxDepth      = 8;
     #else
         // デバッグ用.
         config.Width         = 320;

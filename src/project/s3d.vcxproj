@@ -23,6 +23,7 @@
     <ClInclude Include="..\include\s3d_bmp.h" />
     <ClInclude Include="..\include\s3d_bvh.h" />
     <ClInclude Include="..\include\s3d_camera.h" />
+    <ClInclude Include="..\include\s3d_filter.h" />
     <ClInclude Include="..\include\s3d_hdr.h" />
     <ClInclude Include="..\include\s3d_material.h" />
     <ClInclude Include="..\include\s3d_math.h" />
@@ -32,7 +33,6 @@
     <ClInclude Include="..\include\s3d_shape.h" />
     <ClInclude Include="..\include\s3d_texture.h" />
     <ClInclude Include="..\include\s3d_timer.h" />
-    <ClInclude Include="..\include\s3d_tonemapping.h" />
     <ClInclude Include="..\include\s3d_typedef.h" />
   </ItemGroup>
   <ItemGroup>
@@ -40,6 +40,7 @@
     <ClCompile Include="..\src\s3d_app.cpp" />
     <ClCompile Include="..\src\s3d_bmp.cpp" />
     <ClCompile Include="..\src\s3d_bvh.cpp" />
+    <ClCompile Include="..\src\s3d_filter.cpp" />
     <ClCompile Include="..\src\s3d_hdr.cpp" />
     <ClCompile Include="..\src\s3d_material.cpp" />
     <ClCompile Include="..\src\s3d_mesh.cpp" />
@@ -47,7 +48,6 @@
     <ClCompile Include="..\src\s3d_plbvh.cpp" />
     <ClCompile Include="..\src\s3d_shape.cpp" />
     <ClCompile Include="..\src\s3d_texture.cpp" />
-    <ClCompile Include="..\src\s3d_tonemapping.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{EE16073B-323B-4695-9041-9C08B21626E2}</ProjectGuid>

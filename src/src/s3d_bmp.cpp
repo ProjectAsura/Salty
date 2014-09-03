@@ -162,9 +162,7 @@ bool SaveToBMP( const char* filename, const s32 width, const s32 height, const f
     FILE* pFile;
     errno_t err = fopen_s( &pFile, filename, "wb" );
     if ( err != 0 )
-    {
-        return false;
-    }
+    { return false; }
 
     WriteBmp( pFile, width, height, pPixel, gamma );
 
@@ -180,9 +178,7 @@ bool LoadFromBMP( const char* filename, s32& width, s32& height, f32** ppPixels 
     FILE* pFile;
     errno_t err = fopen_s( &pFile, filename, "rb" );
     if ( err != 0 )
-    {
-        return false;
-    }
+    { return false; }
 
     BMP_FILE_HEADER fileHeader;
     

@@ -603,6 +603,24 @@ public:
         return (*this);
     }
 
+    S3D_INLINE
+    Vector3& operator += ( const f32 b )
+    {
+        x += b;
+        y += b;
+        z += b;
+        return (*this);
+    }
+
+    S3D_INLINE
+    Vector3& operator -= ( const f32 b )
+    {
+        x -= b;
+        y -= b;
+        z -= b;
+        return (*this);
+    }
+
     //--------------------------------------------------------------------------------------
     //! @brief      除算代入演算子です.
     //--------------------------------------------------------------------------------------
@@ -654,6 +672,24 @@ public:
             z - b.z);
     }
 
+    S3D_INLINE
+    Vector3 operator + ( const f32 b ) const
+    {
+        return Vector3(
+            x + b,
+            y + b,
+            z + b );
+    }
+
+    S3D_INLINE
+    Vector3 operator - ( const f32 b ) const
+    {
+        return Vector3(
+            x - b,
+            y - b,
+            z - b  );
+    }
+
     //--------------------------------------------------------------------------------------
     //! @brief      乗算演算子です.
     //--------------------------------------------------------------------------------------
@@ -677,6 +713,24 @@ public:
             x / b,
             y / b,
             z / b);
+    }
+
+    S3D_INLINE
+    Vector3 operator * ( const Vector3& v ) const
+    {
+        return Vector3(
+            x * v.x,
+            y * v.y,
+            z * v.z );
+    }
+
+    S3D_INLINE
+    Vector3 operator / ( const Vector3& v ) const
+    {
+        return Vector3(
+            x / v.x,
+            y / v.y,
+            z / v.z );
     }
 
     //--------------------------------------------------------------------------------------
@@ -859,6 +913,17 @@ S3D_INLINE
 Vector3 operator * (const f32 f, const Vector3 &v)
 { return v * f; }
 
+S3D_INLINE
+Vector3 operator / ( const f32 f, const Vector3& v )
+{ return Vector3( f / v.x, f / v.y, f / v.z ); }
+
+S3D_INLINE
+Vector3 operator + ( const f32 f, const Vector3& v)
+{ return Vector3( f + v.x, f + v.y, f + v.z ); }
+
+S3D_INLINE
+Vector3 operator - ( const f32 f, const Vector3& v )
+{ return Vector3( f - v.x, f - v.y, f - v.z ); }
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////

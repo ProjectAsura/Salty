@@ -57,6 +57,9 @@
     <ClInclude Include="..\include\s3d_hdr.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\s3d_tonemapping.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\main.cpp">
@@ -90,6 +93,9 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="..\src\s3d_hdr.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\s3d_tonemapping.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>

@@ -14,6 +14,7 @@
 #include <s3d_camera.h>
 #include <s3d_shape.h>
 #include <s3d_material.h>
+#include <s3d_tonemapping.h>
 #include <s3d_timer.h>
 #include <s3d_bvh.h>
 #include <s3d_plbvh.h>
@@ -21,7 +22,7 @@
 #include <iostream>
 #include <direct.h>
 #include <ctime>
-#include <process.h>
+#include <thread>
 #include <mutex>
 
 
@@ -86,7 +87,7 @@ namespace s3d {
 //----------------------------------------------------------------------------------
 // Forward Declarations.
 //----------------------------------------------------------------------------------
-void    TimeWatch( void* );
+void    TimeWatch();
 Color   Radiance( const Ray &inRay, s3d::Random &rnd );
 
 
@@ -245,6 +246,46 @@ IShape* g_pBVH = nullptr;
 // Functions
 ////////////////////////////////////////////////////////////////////////////////////
 
+//-----------------------------------------------------------------------------------
+//! @brief      フレームバッファをキャプチャーします.
+//-----------------------------------------------------------------------------------
+void Capture( char* base )
+{
+    char    filename[256];
+    tm      local_time;
+    auto   t = time( nullptr );
+    auto err = localtime_s( &local_time, &t );
+
+    // トーンマッピングする.
+    auto pixels = ToneMapping( g_Config.Width, g_Config.Height, g_pRT );
+
+    if ( err == 0 )
+    {
+        // output_yyyymmdd_hhmmss.bmpという形式の名前にする.
+        // ex) output_20130805_153034.bmp →　2013/08/05 15:30 34sec
+        sprintf_s( filename, "%s_%04d%02d%02d_%02d%02d%02d.bmp",
+            base,
+            local_time.tm_year + 1900,
+            local_time.tm_mon + 1,
+            local_time.tm_mday,
+            local_time.tm_hour,
+            local_time.tm_min,
+            local_time.tm_sec );
+
+        // 最終結果をBMPファイルに出力.
+        SaveToBMP( filename, g_Config.Width, g_Config.Height, &pixels[0].x );
+    }
+    else
+    {
+        sprintf_s( filename, "%s.bmp", base );
+
+        // 最終結果をBMPファイルに出力.
+        SaveToBMP( filename, g_Config.Width, g_Config.Height, &pixels[0].x );
+    }
+
+    pixels.clear();
+}
+
 //----------------------------------------------------------------------------------
 //! @brief      シーンとの交差判定をおこないます.
 //----------------------------------------------------------------------------------
@@ -345,12 +386,10 @@ void PathTrace
 {
     u32 numCore = GetNumCPUCore();
     if ( numCore > 1 )
-    {
-        numCore--;
-    }
+    { numCore--; }
 
     // カメラ更新.
-    Camera camera;
+    PinholeCamera camera;
     camera.Update( 
         Vector3( 50.0f, 52.0f, 220.0f ),
         Vector3( 50.0f, 50.0f, 180.0f ),
@@ -375,8 +414,7 @@ void PathTrace
     const f32 halfRate = rate / 2.0f;
 
     // 時間監視スレッドを走らせる.
-    uintptr_t ret = _beginthread( TimeWatch, 0, nullptr );
-    assert( ret != -1 );    // 失敗しちゃだめよ.
+    std::thread thread( TimeWatch );
 
     // 乱数初期化.
     s3d::Random rnd( 3141592 );
@@ -423,42 +461,11 @@ void PathTrace
     }
     g_Mutex.unlock();
 
-    // スレッドの終了を待機する.
-    for( u32 i=0; i<(UINT_MAX-10); ++i )    // 無限ループ対策.
-    {
-        // ウォッチャーが終了するまで待ち.
-        if ( g_WatcherEnd )
-        { break; }
+    // 画像をキャプチャーする.
+    Capture("img/output");
 
-        // オネンネしな！
-        Sleep( 10 );
-    }
-
-    char    filename[256];
-    tm      local_time;
-    time_t  t = time( nullptr );
-    errno_t err = localtime_s( &local_time, &t );
-
-    if ( err == 0 )
-    {
-        // output_yyyymmdd_hhmmss.bmpという形式の名前にする.
-        // ex) output_20130805_153034.bmp →　2013/08/05 15:30 34sec
-        sprintf_s( filename, "img/output_%04d%02d%02d_%02d%02d%02d.bmp",
-            local_time.tm_year + 1900,
-            local_time.tm_mon + 1,
-            local_time.tm_mday,
-            local_time.tm_hour,
-            local_time.tm_min,
-            local_time.tm_sec );
-
-        // 最終結果をBMPファイルに出力.
-        SaveToBMP( filename, width, height, &g_pRT[0].x );
-    }
-    else
-    {
-        // 最終結果をBMPファイルに出力.
-        SaveToBMP( "img/output.bmp", width, height, &g_pRT[0].x );
-    }
+    // スレッドの終了を待機.
+    thread.join();
 
     // メモリ解放.
     if ( g_pRT )
@@ -471,7 +478,7 @@ void PathTrace
 //-----------------------------------------------------------------------------
 //      時間監視メソッド.
 //-----------------------------------------------------------------------------
-void TimeWatch( void* )
+void TimeWatch()
 {
     // レンダリング開始時刻を記録.
     Timer timer;
@@ -495,32 +502,10 @@ void TimeWatch( void* )
         // 59.9秒以上立ったらキャプチャー.
         if ( sec > 59.9 )
         {
-            char filename[256];
-            tm local_time;
-            time_t t = time( nullptr );
-            errno_t err = localtime_s( &local_time, &t );
+            // 画像をキャプチャー.
+            Capture( "img/frame/frame");
 
-            if ( err == 0 )
-            {
-                // frame_yyyymmdd_hhmmss.bmpという形式の名前にする.
-                // ex) result_20130805_153034.bmp →　2013/08/05 15:30 34sec
-                sprintf_s( filename, "img/frame/frame_%04d%02d%02d_%02d%02d%02d.bmp",
-                    local_time.tm_year + 1900,
-                    local_time.tm_mon + 1,
-                    local_time.tm_mday,
-                    local_time.tm_hour,
-                    local_time.tm_min,
-                    local_time.tm_sec );
-
-                // 結果をBMPファイルに出力.
-                SaveToBMP( filename, g_Config.Width, g_Config.Height, &g_pRT[0].x );
-            }
-            else
-            {
-                // 最終結果をBMPファイルに出力.
-                SaveToBMP( "img/frame/frame.bmp", g_Config.Width, g_Config.Height, &g_pRT[0].x );
-            }
-
+            // ログを表示.
             printf_s( "Captured. %lf min\n", min );
 
             // タイマーを再スタート.
@@ -532,7 +517,9 @@ void TimeWatch( void* )
         if ( min >= 30.0 )
         {
             // 最後のフレームをキャプチャー.
-            SaveToBMP( "img/final_frame.bmp", g_Config.Width, g_Config.Height, &g_pRT[0].x );
+            Capture( "img/final");
+
+            // 時間切れのログを表示.
             printf_s( "Time Over...\n" );
 
             g_Mutex.lock();
@@ -670,13 +657,9 @@ void App::Run( const Config& config )
     { pObj->Dispose(); }
 
     if ( g_IsFinished )
-    {
-        MessageBoxA( nullptr, "Rendering Completed", "レンダリング終了", MB_ICONINFORMATION | MB_OK );
-    }
+    { MessageBoxA( nullptr, "Rendering Completed", "レンダリング終了", MB_ICONINFORMATION | MB_OK ); }
     else
-    {
-        MessageBoxA( nullptr, "Rendering Implcomplete", "レンダリング未完", MB_ICONWARNING | MB_OK );
-    }
+    { MessageBoxA( nullptr, "Rendering Implcomplete", "レンダリング未完", MB_ICONWARNING | MB_OK ); }
 
 }
 

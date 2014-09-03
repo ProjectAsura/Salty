@@ -32,6 +32,7 @@
     <ClInclude Include="..\include\s3d_shape.h" />
     <ClInclude Include="..\include\s3d_texture.h" />
     <ClInclude Include="..\include\s3d_timer.h" />
+    <ClInclude Include="..\include\s3d_tonemapping.h" />
     <ClInclude Include="..\include\s3d_typedef.h" />
   </ItemGroup>
   <ItemGroup>
@@ -46,6 +47,7 @@
     <ClCompile Include="..\src\s3d_plbvh.cpp" />
     <ClCompile Include="..\src\s3d_shape.cpp" />
     <ClCompile Include="..\src\s3d_texture.cpp" />
+    <ClCompile Include="..\src\s3d_tonemapping.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{EE16073B-323B-4695-9041-9C08B21626E2}</ProjectGuid>

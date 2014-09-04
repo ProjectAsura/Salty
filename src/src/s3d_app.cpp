@@ -323,7 +323,11 @@ Color Radiance( const Ray &inRay, s3d::Random &rnd )
     {
         // シーンと交差判定
         if ( !Intersect( ray, record ) )
-        { break; }
+        {
+            // IBLを行う.
+            //
+            break;
+        }
 
         // 衝突物体へのポインタ.
         const IShape* pShape = record.pShape;

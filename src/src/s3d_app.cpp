@@ -122,7 +122,7 @@ Mirror g_Mirror[] = {
 // Refraction (Crystal)
 Glass g_Crystal[] = {
     Glass( 1.54f, Color( 0.85f, 0.65f, 0.65f ) ),
-    Glass( 2.5f,  Color( 1.0f,  1.0f,  1.0f  ) ),
+    Glass( 2.5f,  Color( 0.9f,  0.85f, 0.85f  ) ),
 };
 
 // Phong
@@ -137,13 +137,13 @@ IMaterial* g_pMaterials[] = {
     &g_Matte[2],        // 2 : 照明.
     &g_Mirror[0],       // 3 : ミラー.
     &g_Mirror[1],       // 4 : 黄色ミラー.
-    &g_Crystal[0],      // 5 : 水晶.
+    &g_Crystal[1],      // 5 : 水晶.
     &g_Glossy[0],       // 6 : メタル(緑).
 };
 
 // レンダリングするシーンデータ
 Sphere g_Spheres[] = {
-    Sphere( 16.5f,  Vector3( 30.0f, 26.5f,  57.0f ), g_pMaterials[5] ),    // 水晶
+    Sphere( 16.5f,  Vector3( 25.0f, 26.5f,  57.0f ), g_pMaterials[5] ),    // 水晶
     Sphere( 16.5f,  Vector3( 77.0f, 16.5f,  78.0f ), g_pMaterials[6] ),    // 鏡.
     Sphere( 15.0f,  Vector3( 50.0f, 110.0f, 81.6f ), g_pMaterials[2] ),    // 照明
 };

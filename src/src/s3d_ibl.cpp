@@ -69,7 +69,11 @@ Color IBL::Sample( const Vector3& dir )
     const auto x = s32( u * m_Width  ) % m_Width;
     const auto y = s32( v * m_Height ) % m_Height;
 
-    return m_pPixels[ y * m_Width + x ];
+    auto idx =  y * m_Width * 3 + x * 3;
+    return Color( 
+        m_pPixels[ idx + 0 ],
+        m_pPixels[ idx + 1 ],
+        m_pPixels[ idx + 2 ] );
 }
 
 } // namespace s3d

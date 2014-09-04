@@ -102,7 +102,7 @@ Color*      g_pRT           = nullptr;      //!< レンダーターゲット.
 Config      g_Config;                       //!< 設定です.
 std::mutex  g_Mutex;                        //!< ミューテックス.
 
-Texture2D   g_TextureWall( "./res/texture/wall.bmp" );
+Texture2D   g_TextureWall( "./res/texture/brick.bmp" );
 Texture2D   g_TextureTile( "./res/texture/tile.bmp" );
 TextureSampler g_Sampler = TextureSampler();
 
@@ -121,7 +121,7 @@ Mirror g_Mirror[] = {
 
 // Refraction (Crystal)
 Glass g_Crystal[] = {
-    Glass( 1.54f, Color( 0.75f, 0.25f, 0.25f ) ),
+    Glass( 1.54f, Color( 0.85f, 0.65f, 0.65f ) ),
     Glass( 2.5f,  Color( 1.0f,  1.0f,  1.0f  ) ),
 };
 
@@ -143,9 +143,9 @@ IMaterial* g_pMaterials[] = {
 
 // レンダリングするシーンデータ
 Sphere g_Spheres[] = {
-    Sphere( 16.5f,  Vector3( 20.0f, 16.5f,  27.0f ), g_pMaterials[5] ),    // 水晶
+    Sphere( 16.5f,  Vector3( 30.0f, 26.5f,  57.0f ), g_pMaterials[5] ),    // 水晶
     Sphere( 16.5f,  Vector3( 77.0f, 16.5f,  78.0f ), g_pMaterials[6] ),    // 鏡.
-    Sphere( 15.0f,  Vector3( 50.0f, 100.0f, 81.6f ), g_pMaterials[2] ),    // 照明
+    Sphere( 15.0f,  Vector3( 50.0f, 110.0f, 81.6f ), g_pMaterials[2] ),    // 照明
 };
 
 // トライアングル.
@@ -325,7 +325,7 @@ Color Radiance( const Ray &inRay, s3d::Random &rnd )
         if ( !Intersect( ray, record ) )
         {
             // IBLを行う.
-            //
+            // 未実装
             break;
         }
 
@@ -424,14 +424,14 @@ void PathTrace
     s3d::Random rnd( 3141592 );
 
     // supersamples x supersamples のスーパーサンプリング
-    for ( s32 sy = 0; sy < supersamples; ++sy ) 
-    for ( s32 sx = 0; sx < supersamples; ++sx ) 
+    for ( s32 sy = 0; sy < supersamples && !g_WatcherEnd; ++sy ) 
+    for ( s32 sx = 0; sx < supersamples && !g_WatcherEnd; ++sx ) 
     {
         const f32 r1 = sx * rate + halfRate;
         const f32 r2 = sy * rate + halfRate;
 
         // 一つのサブピクセルあたりsamples回サンプリングする
-        for (s32 s = 0; s < samples; s ++)
+        for (s32 s = 0; s < samples && !g_WatcherEnd; s ++)
         {
             printf_s( "\r%5.2f%% Completed. ", 100.0f * ( sy * supersamples * samples + sx * samples + s ) / numSamples ); 
 
@@ -459,11 +459,11 @@ void PathTrace
         }
     }
 
+
     g_Mutex.lock();
     {
         // 終了フラグを立てる.
         g_IsFinished = true;
-        g_IsRendered = true;
     }
     g_Mutex.unlock();
 
@@ -618,7 +618,7 @@ void App::Run( const Config& config )
     // かっこ悪いけど, グローバルに格納.
     g_Config = config;
 
-    const char filename[] = "res/mesh/dosei/dosei.smd";
+    const char filename[] = "res/mesh/lucy/lucy_low.smd";
     if ( !g_Mesh.LoadFromFile( filename ) )
     {
         printf_s( "Error : Load Mesh Failed.\n" );
@@ -662,7 +662,7 @@ void App::Run( const Config& config )
     if ( pObj != nullptr )
     { pObj->Dispose(); }
 
-    if ( g_IsFinished )
+    if ( g_IsRendered )
     { MessageBoxA( nullptr, "Rendering Completed", "レンダリング終了", MB_ICONINFORMATION | MB_OK ); }
     else
     { MessageBoxA( nullptr, "Rendering Implcomplete", "レンダリング未完", MB_ICONWARNING | MB_OK ); }

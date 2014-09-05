@@ -450,7 +450,6 @@ Color Glossy::ComputeColor( ShadingArg& arg ) const
     Vector3 dir;
     f32 dots = 0.0f;
 
-    for( ;; )
     {
         // インポータンスサンプリング.
         const f32 phi = F_2PI * arg.random.GetAsF32();
@@ -473,13 +472,6 @@ Color Glossy::ComputeColor( ShadingArg& arg ) const
 
         // 出射方向と法線ベクトルの内積を求める.
         dots = Vector3::Dot( dir, normalMod );
-
-        // 反射するかどうかチェック.
-        if ( dots >= 0.0f )
-        {
-            // 反射するのでループ脱出.
-            break;
-        }
     }
 
     // 出射方向を設定.

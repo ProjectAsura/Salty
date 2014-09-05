@@ -110,12 +110,14 @@ TextureSampler g_Sampler = TextureSampler();
 Matte g_Matte[] = {
     Matte( Color( 0.75f, 0.75f, 0.75f ), Color( 0.0f, 0.0f, 0.0f ), &g_TextureWall, &g_Sampler ),
     Matte( Color( 0.75f, 0.75f, 0.75f ), Color( 0.0f, 0.0f, 0.0f ), &g_TextureTile, &g_Sampler ),
-    Matte( Color( 0.0f,  0.0f,  0.0f  ), Color( 36.0f, 36.0f, 36.0f ) ),
+    Matte( Color( 0.0f,  0.0f,  0.0f  ), Color( 50.0f, 50.0f, 50.0f ) ),
+    Matte( Color( 0.5f,  0.0f,  0.0f  ), Color( 36.0f, 1.0f, 1.0f ) ),
+    Matte( Color( 0.0f,  0.0f,  0.5f  ), Color( 1.0f, 1.0f, 36.0f ) ), 
 };
 
 // Mirror
 Mirror g_Mirror[] = {
-    Mirror( Color( 0.25f, 0.25f, 0.75f ) ),
+    Mirror( Color( 0.85f, 0.85f, 0.85f ) ),
     Mirror( Color( 0.75f, 0.75f, 0.25f ) ),
 };
 
@@ -127,7 +129,7 @@ Glass g_Crystal[] = {
 
 // Phong
 Glossy g_Glossy[] = {
-    Glossy( Color( 0.0f, 1.0f, 0.0f ), 100000.0f ),
+    Glossy( Color( 0.95f, 0.95f, 0.95f ), 1000.0f ),
 };
 
 // Materials
@@ -139,13 +141,17 @@ IMaterial* g_pMaterials[] = {
     &g_Mirror[1],       // 4 : 黄色ミラー.
     &g_Crystal[1],      // 5 : 水晶.
     &g_Glossy[0],       // 6 : メタル(緑).
+    &g_Matte[3],
+    &g_Matte[4]
 };
 
 // レンダリングするシーンデータ
 Sphere g_Spheres[] = {
-    Sphere( 16.5f,  Vector3( 25.0f, 26.5f,  57.0f ), g_pMaterials[5] ),    // 水晶
-    Sphere( 16.5f,  Vector3( 77.0f, 16.5f,  78.0f ), g_pMaterials[6] ),    // 鏡.
-    Sphere( 15.0f,  Vector3( 50.0f, 110.0f, 81.6f ), g_pMaterials[2] ),    // 照明
+    Sphere( 16.5f,  Vector3( 25.0f,   26.5f, 57.0f ), g_pMaterials[5] ),    // 水晶
+    Sphere( 7.5f,   Vector3( 50.0f,   16.5f, 78.0f ), g_pMaterials[4] ),    // 鏡.
+    Sphere( 15.0f,  Vector3( 50.0f,  110.0f, 81.6f ), g_pMaterials[2] ),    // 照明
+    Sphere( 5.0f,   Vector3( 10.0f,   90.0f, 30.0f ), g_pMaterials[7] ),
+    Sphere( 2.5f,   Vector3( 10.0f,   20.0f, 120.0f ), g_pMaterials[8] ),
 };
 
 // トライアングル.
@@ -154,9 +160,9 @@ Triangle g_Triangles[] = {
     // 上.
     Triangle( 
         Face3(
-            Vertex( Vector3( 70.0, 50.0, 20.0 ), Vector2( 0.0, 0.0 ) ), 
-            Vertex( Vector3( 50.0, 80.0, 10.0 ), Vector2( 0.5, 1.0 ) ),
-            Vertex( Vector3( 30.0, 50.0, 20.0 ), Vector2( 1.0, 0.0 ) ) ),
+            Vertex( Vector3( 90.0, 20.0, 20.0 ), Vector2( 0.0, 0.0 ) ), 
+            Vertex( Vector3( 50.0, 100.0, 10.0 ), Vector2( 0.5, 1.0 ) ),
+            Vertex( Vector3( 10.0, 20.0, 20.0 ), Vector2( 1.0, 0.0 ) ) ),
         g_pMaterials[4]
     ), 
 
@@ -191,7 +197,7 @@ Quad g_Quads[] = {
             Vertex( Vector3( 0, 100.0,  0.0 ),   Vector2( 0.0, 2.0 ) ),
             Vertex( Vector3( 100, 100.0,  0.0 ), Vector2( 2.0, 2.0 ) ),
             Vertex( Vector3( 100,   0.0,  0.0 ), Vector2( 2.0, 0.0 ) ) ),
-        g_pMaterials[0]
+        g_pMaterials[3]
     ),
 
     // 手前.
@@ -211,7 +217,7 @@ Quad g_Quads[] = {
             Vertex( Vector3( 100, 100.0,  0.0 ),   Vector2( 0.0, 2.0 ) ),
             Vertex( Vector3( 100, 100.0, 250.0 ),  Vector2( 2.0, 2.0 ) ),
             Vertex( Vector3( 100,  0.0, 250.0 ),   Vector2( 2.0, 0.0 ) ) ),
-        g_pMaterials[0]
+        g_pMaterials[6]
     ),
 
     // 上
@@ -639,9 +645,11 @@ void App::Run( const Config& config )
         &g_Mesh,
 
         &g_Spheres[0],
-        //&g_Spheres[1],
+        &g_Spheres[1],
         &g_Spheres[2],
-        &g_Triangles[0],
+        //&g_Triangles[0],
+        &g_Spheres[3],
+        &g_Spheres[4]
     };
 
 

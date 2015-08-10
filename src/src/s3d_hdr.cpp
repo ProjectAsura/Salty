@@ -18,6 +18,10 @@
 
 namespace /* anonymous */ {
 
+template<typename T>
+T Mini(const T& a, const T& b)
+{ return ( a < b ) ? a : b; }
+
 ////////////////////////////////////////////////////////////////////////////////////////////
 // RGBE structure
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -359,7 +363,7 @@ bool SaveToHDR( const char* filename, const s32 width, const s32 height, const f
         {
             for( auto cursor = 0; cursor < width; )
             {
-                const auto cursor_move = std::min( 127, width - cursor );
+                const auto cursor_move = ::Mini( 127, width - cursor );
                 fprintf_s( pFile, "%c", cursor_move );
 
                 for( auto l = cursor; l < cursor + cursor_move; ++l )

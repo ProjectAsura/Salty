@@ -195,8 +195,8 @@ IShape* BVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     };
 
     u32 num[2] = {
-        midPoint,
-        numShapes - midPoint
+        u32(midPoint),
+        numShapes - u32(midPoint)
     };
 
     // ブランチ構築.
@@ -343,9 +343,9 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
         midPoint
     };
 
-    s32 num1[2] = {
-        midPoint,
-        numShapes - midPoint
+    u32 num1[2] = {
+        u32(midPoint),
+        numShapes - u32(midPoint)
     };
 
     // 更に分割するためにAABBを求める.
@@ -366,7 +366,7 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     s32 midPointL = Split( &ppShapes[idx1[0]], num1[0], pivotL.a[axisL], axisL );
     s32 midPointR = Split( &ppShapes[idx1[1]], num1[1], pivotR.a[axisR], axisR );
 
-    u32 idx2[4] = {
+    s32 idx2[4] = {
         idx1[0],
         idx1[0] + midPointL,
         idx1[1],
@@ -374,10 +374,10 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     };
 
     u32 num2[4] = {
-        midPointL,
-        num1[0] - midPointL,
-        midPointR,
-        num1[1] - midPointR
+        u32(midPointL),
+        num1[0] - u32(midPointL),
+        u32(midPointR),
+        num1[1] - u32(midPointR)
     };
 
     IShape* pShapes[ 4 ];
@@ -553,9 +553,9 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
         midPoint
     };
 
-    s32 num1[2] = {
-        midPoint,
-        numShapes - midPoint
+    u32 num1[2] = {
+        u32(midPoint),
+        numShapes - u32(midPoint)
     };
 
     // -------------------------
@@ -579,7 +579,7 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     s32 midPointL = Split( &ppShapes[idx1[0]], num1[0], pivotL.a[axisL], axisL );
     s32 midPointR = Split( &ppShapes[idx1[1]], num1[1], pivotR.a[axisR], axisR );
 
-    u32 idx2[4] = {
+   s32 idx2[4] = {
         idx1[0],
         midPointL,
         idx1[1],
@@ -587,10 +587,10 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     };
 
     u32 num2[4] = {
-        midPointL,
-        num1[0] - midPointL,
-        midPointR,
-        num1[1] - midPointR
+        u32(midPointL),
+        num1[0] - u32(midPointL),
+        u32(midPointR),
+        num1[1] - u32(midPointR)
     };
 
 
@@ -637,15 +637,15 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
         idx2[3] + midPoint4
     };
 
-    s32 num3[8] = {
-        midPoint1,
-        num2[0] - midPoint1,
-        midPoint2,
-        num2[1] - midPoint2,
-        midPoint3,
-        num2[2] - midPoint3,
-        midPoint4,
-        num2[3] - midPoint4,
+    u32 num3[8] = {
+        u32(midPoint1),
+        num2[0] - u32(midPoint1),
+        u32(midPoint2),
+        num2[1] - u32(midPoint2),
+        u32(midPoint3),
+        num2[2] - u32(midPoint3),
+        u32(midPoint4),
+        num2[3] - u32(midPoint4),
     };
 
     IShape* pShapes[ 8 ] = { nullptr };

@@ -1492,9 +1492,9 @@ struct Ray
         invDir.y = 1.0f / dir.y;
         invDir.z = 1.0f / dir.z;
 
-        sign[0] = ( dir.x > 0.0f ) ? 0 : 1;
-        sign[1] = ( dir.y > 0.0f ) ? 0 : 1;
-        sign[2] = ( dir.z > 0.0f ) ? 0 : 1;
+        sign[0] = ( dir.x > -F32_EPSILON ) ? 0 : 1;
+        sign[1] = ( dir.y > -F32_EPSILON ) ? 0 : 1;
+        sign[2] = ( dir.z > -F32_EPSILON ) ? 0 : 1;
     }
 };
 

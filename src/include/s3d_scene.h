@@ -23,9 +23,24 @@ namespace s3d {
 class Scene
 {
 public:
-    IShape*     pBVH;
-    ICamera*    pCamera;
-    IBL         IBL;
+    Scene()
+    : m_pBVH   ( nullptr )
+    , m_pCamera( nullptr )
+    {}
+
+    Ray GetRay( const f32 x, const f32 y )
+    { return m_pCamera->GetRay( x, y ); }
+
+    bool Intersect( const Ray& ray, HitRecord& record )
+    { return m_pBVH->IsHit( ray, record ); }
+
+    Color SampleIBL( const Vector3& dir )
+    { return m_IBL.Sample( dir ); }
+
+protected:
+    IShape*     m_pBVH;
+    ICamera*    m_pCamera;
+    IBL         m_IBL;
 };
 
 } // namespace s3d

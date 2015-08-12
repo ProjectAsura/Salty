@@ -65,16 +65,34 @@ s32 GetCPUCoreCount()
 
 namespace s3d {
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// PathTracer class
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+//-------------------------------------------------------------------------------------------------
+//      コンストラクタです.
+//-------------------------------------------------------------------------------------------------
 PathTracer::PathTracer()
 : m_RenderTarget( nullptr )
+, m_Intermediate( nullptr )
+, m_pScene      ( nullptr )
+, m_IsFinish    ( false )
 {
 }
 
+//-------------------------------------------------------------------------------------------------
+//      デストラクタです.
+//-------------------------------------------------------------------------------------------------
 PathTracer::~PathTracer()
 {
     SafeDeleteArray( m_RenderTarget );
+    SafeDeleteArray( m_Intermediate );
+    SafeDelete( m_pScene );
 }
 
+//-------------------------------------------------------------------------------------------------
+//      レンダリングを実行します.
+//-------------------------------------------------------------------------------------------------
 bool PathTracer::Run( const Config& config )
 {
     // 起動画面.
@@ -100,6 +118,9 @@ bool PathTracer::Run( const Config& config )
     return m_IsFinish;
 }
 
+//-------------------------------------------------------------------------------------------------
+//      レンダリング結果をキャプチャーします.
+//-------------------------------------------------------------------------------------------------
 void PathTracer::Capture( const char* filename )
 {
     // トーンマッピングを実行.
@@ -109,6 +130,9 @@ void PathTracer::Capture( const char* filename )
     SaveToBMP( filename, m_Config.Width, m_Config.Height, &m_Intermediate[0].x );
 }
 
+//-------------------------------------------------------------------------------------------------
+//      レンダリング時間を監視します.
+//-------------------------------------------------------------------------------------------------
 void PathTracer::Watcher()
 {
     auto counter = 0;
@@ -163,6 +187,9 @@ void PathTracer::Watcher()
     Capture( "final.bmp" );
 }
 
+//-------------------------------------------------------------------------------------------------
+//      指定方向からの放射輝度推定を行います.
+//-------------------------------------------------------------------------------------------------
 Color PathTracer::Radiance( const Ray& input )
 {
     HitRecord  record = HitRecord();
@@ -178,9 +205,10 @@ Color PathTracer::Radiance( const Ray& input )
     for( auto depth=0; ; ++depth)
     {
         // 交差判定.
-        if ( !m_Scene.pBVH->IsHit( ray, record ) )
+        if ( !m_pScene->Intersect( ray, record ) )
         {
-            L += Color::Mul( W, m_Scene.IBL.Sample( ray.dir ) );
+            // IBL
+            L += Color::Mul( W, m_pScene->SampleIBL( ray.dir ) );
             break;
         }
 
@@ -212,6 +240,9 @@ Color PathTracer::Radiance( const Ray& input )
     return L;
 }
 
+//-------------------------------------------------------------------------------------------------
+//      経路を追跡します.
+//-------------------------------------------------------------------------------------------------
 void PathTracer::TracePath()
 {
     // CPUコア数を取得.
@@ -238,16 +269,6 @@ void PathTracer::TracePath()
     // 乱数初期化.
     m_Random.SetSeed( 3141592 );
 
-    // カメラ更新.
-    PinholeCamera camera;
-    camera.Update( 
-        Vector3( 50.0f, 52.0f, 220.0f ),
-        Vector3( 50.0f, 50.0f, 180.0f ),
-        Vector3( 0.0f, 1.0f, 0.0f ),
-        F_PIDIV4,
-        (f32)m_Config.Width / (f32)m_Config.Height,
-        1.0f );
-
     for ( auto sy=0; sy<m_Config.SubSampleCount && !m_IsFinish; ++sy )
     for ( auto sx=0; sx<m_Config.SubSampleCount && !m_IsFinish; ++sx )
     {
@@ -264,7 +285,7 @@ void PathTracer::TracePath()
             for( auto y=0; y<m_Config.Height; ++y )
             for( auto x=0; x<m_Config.Width;  ++x )
             {
-                auto ray = camera.GetRay(
+                auto ray = m_pScene->GetRay(
                     ( r1 + x ) / m_Config.Width  - 0.5f,
                     ( r2 + y ) / m_Config.Height - 0.5f );
 
@@ -274,14 +295,17 @@ void PathTracer::TracePath()
         }
     }
 
+    // 正常終了フラグを立てる.
     g_Mutex.lock();
     m_IsFinish = true;
     g_Mutex.unlock();
 
+    // 時間監視スレッドを終了.
     thd.join();
 
+    // レンダーターゲット解放.
     SafeDeleteArray( m_RenderTarget );
     SafeDeleteArray( m_Intermediate );
 }
 
-}
+} // namespace s3d

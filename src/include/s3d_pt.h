@@ -71,7 +71,7 @@ private:
     Color*          m_RenderTarget;     //!< レンダーターゲットです.
     Color*          m_Intermediate;     //!< 中間出力用ターゲット.
     Random          m_Random;           //!< 乱数.
-    Scene           m_Scene;            //!< シーンデータ.
+    Scene*          m_pScene;           //!< シーンデータ.
     volatile bool   m_IsFinish;         //!< 正常終了したかどうか？
 
     //=============================================================================================

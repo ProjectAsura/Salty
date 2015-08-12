@@ -17,7 +17,6 @@
 #include <s3d_filter.h>
 #include <s3d_timer.h>
 #include <s3d_bvh.h>
-#include <s3d_plbvh.h>
 #include <s3d_mesh.h>
 #include <iostream>
 #include <direct.h>
@@ -511,8 +510,8 @@ void TimeWatch()
         timer.Stop();
         f64 min = timer.GetElapsedTimeMin();
 
-        // 59.9秒以上立ったらキャプチャー.
-        if ( sec > 59.9 )
+        // 29.9秒以上立ったらキャプチャー.
+        if ( sec > 29.9 )
         {
             // 画像をキャプチャー.
             Capture( "img/frame/frame");
@@ -525,8 +524,8 @@ void TimeWatch()
         }
 
     #if defined(NDEBUG) || defined(_NDEBUG)
-        // 30分以上たった
-        if ( min >= 30.0 )
+        // 15分以上たった
+        if ( min >= 15.0 )
         {
             // 最後のフレームをキャプチャー.
             Capture( "img/final");
@@ -666,7 +665,7 @@ void App::Run( const Config& config )
     g_Mesh.Release();
 
     // メモリ解放.
-    IDispose* pObj = dynamic_cast<IDispose*>( g_pBVH );
+    auto pObj = dynamic_cast<IDisposable*>( g_pBVH );
     if ( pObj != nullptr )
     { pObj->Dispose(); }
 

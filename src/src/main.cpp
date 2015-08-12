@@ -33,11 +33,11 @@ int main( int argc, char **argv )
 
     #if 1
         // 本番用.
-        config.Width         = 960;
-        config.Height        = 540;
+        config.Width         = 1280;
+        config.Height        = 720;
         config.NumSamples    = 2048;
-        config.NumSubSamples = 2;
-        config.MaxDepth      = 8;
+        config.NumSubSamples = 1;
+        config.MaxDepth      = 16;
     #else
         // デバッグ用.
         config.Width         = 320;

@@ -12,7 +12,6 @@
 #include <cstring>
 #include <string>
 #include <s3d_bvh.h>
-#include <s3d_plbvh.h>
 
 
 #ifndef DLOG
@@ -217,7 +216,7 @@ void Mesh::Release()
 {
     if ( m_pBVH )
     {
-        IDispose* pBVH = dynamic_cast<IDispose*>( m_pBVH );
+        auto pBVH = dynamic_cast<IDisposable*>( m_pBVH );
         if ( pBVH != nullptr )
         { pBVH->Dispose(); }
         m_pBVH = nullptr;

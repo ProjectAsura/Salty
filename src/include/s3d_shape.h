@@ -12,6 +12,7 @@
 //-----------------------------------------------------------------------------------
 #include <s3d_typedef.h>
 #include <s3d_math.h>
+#include <s3d_idisposable.h>
 
 
 namespace s3d {
@@ -104,7 +105,7 @@ struct IShape
 //////////////////////////////////////////////////////////////////////////////////////
 // NullShape structure
 //////////////////////////////////////////////////////////////////////////////////////
-struct NullShape : public IShape, public IDispose
+struct NullShape : public IShape, public IDisposable
 {
     //--------------------------------------------------------------------------------
     //! @brief      コンストラクタです.
@@ -434,7 +435,7 @@ struct Quad : public IShape
 ////////////////////////////////////////////////////////////////////////////////
 // Leaf structure
 ////////////////////////////////////////////////////////////////////////////////
-struct Leaf : public IShape, public IDispose
+struct Leaf : public IShape, public IDisposable
 {
 public:
     u32         size;        //!< シェイプの数です.

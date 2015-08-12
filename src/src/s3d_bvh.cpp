@@ -412,7 +412,7 @@ void QBVH::Dispose()
         { pShape[ i ] = nullptr; }
         else
         {
-            IDispose* pObj = dynamic_cast<IDispose*>( pShape[ i ] );
+            auto pObj = dynamic_cast<IDisposable*>( pShape[ i ] );
             if ( pObj != nullptr )
             { pObj->Dispose(); }
         }
@@ -674,7 +674,7 @@ void OBVH::Dispose()
         { pShape[ i ] = nullptr; }
         else
         {
-            IDispose* pObj = dynamic_cast<IDispose*>( pShape[ i ] );
+            auto pObj = dynamic_cast<IDisposable*>( pShape[ i ] );
             if ( pObj != nullptr )
             { pObj->Dispose(); }
         }

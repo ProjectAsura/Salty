@@ -13,6 +13,7 @@
 #include <s3d_typedef.h>
 #include <s3d_math.h>
 #include <s3d_shape.h>
+#include <s3d_idisposable.h>
 
 
 namespace s3d {
@@ -20,7 +21,7 @@ namespace s3d {
 //////////////////////////////////////////////////////////////////////////////
 // BVH structure
 //////////////////////////////////////////////////////////////////////////////
-struct BVH : public IShape, public IDispose
+struct BVH : public IShape, public IDisposable
 {
 public:
     BoundingBox box;            //!< バウンディングボックスです.
@@ -83,7 +84,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 // QBVH structure
 ////////////////////////////////////////////////////////////////////////////////
-struct QBVH : public IShape, public IDispose
+struct QBVH : public IShape, public IDisposable
 {
 public:
     IShape*         pShape[4];          //!< 子ノードです.
@@ -145,7 +146,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 // OBVH structure
 ////////////////////////////////////////////////////////////////////////////////
-struct OBVH : public IShape, public IDispose
+struct OBVH : public IShape, public IDisposable
 {
 public:
     IShape*         pShape[8];          //!< 子ノードです.

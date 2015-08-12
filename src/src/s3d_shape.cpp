@@ -491,7 +491,7 @@ void Leaf::Dispose()
         { ppShapes[ i ] = nullptr; }
         else
         {
-            IDispose* pDisposable = dynamic_cast<IDispose*>( ppShapes[ i ] );
+            auto pDisposable = dynamic_cast<IDisposable*>( ppShapes[ i ] );
             if ( pDisposable != nullptr )
             { pDisposable->Dispose(); }
         }

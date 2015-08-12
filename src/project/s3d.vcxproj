@@ -27,6 +27,7 @@
     <ClInclude Include="..\include\s3d_hdr.h" />
     <ClInclude Include="..\include\s3d_ibl.h" />
     <ClInclude Include="..\include\s3d_idisposable.h" />
+    <ClInclude Include="..\include\s3d_instance.h" />
     <ClInclude Include="..\include\s3d_logger.h" />
     <ClInclude Include="..\include\s3d_material.h" />
     <ClInclude Include="..\include\s3d_math.h" />
@@ -47,6 +48,7 @@
     <ClCompile Include="..\src\s3d_filter.cpp" />
     <ClCompile Include="..\src\s3d_hdr.cpp" />
     <ClCompile Include="..\src\s3d_ibl.cpp" />
+    <ClCompile Include="..\src\s3d_instance.cpp" />
     <ClCompile Include="..\src\s3d_logger.cpp" />
     <ClCompile Include="..\src\s3d_material.cpp" />
     <ClCompile Include="..\src\s3d_mesh.cpp" />

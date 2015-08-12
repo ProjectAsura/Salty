@@ -70,18 +70,6 @@ typedef double              f64;
 #define S3D_TEMPLATE2(T, U)         template< typename T, typename U >
 #endif//S3D_TEMPLATE2
 
-#ifndef S3D_RELEASE
-#define S3D_RELEASE(x)     { if (x) { (x)->Release(); (x) = nullptr; } }
-#endif//S3D_RELEASE
-
-#ifndef S3D_DELETE
-#define S3D_DELETE(x)       { if (x) { delete (x); (x) = nullptr; } }
-#endif//S3D_DELETE
-
-#ifndef S3D_DELETE_ARRAY
-#define S3D_DELETE_ARRAY(x) { if (x) { delete[] (x); (x) = nullptr; } }
-#endif//S3D_DELETE_ARRAY
-
 
 #if defined(_M_IX86) || defined(_M_AMD64)
     #define S3D_IS_SSE2   (1)     // SSE2有効.
@@ -377,5 +365,35 @@ typedef union S3D_ALIGN(32) _b256i
 } b256i;
 
 #endif//S3D_IS_SIMD
+
+S3D_TEMPLATE(T)
+void SafeRelease( T*& ptr )
+{
+    if ( ptr != nullptr )
+    {
+        ptr->Release();
+        ptr = nullptr;
+    }
+}
+
+S3D_TEMPLATE(T)
+void SafeDelete( T*& ptr )
+{
+    if ( ptr != nullptr )
+    {
+        delete ptr;
+        ptr = nullptr;
+    }
+}
+
+S3D_TEMPLATE(T)
+void SafeDeleteArray( T*& ptr )
+{
+    if ( ptr != nullptr )
+    {
+        delete [] ptr;
+        ptr = nullptr;
+    }
+}
 
 #endif//__S3D_TYPEDEF_H__

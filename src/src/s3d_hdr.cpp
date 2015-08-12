@@ -283,8 +283,8 @@ bool ReadHdrData( FILE* pFile, const s32 width, const s32 height, f32** ppPixels
     {
         if ( !ReadColor( pFile, pLines, width ) )
         {
-            S3D_DELETE_ARRAY( pLines );
-            S3D_DELETE_ARRAY( pixels );
+            SafeDeleteArray( pLines );
+            SafeDeleteArray( pixels );
             return false;
         }
 
@@ -298,7 +298,7 @@ bool ReadHdrData( FILE* pFile, const s32 width, const s32 height, f32** ppPixels
         }
     }
 
-    S3D_DELETE_ARRAY( pLines );
+    SafeDeleteArray( pLines );
     (*ppPixels) = pixels;
 
     return true;

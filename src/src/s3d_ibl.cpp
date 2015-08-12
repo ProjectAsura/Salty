@@ -47,7 +47,7 @@ bool IBL::Init( const char* filename )
 //-------------------------------------------------------------------------------------------
 void IBL::Term()
 {
-    S3D_DELETE_ARRAY( m_pPixels );
+    SafeDeleteArray( m_pPixels );
     m_Width    = 0;
     m_Height   = 0;
     m_Gamma    = 0.0f;

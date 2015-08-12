@@ -226,13 +226,13 @@ void Mesh::Release()
     {
         for( u32 i=0; i<m_NumTriangles; ++i )
         {
-            S3D_DELETE( m_pTriangles[i] );
+            SafeDelete( m_pTriangles[i] );
         }
-        S3D_DELETE_ARRAY( m_pTriangles );
+        SafeDeleteArray( m_pTriangles );
     }
 
-    S3D_DELETE_ARRAY( m_pMaterials );
-    S3D_DELETE_ARRAY( m_pTextures );
+    SafeDeleteArray( m_pMaterials );
+    SafeDeleteArray( m_pTextures );
 
     m_NumTriangles = 0;
     m_NumMaterials = 0;

@@ -37,7 +37,7 @@ int main( int argc, char **argv )
         config.Height        = 720;
         config.NumSamples    = 2048;
         config.NumSubSamples = 1;
-        config.MaxDepth      = 16;
+        config.MaxDepth      = 8;
     #else
         // デバッグ用.
         config.Width         = 320;

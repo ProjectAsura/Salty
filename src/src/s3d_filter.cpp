@@ -79,7 +79,7 @@ namespace s3d {
 //------------------------------------------------------------------------------------------------
 //      トーンマッピングを行います.
 //------------------------------------------------------------------------------------------------
-std::vector<Vector3> ToneMapping( const s32 width, const s32 height, const Vector3* pPixels )
+void ToneMapping( const s32 width, const s32 height, const Color* pPixels, Color* pResult )
 {
     assert( pPixels != nullptr );
 
@@ -93,11 +93,6 @@ std::vector<Vector3> ToneMapping( const s32 width, const s32 height, const Vecto
     auto coeff = a / aveLw;
     auto maxLw2 = maxLw * coeff;
     maxLw2 *= maxLw2;
-
-    // メモリを確保.
-    std::vector<Vector3> result;
-    result.resize( width * height );
-    result.shrink_to_fit();
 
     for( auto i=0; i<height; ++i )
     {
@@ -113,12 +108,9 @@ std::vector<Vector3> ToneMapping( const s32 width, const s32 height, const Vecto
             auto Ld  = L * ( 1.0f + ( L / maxLw2 ) ) / ( 1.0f + L );
 
             // トーンマッピングした結果を格納.
-            result[idx] = Ld;
+            pResult[idx] = Ld;
         }
     }
-
-    // トーンマッピングした結果を返却する.
-    return result;
 }
 
 } // namespace s3d

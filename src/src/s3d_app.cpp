@@ -98,6 +98,7 @@ bool        g_IsFinished    = false;        //!< レイトレ終了フラグ.
 bool        g_IsRendered    = false;
 bool        g_ForceExit     = false;
 Color*      g_pRT           = nullptr;      //!< レンダーターゲット.
+Color*      g_pOut          = nullptr;
 Config      g_Config;                       //!< 設定です.
 std::mutex  g_Mutex;                        //!< ミューテックス.
 
@@ -262,7 +263,7 @@ void Capture( char* base )
     auto err = localtime_s( &local_time, &t );
 
     // トーンマッピングする.
-    auto pixels = ToneMapping( g_Config.Width, g_Config.Height, g_pRT );
+    ToneMapping( g_Config.Width, g_Config.Height, g_pRT, g_pOut );
 
     if ( err == 0 )
     {
@@ -278,17 +279,15 @@ void Capture( char* base )
             local_time.tm_sec );
 
         // 最終結果をBMPファイルに出力.
-        SaveToBMP( filename, g_Config.Width, g_Config.Height, &pixels[0].x );
+        SaveToBMP( filename, g_Config.Width, g_Config.Height, &g_pOut[0].x );
     }
     else
     {
         sprintf_s( filename, "%s.bmp", base );
 
         // 最終結果をBMPファイルに出力.
-        SaveToBMP( filename, g_Config.Width, g_Config.Height, &pixels[0].x );
+        SaveToBMP( filename, g_Config.Width, g_Config.Height, &g_pOut[0].x );
     }
-
-    pixels.clear();
 }
 
 //----------------------------------------------------------------------------------
@@ -409,6 +408,7 @@ void PathTrace
 
     // レンダーターゲットのメモリを確保.
     g_pRT = new Color[ width * height ];
+    g_pOut = new Color[ width * height ];
 
     // レンダーターゲットをクリア.
     for( s32 i=0; i<width * height; ++i )
@@ -479,11 +479,8 @@ void PathTrace
     thread.join();
 
     // メモリ解放.
-    if ( g_pRT )
-    {
-        delete[] g_pRT;
-        g_pRT = nullptr;
-    }
+    SafeDeleteArray( g_pRT );
+    SafeDeleteArray( g_pOut );
 }
 
 //-----------------------------------------------------------------------------

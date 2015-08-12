@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------------------------
 #include <s3d_typedef.h>
 #include <s3d_math.h>
-#include <vector>
 
 
 namespace s3d {
@@ -23,8 +22,9 @@ namespace s3d {
 //! @param[in]      width       画像の横幅です.
 //! @param[in]      height      画像の縦幅です.
 //! @param[in]      pPixels     ピクセルです.
+//! @param[out]     pResult     出力値.
 //------------------------------------------------------------------------------------------------
-std::vector<Vector3> ToneMapping( const s32 width, const s32 height, const Vector3* pPixels );
+void ToneMapping( const s32 width, const s32 height, const Color* pPixels, Color* pResult );
 
 
 } // namespace s3d

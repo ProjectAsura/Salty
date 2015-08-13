@@ -154,28 +154,6 @@ Sphere g_Spheres[] = {
     Sphere( 2.5f,   Vector3( 10.0f,   20.0f, 120.0f ), g_pMaterials[8] ),
 };
 
-// トライアングル.
-Triangle g_Triangles[] = {
-
-    // 上.
-    Triangle( 
-        Face3(
-            Vertex( Vector3( 90.0, 20.0, 20.0 ), Vector2( 0.0, 0.0 ) ), 
-            Vertex( Vector3( 50.0, 100.0, 10.0 ), Vector2( 0.5, 1.0 ) ),
-            Vertex( Vector3( 10.0, 20.0, 20.0 ), Vector2( 1.0, 0.0 ) ) ),
-        g_pMaterials[4]
-    ), 
-
-    // 左.
-    Triangle( 
-        Face3(
-            Vertex( Vector3( 70.0, 30.0, 20.0 ), Vector2( 0.0, 0.0 ) ),
-            Vertex( Vector3( 50.0, 70.0, 10.0 ), Vector2( 0.5, 1.0 ) ),
-            Vertex( Vector3( 30.0, 30.0, 20.0 ), Vector2( 1.0, 0.0 ) ) ),
-        g_pMaterials[4]
-    ), 
-
-};
 
 // 矩形.
 Quad g_Quads[] = {

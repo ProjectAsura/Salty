@@ -3,9 +3,7 @@
 // Desc : Logger Module.
 // Copyright(c) Project Asura. All right reserved.
 //-------------------------------------------------------------------------------------------------
-
-#ifndef __S3D_LOGGER_H__
-#define __S3D_LOGGER_H__
+#pragma once
 
 //-------------------------------------------------------------------------------------------------
 // Includes
@@ -71,6 +69,3 @@ private:
 #ifndef ELOG
     #define ELOG(x, ...)        s3d::SystemLogger::GetInstance().ErrorLog("[File: %s, Line: %d] " x "\n", __FILE__, __LINE__, ##__VA_ARGS__ )
 #endif//ELOG
-
-
-#endif//__G3D_LOGGER_H__

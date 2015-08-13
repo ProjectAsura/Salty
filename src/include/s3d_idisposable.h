@@ -3,10 +3,7 @@
 // Desc : IDisposable Interface Module.
 // Copyright(c) Project Asura. All right reserved.
 //-------------------------------------------------------------------------------------------------
-
-#ifndef __S3D_IDISPOSABLE_H__
-#define __S3D_IDISPOSABLE_H__
-
+#pragma once
 
 namespace s3d {
 
@@ -21,8 +18,4 @@ struct IDisposable
     virtual void Dispose() = 0;
 };
 
-
 } // namespace s3d
-
-
-#endif//__S3D_IDISPOSABLE_H__

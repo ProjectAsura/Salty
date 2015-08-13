@@ -3,10 +3,7 @@
 // Desc : Type Definitions.
 // Copyright(c) Project Asura. All right reserved.
 //------------------------------------------------------------------------------
-
-#ifndef __S3D_TYPEDEF_H__
-#define __S3D_TYPEDEF_H__
-
+#pragma once
 
 //==============================================================================
 // Type definitions
@@ -395,5 +392,3 @@ void SafeDeleteArray( T*& ptr )
         ptr = nullptr;
     }
 }
-
-#endif//__S3D_TYPEDEF_H__

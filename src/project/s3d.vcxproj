@@ -33,7 +33,6 @@
     <ClInclude Include="..\include\s3d_mesh.h" />
     <ClInclude Include="..\include\s3d_pt.h" />
     <ClInclude Include="..\include\s3d_scene.h" />
-    <ClInclude Include="..\include\s3d_separator.h" />
     <ClInclude Include="..\include\s3d_shape.h" />
     <ClInclude Include="..\include\s3d_split.h" />
     <ClInclude Include="..\include\s3d_texture.h" />

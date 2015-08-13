@@ -3,9 +3,7 @@
 // Desc : Math Module.
 // Copyright(c) Project Asura. All right reserved.
 //-------------------------------------------------------------------------------------------------
-
-#ifndef __S3D_MATH__
-#define __S3D_MATH__
+#pragma once
 
 //-------------------------------------------------------------------------------------------------
 // Includes
@@ -3675,5 +3673,3 @@ f32 SurfaceArea( const f32 radius )
 
 } // namespace s3d
 
-
-#endif//__S3D_MATH__

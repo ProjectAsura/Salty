@@ -3,9 +3,7 @@
 // Desc : HDR File Module.
 // Copyright(c) Project Asura. All right reserved.
 //--------------------------------------------------------------------------------------
-
-#ifndef __S3D_HDR_H__
-#define __S3D_HDR_H__
+#pragma once 
 
 //--------------------------------------------------------------------------------------
 // Includes
@@ -52,6 +50,3 @@ bool LoadFromHDR(
     f32**       ppPixel );
 
 } // namespace s3d
-
-
-#endif//__S3D_HDR_H__

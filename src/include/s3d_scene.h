@@ -3,9 +3,7 @@
 // Desc : Scene Data Module.
 // Copyright(c) Project Asura. All right reserved.
 //-------------------------------------------------------------------------------------------------
-
-#ifndef __S3D_SCENE_H__
-#define __S3D_SCENE_H__
+#pragma once
 
 //-------------------------------------------------------------------------------------------------
 // Includes
@@ -88,5 +86,3 @@ protected:
 
 } // namespace s3d
 
-
-#endif//__S3D_SCENE_H__

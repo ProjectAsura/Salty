@@ -3,9 +3,7 @@
 // Desc : Timer Module.
 // Copyright(c) Project Asura. All right reserved.
 //------------------------------------------------------------------------------
-
-#ifndef __S3D_TIMER_H__
-#define __S3D_TIMER_H__
+#pragma once
 
 //------------------------------------------------------------------------------
 // Includes
@@ -76,6 +74,3 @@ private:
 // Inlines
 //------------------------------------------------------------------------------
 #include <s3d_timer.inl>
-
-
-#endif//__S3D_TIMER_H__

@@ -46,7 +46,7 @@ bool MedianSplit( std::vector<IShape*> shapes, u32& bestIndex, u32& bestAxis )
             }
         );
 
-        auto idx = axisSortedL.size() / 2 - 1;
+        auto idx = static_cast<u32>(axisSortedL.size()) / 2 - 1;
         assert( idx >= 0 );
         auto select = axisSortedL[idx];
         auto left   = axisSortedL[0];

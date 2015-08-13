@@ -3,9 +3,7 @@
 // Desc : Filter Module.
 // Copyright(c) Project Asura. All right reserved.
 //------------------------------------------------------------------------------------------------
-
-#ifndef __S3D_FILTER_H__
-#define __S3D_FILTER_H__
+#pragma once
 
 //------------------------------------------------------------------------------------------------
 // Includes
@@ -29,4 +27,3 @@ void ToneMapping( const s32 width, const s32 height, const Color* pPixels, Color
 
 } // namespace s3d
 
-#endif//__S3D_FILTER_H__

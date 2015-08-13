@@ -3,10 +3,7 @@
 // Desc : Camera Module.
 // Copyright(c) Project Asura. All right reserved.
 //-------------------------------------------------------------------------------------------------
-
-#ifndef __S3D_CAMERA_H__
-#define __S3D_CAMERA_H__
-
+#pragma once
 
 //-------------------------------------------------------------------------------------------------
 // Includes
@@ -138,5 +135,3 @@ private:
 
 
 } // namespace s3d
-
-#endif // __S3D_CAMERA_H__

@@ -168,10 +168,6 @@ Vector3 BVH::GetCenter() const
 //--------------------------------------------------------------------------
 IShape* BVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 {
-    // そのまま返却.
-    if ( numShapes == 0 ) 
-    { return new NullShape(); }
-
     // 左と右を入れたインスタンスを生成.
     if ( numShapes <= 2 )
     { return new Leaf( numShapes, ppShapes ); }
@@ -199,9 +195,11 @@ IShape* BVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
         numShapes - u32(midPoint)
     };
 
-    // ブランチ構築.
-    IShape* left  = BuildBranch( &ppShapes[idx[0]], num[0] );
-    IShape* right = BuildBranch( &ppShapes[idx[1]], num[1] );
+    IShape* left;
+    IShape* right;
+
+    left  = BuildBranch( &ppShapes[idx[0]], num[0] );
+    right = BuildBranch( &ppShapes[idx[1]], num[1] );
 
     // インスタンスを返却.
     return new BVH( left, right, bbox );
@@ -315,10 +313,6 @@ Vector3 QBVH::GetCenter() const
 //--------------------------------------------------------------------------
 IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 {
-    // そのまま返却.
-    if ( numShapes == 0 )
-    { return new NullShape(); }
-
     if ( numShapes <= 4 )
     { return new Leaf( numShapes, ppShapes ); }
 
@@ -386,13 +380,7 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     for( u32 i=0; i<4; ++i )
     {
         box[ i ] = CreateMergedBox( &ppShapes[ idx2[ i ] ], num2[ i ] );
-
-        if ( num2[ i ] == 0 )
-        { pShapes[ i ] = new NullShape(); }
-        else if ( num2[ i ] > 4 )
-        { pShapes[ i ] = BuildBranch( &ppShapes[ idx2[ i ] ], num2[ i ] ); }
-        else
-        { pShapes[ i ] = new Leaf( num2[ i ], &ppShapes[ idx2[ i ] ] ); }
+        pShapes[ i ] = BuildBranch( &ppShapes[ idx2[ i ] ], num2[ i ] );
     }
 
     return new (pBuf) QBVH( pShapes, BoundingBox4( box ) );
@@ -522,10 +510,6 @@ Vector3 OBVH::GetCenter() const
 //--------------------------------------------------------------------------
 IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 {
-    // そのまま返却.
-    if ( numShapes == 0 )
-    { return new NullShape(); }
-
     if ( numShapes <= 8 )
     { return new Leaf( numShapes, ppShapes ); }
 

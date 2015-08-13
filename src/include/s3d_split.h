@@ -3,9 +3,7 @@
 // Desc : Volume Splitter.
 // Copyright(c) Project Asura. All right reserved.
 //-------------------------------------------------------------------------------------------------
-
-#ifndef __S3D_SPLIT_H__
-#define __S3D_SPLIT_H__
+#pragma once
 
 //-------------------------------------------------------------------------------------------------
 // Includes
@@ -28,5 +26,3 @@ bool SahSplit( std::vector<IShape*> shapes, u32& bestIndex, u32& bestAxis );
 
 } // namespace s3d
 
-
-#endif//__S3D_SPLIT_H__

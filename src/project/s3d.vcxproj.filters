@@ -48,9 +48,6 @@
     <ClInclude Include="..\include\s3d_mesh.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\s3d_separator.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\s3d_hdr.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>

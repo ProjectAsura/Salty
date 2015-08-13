@@ -3,10 +3,7 @@
 // Desc : Timer Module.
 // Copyright(c) Project Asura. All right reserved.
 //--------------------------------------------------------------------------------
-
-#ifndef __S3D_TIMER_INL__
-#define __S3D_TIMER_INL__
-
+#pragma once
 
 namespace s3d {
 
@@ -79,7 +76,5 @@ f64 Timer::GetElapsedTimeHour() const
 { return ( ( m_StopTime - m_StartTime ) * m_InvTicksPerSec ) / 3600.0; }
 
 
-
 } // namespace s3d
 
-#endif//__S3D_TIMER_INL__

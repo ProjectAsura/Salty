@@ -3,9 +3,7 @@
 // Desc : Mesh Module.
 // Copyright(c) Project Asura. All right reserved.
 //----------------------------------------------------------------------------------------
-
-#ifndef __S3D_MESH_H__
-#define __S3D_MESH_H__
+#pragma once
 
 //----------------------------------------------------------------------------------------
 // Includes
@@ -13,7 +11,6 @@
 #include <s3d_math.h>
 #include <s3d_shape.h>
 #include <s3d_material.h>
-
 
 
 namespace s3d {
@@ -154,6 +151,3 @@ private:
 
 
 } // namespace s3d
-
-
-#endif//__S3D_MESH_H__

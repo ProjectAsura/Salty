@@ -8,6 +8,7 @@
 //----------------------------------------------------------------------------------------
 // Includes
 //----------------------------------------------------------------------------------------
+#include <vector>
 #include <s3d_math.h>
 #include <s3d_shape.h>
 #include <s3d_material.h>
@@ -98,11 +99,6 @@ public:
     bool IsHit(const Ray&, HitRecord&) const;
 
     //----------------------------------------------------------------------------------
-    //! @brief      マテリアルを取得します.
-    //----------------------------------------------------------------------------------
-    const IMaterial* GetMaterial() const;
-
-    //----------------------------------------------------------------------------------
     //! @brief      バウンディングボックスを取得します.
     //----------------------------------------------------------------------------------
     BoundingBox GetBox() const;
@@ -132,21 +128,18 @@ private:
     //==================================================================================
     // private variables.
     //==================================================================================
-    u32                 m_NumTriangles;     //!< 三角形数です.
-    u32                 m_NumMaterials;     //!< マテリアル数です.
-    u32                 m_NumTextures;      //!< テクスチャ数です.
-    IShape**            m_pTriangles;       //!< 三角形リストです.
-    MeshMaterial*       m_pMaterials;       //!< マテリアルリストです.
-    Texture2D*          m_pTextures;        //!< テクスチャリストです.
-    TextureSampler      m_DiffuseSmp;       //!< ディフューズマップのサンプラーです.
-    IShape*             m_pBVH;             //!< BVHです.
-    Vector3             m_Center;           //!< 中心座標.
+    TextureSampler              m_DiffuseSmp;       //!< ディフューズマップのサンプラーです.
+    IShape*                     m_pBVH;             //!< BVHです.
+    Vector3                     m_Center;           //!< 中心座標.
+    std::vector<IShape*>        m_Triangles;
+    std::vector<MeshMaterial>   m_Materials;
+    std::vector<Texture2D>      m_Textures;
 
     //==================================================================================
     // private methods.
     //==================================================================================
-    Mesh            ( const Mesh& );
-    void operator = ( const Mesh& );
+    Mesh            ( const Mesh& ) = delete;
+    void operator = ( const Mesh& ) = delete;
 };
 
 

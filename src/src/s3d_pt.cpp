@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <thread>
 #include <mutex>
+#include <direct.h>
 
 #include <s3d_pt.h>
 #include <s3d_logger.h>
@@ -19,6 +20,7 @@
 #include <s3d_camera.h>
 #include <s3d_shape.h>
 #include <s3d_material.h>
+#include <s3d_testScene.h> // for Debug.
 
 
 #undef min
@@ -109,11 +111,18 @@ bool PathTracer::Run( const Config& config )
     ILOG( "     max bounce = %d", config.MaxBounceCount );
     ILOG( "--------------------------------------------------------------------" );
 
+    // 画像出力用ディレクトリ作成.
+    _mkdir( "./img" );
+
     // コンフィグ設定.
     m_Config = config;
 
+    m_pScene = new TestScene( m_Config.Width, m_Config.Height );
+
     // 経路追跡を実行.
     TracePath();
+
+    SafeDelete( m_pScene );
 
     return m_IsFinish;
 }
@@ -154,9 +163,9 @@ void PathTracer::Watcher()
         auto min = renderingTimer.GetElapsedTimeMin();
 
         // 約30秒ごとにレンダリング結果をキャプチャ.
-        if ( sec > 29.9 )
+        if ( sec >= 29.9 )
         {
-            sprintf_s( filename, "%03d.bmp", counter );
+            sprintf_s( filename, "img/%03d.bmp", counter );
             Capture( filename );
             counter++;
 
@@ -167,7 +176,7 @@ void PathTracer::Watcher()
         }
 
         // 15分の規定時間に達した場合.
-        if ( min > 15.0 )
+        if ( min >= 15.0 )
         {
             ILOG( "Rendering Imcompleted..." );
             break;
@@ -184,7 +193,7 @@ void PathTracer::Watcher()
         Sleep( 1000 );
     }
 
-    Capture( "final.bmp" );
+    Capture( "img/final.bmp" );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -192,7 +201,6 @@ void PathTracer::Watcher()
 //-------------------------------------------------------------------------------------------------
 Color PathTracer::Radiance( const Ray& input )
 {
-    HitRecord  record = HitRecord();
     ShadingArg arg    = ShadingArg();
 
     Ray ray( input );
@@ -202,18 +210,22 @@ Color PathTracer::Radiance( const Ray& input )
 
     arg.random = m_Random;
 
-    for( auto depth=0; ; ++depth)
+    for( auto depth=0; ;++depth)
     {
+        auto record = HitRecord();
+
         // 交差判定.
         if ( !m_pScene->Intersect( ray, record ) )
         {
             // IBL
-            L += Color::Mul( W, m_pScene->SampleIBL( ray.dir ) );
+            //L += Color::Mul( W, m_pScene->SampleIBL( ray.dir ) );
             break;
         }
 
         const auto shape    = record.pShape;
-        const auto material = shape->GetMaterial();
+        const auto material = record.pMaterial;
+        assert( shape != nullptr );
+        assert( material != nullptr );
 
         L += Color::Mul( W, material->GetEmissive() );
 
@@ -236,6 +248,8 @@ Color PathTracer::Radiance( const Ray& input )
         if ( W.LengthSq() < F32_EPSILON )
         { break; }
     }
+
+    m_Random = arg.random;
 
     return L;
 }
@@ -269,8 +283,8 @@ void PathTracer::TracePath()
     // 乱数初期化.
     m_Random.SetSeed( 3141592 );
 
-    for ( auto sy=0; sy<m_Config.SubSampleCount && !m_IsFinish; ++sy )
-    for ( auto sx=0; sx<m_Config.SubSampleCount && !m_IsFinish; ++sx )
+    for ( auto sy=0; sy<m_Config.SubSampleCount; ++sy )
+    for ( auto sx=0; sx<m_Config.SubSampleCount; ++sx )
     {
         const auto r1 = sx * rate + halfRate;
         const auto r2 = sy * rate + halfRate;

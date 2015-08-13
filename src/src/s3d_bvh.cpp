@@ -259,22 +259,16 @@ bool QBVH::IsHit( const Ray& ray, HitRecord& record ) const
     // まず子のバウンディングボックスと交差判定.
     s32 mask = 0;
     if ( !box.IsHit( Ray4( ray ), mask ) )
-    { return record.distance < F_MAX; }
+    { return false; }
 
     // 次にバウンディングボックスとヒットした子のみたどっていく.
-    HitRecord rec;
+    auto hit = false;
     for( auto i=0; i<4; ++i )
     {
         if ( mask & ( 0x1 << i ) )
-        {
-            if ( pShape[i]->IsHit( ray, rec ) )
-            {
-                if ( rec.distance < record.distance )
-                { record = rec; }
-            }
-        }
+        { hit |= pShape[i]->IsHit( ray, record ); }
     }
-    return record.distance < F_MAX;
+    return hit;
 }
 
 //--------------------------------------------------------------------------
@@ -313,11 +307,14 @@ Vector3 QBVH::GetCenter() const
 //--------------------------------------------------------------------------
 IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 {
-    if ( numShapes <= 4 )
+    if ( numShapes < 4 )
     { return new Leaf( numShapes, ppShapes ); }
 
-    // 16byteアライメントでメモリを確保.
-    u8* pBuf = (u8*)_aligned_malloc( sizeof(QBVH), 16 );
+    if ( numShapes == 4 )
+    {
+        u8* pBuf = (u8*)_aligned_malloc( sizeof(QBVH), 16 );
+        return new (pBuf) QBVH( ppShapes );
+    }
 
     // AABBを求める.
     BoundingBox bbox = CreateMergedBox( ppShapes, numShapes );
@@ -339,7 +336,7 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 
     u32 num1[2] = {
         u32(midPoint),
-        numShapes - u32(midPoint)
+        numShapes - u32(midPoint),
     };
 
     // 更に分割するためにAABBを求める.
@@ -371,7 +368,7 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
         u32(midPointL),
         num1[0] - u32(midPointL),
         u32(midPointR),
-        num1[1] - u32(midPointR)
+        num1[1] - u32(midPointR),
     };
 
     IShape* pShapes[ 4 ];
@@ -383,6 +380,8 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
         pShapes[ i ] = BuildBranch( &ppShapes[ idx2[ i ] ], num2[ i ] );
     }
 
+    // 16byteアライメントでメモリを確保.
+    u8* pBuf = (u8*)_aligned_malloc( sizeof(QBVH), 16 );
     return new (pBuf) QBVH( pShapes, BoundingBox4( box ) );
 }
 
@@ -459,20 +458,14 @@ bool OBVH::IsHit( const Ray& ray, HitRecord& record ) const
     { return record.distance < F_MAX; }
 
     // 次にバウンディングボックスとヒットした子のみたどっていく.
-    HitRecord rec;
+    auto hit = false;
     for( auto i=0; i<8; ++i )
     {
         if ( mask & ( 0x1 << i ) )
-        {
-            if ( pShape[i]->IsHit( ray, rec ) )
-            {
-                if ( rec.distance < record.distance )
-                { record = rec; }
-            }
-        }
+        { hit |= pShape[i]->IsHit( ray, record ); }
     }
 
-    return record.distance < F_MAX;
+    return hit;
 }
 
 //--------------------------------------------------------------------------
@@ -510,11 +503,19 @@ Vector3 OBVH::GetCenter() const
 //--------------------------------------------------------------------------
 IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 {
-    if ( numShapes <= 8 )
-    { return new Leaf( numShapes, ppShapes ); }
+    if ( numShapes < 8 )
+    {
+        if ( numShapes == 4 )
+        { return QBVH::BuildBranch( ppShapes, numShapes ); }
 
-    // 32byteアライメントでメモリを確保.
-    u8* pBuf = (u8*)_aligned_malloc( sizeof(OBVH), 32 );
+        return new Leaf( numShapes, ppShapes );
+    }
+
+    if ( numShapes == 8 )
+    {
+        u8* pBuf = (u8*)_aligned_malloc( sizeof(OBVH), 32 );
+        return new (pBuf) OBVH( ppShapes );
+    }
 
     // -------------------------
     //      1段階目.
@@ -576,7 +577,6 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
         u32(midPointR),
         num1[1] - u32(midPointR)
     };
-
 
     // -------------------------
     //      3段階目.
@@ -641,6 +641,8 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
         pShapes[ i ] = BuildBranch( &ppShapes[ idx3[ i ] ], num3[ i ] );
     }
 
+    // 32byteアライメントでメモリを確保.
+    u8* pBuf = (u8*)_aligned_malloc( sizeof(OBVH), 32 );
     return new (pBuf) OBVH( pShapes, box );
 }
 

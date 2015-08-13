@@ -12,6 +12,7 @@
 #include <cmath>
 #include <cfloat>
 #include <cassert>
+#include <cstdio>
 
 
 namespace s3d {
@@ -41,7 +42,7 @@ typedef Vector3 Color;
 // Constant Values
 //-------------------------------------------------------------------------------------------------
 const f32   F_HIT_MAX   = 1e12f;                                  //!< 交差判定上限値.
-const f32   F_HIT_MIN   = 0.1f;                                   //!< 交差判定下限値.
+const f32   F_HIT_MIN   = 1e-3f;                                  //!< 交差判定下限値.
 const f32   F_PI        = 3.1415926535897932384626433832795f;     //!< πです.
 const f32   F_2PI       = 6.283185307179586476925286766559f;      //!< 2πです.
 const f32   F_1DIVPI    = 0.31830988618379067153776752674503f;    //!< 1/πです.
@@ -1534,9 +1535,9 @@ struct Ray
         invDir.y = 1.0f / dir.y;
         invDir.z = 1.0f / dir.z;
 
-        sign[0] = ( dir.x > -F32_EPSILON ) ? 0 : 1;
-        sign[1] = ( dir.y > -F32_EPSILON ) ? 0 : 1;
-        sign[2] = ( dir.z > -F32_EPSILON ) ? 0 : 1;
+        sign[0] = ( dir.x >= 0.0f ) ? 0 : 1;
+        sign[1] = ( dir.y >= 0.0f ) ? 0 : 1;
+        sign[2] = ( dir.z >= 0.0f ) ? 0 : 1;
     }
 };
 
@@ -2840,71 +2841,56 @@ public:
     bool IsHit( const Ray4& ray, s32& mask ) const
     {
     #if S3D_IS_SIMD
-        b128 tmin = _mm_set1_ps( F_HIT_MIN );
-        b128 tmax = _mm_set1_ps( F_HIT_MAX );
+        b128 tmin = _mm_set1_ps( -F_HIT_MAX );
+        b128 tmax = _mm_set1_ps(  F_HIT_MAX );
 
         s32 idx0, idx1;
 
-        // X軸.
-        idx0 = ray.sign[ 0 ];
-        idx1 = 1 - idx0;
-        tmin = _mm_max_ps( tmin, _mm_mul_ps( _mm_sub_ps( value[ idx0 ][ 0 ], ray.pos[ 0 ] ), ray.invDir[ 0 ] ) );
-        tmax = _mm_min_ps( tmax, _mm_mul_ps( _mm_sub_ps( value[ idx1 ][ 0 ], ray.pos[ 0 ] ), ray.invDir[ 0 ] ) );
-
-        // Y軸.
-        idx0 = ray.sign[ 1 ];
-        idx1 = 1 - idx0;
-        tmin = _mm_max_ps( tmin, _mm_mul_ps( _mm_sub_ps( value[ idx0 ][ 1 ], ray.pos[ 1 ] ), ray.invDir[ 1 ] ) );
-        tmax = _mm_min_ps( tmax, _mm_mul_ps( _mm_sub_ps( value[ idx1 ][ 1 ], ray.pos[ 1 ] ), ray.invDir[ 1 ] ) );
-
-        // Z軸.
-        idx0 = ray.sign[ 2 ];
-        idx1 = 1 - idx0;
-        tmin = _mm_max_ps( tmin, _mm_mul_ps( _mm_sub_ps( value[ idx0 ][ 2 ], ray.pos[ 2 ] ), ray.invDir[ 2 ] ) );
-        tmax = _mm_min_ps( tmax, _mm_mul_ps( _mm_sub_ps( value[ idx1 ][ 2 ], ray.pos[ 2 ] ), ray.invDir[ 2 ] ) );
+        for( auto i=0; i<3; ++i )
+        {
+            idx0 = ray.sign[ i ];
+            idx1 = 1 - idx0;
+            tmin = _mm_max_ps( tmin, _mm_mul_ps( _mm_sub_ps( value[ idx0 ][ i ], ray.pos[ i ] ), ray.invDir[ i ] ) );
+            tmax = _mm_min_ps( tmax, _mm_mul_ps( _mm_sub_ps( value[ idx1 ][ i ], ray.pos[ i ] ), ray.invDir[ i ] ) );
+        }
 
         mask = _mm_movemask_ps( _mm_cmpge_ps( tmax, tmin ) );
         return ( mask > 0 );
     #else
-        b128 tmin = { F_HIT_MIN, F_HIT_MIN, F_HIT_MIN, F_HIT_MIN };
-        b128 tmax = { F_HIT_MAX, F_HIT_MAX, F_HIT_MAX, F_HIT_MAX };
+        b128 tmin;
+        b128 tmax;
+
+        for( auto i=0; i<4; ++i)
+        {
+            tmin.m128_f32[i] = -F_HIT_MAX;
+            tmax.m128_f32[i] =  F_HIT_MAX;
+        }
 
         s32 idx0, idx1;
-
-        // X軸
-        idx0 = ray.sign[ 0 ];
-        idx1 = 1 - idx0;
-        for ( u32 i=0; i<4; ++i )
-        {
-            tmin.m128_f32[ i ] = s3d::Max( tmin.m128_f32[ i ], ( value[ idx0 ][ 0 ].m128_f32[ i ] - ray.pos[ 0 ].m128_f32[ i ] ) * ray.invDir[ 0 ].m128_f32[ i ] );
-            tmax.m128_f32[ i ] = s3d::Min( tmax.m128_f32[ i ], ( value[ idx1 ][ 0 ].m128_f32[ i ] - ray.pos[ 0 ].m128_f32[ i ] ) * ray.invDir[ 0 ].m128_f32[ i ] );
-        }
-
-        // Y軸
-        idx0 = ray.sign[ 1 ];
-        idx1 = 1 - idx0;
-        for ( u32 i=0; i<4; ++i )
-        {
-            tmin.m128_f32[ i ] = s3d::Max( tmin.m128_f32[ i ], ( value[ idx0 ][ 1 ].m128_f32[ i ] - ray.pos[ 1 ].m128_f32[ i ] ) * ray.invDir[ 1 ].m128_f32[ i ] );
-            tmax.m128_f32[ i ] = s3d::Min( tmax.m128_f32[ i ], ( value[ idx1 ][ 1 ].m128_f32[ i ] - ray.pos[ 1 ].m128_f32[ i ] ) * ray.invDir[ 1 ].m128_f32[ i ] );
-        }
-
-        // Z軸
-        idx0 = ray.sign[ 2 ];
-        idx1 = 1 - idx0;
-        for ( u32 i=0; i<4; ++i )
-        {
-            tmin.m128_f32[ i ] = s3d::Max( tmin.m128_f32[ i ], ( value[ idx0 ][ 2 ].m128_f32[ i ] - ray.pos[ 2 ].m128_f32[ i ] ) * ray.invDir[ 2 ].m128_f32[ i ] );
-            tmax.m128_f32[ i ] = s3d::Min( tmax.m128_f32[ i ], ( value[ idx1 ][ 2 ].m128_f32[ i ] - ray.pos[ 2 ].m128_f32[ i ] ) * ray.invDir[ 2 ].m128_f32[ i ] );
-        }
-
         b128 flg;
-        flg.m128_u32[0] = ( tmax.m128_f32[ 0 ] >= tmin.m128_f32[ 0 ] ) ? 0xffffffff : 0x0;
-        flg.m128_u32[1] = ( tmax.m128_f32[ 1 ] >= tmin.m128_f32[ 1 ] ) ? 0xffffffff : 0x0;
-        flg.m128_u32[2] = ( tmax.m128_f32[ 2 ] >= tmin.m128_f32[ 2 ] ) ? 0xffffffff : 0x0;
-        flg.m128_u32[3] = ( tmax.m128_f32[ 3 ] >= tmin.m128_f32[ 3 ] ) ? 0xffffffff : 0x0;
 
-        mask = ( Sign(flg.m128_u32[3]) << 3 | Sign(flg.m128_u32[2]) << 2 | Sign(flg.m128_u32[1]) << 1 | Sign(flg.m128_u32[0]) );
+        for( u32 j=0; j<3; ++j )
+        {
+            idx0 = ray.sign[ j ];
+            idx1 = 1 - idx0;
+            for ( u32 i=0; i<4; ++i )
+            {
+                auto t0 = ( value[ idx0 ][ j ].m128_f32[ i ] - ray.pos[ j ].m128_f32[ i ] ) * ray.invDir[ j ].m128_f32[ i ];
+                auto t1 = ( value[ idx1 ][ j ].m128_f32[ i ] - ray.pos[ j ].m128_f32[ i ] ) * ray.invDir[ j ].m128_f32[ i ];
+                tmin.m128_f32[ i ] = s3d::Max( tmin.m128_f32[ i ], t0 );
+                tmax.m128_f32[ i ] = s3d::Min( tmax.m128_f32[ i ], t1 );
+            }
+        }
+
+        for( u32 i=0; i<4; ++i )
+        {
+            flg.m128_u32[ i ] = ( tmax.m128_f32[ i ] >= tmin.m128_f32[ i ] ) ? 0xffffffff : 0x0;
+        }
+
+        mask = ( (flg.m128_u32[3] > 0 ? 0x1 : 0 ) << 3
+               | (flg.m128_u32[2] > 0 ? 0x1 : 0 ) << 2
+               | (flg.m128_u32[1] > 0 ? 0x1 : 0 ) << 1
+               | (flg.m128_u32[0] > 0 ? 0x1 : 0 ) );
         return ( mask > 0 );
     #endif
     }
@@ -3250,28 +3236,18 @@ public:
     bool IsHit( const Ray8& ray, s32& mask ) const
     {
     #if ( S3D_IS_SIMD && S3D_IS_AVX )
-        b256 tmin = _mm256_set1_ps( F_HIT_MIN );
-        b256 tmax = _mm256_set1_ps( F_HIT_MAX );
+        b256 tmin = _mm256_set1_ps( -F_HIT_MAX );
+        b256 tmax = _mm256_set1_ps(  F_HIT_MAX );
 
         s32 idx0, idx1;
 
-        // X軸.
-        idx0 = ray.sign[ 0 ];
-        idx1 = 1 - idx0;
-        tmin = _mm256_max_ps( tmin, _mm256_mul_ps( _mm256_sub_ps( value[ idx0 ][ 0 ], ray.pos[ 0 ] ), ray.invDir[ 0 ] ) );
-        tmax = _mm256_min_ps( tmax, _mm256_mul_ps( _mm256_sub_ps( value[ idx1 ][ 0 ], ray.pos[ 0 ] ), ray.invDir[ 0 ] ) );
-
-        // Y軸.
-        idx0 = ray.sign[ 1 ];
-        idx1 = 1 - idx0;
-        tmin = _mm256_max_ps( tmin, _mm256_mul_ps( _mm256_sub_ps( value[ idx0 ][ 1 ], ray.pos[ 1 ] ), ray.invDir[ 1 ] ) );
-        tmax = _mm256_min_ps( tmax, _mm256_mul_ps( _mm256_sub_ps( value[ idx1 ][ 1 ], ray.pos[ 1 ] ), ray.invDir[ 1 ] ) );
-
-        // Z軸.
-        idx0 = ray.sign[ 2 ];
-        idx1 = 1 - idx0;
-        tmin = _mm256_max_ps( tmin, _mm256_mul_ps( _mm256_sub_ps( value[ idx0 ][ 2 ], ray.pos[ 2 ] ), ray.invDir[ 2 ] ) );
-        tmax = _mm256_min_ps( tmax, _mm256_mul_ps( _mm256_sub_ps( value[ idx1 ][ 2 ], ray.pos[ 2 ] ), ray.invDir[ 2 ] ) );
+        for( auto i=0; i<3; ++i )
+        {
+            idx0 = ray.sign[ i ];
+            idx1 = 1 - idx0;
+            tmin = _mm256_max_ps( tmin, _mm256_mul_ps( _mm256_sub_ps( value[ idx0 ][ i ], ray.pos[ i ] ), ray.invDir[ i ] ) );
+            tmax = _mm256_min_ps( tmax, _mm256_mul_ps( _mm256_sub_ps( value[ idx1 ][ i ], ray.pos[ i ] ), ray.invDir[ i ] ) );
+        }
 
         mask = _mm256_movemask_ps( _mm256_cmp_ps( tmax, tmin, _CMP_GE_OS ) );
         return ( mask > 0 );
@@ -3319,14 +3295,14 @@ public:
         flg.m256i_u32[7] = ( tmax.m256_f32[ 7 ] >= tmin.m256_f32[ 7 ] ) ? 0xffffffff : 0x0;
 
         mask = (
-              ( Sign(flg.m256i_u32[7]) << 7 )
-            | ( Sign(flg.m256i_u32[6]) << 6 )
-            | ( Sign(flg.m256i_u32[5]) << 5 )
-            | ( Sign(flg.m256i_u32[4]) << 4 )
-            | ( Sign(flg.m256i_u32[3]) << 3 )
-            | ( Sign(flg.m256i_u32[2]) << 2 )
-            | ( Sign(flg.m256i_u32[1]) << 1 )
-            | ( Sign(flg.m256i_u32[0]) ) );
+              ( (flg.m256i_u32[7] > 0 ? 1 : 0 ) << 7 )
+            | ( (flg.m256i_u32[6] > 0 ? 1 : 0 ) << 6 )
+            | ( (flg.m256i_u32[5] > 0 ? 1 : 0 ) << 5 )
+            | ( (flg.m256i_u32[4] > 0 ? 1 : 0 ) << 4 )
+            | ( (flg.m256i_u32[3] > 0 ? 1 : 0 ) << 3 )
+            | ( (flg.m256i_u32[2] > 0 ? 1 : 0 ) << 2 )
+            | ( (flg.m256i_u32[1] > 0 ? 1 : 0 ) << 1 )
+            | ( (flg.m256i_u32[0] > 0 ? 1 : 0 ) ) );
 
         return ( mask > 0 );
     #endif// ( S3D_IS_SIMD && S3D_IS_AVX )

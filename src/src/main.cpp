@@ -16,7 +16,7 @@
 #if defined(DEBUG) || defined(_DEBUG)
 #include <crtdbg.h>
 #endif
-#include <s3d_app.h>
+#include <s3d_pt.h>
 
 //-----------------------------------------------------------------------------
 //! @brief      メインエントリーポイントです.
@@ -29,28 +29,28 @@ int main( int argc, char **argv )
 #endif
     {
         // アプリケーションの構成設定.
-        s3d::Config config;
+        s3d::PathTracer::Config config;
 
     #if 1
         // 本番用.
-        config.Width         = 1280;
-        config.Height        = 720;
-        config.NumSamples    = 2048;
-        config.NumSubSamples = 1;
-        config.MaxDepth      = 8;
+        config.Width          = 1280;
+        config.Height         = 720;
+        config.SampleCount    = 2048;
+        config.SubSampleCount = 1;
+        config.MaxBounceCount = 8;
     #else
         // デバッグ用.
-        config.Width         = 320;
-        config.Height        = 180;
-        config.NumSamples    = 512;
-        config.NumSubSamples = 2;
-        config.MaxDepth      = 8;
+        config.Width          = 320;
+        config.Height         = 180;
+        config.SampleCount    = 512;
+        config.SubSampleCount = 1;
+        config.MaxBounceCount = 16;
     #endif
 
-        s3d::App app;
+        s3d::PathTracer renderer;
 
         // アプリケーション実行.
-        app.Run( config );
+        renderer.Run( config );
     }
 
     return 0;

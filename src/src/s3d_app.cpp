@@ -17,6 +17,7 @@
 #include <s3d_filter.h>
 #include <s3d_timer.h>
 #include <s3d_bvh.h>
+#include <s3d_bvh2.h>
 #include <s3d_mesh.h>
 #include <iostream>
 #include <direct.h>
@@ -171,11 +172,11 @@ Quad g_Quads[] = {
     // 奥.
     Quad(
         Face4(
-            Vertex( Vector3( 0,   0.0,  0.0 ),   Vector2( 0.0, 0.0 ) ),
-            Vertex( Vector3( 0, 100.0,  0.0 ),   Vector2( 0.0, 2.0 ) ),
-            Vertex( Vector3( 100, 100.0,  0.0 ), Vector2( 2.0, 2.0 ) ),
-            Vertex( Vector3( 100,   0.0,  0.0 ), Vector2( 2.0, 0.0 ) ) ),
-        g_pMaterials[3]
+            Vertex( Vector3( 0,   0.0,  1.0 ),   Vector2( 0.0, 0.0 ) ),
+            Vertex( Vector3( 0, 100.0,  1.0 ),   Vector2( 0.0, 2.0 ) ),
+            Vertex( Vector3( 100, 100.0,  1.0 ), Vector2( 2.0, 2.0 ) ),
+            Vertex( Vector3( 100,   0.0,  1.0 ), Vector2( 2.0, 0.0 ) ) ),
+        g_pMaterials[6]
     ),
 
     // 手前.
@@ -313,9 +314,11 @@ Color Radiance( const Ray &inRay, s3d::Random &rnd )
 
         // 衝突物体へのポインタ.
         const IShape* pShape = record.pShape;
+        assert( pShape != nullptr );
 
         // マテリアルへのポインタ.
-        const IMaterial* pMaterial = pShape->GetMaterial();
+        const IMaterial* pMaterial = record.pMaterial;
+        assert( pMaterial != nullptr );
 
         // 自己発光による放射輝度.
         L += Color::Mul( W, pMaterial->GetEmissive() );
@@ -433,7 +436,7 @@ void PathTrace
                         ( r2 + y ) / height - 0.5f );
 
                     // ピクセルインデックス.
-                    const s32 idx = ( ( height - 1 - y ) * width ) + x;
+                    const s32 idx = ( y * width ) + x;
 
                     // ピクセルカラーを加算.
                     g_pRT[ idx ] += Radiance( ray, rnd ) * invNumSamples;
@@ -607,31 +610,24 @@ void App::Run( const Config& config )
         return;
     }
 
-    // シェイプリスト.
-    IShape* pShapes[] = {
-        &g_Quads[0],
-        &g_Quads[1],
-        &g_Quads[2],
-        &g_Quads[3],
-        &g_Quads[4],
-        &g_Quads[5],
+    std::vector<IShape*> shapes;
+    shapes.push_back( &g_Quads[0] );
+    shapes.push_back( &g_Quads[1] );
+    shapes.push_back( &g_Quads[2] );
+    shapes.push_back( &g_Quads[3] );
+    shapes.push_back( &g_Quads[4] );
+    shapes.push_back( &g_Quads[5] );
+    shapes.push_back( &g_Mesh );
+    shapes.push_back( &g_Spheres[0] );
+    shapes.push_back( &g_Spheres[1] );
+    shapes.push_back( &g_Spheres[2] );
+    shapes.push_back( &g_Spheres[3] );
+    shapes.push_back( &g_Spheres[4] );
 
-        &g_Mesh,
-
-        &g_Spheres[0],
-        &g_Spheres[1],
-        &g_Spheres[2],
-        //&g_Triangles[0],
-        &g_Spheres[3],
-        &g_Spheres[4]
-    };
-
-
-    // 物体の数を算出.
-    u32 numShapes = sizeof( pShapes ) / sizeof( pShapes[0] );
+    shapes.shrink_to_fit();
 
     // BVH構築.
-    g_pBVH = QBVH::BuildBranch( pShapes, numShapes );
+    g_pBVH = OBVH::BuildBranch( &shapes[0], static_cast<u32>(shapes.size()) );
     assert( g_pBVH != nullptr );
 
     // レイトレ！
@@ -643,12 +639,6 @@ void App::Run( const Config& config )
     auto pObj = dynamic_cast<IDisposable*>( g_pBVH );
     if ( pObj != nullptr )
     { pObj->Dispose(); }
-
-    if ( g_IsRendered )
-    { MessageBoxA( nullptr, "Rendering Completed", "レンダリング終了", MB_ICONINFORMATION | MB_OK ); }
-    else
-    { MessageBoxA( nullptr, "Rendering Implcomplete", "レンダリング未完", MB_ICONWARNING | MB_OK ); }
-
 }
 
 

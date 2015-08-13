@@ -100,12 +100,6 @@ BoundingBox Instance::GetBox() const
 { return m_WorldBox; }
 
 //-------------------------------------------------------------------------------------------------
-//      マテリアルを取得します.
-//-------------------------------------------------------------------------------------------------
-const IMaterial* Instance::GetMaterial() const
-{ return m_pShape->GetMaterial(); }
-
-//-------------------------------------------------------------------------------------------------
 //      中心座標を取得します.
 //-------------------------------------------------------------------------------------------------
 Vector3 Instance::GetCenter() const
@@ -162,6 +156,7 @@ bool Sphere::IsHit(const Ray &ray, HitRecord& record ) const
     record.distance  = dist;
     record.position  = ray.pos + record.distance * ray.dir;
     record.pShape    = this;
+    record.pMaterial = pMaterial;
 
     f32 theta = acosf( record.normal.y );
     f32 phi   = atan2f( record.normal.x, record.normal.z );
@@ -176,12 +171,6 @@ bool Sphere::IsHit(const Ray &ray, HitRecord& record ) const
     // 交差した.
     return true;
 }
-
-//-------------------------------------------------------------------------------------
-//      マテリアルを取得します.
-//-------------------------------------------------------------------------------------
-const IMaterial* Sphere::GetMaterial() const
-{ return pMaterial; }
 
 //-------------------------------------------------------------------------------------
 //      バウンディングボックスを取得します.
@@ -273,9 +262,10 @@ bool Triangle::IsHit( const Ray& ray, HitRecord& record ) const
     if ( dist > record.distance )
     { return false; }
 
-    record.position = ray.pos + ray.dir * dist;
-    record.distance = dist;
-    record.pShape   = this;
+    record.position  = ray.pos + ray.dir * dist;
+    record.distance  = dist;
+    record.pShape    = this;
+    record.pMaterial = pMaterial;
 
     f32 alpha = 1.0f - beta - gamma;
     record.normal = Vector3(
@@ -290,12 +280,6 @@ bool Triangle::IsHit( const Ray& ray, HitRecord& record ) const
 
     return true;
 }
-
-//-------------------------------------------------------------------------------------
-//      マテリアルを取得します.
-//-------------------------------------------------------------------------------------
-const IMaterial* Triangle::GetMaterial() const
-{ return pMaterial; }
 
 //-------------------------------------------------------------------------------------
 //      バウンディングボックスを取得します.
@@ -402,9 +386,10 @@ bool Quad::IsHitTriangle
     if ( dist > record.distance )
     { return false; }
 
-    record.position = ray.pos + ray.dir * dist;
-    record.distance = dist;
-    record.pShape   = this;
+    record.position  = ray.pos + ray.dir * dist;
+    record.distance  = dist;
+    record.pShape    = this;
+    record.pMaterial = pMaterial;
 
     f32 alpha = 1.0f - beta - gamma;
     record.normal   = Vector3(
@@ -433,12 +418,6 @@ bool Quad::IsHit( const Ray& ray, HitRecord& record ) const
 
     return false;
 }
-
-//-------------------------------------------------------------------------------------
-//      マテリアルを取得します.
-//-------------------------------------------------------------------------------------
-const IMaterial* Quad::GetMaterial() const
-{ return pMaterial; }
 
 //-------------------------------------------------------------------------------------
 //      バウンディングボックスを取得します.
@@ -528,24 +507,12 @@ void Leaf::Dispose()
 //-------------------------------------------------------------------------------------
 bool Leaf::IsHit( const Ray& ray, HitRecord& record ) const
 {
-    HitRecord rec;
+    auto hit = false;
     for( u32 i=0; i<size; ++i )
-    { 
-        if ( ppShapes[ i ]->IsHit( ray, rec ) )
-        {
-            if ( rec.distance < record.distance )
-            { record = rec; }
-        }
-    }
+    { hit |= ppShapes[ i ]->IsHit( ray, record ); }
 
-    return record.distance < F_MAX;
+    return hit;
 }
-
-//-------------------------------------------------------------------------------------
-//      マテリアルを取得します.
-//-------------------------------------------------------------------------------------
-const IMaterial* Leaf::GetMaterial() const
-{ return nullptr; }
 
 //-------------------------------------------------------------------------------------
 //      バウンディングボックスを取得します.

@@ -12,7 +12,7 @@
 #include <cstring>
 #include <string>
 #include <s3d_bvh.h>
-
+#include <s3d_bvh2.h>
 
 #ifndef DLOG
     #if defined(DEBUG) || defined(_DEBUG)
@@ -192,13 +192,7 @@ Color MeshMaterial::ComputeColor( ShadingArg& arg ) const
 //      コンストラクタです.
 //----------------------------------------------------------------------------------------
 Mesh::Mesh()
-: m_NumTriangles( 0 )
-, m_NumMaterials( 0 )
-, m_NumTextures ( 0 )
-, m_pTriangles  ( nullptr )
-, m_pMaterials  ( nullptr )
-, m_pTextures   ( nullptr )
-, m_pBVH        ( nullptr )
+: m_pBVH        ( nullptr )
 { /* DO_NOTHING */ }
 
 //----------------------------------------------------------------------------------------
@@ -222,21 +216,17 @@ void Mesh::Release()
         m_pBVH = nullptr;
     }
 
-    if ( m_pTriangles )
+    if ( !m_Triangles.empty() )
     {
-        for( u32 i=0; i<m_NumTriangles; ++i )
+        for( size_t i=0; i<m_Triangles.size(); ++i )
         {
-            SafeDelete( m_pTriangles[i] );
+            SafeDelete( m_Triangles[i] );
         }
-        SafeDeleteArray( m_pTriangles );
+        m_Triangles.clear();
     }
 
-    SafeDeleteArray( m_pMaterials );
-    SafeDeleteArray( m_pTextures );
-
-    m_NumTriangles = 0;
-    m_NumMaterials = 0;
-    m_NumTextures  = 0;
+    m_Materials.clear();
+    m_Textures.clear();
 }
 
 //----------------------------------------------------------------------------------------
@@ -303,9 +293,9 @@ bool Mesh::LoadFromFile( const char* filename )
         return false;
     }
 
-    m_NumTriangles = fileHeader.DataHeader.NumTriangles;
-    m_NumMaterials = fileHeader.DataHeader.NumMaterials;
-    m_NumTextures  = fileHeader.DataHeader.NumTextures;
+    m_Triangles.resize( fileHeader.DataHeader.NumTriangles );
+    m_Materials.resize( fileHeader.DataHeader.NumMaterials );
+    m_Textures .resize( fileHeader.DataHeader.NumTextures );
 
 #if 0
     ILOG( "Num Triangle  : %d", m_NumTriangles );
@@ -313,40 +303,10 @@ bool Mesh::LoadFromFile( const char* filename )
     ILOG( "Num Textures  : %d", m_NumTextures );
 #endif
 
-    // 三角形データのメモリを確保します.
-    m_pTriangles = new IShape* [ m_NumTriangles ];
-    if ( m_pTriangles == nullptr )
-    {
-        fclose( pFile );
-        Release();
-        return false;
-    }
-
-    // マテリアルデータのメモリを確保します.
-    m_pMaterials = new MeshMaterial[ m_NumMaterials ];
-    if ( m_pMaterials == nullptr )
-    {
-        fclose( pFile );
-        Release( );
-        return false;
-    }
-
-    // テクスチャデータのメモリを確保します.
-    if ( m_NumTextures )
-    {
-        m_pTextures = new Texture2D[ m_NumTextures ];
-        if ( m_pTextures == nullptr )
-        {
-            fclose( pFile );
-            Release( );
-            return false;
-        }
-    }
-
     m_Center = Vector3( 0.0f, 0.0f, 0.0f );
 
     // 三角形データを読み込みます.
-    for ( u32 i = 0; i < m_NumTriangles; ++i )
+    for ( size_t i = 0; i < m_Triangles.size(); ++i )
     {
         SMD_TRIANGLE triangle;
         fread( &triangle, sizeof( SMD_TRIANGLE ), 1, pFile );
@@ -372,10 +332,10 @@ bool Mesh::LoadFromFile( const char* filename )
 
         if ( triangle.MaterialId >= 0 )
         {
-            tri->pMaterial = &m_pMaterials[ triangle.MaterialId ];
+            tri->pMaterial = &m_Materials[ triangle.MaterialId ];
         }
 
-        m_pTriangles[ i ] = tri;
+        m_Triangles[ i ] = tri;
 
     #if 0
         ILOG( "Triangle[%d] : ", i );
@@ -395,19 +355,19 @@ bool Mesh::LoadFromFile( const char* filename )
     #endif
     }
 
-    m_Center /= ( m_NumTriangles * 3.0f );
+    m_Center /= ( m_Triangles.size() * 3.0f );
 
     // マテリアルデータを読み込みます.
-    for ( u32 i = 0; i < m_NumMaterials; ++i )
+    for ( size_t i = 0; i < m_Materials.size(); ++i )
     {
         SMD_MATERIAL material;
         fread( &material, sizeof( SMD_MATERIAL ), 1, pFile );
 
-        m_pMaterials[i] = MeshMaterial( material.Diffuse, material.Emissive );
+        m_Materials[i] = MeshMaterial( material.Diffuse, material.Emissive );
         if ( material.DiffuseMap >= 0 )
         {
-            m_pMaterials[ i ].pDiffuseMap = &m_pTextures[ material.DiffuseMap ];
-            m_pMaterials[ i ].pDiffuseSmp = &m_DiffuseSmp;
+            m_Materials[ i ].pDiffuseMap = &m_Textures[ material.DiffuseMap ];
+            m_Materials[ i ].pDiffuseSmp = &m_DiffuseSmp;
         }
 
     #if 0
@@ -421,23 +381,23 @@ bool Mesh::LoadFromFile( const char* filename )
     }
 
     // テクスチャデータを読み込みます.
-    if ( m_NumTextures )
+    if ( !m_Textures.empty() )
     {
-        for ( u32 i = 0; i < m_NumTextures; ++i )
+        for ( size_t i = 0; i < m_Textures.size(); ++i )
         {
             SMD_TEXTURE texture;
             fread( &texture, sizeof( SMD_TEXTURE ), 1, pFile );
 
             std::string path = dirPath + "/" + texture.FileName;
-            if ( !m_pTextures[ i ].LoadFromFile( path.c_str() ) )
+            if ( !m_Textures[ i ].LoadFromFile( path.c_str() ) )
             {
                 ILOG( "Warning : Texture Load Failed. filename = %s", path.c_str() );
-                for( u32 j=0; j<m_NumMaterials; ++j )
+                for( size_t j=0; j<m_Materials.size(); ++j )
                 {
-                    if ( m_pMaterials[j].pDiffuseMap == (&m_pTextures[i]) )
+                    if ( m_Materials[j].pDiffuseMap == (&m_Textures[i]) )
                     {
-                        m_pMaterials[j].pDiffuseMap = nullptr;
-                        m_pMaterials[j].pDiffuseSmp = nullptr;
+                        m_Materials[j].pDiffuseMap = nullptr;
+                        m_Materials[j].pDiffuseSmp = nullptr;
                     }
                 }
             }
@@ -449,7 +409,7 @@ bool Mesh::LoadFromFile( const char* filename )
     }
 
     // BVHを構築します.
-    m_pBVH = QBVH::BuildBranch( m_pTriangles, m_NumTriangles );
+    m_pBVH = OBVH::BuildBranch( &m_Triangles[0], static_cast<u32>(m_Triangles.size()) );
 
     return true;
 }
@@ -460,17 +420,6 @@ bool Mesh::LoadFromFile( const char* filename )
 bool Mesh::IsHit( const Ray& ray, HitRecord& record ) const
 {
     return m_pBVH->IsHit( ray, record );
-}
-
-//----------------------------------------------------------------------------------------
-//      マテリアルを取得します.
-//----------------------------------------------------------------------------------------
-const IMaterial* Mesh::GetMaterial() const
-{
-    if ( m_pMaterials != nullptr )
-    { return &m_pMaterials[0]; }
-
-    return nullptr;
 }
 
 //----------------------------------------------------------------------------------------

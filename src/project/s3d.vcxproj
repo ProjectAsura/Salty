@@ -22,6 +22,7 @@
     <ClInclude Include="..\include\s3d_app.h" />
     <ClInclude Include="..\include\s3d_bmp.h" />
     <ClInclude Include="..\include\s3d_bvh.h" />
+    <ClInclude Include="..\include\s3d_bvh2.h" />
     <ClInclude Include="..\include\s3d_camera.h" />
     <ClInclude Include="..\include\s3d_filter.h" />
     <ClInclude Include="..\include\s3d_hdr.h" />
@@ -35,6 +36,7 @@
     <ClInclude Include="..\include\s3d_scene.h" />
     <ClInclude Include="..\include\s3d_shape.h" />
     <ClInclude Include="..\include\s3d_split.h" />
+    <ClInclude Include="..\include\s3d_testScene.h" />
     <ClInclude Include="..\include\s3d_texture.h" />
     <ClInclude Include="..\include\s3d_timer.h" />
     <ClInclude Include="..\include\s3d_typedef.h" />
@@ -44,6 +46,7 @@
     <ClCompile Include="..\src\s3d_app.cpp" />
     <ClCompile Include="..\src\s3d_bmp.cpp" />
     <ClCompile Include="..\src\s3d_bvh.cpp" />
+    <ClCompile Include="..\src\s3d_bvh2.cpp" />
     <ClCompile Include="..\src\s3d_filter.cpp" />
     <ClCompile Include="..\src\s3d_hdr.cpp" />
     <ClCompile Include="..\src\s3d_ibl.cpp" />
@@ -54,6 +57,7 @@
     <ClCompile Include="..\src\s3d_pt.cpp" />
     <ClCompile Include="..\src\s3d_shape.cpp" />
     <ClCompile Include="..\src\s3d_split.cpp" />
+    <ClCompile Include="..\src\s3d_testScene.cpp" />
     <ClCompile Include="..\src\s3d_texture.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

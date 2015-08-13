@@ -66,6 +66,7 @@ Color IBL::Sample( const Vector3& dir )
 
     const auto u = phi / F_2PI;
     const auto v = 1.0f - theta / F_PI;
+
     const auto x = s32( u * m_Width  ) % m_Width;
     const auto y = s32( v * m_Height ) % m_Height;
 

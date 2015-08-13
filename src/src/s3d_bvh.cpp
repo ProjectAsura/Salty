@@ -242,8 +242,11 @@ QBVH::QBVH( IShape** ppShapes )
 //--------------------------------------------------------------------------
 //      引数付きコンストラクタです.
 //--------------------------------------------------------------------------
-QBVH::QBVH( IShape** ppShapes, const BoundingBox4& quadBox )
+QBVH::QBVH( IShape** ppShapes, const BoundingBox4& quadBox, s32 top, s32 left, s32 right )
 : box( quadBox )
+, axisTop( top )
+, axisLeft( left )
+, axisRight( right )
 {
     pShape[0] = ppShapes[ 0 ];
     pShape[1] = ppShapes[ 1 ];
@@ -261,6 +264,7 @@ bool QBVH::IsHit( const Ray& ray, HitRecord& record ) const
     if ( !box.IsHit( Ray4( ray ), mask ) )
     { return false; }
 
+#if 0
     // 次にバウンディングボックスとヒットした子のみたどっていく.
     auto hit = false;
     for( auto i=0; i<4; ++i )
@@ -269,6 +273,44 @@ bool QBVH::IsHit( const Ray& ray, HitRecord& record ) const
         { hit |= pShape[i]->IsHit( ray, record ); }
     }
     return hit;
+#else
+    u32 order[4];
+    const bool isLeft = ray.sign[axisTop] == 0;
+    const int leftIndexFirst = isLeft ? 0 : 2;
+    const int rightIndexFirst = ( leftIndexFirst + 2 ) % 4;
+    if ( ray.sign[axisLeft] == 0 )
+    {
+        order[leftIndexFirst] = 0;
+        order[leftIndexFirst +1] = 1;
+    }
+    else
+    {
+        order[leftIndexFirst] = 1;
+        order[leftIndexFirst+1] = 0;
+    }
+
+    if ( ray.sign[axisRight] == 0 )
+    {
+        order[rightIndexFirst] = 2;
+        order[rightIndexFirst+1] = 3;
+    }
+    else
+    {
+        order[rightIndexFirst] = 3;
+        order[rightIndexFirst+1] = 2;
+    }
+
+    for( auto i=0; i<4; ++i )
+    {
+        if ( mask & ( 0x1 << order[i] ) )
+        {
+            if ( pShape[order[i]]->IsHit( ray, record ) )
+            { return true; }
+        }
+    }
+
+    return false;
+#endif
 }
 
 //--------------------------------------------------------------------------
@@ -307,14 +349,8 @@ Vector3 QBVH::GetCenter() const
 //--------------------------------------------------------------------------
 IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 {
-    if ( numShapes < 4 )
+    if ( numShapes <= 4 )
     { return new Leaf( numShapes, ppShapes ); }
-
-    if ( numShapes == 4 )
-    {
-        u8* pBuf = (u8*)_aligned_malloc( sizeof(QBVH), 16 );
-        return new (pBuf) QBVH( ppShapes );
-    }
 
     // AABBを求める.
     BoundingBox bbox = CreateMergedBox( ppShapes, numShapes );
@@ -382,7 +418,7 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 
     // 16byteアライメントでメモリを確保.
     u8* pBuf = (u8*)_aligned_malloc( sizeof(QBVH), 16 );
-    return new (pBuf) QBVH( pShapes, BoundingBox4( box ) );
+    return new (pBuf) QBVH( pShapes, BoundingBox4( box ), axis, axisL, axisR );
 }
 
 //--------------------------------------------------------------------------

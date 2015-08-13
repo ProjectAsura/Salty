@@ -87,6 +87,9 @@ struct QBVH : public IShape, public IDisposable
 public:
     IShape*         pShape[4];          //!< 子ノードです.
     BoundingBox4    box;                //!< 子ノードのバウンディングボックスです.
+    s32             axisTop;
+    s32             axisLeft;
+    s32             axisRight;
 
     //--------------------------------------------------------------------------
     //! @brief      コンストラクタです.
@@ -137,7 +140,7 @@ private:
     //--------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです
     //--------------------------------------------------------------------------
-    QBVH( IShape** ppShapes, const BoundingBox4& box );
+    QBVH( IShape** ppShapes, const BoundingBox4& box, s32 top, s32 left, s32 right );
 };
 
 

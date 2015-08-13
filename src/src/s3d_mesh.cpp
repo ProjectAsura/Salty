@@ -409,7 +409,7 @@ bool Mesh::LoadFromFile( const char* filename )
     }
 
     // BVHを構築します.
-    m_pBVH = OBVH::BuildBranch( &m_Triangles[0], static_cast<u32>(m_Triangles.size()) );
+    m_pBVH = QBVH::BuildBranch( &m_Triangles[0], static_cast<u32>(m_Triangles.size()) );
 
     return true;
 }

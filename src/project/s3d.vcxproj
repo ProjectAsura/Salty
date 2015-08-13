@@ -27,7 +27,6 @@
     <ClInclude Include="..\include\s3d_hdr.h" />
     <ClInclude Include="..\include\s3d_ibl.h" />
     <ClInclude Include="..\include\s3d_idisposable.h" />
-    <ClInclude Include="..\include\s3d_instance.h" />
     <ClInclude Include="..\include\s3d_logger.h" />
     <ClInclude Include="..\include\s3d_material.h" />
     <ClInclude Include="..\include\s3d_math.h" />
@@ -36,6 +35,7 @@
     <ClInclude Include="..\include\s3d_scene.h" />
     <ClInclude Include="..\include\s3d_separator.h" />
     <ClInclude Include="..\include\s3d_shape.h" />
+    <ClInclude Include="..\include\s3d_split.h" />
     <ClInclude Include="..\include\s3d_texture.h" />
     <ClInclude Include="..\include\s3d_timer.h" />
     <ClInclude Include="..\include\s3d_typedef.h" />
@@ -48,13 +48,13 @@
     <ClCompile Include="..\src\s3d_filter.cpp" />
     <ClCompile Include="..\src\s3d_hdr.cpp" />
     <ClCompile Include="..\src\s3d_ibl.cpp" />
-    <ClCompile Include="..\src\s3d_instance.cpp" />
     <ClCompile Include="..\src\s3d_logger.cpp" />
     <ClCompile Include="..\src\s3d_material.cpp" />
     <ClCompile Include="..\src\s3d_mesh.cpp" />
     <ClCompile Include="..\src\s3d_onb.cpp" />
     <ClCompile Include="..\src\s3d_pt.cpp" />
     <ClCompile Include="..\src\s3d_shape.cpp" />
+    <ClCompile Include="..\src\s3d_split.cpp" />
     <ClCompile Include="..\src\s3d_texture.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

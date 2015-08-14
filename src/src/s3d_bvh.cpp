@@ -13,6 +13,18 @@
 
 namespace /* anonymous */ {
 
+const u32 QbvhTable[][4] =  {
+    { 0, 1, 2, 3 },
+    { 0, 1, 3, 2 },
+    { 1, 0, 2, 3 },
+    { 1, 0, 3, 2 },
+    { 2, 3, 0, 1 },
+    { 3, 2, 0, 1 },
+    { 2, 3, 1, 0 },
+    { 3, 2, 1, 0 },
+};
+
+
 //---------------------------------------------------------------------------
 //      分割します.
 //---------------------------------------------------------------------------
@@ -264,53 +276,22 @@ bool QBVH::IsHit( const Ray& ray, HitRecord& record ) const
     if ( !box.IsHit( Ray4( ray ), mask ) )
     { return false; }
 
-#if 0
-    // 次にバウンディングボックスとヒットした子のみたどっていく.
-    auto hit = false;
-    for( auto i=0; i<4; ++i )
-    {
-        if ( mask & ( 0x1 << i ) )
-        { hit |= pShape[i]->IsHit( ray, record ); }
-    }
-    return hit;
-#else
-    u32 order[4];
-    const bool isLeft = ray.sign[axisTop] == 0;
-    const int leftIndexFirst = isLeft ? 0 : 2;
-    const int rightIndexFirst = ( leftIndexFirst + 2 ) % 4;
-    if ( ray.sign[axisLeft] == 0 )
-    {
-        order[leftIndexFirst] = 0;
-        order[leftIndexFirst +1] = 1;
-    }
-    else
-    {
-        order[leftIndexFirst] = 1;
-        order[leftIndexFirst+1] = 0;
-    }
-
-    if ( ray.sign[axisRight] == 0 )
-    {
-        order[rightIndexFirst] = 2;
-        order[rightIndexFirst+1] = 3;
-    }
-    else
-    {
-        order[rightIndexFirst] = 3;
-        order[rightIndexFirst+1] = 2;
-    }
+    // 巡回テーブルのインデックスを算出.
+    u32 idx = ( ray.sign[axisTop]  << 2 )
+            | ( ray.sign[axisLeft] << 1 )
+            | ( ray.sign[axisRight] );
 
     for( auto i=0; i<4; ++i )
     {
-        if ( mask & ( 0x1 << order[i] ) )
+        auto id = QbvhTable[idx][i];
+        if ( mask & ( 0x1 << id ) )
         {
-            if ( pShape[order[i]]->IsHit( ray, record ) )
+            if ( pShape[id]->IsHit( ray, record ) )
             { return true; }
         }
     }
 
     return false;
-#endif
 }
 
 //--------------------------------------------------------------------------

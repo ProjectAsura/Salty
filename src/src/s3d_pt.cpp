@@ -221,7 +221,7 @@ Color PathTracer::Radiance( const Ray& input )
         if ( !m_pScene->Intersect( ray, record ) )
         {
             // IBL
-            //L += Color::Mul( W, m_pScene->SampleIBL( ray.dir ) );
+            L += Color::Mul( W, m_pScene->SampleIBL( ray.dir ) );
             break;
         }
 
@@ -238,7 +238,11 @@ Color PathTracer::Radiance( const Ray& input )
         { arg.prob *= powf( 0.5f, static_cast<f32>(depth - m_Config.MaxBounceCount ) ); }
 
         if ( arg.random.GetAsF32() >= arg.prob )
-        { break; }
+        {
+            // IBL
+            L += Color::Mul( W, m_pScene->SampleIBL( ray.dir ) );
+            break;
+        }
 
         arg.input    = ray.dir;
         arg.normal   = record.normal;

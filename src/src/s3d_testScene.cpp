@@ -81,7 +81,7 @@ Quad g_Quads[] = {
             Vertex( Vector3( 0, 100.0, 250.0 ), Vector2( 0.0, 2.0 ) ),
             Vertex( Vector3( 0, 100.0, 0.0 ),   Vector2( 2.0, 2.0 ) ),
             Vertex( Vector3( 0,  0.0,  0.0 ),   Vector2( 2.0, 0.0 ) ) ),
-        g_pMaterials[0]
+        g_pMaterials[6]
     ),
 
     // ‰œ.
@@ -150,17 +150,17 @@ TestScene::TestScene( const u32 width, const u32 height )
     }
 
     m_Shapes.push_back( &g_Quads[0] );
-    m_Shapes.push_back( &g_Quads[1] );
-    m_Shapes.push_back( &g_Quads[2] );
+    //m_Shapes.push_back( &g_Quads[1] );
+    //m_Shapes.push_back( &g_Quads[2] );
     m_Shapes.push_back( &g_Quads[3] );
-    m_Shapes.push_back( &g_Quads[4] );
+    //m_Shapes.push_back( &g_Quads[4] );
     m_Shapes.push_back( &g_Quads[5] );
     m_Shapes.push_back( &g_Mesh );
     m_Shapes.push_back( &g_Spheres[0] );
     m_Shapes.push_back( &g_Spheres[1] );
-    m_Shapes.push_back( &g_Spheres[2] );
-    m_Shapes.push_back( &g_Spheres[3] );
-    m_Shapes.push_back( &g_Spheres[4] );
+    //m_Shapes.push_back( &g_Spheres[2] );
+    //m_Shapes.push_back( &g_Spheres[3] );
+    //m_Shapes.push_back( &g_Spheres[4] );
 
     m_Shapes.shrink_to_fit();
 
@@ -177,7 +177,7 @@ TestScene::TestScene( const u32 width, const u32 height )
 
     m_pCamera = camera;
 
-    m_IBL.Init( "res/ibl/Barce_Rooftop_C_Env.hdr");
+    m_IBL.Init( "res/ibl/Etnies_Park_Center_3k.hdr");
 }
 
 TestScene::~TestScene()

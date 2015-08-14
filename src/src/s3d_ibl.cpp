@@ -59,13 +59,17 @@ void IBL::Term()
 //-------------------------------------------------------------------------------------------
 Color IBL::Sample( const Vector3& dir )
 {
+    f32 u = 0.0f;
     const auto theta = acosf( dir.y );
-    auto phi = acosf( dir.x / sqrtf( dir.x * dir.x + dir.z * dir.z ) );
-    if ( dir.z < 0.0f )
-        phi = F_2PI * phi;
+    const auto v = theta / F_PI;
 
-    const auto u = phi / F_2PI;
-    const auto v = 1.0f - theta / F_PI;
+    if ( !IsZero(dir.x) )
+    {
+        auto phi = acosf( dir.x / sqrtf( dir.x * dir.x + dir.z * dir.z ) );
+        if ( dir.z < 0.0f )
+            phi += F_2PI;
+        u = phi / F_2PI;
+    }
 
     const auto x = s32( u * m_Width  ) % m_Width;
     const auto y = s32( v * m_Height ) % m_Height;

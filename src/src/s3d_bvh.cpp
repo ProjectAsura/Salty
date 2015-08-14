@@ -13,6 +13,7 @@
 
 namespace /* anonymous */ {
 
+// QBVH 巡回テーブル(早期打ち切り用).
 const u32 QbvhTable[][4] =  {
     { 0, 1, 2, 3 },
     { 0, 1, 3, 2 },
@@ -23,7 +24,6 @@ const u32 QbvhTable[][4] =  {
     { 2, 3, 1, 0 },
     { 3, 2, 1, 0 },
 };
-
 
 //---------------------------------------------------------------------------
 //      分割します.
@@ -356,6 +356,9 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
         numShapes - u32(midPoint),
     };
 
+    if ( num1[0] == 0 || num1[1] == 0 )
+    { return new Leaf( numShapes, ppShapes ); }
+
     // 更に分割するためにAABBを求める.
     BoundingBox bboxL = CreateMergedBox( &ppShapes[idx1[0]], num1[0] );
     BoundingBox bboxR = CreateMergedBox( &ppShapes[idx1[1]], num1[1] );
@@ -387,6 +390,9 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
         u32(midPointR),
         num1[1] - u32(midPointR),
     };
+
+    if ( num2[0] == 0 || num2[1] == 0 || num2[2] == 0 || num2[3] == 0 )
+    { return new Leaf( numShapes, ppShapes ); }
 
     IShape* pShapes[ 4 ];
     BoundingBox box[ 4 ];
@@ -520,19 +526,8 @@ Vector3 OBVH::GetCenter() const
 //--------------------------------------------------------------------------
 IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 {
-    if ( numShapes < 8 )
-    {
-        if ( numShapes == 4 )
-        { return QBVH::BuildBranch( ppShapes, numShapes ); }
-
-        return new Leaf( numShapes, ppShapes );
-    }
-
-    if ( numShapes == 8 )
-    {
-        u8* pBuf = (u8*)_aligned_malloc( sizeof(OBVH), 32 );
-        return new (pBuf) OBVH( ppShapes );
-    }
+    if ( numShapes <= 8 )
+    { return new Leaf( numShapes, ppShapes ); }
 
     // -------------------------
     //      1段階目.
@@ -559,6 +554,9 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
         u32(midPoint),
         numShapes - u32(midPoint)
     };
+
+    if ( num1[0] == 0 || num1[1] == 0 )
+    { return new Leaf( numShapes, ppShapes ); }
 
     // -------------------------
     //      2段階目.
@@ -594,6 +592,9 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
         u32(midPointR),
         num1[1] - u32(midPointR)
     };
+
+    if ( num2[0] == 0 || num2[1] == 0 || num2[2] == 0 || num2[3] == 0 )
+    { return new Leaf( numShapes, ppShapes ); }
 
     // -------------------------
     //      3段階目.
@@ -648,6 +649,10 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
         u32(midPoint4),
         num2[3] - u32(midPoint4),
     };
+
+    if ( num3[0] == 0 || num3[1] == 0 || num3[2] == 0 || num3[3] == 0
+      || num3[4] == 0 || num3[5] == 0 || num3[6] == 0 || num3[7] == 0 )
+    { return new Leaf( numShapes, ppShapes ); }
 
     IShape* pShapes[ 8 ] = { nullptr };
     BoundingBox box[ 8 ];

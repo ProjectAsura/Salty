@@ -152,6 +152,13 @@ struct OBVH : public IShape, public IDisposable
 public:
     IShape*         pShape[8];          //!< 子ノードです.
     BoundingBox8    box;                //!< 子ノードのバウンディングボックスです.
+    s32             axisTop;
+    s32             axisL;
+    s32             axisR;
+    s32             axisA;
+    s32             axisB;
+    s32             axisC;
+    s32             axisD;
 
     //--------------------------------------------------------------------------
     //! @brief      コンストラクタです.

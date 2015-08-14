@@ -22,7 +22,6 @@
     <ClInclude Include="..\include\s3d_app.h" />
     <ClInclude Include="..\include\s3d_bmp.h" />
     <ClInclude Include="..\include\s3d_bvh.h" />
-    <ClInclude Include="..\include\s3d_bvh2.h" />
     <ClInclude Include="..\include\s3d_camera.h" />
     <ClInclude Include="..\include\s3d_filter.h" />
     <ClInclude Include="..\include\s3d_hdr.h" />
@@ -46,7 +45,6 @@
     <ClCompile Include="..\src\s3d_app.cpp" />
     <ClCompile Include="..\src\s3d_bmp.cpp" />
     <ClCompile Include="..\src\s3d_bvh.cpp" />
-    <ClCompile Include="..\src\s3d_bvh2.cpp" />
     <ClCompile Include="..\src\s3d_filter.cpp" />
     <ClCompile Include="..\src\s3d_hdr.cpp" />
     <ClCompile Include="..\src\s3d_ibl.cpp" />
@@ -74,7 +72,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -87,7 +85,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>

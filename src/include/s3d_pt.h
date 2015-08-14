@@ -71,6 +71,7 @@ private:
     Random          m_Random;           //!< 乱数.
     Scene*          m_pScene;           //!< シーンデータ.
     volatile bool   m_IsFinish;         //!< 正常終了したかどうか？
+    volatile bool   m_WatcherEnd;       //!< 時間監視を終了したかどうか.
 
     //=============================================================================================
     // private methods.

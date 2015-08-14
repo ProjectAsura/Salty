@@ -79,6 +79,7 @@ PathTracer::PathTracer()
 , m_Intermediate( nullptr )
 , m_pScene      ( nullptr )
 , m_IsFinish    ( false )
+, m_WatcherEnd  ( false )
 {
 }
 
@@ -194,6 +195,8 @@ void PathTracer::Watcher()
     }
 
     Capture( "img/final.bmp" );
+
+    m_WatcherEnd = true;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -210,7 +213,7 @@ Color PathTracer::Radiance( const Ray& input )
 
     arg.random = m_Random;
 
-    for( auto depth=0; ;++depth)
+    for( auto depth=0; !m_WatcherEnd ;++depth)
     {
         auto record = HitRecord();
 
@@ -283,13 +286,13 @@ void PathTracer::TracePath()
     // 乱数初期化.
     m_Random.SetSeed( 3141592 );
 
-    for ( auto sy=0; sy<m_Config.SubSampleCount; ++sy )
-    for ( auto sx=0; sx<m_Config.SubSampleCount; ++sx )
+    for ( auto sy=0; sy<m_Config.SubSampleCount && !m_WatcherEnd; ++sy )
+    for ( auto sx=0; sx<m_Config.SubSampleCount && !m_WatcherEnd; ++sx )
     {
         const auto r1 = sx * rate + halfRate;
         const auto r2 = sy * rate + halfRate;
 
-        for( auto s=0; s<m_Config.SampleCount && !m_IsFinish; ++s )
+        for( auto s=0; s<m_Config.SampleCount && !m_WatcherEnd; ++s )
         {
             printf_s( "\r%5.2f%% Completed.", 100.f * ( sy * m_Config.SubSampleCount * m_Config.SampleCount + sx * m_Config.SampleCount + s ) / sampleCount );
 
@@ -297,7 +300,7 @@ void PathTracer::TracePath()
             #pragma omp parallel for schedule(dynamic, 1) num_threads(coreCount)
         #endif
             for( auto y=0; y<m_Config.Height; ++y )
-            for( auto x=0; x<m_Config.Width;  ++x )
+            for( auto x=0; x<m_Config.Width ; ++x )
             {
                 auto ray = m_pScene->GetRay(
                     ( r1 + x ) / m_Config.Width  - 0.5f,

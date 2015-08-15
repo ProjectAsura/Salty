@@ -18,7 +18,8 @@ namespace /* anonymous */ {
 
 using namespace s3d;
 
-Texture2D   g_TextureWall( "./res/texture/brick.bmp" );
+Texture2D   g_TextureWall( "./res/texture/wall.bmp" );
+Texture2D   g_TextureLeaf( "./res/texture/aglaonema_leaf.tga" );
 Texture2D   g_TextureTile( "./res/texture/tile.bmp" );
 TextureSampler g_Sampler = TextureSampler();
 
@@ -26,9 +27,11 @@ TextureSampler g_Sampler = TextureSampler();
 Matte g_Matte[] = {
     Matte( Color( 0.75f, 0.75f, 0.75f ), Color( 0.0f, 0.0f, 0.0f ), &g_TextureWall, &g_Sampler ),
     Matte( Color( 0.75f, 0.75f, 0.75f ), Color( 0.0f, 0.0f, 0.0f ), &g_TextureTile, &g_Sampler ),
-    Matte( Color( 0.0f,  0.0f,  0.0f  ), Color( 50.0f, 50.0f, 50.0f ) ),
+    Matte( Color( 0.0f,  0.0f,  0.0f  ), Color( 500.0f, 500.0f, 500.0f ) ),
     Matte( Color( 0.5f,  0.0f,  0.0f  ), Color( 36.0f, 1.0f, 1.0f ) ),
     Matte( Color( 0.0f,  0.0f,  0.5f  ), Color( 1.0f, 1.0f, 36.0f ) ), 
+    Matte( Color( 0.75f, 0.75f, 0.75f ), Color( 0.0f, 0.0f, 0.0f ), &g_TextureLeaf, &g_Sampler ),
+
 };
 
 // Mirror
@@ -64,7 +67,7 @@ IMaterial* g_pMaterials[] = {
 // レンダリングするシーンデータ
 Sphere g_Spheres[] = {
     Sphere( 16.5f,  Vector3( 25.0f,   26.5f, 57.0f ), g_pMaterials[5] ),    // 水晶
-    Sphere( 7.5f,   Vector3( 50.0f,   16.5f, 78.0f ), g_pMaterials[4] ),    // 鏡.
+    Sphere( 7.5f,   Vector3( 50.0f,    6.5f, 78.0f ), g_pMaterials[4] ),    // 鏡.
     Sphere( 15.0f,  Vector3( 50.0f,  110.0f, 81.6f ), g_pMaterials[2] ),    // 照明
     Sphere( 5.0f,   Vector3( 10.0f,   90.0f, 30.0f ), g_pMaterials[7] ),
     Sphere( 2.5f,   Vector3( 10.0f,   20.0f, 120.0f ), g_pMaterials[8] ),
@@ -81,7 +84,7 @@ Quad g_Quads[] = {
             Vertex( Vector3( 0, 100.0, 250.0 ), Vector2( 0.0, 2.0 ) ),
             Vertex( Vector3( 0, 100.0, 0.0 ),   Vector2( 2.0, 2.0 ) ),
             Vertex( Vector3( 0,  0.0,  0.0 ),   Vector2( 2.0, 0.0 ) ) ),
-        g_pMaterials[6]
+        &g_Matte[5]
     ),
 
     // 奥.
@@ -150,17 +153,17 @@ TestScene::TestScene( const u32 width, const u32 height )
     }
 
     m_Shapes.push_back( &g_Quads[0] );
-    //m_Shapes.push_back( &g_Quads[1] );
-    //m_Shapes.push_back( &g_Quads[2] );
+    m_Shapes.push_back( &g_Quads[1] );
+    m_Shapes.push_back( &g_Quads[2] );
     m_Shapes.push_back( &g_Quads[3] );
-    //m_Shapes.push_back( &g_Quads[4] );
+    m_Shapes.push_back( &g_Quads[4] );
     m_Shapes.push_back( &g_Quads[5] );
     m_Shapes.push_back( &g_Mesh );
     m_Shapes.push_back( &g_Spheres[0] );
     m_Shapes.push_back( &g_Spheres[1] );
-    //m_Shapes.push_back( &g_Spheres[2] );
-    //m_Shapes.push_back( &g_Spheres[3] );
-    //m_Shapes.push_back( &g_Spheres[4] );
+    m_Shapes.push_back( &g_Spheres[2] );
+    m_Shapes.push_back( &g_Spheres[3] );
+    m_Shapes.push_back( &g_Spheres[4] );
 
     m_Shapes.shrink_to_fit();
 
@@ -177,7 +180,7 @@ TestScene::TestScene( const u32 width, const u32 height )
 
     m_pCamera = camera;
 
-    m_IBL.Init( "res/ibl/Etnies_Park_Center_3k.hdr");
+    m_IBL.Init( "res/ibl/Tropical_Beach_3k.hdr");
 }
 
 TestScene::~TestScene()

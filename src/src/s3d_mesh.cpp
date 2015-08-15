@@ -128,6 +128,14 @@ f32 MeshMaterial::GetThreshold() const
     return Threshold;
 }
 
+bool MeshMaterial::AlphaTest( const Vector2& texcoord, const f32 value ) const
+{
+    if ( pDiffuseMap == nullptr || pDiffuseSmp == nullptr )
+    { return true; }
+
+    return pDiffuseMap->AlphaTest( (*pDiffuseSmp), texcoord, value );
+}
+
 #if 1
 Color MeshMaterial::GetDebugColor() const
 { return Diffuse; }

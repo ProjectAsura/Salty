@@ -32,6 +32,7 @@ namespace /* anonymous */ {
 // Global Variables.
 //-------------------------------------------------------------------------------------------------
 std::mutex      g_Mutex;
+const s3d::TONE_MAPPING_TYPE  ToneMappingType = s3d::TONE_MAPPING_FILMIC;
 
 
 //-------------------------------------------------------------------------------------------------
@@ -134,7 +135,7 @@ bool PathTracer::Run( const Config& config )
 void PathTracer::Capture( const char* filename )
 {
     // トーンマッピングを実行.
-    ToneMapping( m_Config.Width, m_Config.Height, m_RenderTarget, m_Intermediate );
+    ToneMapper::Map( ToneMappingType, m_Config.Width, m_Config.Height, m_RenderTarget, m_Intermediate );
 
     // BMPに出力する.
     SaveToBMP( filename, m_Config.Width, m_Config.Height, &m_Intermediate[0].x );
@@ -177,7 +178,7 @@ void PathTracer::Watcher()
         }
 
         // 15分の規定時間に達した場合.
-        if ( min >= 15.0 )
+        if ( min > 14.9 )
         {
             ILOG( "Rendering Imcompleted..." );
             break;
@@ -211,6 +212,7 @@ Color PathTracer::Radiance( const Ray& input )
     Color W( 1.0f, 1.0f, 1.0f );
     Color L( 0.0f, 0.0f, 0.0f );
 
+    // 乱数設定.
     arg.random = m_Random;
 
     for( auto depth=0; !m_WatcherEnd ;++depth)
@@ -229,30 +231,46 @@ Color PathTracer::Radiance( const Ray& input )
         assert( shape    != nullptr );
         assert( material != nullptr );
 
+        // アルファテスト.
+        if ( !material->AlphaTest( record.texcoord, 0.1f ) )
+        {
+            L += Color::Mul( W, m_pScene->SampleIBL( ray.dir ) );
+            break;
+        }
+
+        // 自己発光による放射輝度.
         L += Color::Mul( W, material->GetEmissive() );
 
         arg.prob = material->GetThreshold();
 
+        // 最大深度以上になったら，打ち切るために閾値を急激に下げる.
         if ( depth > m_Config.MaxBounceCount )
         { arg.prob *= powf( 0.5f, static_cast<f32>(depth - m_Config.MaxBounceCount ) ); }
 
+        // ロシアンルーレット.
         if ( arg.random.GetAsF32() >= arg.prob )
         { break; }
 
+        // シェーディング引数を設定.
         arg.input    = ray.dir;
         arg.normal   = record.normal;
         arg.texcoord = record.texcoord;
 
+        // 色を求める.
         W = Color::Mul( W, material->ComputeColor( arg ) );
 
+        // レイを更新.
         ray.Update( record.position, arg.output );
 
-        if ( W.LengthSq() < F32_EPSILON )
+        // 重みがゼロになったら以降の更新は無駄なので打ち切りにする.
+        if ( IsZero(W.x) && IsZero(W.y) && IsZero(W.z) )
         { break; }
     }
 
+    // 乱数を更新.
     m_Random = arg.random;
 
+    // 計算結果を返却.
     return L;
 }
 

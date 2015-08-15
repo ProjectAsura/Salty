@@ -42,9 +42,9 @@ int main( int argc, char **argv )
         // デバッグ用.
         config.Width          = 320;
         config.Height         = 180;
-        config.SampleCount    = 512;
-        config.SubSampleCount = 1;
-        config.MaxBounceCount = 16;
+        config.SampleCount    = 1024;
+        config.SubSampleCount = 2;
+        config.MaxBounceCount = 8;
     #endif
 
         s3d::PathTracer renderer;

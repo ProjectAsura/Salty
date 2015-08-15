@@ -241,7 +241,7 @@ void Capture( char* base )
     auto err = localtime_s( &local_time, &t );
 
     // トーンマッピングする.
-    ToneMapping( g_Config.Width, g_Config.Height, g_pRT, g_pOut );
+    ToneMapper::Map( TONE_MAPPING_REINHARD, g_Config.Width, g_Config.Height, g_pRT, g_pOut );
 
     if ( err == 0 )
     {

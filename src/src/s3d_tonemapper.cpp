@@ -76,15 +76,67 @@ void ComputeLogarithmicAverage
     aveLw = expf( aveLw );
 }
 
+//------------------------------------------------------------------------------------------------
+//      Uncharted2のトーンマッピング式.
+//------------------------------------------------------------------------------------------------
+template<typename T>
+T Uncharted2Tonemap( const T& color )
+{
+    const auto A = 0.15f; // Sholder Strength
+    const auto B = 0.50f; // Linear Strength
+    const auto C = 0.10f; // Linear Angle
+    const auto D = 0.20f; // Toe Strength
+    const auto E = 0.01f; // Toe Numerator
+    const auto F = 0.30f; // Toe Denominator
+
+    // John Hable, "Uncharted 2 : HDR Lighting" のスライドより.
+    return ( (color * ( A * color + C * B) + D * E ) / ( color *( A* color + B ) + D * F )) - E / F;
+}
+
 } // namespace /* anonymous */
 
 
 namespace s3d {
 
-//------------------------------------------------------------------------------------------------
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// ToneMapper class
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+//-------------------------------------------------------------------------------------------------
 //      トーンマッピングを行います.
+//-------------------------------------------------------------------------------------------------
+void ToneMapper::Map
+(
+    TONE_MAPPING_TYPE type,
+    const s32         width, 
+    const s32         height,
+    const Color*      pPixels,
+    Color*            pResult
+)
+{
+    switch( type )
+    {
+        case TONE_MAPPING_REINHARD:
+        default:
+            ReinhardToneMapping( width, height, pPixels, pResult );
+            break;
+
+        case TONE_MAPPING_FILMIC:
+            FilmicToneMapping( width, height, pPixels, pResult );
+            break;
+    }
+}
+
 //------------------------------------------------------------------------------------------------
-void ToneMapping( const s32 width, const s32 height, const Color* pPixels, Color* pResult )
+//      Reinhardトーンマッピングを行います.
+//------------------------------------------------------------------------------------------------
+void ToneMapper::ReinhardToneMapping
+(
+    const s32    width, 
+    const s32    height,
+    const Color* pPixels,
+    Color*       pResult
+)
 {
     assert( pPixels != nullptr );
 
@@ -114,6 +166,45 @@ void ToneMapping( const s32 width, const s32 height, const Color* pPixels, Color
 
             // トーンマッピングした結果を格納.
             pResult[idx] = Ld;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------
+//      Filmic トーンマッピング.
+//------------------------------------------------------------------------------------------------
+void ToneMapper::FilmicToneMapping
+(
+    const s32    width,
+    const s32    height,
+    const Color* pPixels,
+    Color*       pResult
+)
+{
+    assert( pPixels != nullptr );
+    auto a     = 0.18f;
+    auto aveLw = 0.0f;
+    auto maxLw = 0.0f;
+
+    // 対数平均と最大輝度値を求める.
+    ComputeLogarithmicAverage( width, height, pPixels, 0.00001f, aveLw, maxLw );
+
+    auto coeff = a / aveLw;
+
+    const auto LinearWhite = 11.2f;     // "Uncharted 2 : HDR Lighting" に記載の値を使用.
+
+    for( auto i=0; i<height; ++i )
+    {
+        for( auto j=0; j<width; ++j )
+        {
+            // ピクセル番号.
+            auto idx = ( i * width ) + j;
+
+            auto texelColor = pPixels[idx] * coeff;
+
+            auto color = Uncharted2Tonemap( 2.0f * texelColor ) / Uncharted2Tonemap( LinearWhite );
+
+            pResult[idx] = color;
         }
     }
 }

@@ -101,6 +101,14 @@ Color MaterialBase::ComputeColor( ShadingArg& arg ) const
     return color;
 }
 
+bool MaterialBase::AlphaTest( const Vector2& texcoord, const f32 value ) const
+{
+    if ( pTexture == nullptr || pSampler == nullptr )
+    { return true; }
+
+    return pTexture->AlphaTest( (*pSampler), texcoord, value );
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////
 // Matte structure
@@ -486,6 +494,16 @@ Color Glossy::ComputeColor( ShadingArg& arg ) const
     return specular * dots;
 }
 
+//-------------------------------------------------------------------------------------------------
+//      アルファテストを行います.
+//-------------------------------------------------------------------------------------------------
+bool Glossy::AlphaTest( const Vector2& texcoord, const f32 value ) const
+{
+    if ( pTexture == nullptr || pSampler == nullptr )
+    { return true; }
+
+    return pTexture->AlphaTest( (*pSampler), texcoord, value );
+}
 
 
 } // namespace s3d

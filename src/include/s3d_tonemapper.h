@@ -14,15 +14,27 @@
 
 namespace s3d {
 
-//------------------------------------------------------------------------------------------------
-//! @brief      トーンマッピングを行います.
-//!
-//! @param[in]      width       画像の横幅です.
-//! @param[in]      height      画像の縦幅です.
-//! @param[in]      pPixels     ピクセルです.
-//! @param[out]     pResult     出力値.
-//------------------------------------------------------------------------------------------------
-void ToneMapping( const s32 width, const s32 height, const Color* pPixels, Color* pResult );
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// TONE_MAPPING_TYPE
+///////////////////////////////////////////////////////////////////////////////////////////////////
+enum TONE_MAPPING_TYPE
+{
+    TONE_MAPPING_REINHARD,          //!< Reinhard 方式.
+    TONE_MAPPING_FILMIC,            //!< Uncharted2 方式.
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// ToneMapper class
+///////////////////////////////////////////////////////////////////////////////////////////////////
+class ToneMapper
+{
+public:
+    static void Map( TONE_MAPPING_TYPE type, const s32 width, const s32 height, const Color* pPixels, Color* pResult );
+
+private:
+    static void ReinhardToneMapping( const s32 width, const s32 height, const Color* pPixels, Color* pResult );
+    static void FilmicToneMapping  ( const s32 width, const s32 height, const Color* pPixels, Color* pResult );
+};
 
 
 } // namespace s3d

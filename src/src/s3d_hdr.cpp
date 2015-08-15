@@ -49,7 +49,7 @@ s3d::Vector3 RGBEToVec3( const RGBE& val )
     s3d::Vector3 result;
     if ( val.e )
     {
-        auto f = ldexpf( 1.0f, val.e - s32(128+8) );
+        auto f = powf( 2.0f, val.e - 128.0f );
         result.x = val.r * f;
         result.y = val.g * f;
         result.z = val.b * f;

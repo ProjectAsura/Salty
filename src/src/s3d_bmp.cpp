@@ -96,7 +96,7 @@ void WriteBmpInfoHeader( BMP_INFO_HEADER& header, FILE* pFile )
 //-------------------------------------------------------------------------------------------
 //      BMPファイルに書き出します.
 //-------------------------------------------------------------------------------------------
-void WriteBmp( FILE* pFile, const s32 width, const s32 height, const f32* pPixel, const f32 gamma )
+void WriteBmp( FILE* pFile, const s32 width, const s32 height, const f32* pPixel )
 {
     BMP_FILE_HEADER fileHeader;
     BMP_INFO_HEADER infoHeader;
@@ -128,9 +128,9 @@ void WriteBmp( FILE* pFile, const s32 width, const s32 height, const f32* pPixel
         {
             s32 index = ( i * width * 3 ) + ( j * 3 );
 
-            f32 r = powf( pPixel[index + 0], 1.0f / gamma );
-            f32 g = powf( pPixel[index + 1], 1.0f / gamma );
-            f32 b = powf( pPixel[index + 2], 1.0f / gamma );
+            f32 r = pPixel[index + 0];
+            f32 g = pPixel[index + 1];
+            f32 b = pPixel[index + 2];
 
             if ( r > 1.0f ) { r = 1.0f; }
             if ( g > 1.0f ) { g = 1.0f; }
@@ -139,7 +139,6 @@ void WriteBmp( FILE* pFile, const s32 width, const s32 height, const f32* pPixel
             if ( r < 0.0f ) { r = 0.0f; }
             if ( g < 0.0f ) { g = 0.0f; }
             if ( b < 0.0f ) { b = 0.0f; }
-
 
             u8 R = static_cast<u8>( r * 255.0f + 0.5f );
             u8 G = static_cast<u8>( g * 255.0f + 0.5f );
@@ -157,14 +156,14 @@ void WriteBmp( FILE* pFile, const s32 width, const s32 height, const f32* pPixel
 //-------------------------------------------------------------------------------------------
 //      BMPファイルに保存します.
 //-------------------------------------------------------------------------------------------
-bool SaveToBMP( const char* filename, const s32 width, const s32 height, const f32* pPixel, const f32 gamma )
+bool SaveToBMP( const char* filename, const s32 width, const s32 height, const f32* pPixel )
 {
     FILE* pFile;
     errno_t err = fopen_s( &pFile, filename, "wb" );
     if ( err != 0 )
     { return false; }
 
-    WriteBmp( pFile, width, height, pPixel, gamma );
+    WriteBmp( pFile, width, height, pPixel );
 
     fclose( pFile );
     return true;

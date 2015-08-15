@@ -204,7 +204,7 @@ void PathTracer::Watcher()
 //-------------------------------------------------------------------------------------------------
 Color PathTracer::Radiance( const Ray& input )
 {
-    ShadingArg arg    = ShadingArg();
+    ShadingArg arg = ShadingArg();
 
     Ray ray( input );
 
@@ -220,14 +220,13 @@ Color PathTracer::Radiance( const Ray& input )
         // 交差判定.
         if ( !m_pScene->Intersect( ray, record ) )
         {
-            // IBL
             L += Color::Mul( W, m_pScene->SampleIBL( ray.dir ) );
             break;
         }
 
         const auto shape    = record.pShape;
         const auto material = record.pMaterial;
-        assert( shape != nullptr );
+        assert( shape    != nullptr );
         assert( material != nullptr );
 
         L += Color::Mul( W, material->GetEmissive() );
@@ -238,11 +237,7 @@ Color PathTracer::Radiance( const Ray& input )
         { arg.prob *= powf( 0.5f, static_cast<f32>(depth - m_Config.MaxBounceCount ) ); }
 
         if ( arg.random.GetAsF32() >= arg.prob )
-        {
-            // IBL
-            L += Color::Mul( W, m_pScene->SampleIBL( ray.dir ) );
-            break;
-        }
+        { break; }
 
         arg.input    = ray.dir;
         arg.normal   = record.normal;

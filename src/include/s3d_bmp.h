@@ -23,7 +23,7 @@ namespace s3d {
 //! @retval true    保存に成功.
 //! @retval false   保存に失敗.
 //----------------------------------------------------------------------------------------
-bool SaveToBMP( const char* filename, const s32 width, const s32 height, const f32* pPixel, const f32 gamma = 2.2f );
+bool SaveToBMP( const char* filename, const s32 width, const s32 height, const f32* pPixel );
 
 //----------------------------------------------------------------------------------------
 //! @brief      BMPファイルを読み込みます.

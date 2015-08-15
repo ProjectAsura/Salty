@@ -28,8 +28,8 @@ namespace s3d {
 //      コンストラクタです.
 //--------------------------------------------------------------------------------
 MaterialBase::MaterialBase()
-: emissive  ( 0.0f, 0.0f, 0.0f )
-, color     ( 0.0f, 0.0f, 0.0f )
+: emissive  ( 0.0f, 0.0f, 0.0f, 1.0f )
+, color     ( 0.0f, 0.0f, 0.0f, 1.0f )
 , pTexture  ( nullptr )
 , pSampler  ( nullptr )
 , threshold ( 0.0 )
@@ -40,8 +40,8 @@ MaterialBase::MaterialBase()
 //--------------------------------------------------------------------------------
 MaterialBase::MaterialBase
 (
-    const Color& _color,
-    const Color& _emissive = Color( 0.0f, 0.0f, 0.0f )
+    const Color4& _color,
+    const Color4& _emissive = Color4( 0.0f, 0.0f, 0.0f, 1.0f )
 )
 : emissive  ( _emissive )
 , color     ( _color )
@@ -57,8 +57,8 @@ MaterialBase::MaterialBase
 //--------------------------------------------------------------------------------
 MaterialBase::MaterialBase
 (
-    const Color&            _color,
-    const Color&            _emissive,
+    const Color4&           _color,
+    const Color4&           _emissive,
     const Texture2D*        _pTexture,
     const TextureSampler*   _pSampler
 )
@@ -83,7 +83,7 @@ MaterialBase::~MaterialBase()
 //--------------------------------------------------------------------------------
 //      自己発光色を取得します.
 //--------------------------------------------------------------------------------
-Color MaterialBase::GetEmissive() const
+Color4 MaterialBase::GetEmissive() const
 { return emissive; }
 
 //--------------------------------------------------------------------------------
@@ -95,7 +95,7 @@ f32 MaterialBase::GetThreshold() const
 //--------------------------------------------------------------------------------
 //     色を求めます.
 //--------------------------------------------------------------------------------
-Color MaterialBase::ComputeColor( ShadingArg& arg ) const
+Color4 MaterialBase::ComputeColor( ShadingArg& arg ) const
 {
     S3D_UNUSED_VAR( arg );
     return color;
@@ -126,8 +126,8 @@ Matte::Matte()
 //--------------------------------------------------------------------------------
 Matte::Matte
 (
-    const Color& _color,
-    const Color& _emissive
+    const Color4& _color,
+    const Color4& _emissive
 )
 : MaterialBase( _color, _emissive )
 { /* DO_NOTHING */ }
@@ -137,8 +137,8 @@ Matte::Matte
 //--------------------------------------------------------------------------------
 Matte::Matte
 (
-    const Color&            _color,
-    const Color&            _emissive,
+    const Color4&            _color,
+    const Color4&            _emissive,
     const Texture2D*        _pTexture,
     const TextureSampler*   _pSampler
 )
@@ -148,7 +148,7 @@ Matte::Matte
 //--------------------------------------------------------------------------------
 //      色を求めます.
 //--------------------------------------------------------------------------------
-Color Matte::ComputeColor( ShadingArg& arg ) const
+Color4 Matte::ComputeColor( ShadingArg& arg ) const
 {
     // ========================
     // Lambert BRDF.
@@ -176,7 +176,7 @@ Color Matte::ComputeColor( ShadingArg& arg ) const
     // 重み更新 (飛ぶ方向が不定なので確率で割る必要あり).
     if ( pTexture != nullptr && pSampler != nullptr )
     {
-        return Color::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) ) / arg.prob;
+        return Color4::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) ) / arg.prob;
     }
 
     return color / arg.prob;
@@ -199,8 +199,8 @@ Mirror::Mirror()
 //--------------------------------------------------------------------------------
 Mirror::Mirror
 (
-    const Color& _color,
-    const Color& _emissive
+    const Color4& _color,
+    const Color4& _emissive
 )
 : MaterialBase( _color, _emissive )
 { /* DO_NOTHING */ }
@@ -210,8 +210,8 @@ Mirror::Mirror
 //--------------------------------------------------------------------------------
 Mirror::Mirror
 (
-    const Color&            _color,
-    const Color&            _emissive,
+    const Color4&           _color,
+    const Color4&           _emissive,
     const Texture2D*        _pTexture,
     const TextureSampler*   _pSampler
 )
@@ -221,7 +221,7 @@ Mirror::Mirror
 //--------------------------------------------------------------------------------
 //      色を求めます.
 //--------------------------------------------------------------------------------
-Color Mirror::ComputeColor( ShadingArg& arg ) const
+Color4 Mirror::ComputeColor( ShadingArg& arg ) const
 {
     // 補正済み法線データ (レイの入出を考慮済み).
     const Vector3 normalMod = ( Vector3::Dot ( arg.normal, arg.input ) < 0.0 ) ? arg.normal : -arg.normal;
@@ -241,7 +241,7 @@ Color Mirror::ComputeColor( ShadingArg& arg ) const
     // 重み更新 (飛ぶ方向が確定しているので，確率100%).
     if ( pTexture != nullptr && pSampler != nullptr )
     {
-        return Vector3::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) );
+        return Color4::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) );
     }
 
     return color;
@@ -265,9 +265,9 @@ Glass::Glass()
 //--------------------------------------------------------------------------------
 Glass::Glass
 (
-    const f32    _ior,
-    const Color& _color,
-    const Color& _emissive
+    const f32     _ior,
+    const Color4& _color,
+    const Color4& _emissive
 )
 : MaterialBase( _color, _emissive )
 , ior( _ior )
@@ -279,8 +279,8 @@ Glass::Glass
 Glass::Glass
 (
     const f32               _ior,
-    const Color&            _color,
-    const Color&            _emissive,
+    const Color4&           _color,
+    const Color4&           _emissive,
     const Texture2D*        _pTexture,
     const TextureSampler*   _pSampler
 )
@@ -291,7 +291,7 @@ Glass::Glass
 //--------------------------------------------------------------------------------
 //      色を求めます.
 //--------------------------------------------------------------------------------
-Color Glass::ComputeColor( ShadingArg& arg ) const
+Color4 Glass::ComputeColor( ShadingArg& arg ) const
 {
     // 補正済み法線データ (レイの入出を考慮済み).
     const Vector3 normalMod = ( Vector3::Dot ( arg.normal, arg.input ) < 0.0 ) ? arg.normal : -arg.normal;
@@ -326,7 +326,7 @@ Color Glass::ComputeColor( ShadingArg& arg ) const
         // 重み更新 (飛ぶ方向が確定しているので，確率100%).
         if ( pTexture != nullptr && pSampler != nullptr )
         {
-            return Vector3::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) );
+            return Color4::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) );
         }
 
         return color;
@@ -358,7 +358,7 @@ Color Glass::ComputeColor( ShadingArg& arg ) const
         // 重み更新.
         if ( pTexture != nullptr && pSampler != nullptr )
         {
-            return Vector3::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) ) * Re / ( P * arg.prob );
+            return Color4::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) ) * Re / ( P * arg.prob );
         }
 
         return color * Re / ( P * arg.prob );
@@ -372,7 +372,7 @@ Color Glass::ComputeColor( ShadingArg& arg ) const
         // 重み更新.
         if ( pTexture != nullptr && pSampler != nullptr )
         {
-            return Vector3::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) ) * Tr / ( ( 1.0f - P ) * arg.prob );
+            return Color4::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) ) * Tr / ( ( 1.0f - P ) * arg.prob );
         }
 
         return color * Tr / ( ( 1.0f - P ) * arg.prob );
@@ -388,8 +388,8 @@ Color Glass::ComputeColor( ShadingArg& arg ) const
 //      コンストラクタです.
 //--------------------------------------------------------------------------------
 Glossy::Glossy()
-: emissive  ( 0.0f, 0.0f, 0.0f )
-, specular  ( 0.0f, 0.0f, 0.0f )
+: emissive  ( 0.0f, 0.0f, 0.0f, 1.0f )
+, specular  ( 0.0f, 0.0f, 0.0f, 1.0f )
 , power     ( 0.0f )
 , pTexture  ( nullptr )
 , pSampler  ( nullptr )
@@ -400,9 +400,9 @@ Glossy::Glossy()
 //--------------------------------------------------------------------------------
 Glossy::Glossy
 (
-    const Color& _specular,
-    const f32    _power,
-    const Color& _emissive
+    const Color4& _specular,
+    const f32     _power,
+    const Color4& _emissive
 )
 : emissive  ( _emissive )
 , specular  ( _specular )
@@ -419,9 +419,9 @@ Glossy::Glossy
 //--------------------------------------------------------------------------------
 Glossy::Glossy
 (
-    const Color&            _specular,
+    const Color4&          _specular,
     const f32               _power,
-    const Color&            _emissive,
+    const Color4&           _emissive,
     const Texture2D*        _pTexture,
     const TextureSampler*   _pSampler
 )
@@ -438,7 +438,7 @@ Glossy::Glossy
 //--------------------------------------------------------------------------------
 //      自己発光色を取得します.
 //--------------------------------------------------------------------------------
-Color Glossy::GetEmissive() const
+Color4 Glossy::GetEmissive() const
 { return emissive; }
 
 //--------------------------------------------------------------------------------
@@ -450,7 +450,7 @@ f32 Glossy::GetThreshold() const
 //---------------------------------------------------------------------------------
 //      色を取得します.
 //---------------------------------------------------------------------------------
-Color Glossy::ComputeColor( ShadingArg& arg ) const
+Color4 Glossy::ComputeColor( ShadingArg& arg ) const
 {
     // 補正済み法線データ (レイの入出を考慮済み).
     const Vector3 normalMod = ( Vector3::Dot ( arg.normal, arg.input ) < 0.0 ) ? arg.normal : -arg.normal;
@@ -488,7 +488,7 @@ Color Glossy::ComputeColor( ShadingArg& arg ) const
     // 重み更新.
     if ( pTexture != nullptr && pSampler != nullptr )
     {
-        return Color::Mul( specular, pTexture->Sample( (*pSampler), arg.texcoord ) ) * dots;
+        return Color4::Mul( specular, pTexture->Sample( (*pSampler), arg.texcoord ) ) * dots;
     }
 
     return specular * dots;

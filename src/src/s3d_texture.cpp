@@ -103,7 +103,7 @@ bool Texture2D::LoadFromFile( const char* filename )
         {
             m_Width  = static_cast<u32>( w ); 
             m_Height = static_cast<u32>( h );
-            m_Size   = m_Width * m_Height * 3;
+            m_Size   = m_Width * m_Height * 4;
             m_ComponentCount = 3;
 
             // 正常終了.
@@ -126,9 +126,8 @@ bool Texture2D::LoadFromFile( const char* filename )
             {
                 m_Width  = static_cast<u32>( w );
                 m_Height = static_cast<u32>( h );
-                m_Size   = m_Width * m_Height * c;
-                m_ComponentCount = static_cast<u32>( c );
-
+                m_Size   = m_Width * m_Height * 4;
+                m_ComponentCount = c;
                 return true;
             }
         }
@@ -155,11 +154,11 @@ void Texture2D::Release()
 //--------------------------------------------------------------------------------------
 //      テクスチャフェッチします.
 //--------------------------------------------------------------------------------------
-Color Texture2D::Sample( const TextureSampler& sampler, const Vector2& location ) const
+Color4 Texture2D::Sample( const TextureSampler& sampler, const Vector2& location ) const
 {
     // テクスチャが無ければ(1.0, 1.0, 1.0)を返しておく.
     if ( m_pPixels == nullptr )
-    { return Color( 1.0f, 1.0f, 1.0f ); }
+    { return Color4( 1.0f, 1.0f, 1.0f, 1.0f ); }
 
     Vector2 uv = location;
 
@@ -243,38 +242,14 @@ Color Texture2D::Sample( const TextureSampler& sampler, const Vector2& location 
     // テクスチャインデックス算出.
     u32 x = static_cast<u32>( uv.x * ( m_Width - 1 ) );
     u32 y = static_cast<u32>( uv.y * ( m_Height -1 ) );
-    u32 idx = ( m_Width * m_ComponentCount * y ) + ( x * m_ComponentCount );
-    assert( idx < m_Size );
+    u32 idx = ( m_Width * 4 * y ) + ( x * 4 );
+    //assert( idx < m_Size );
 
-    if ( m_ComponentCount == 3 )
-    {
-        // フェッチした色を返す.
-        return Color( 
-            m_pPixels[ idx + 0 ],
-            m_pPixels[ idx + 1 ],
-            m_pPixels[ idx + 2 ] );
-    }
-    else if ( m_ComponentCount == 4 )
-    {
-        return Color(
-            m_pPixels[idx + 0] * m_pPixels[idx + 3],
-            m_pPixels[idx + 1] * m_pPixels[idx + 3],
-            m_pPixels[idx + 2] * m_pPixels[idx + 3] );
-    }
-    else if ( m_ComponentCount == 2 )
-    {
-        return Color(
-            m_pPixels[idx + 0] * m_pPixels[idx + 1],
-            m_pPixels[idx + 0] * m_pPixels[idx + 1],
-            m_pPixels[idx + 0] * m_pPixels[idx + 1] );
-    }
-    else
-    {
-        return Color(
-            m_pPixels[idx],
-            m_pPixels[idx],
-            m_pPixels[idx]);
-    }
+    return Color4(
+        m_pPixels[idx + 0],
+        m_pPixels[idx + 1],
+        m_pPixels[idx + 2],
+        m_pPixels[idx + 3] );
 }
 
 bool Texture2D::AlphaTest( const TextureSampler& sampler, const Vector2& location, const f32 value ) const
@@ -367,8 +342,8 @@ bool Texture2D::AlphaTest( const TextureSampler& sampler, const Vector2& locatio
     // テクスチャインデックス算出.
     u32 x = static_cast<u32>( uv.x * ( m_Width - 1 ) );
     u32 y = static_cast<u32>( uv.y * ( m_Height -1 ) );
-    u32 idx = ( m_Width * m_ComponentCount * y ) + ( x * m_ComponentCount );
-    assert( idx < m_Size );
+    u32 idx = ( m_Width * 4 * y ) + ( x * 4 );
+    //assert( idx < m_Size );
 
     return ( m_pPixels[idx + 3] >= value );
 }

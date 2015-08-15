@@ -21,8 +21,8 @@ namespace s3d {
 ////////////////////////////////////////////////////////////////////////////////////
 struct MeshMaterial : IMaterial
 {
-    Color           Diffuse;        //!< 拡散反射成分です.
-    Color           Emissive;       //!< 自己照明成分です.
+    Color4          Diffuse;        //!< 拡散反射成分です.
+    Color4          Emissive;       //!< 自己照明成分です.
     Texture2D*      pDiffuseMap;    //!< ディフューズマップです.
     TextureSampler* pDiffuseSmp;    //!< ディフューズマップのサンプラーです.
     f32             Threshold;      //!< 閾値です.
@@ -36,12 +36,12 @@ struct MeshMaterial : IMaterial
     //------------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです.
     //------------------------------------------------------------------------------
-    MeshMaterial( const Color& diffuse, const Color& emissive );
+    MeshMaterial( const Color4& diffuse, const Color4& emissive );
 
     //------------------------------------------------------------------------------
     //! @brief      自己照明成分を取得します.
     //------------------------------------------------------------------------------
-    Color   GetEmissive( ) const override;
+    Color4   GetEmissive( ) const override;
 
     //------------------------------------------------------------------------------
     //! @brief      ロシアンルーレットの閾値を取得します.
@@ -51,7 +51,7 @@ struct MeshMaterial : IMaterial
     //------------------------------------------------------------------------------
     //! @brief      色を計算します.
     //------------------------------------------------------------------------------
-    Color   ComputeColor( ShadingArg& arg ) const override;
+    Color4   ComputeColor( ShadingArg& arg ) const override;
 
     //------------------------------------------------------------------------------
     //! @brief      アルファテストを行います.
@@ -59,7 +59,7 @@ struct MeshMaterial : IMaterial
     bool    AlphaTest( const Vector2& texcoord, const f32 value ) const override;
 
 #if 1
-    Color   GetDebugColor() const;
+    Color4   GetDebugColor() const;
 #endif
 };
 

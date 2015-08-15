@@ -203,14 +203,14 @@ void PathTracer::Watcher()
 //-------------------------------------------------------------------------------------------------
 //      指定方向からの放射輝度推定を行います.
 //-------------------------------------------------------------------------------------------------
-Color PathTracer::Radiance( const Ray& input )
+Color4 PathTracer::Radiance( const Ray& input )
 {
     ShadingArg arg = ShadingArg();
 
     Ray ray( input );
 
-    Color W( 1.0f, 1.0f, 1.0f );
-    Color L( 0.0f, 0.0f, 0.0f );
+    Color4 W( 1.0f, 1.0f, 1.0f, 1.0f );
+    Color4 L( 0.0f, 0.0f, 0.0f, 0.0f );
 
     // 乱数設定.
     arg.random = m_Random;
@@ -222,7 +222,7 @@ Color PathTracer::Radiance( const Ray& input )
         // 交差判定.
         if ( !m_pScene->Intersect( ray, record ) )
         {
-            L += Color::Mul( W, m_pScene->SampleIBL( ray.dir ) );
+            L += Color4::Mul( W, m_pScene->SampleIBL( ray.dir ) );
             break;
         }
 
@@ -234,12 +234,12 @@ Color PathTracer::Radiance( const Ray& input )
         // アルファテスト.
         if ( !material->AlphaTest( record.texcoord, 0.1f ) )
         {
-            L += Color::Mul( W, m_pScene->SampleIBL( ray.dir ) );
+            L += Color4::Mul( W, m_pScene->SampleIBL( ray.dir ) );
             break;
         }
 
         // 自己発光による放射輝度.
-        L += Color::Mul( W, material->GetEmissive() );
+        L += Color4::Mul( W, material->GetEmissive() );
 
         arg.prob = material->GetThreshold();
 
@@ -257,7 +257,7 @@ Color PathTracer::Radiance( const Ray& input )
         arg.texcoord = record.texcoord;
 
         // 色を求める.
-        W = Color::Mul( W, material->ComputeColor( arg ) );
+        W = Color4::Mul( W, material->ComputeColor( arg ) );
 
         // レイを更新.
         ray.Update( record.position, arg.output );
@@ -288,8 +288,8 @@ void PathTracer::TracePath()
     { coreCount--; }
 
     // レンダーターゲットを生成.
-    m_RenderTarget = new Color [ m_Config.Width * m_Config.Height ];
-    m_Intermediate = new Color [ m_Config.Width * m_Config.Height ];
+    m_RenderTarget = new Color4 [ m_Config.Width * m_Config.Height ];
+    m_Intermediate = new Color4 [ m_Config.Width * m_Config.Height ];
 
     const auto sampleCount    = m_Config.SampleCount * m_Config.SubSampleCount * m_Config.SubSampleCount;
     const auto invSampleCount = 1.0f / static_cast<f32>( sampleCount );

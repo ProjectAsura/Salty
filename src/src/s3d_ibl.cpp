@@ -57,7 +57,7 @@ void IBL::Term()
 //-------------------------------------------------------------------------------------------
 //      フェッチします.
 //-------------------------------------------------------------------------------------------
-Color IBL::Sample( const Vector3& dir )
+Color4 IBL::Sample( const Vector3& dir )
 {
     f32 u = 0.0f;
     const auto theta = acosf( dir.y );
@@ -75,10 +75,11 @@ Color IBL::Sample( const Vector3& dir )
     const auto y = s32( v * m_Height ) % m_Height;
 
     auto idx =  y * m_Width * 3 + x * 3;
-    return Color( 
+    return Color4( 
         m_pPixels[ idx + 0 ],
         m_pPixels[ idx + 1 ],
-        m_pPixels[ idx + 2 ] );
+        m_pPixels[ idx + 2 ],
+        1.0f );
 }
 
 } // namespace s3d

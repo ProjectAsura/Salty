@@ -126,7 +126,7 @@ void WriteBmp( FILE* pFile, const s32 width, const s32 height, const f32* pPixel
     {
         for( int j=0; j<width; ++j )
         {
-            s32 index = ( i * width * 3 ) + ( j * 3 );
+            s32 index = ( i * width * 4 ) + ( j * 4 );
 
             f32 r = pPixel[index + 0];
             f32 g = pPixel[index + 1];
@@ -208,12 +208,13 @@ bool LoadFromBMP( const char* filename, s32& width, s32& height, f32** ppPixels 
 
     fclose( pFile );
 
-    (*ppPixels) = new f32 [ size ];
-    for( s32 i=0; i<size-3; i+=3)
+    (*ppPixels) = new f32 [ width * height * 4 ];
+    for( s32 i=0, j=0; i<size-3; i+=3, j+=4)
     {
-        (*ppPixels)[ i + 0 ] = static_cast<f32>( pTexels[ i + 2 ] ) / 255.0f;
-        (*ppPixels)[ i + 1 ] = static_cast<f32>( pTexels[ i + 1 ] ) / 255.0f;
-        (*ppPixels)[ i + 2 ] = static_cast<f32>( pTexels[ i + 0 ] ) / 255.0f;
+        (*ppPixels)[ j + 0 ] = static_cast<f32>( pTexels[ i + 2 ] ) / 255.0f;
+        (*ppPixels)[ j + 1 ] = static_cast<f32>( pTexels[ i + 1 ] ) / 255.0f;
+        (*ppPixels)[ j + 2 ] = static_cast<f32>( pTexels[ i + 0 ] ) / 255.0f;
+        (*ppPixels)[ j + 3 ] = 1.0f;
     }
 
     delete [] pTexels;

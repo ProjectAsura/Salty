@@ -16,20 +16,20 @@ namespace /* anonymous */ {
 //------------------------------------------------------------------------------------------------
 // Constant Values
 //------------------------------------------------------------------------------------------------
-const s3d::Vector3 RGB2Y  (  0.29900f,  0.58700f,  0.11400f );
-const s3d::Vector3 RGB2Cb ( -0.16874f, -0.33126f,  0.50000f );
-const s3d::Vector3 RGB2Cr (  0.50000f, -0.41869f, -0.08131f );
-const s3d::Vector3 YCbCr2R(  1.00000f,  0.00000f,  1.40200f );
-const s3d::Vector3 YCbCr2G(  1.00000f, -0.34414f, -0.71414f );
-const s3d::Vector3 YCbCr2B(  1.00000f,  1.77200f,  0.00000f );
+const s3d::Vector4 RGB2Y  (  0.29900f,  0.58700f,  0.11400f, 0.0f );
+const s3d::Vector4 RGB2Cb ( -0.16874f, -0.33126f,  0.50000f, 0.0f );
+const s3d::Vector4 RGB2Cr (  0.50000f, -0.41869f, -0.08131f, 0.0f );
+const s3d::Vector4 YCbCr2R(  1.00000f,  0.00000f,  1.40200f, 0.0f );
+const s3d::Vector4 YCbCr2G(  1.00000f, -0.34414f, -0.71414f, 0.0f );
+const s3d::Vector4 YCbCr2B(  1.00000f,  1.77200f,  0.00000f, 0.0f );
 
 
 //------------------------------------------------------------------------------------------------
 //      輝度値を取得します.
 //------------------------------------------------------------------------------------------------
 S3D_INLINE
-f32 RGBToY( const s3d::Vector3& value )
-{ return s3d::Vector3::Dot( RGB2Y, value ); }
+f32 RGBToY( const s3d::Vector4& value )
+{ return s3d::Vector4::Dot( RGB2Y, value ); }
 
 //------------------------------------------------------------------------------------------------
 //      対数平均と最大輝度値を求めます.
@@ -38,7 +38,7 @@ void ComputeLogarithmicAverage
 (
     const s32           width,
     const s32           height,
-    const s3d::Vector3* pPixels,
+    const s3d::Color4*  pPixels,
     const f32           epsilon,
     f32&                aveLw,
     f32&                maxLw
@@ -110,8 +110,8 @@ void ToneMapper::Map
     TONE_MAPPING_TYPE type,
     const s32         width, 
     const s32         height,
-    const Color*      pPixels,
-    Color*            pResult
+    const Color4*     pPixels,
+    Color4*           pResult
 )
 {
     switch( type )
@@ -132,10 +132,10 @@ void ToneMapper::Map
 //------------------------------------------------------------------------------------------------
 void ToneMapper::ReinhardToneMapping
 (
-    const s32    width, 
-    const s32    height,
-    const Color* pPixels,
-    Color*       pResult
+    const s32     width, 
+    const s32     height,
+    const Color4* pPixels,
+    Color4*        pResult
 )
 {
     assert( pPixels != nullptr );
@@ -166,6 +166,7 @@ void ToneMapper::ReinhardToneMapping
 
             // トーンマッピングした結果を格納.
             pResult[idx] = Ld;
+            pResult[idx].w = pPixels[idx].w;    // アルファはそのまま.
         }
     }
 }
@@ -175,10 +176,10 @@ void ToneMapper::ReinhardToneMapping
 //------------------------------------------------------------------------------------------------
 void ToneMapper::FilmicToneMapping
 (
-    const s32    width,
-    const s32    height,
-    const Color* pPixels,
-    Color*       pResult
+    const s32     width,
+    const s32     height,
+    const Color4* pPixels,
+    Color4*       pResult
 )
 {
     assert( pPixels != nullptr );

@@ -25,30 +25,30 @@ TextureSampler g_Sampler = TextureSampler();
 
 // Lambert
 Matte g_Matte[] = {
-    Matte( Color( 0.75f, 0.75f, 0.75f ), Color( 0.0f, 0.0f, 0.0f ), &g_TextureWall, &g_Sampler ),
-    Matte( Color( 0.75f, 0.75f, 0.75f ), Color( 0.0f, 0.0f, 0.0f ), &g_TextureTile, &g_Sampler ),
-    Matte( Color( 0.0f,  0.0f,  0.0f  ), Color( 500.0f, 500.0f, 500.0f ) ),
-    Matte( Color( 0.5f,  0.0f,  0.0f  ), Color( 36.0f, 1.0f, 1.0f ) ),
-    Matte( Color( 0.0f,  0.0f,  0.5f  ), Color( 1.0f, 1.0f, 36.0f ) ), 
-    Matte( Color( 0.75f, 0.75f, 0.75f ), Color( 0.0f, 0.0f, 0.0f ), &g_TextureLeaf, &g_Sampler ),
+    Matte( Color4( 0.75f, 0.75f, 0.75f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f ), &g_TextureWall, &g_Sampler ),
+    Matte( Color4( 0.75f, 0.75f, 0.75f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f ), &g_TextureTile, &g_Sampler ),
+    Matte( Color4( 0.0f,  0.0f,  0.0f,  1.0f ), Color4( 500.0f, 500.0f, 500.0f, 1.0f ) ),
+    Matte( Color4( 0.5f,  0.0f,  0.0f,  1.0f ), Color4( 36.0f, 1.0f, 1.0f, 1.0f ) ),
+    Matte( Color4( 0.0f,  0.0f,  0.5f,  1.0f ), Color4( 1.0f, 1.0f, 36.0f, 1.0f ) ), 
+    Matte( Color4( 0.75f, 0.75f, 0.75f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f ), &g_TextureLeaf, &g_Sampler ),
 
 };
 
 // Mirror
 Mirror g_Mirror[] = {
-    Mirror( Color( 0.85f, 0.85f, 0.85f ) ),
-    Mirror( Color( 0.75f, 0.75f, 0.25f ) ),
+    Mirror( Color4( 0.85f, 0.85f, 0.85f, 1.0f ) ),
+    Mirror( Color4( 0.75f, 0.75f, 0.25f, 1.0f ) ),
 };
 
 // Refraction (Crystal)
 Glass g_Crystal[] = {
-    Glass( 1.54f, Color( 0.85f, 0.65f, 0.65f ) ),
-    Glass( 2.5f,  Color( 0.9f,  0.85f, 0.85f  ) ),
+    Glass( 1.54f, Color4( 0.85f, 0.65f, 0.65f, 1.0f ) ),
+    Glass( 2.5f,  Color4( 0.9f,  0.85f, 0.85f, 1.0f ) ),
 };
 
 // Phong
 Glossy g_Glossy[] = {
-    Glossy( Color( 0.95f, 0.95f, 0.95f ), 1000.0f ),
+    Glossy( Color4( 0.95f, 0.95f, 0.95f, 1.0f ), 1000.0f ),
 };
 
 // Materials

@@ -32,7 +32,7 @@ struct TextureSampler
 {
     TEXTURE_ADDRESS_MODE addressU;          //!< テクスチャU座標のアドレッシングモードです.
     TEXTURE_ADDRESS_MODE addressV;          //!< テクスチャV座標のアドレッシングモードです.
-    Color                boarderColor;      //!< 境界色です.
+    Color4               boarderColor;      //!< 境界色です.
 
     //------------------------------------------------------------------------------
     //! @brief      コンストラクタです.
@@ -40,7 +40,7 @@ struct TextureSampler
     TextureSampler()
     : addressU      ( TEXTURE_ADDRESS_WRAP )
     , addressV      ( TEXTURE_ADDRESS_WRAP )
-    , boarderColor  ( 0.0f, 0.0f, 0.0f )
+    , boarderColor  ( 0.0f, 0.0f, 0.0f, 1.0f )
     { /* DO_NOTHING */ }
 
     //------------------------------------------------------------------------------
@@ -50,7 +50,7 @@ struct TextureSampler
     ( 
         const TEXTURE_ADDRESS_MODE _addressU,
         const TEXTURE_ADDRESS_MODE _addressV,
-        const Color&               _boarderColor
+        const Color4&              _boarderColor
     )
     : addressU      ( _addressU )
     , addressV      ( _addressV )
@@ -112,7 +112,7 @@ public:
     //------------------------------------------------------------------------------
     //! @brief      テクスチャフェッチします.
     //------------------------------------------------------------------------------
-    Color Sample( const TextureSampler&, const Vector2& ) const;
+    Color4 Sample( const TextureSampler&, const Vector2& ) const;
 
     //------------------------------------------------------------------------------
     //! @brief      アルファテストを行います.

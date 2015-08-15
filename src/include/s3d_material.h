@@ -36,7 +36,7 @@ struct IMaterial
     //---------------------------------------------------------------------------------------------
     //! @brief      自己発光カラーを取得します.
     //---------------------------------------------------------------------------------------------
-    virtual Color GetEmissive() const = 0;
+    virtual Color4 GetEmissive() const = 0;
 
     //---------------------------------------------------------------------------------------------
     //! @brief      ロシアンルーレットの閾値を取得します.
@@ -46,7 +46,7 @@ struct IMaterial
     //---------------------------------------------------------------------------------------------
     //! @brief      シェーディングします.
     //---------------------------------------------------------------------------------------------
-    virtual Color ComputeColor( ShadingArg& ) const = 0;
+    virtual Color4 ComputeColor( ShadingArg& ) const = 0;
 
     //---------------------------------------------------------------------------------------------
     //! @brief      アルファテストを行います.
@@ -54,8 +54,8 @@ struct IMaterial
     virtual bool AlphaTest( const Vector2&, const f32 ) const = 0;
 
 #if 1
-    virtual Color GetDebugColor() const
-    { return Color( 1.0f, 0.0f, 0.0f ); }
+    virtual Color4 GetDebugColor() const
+    { return Color4( 1.0f, 0.0f, 0.0f, 1.0f ); }
 #endif
 };
 
@@ -65,8 +65,8 @@ struct IMaterial
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 struct MaterialBase : public IMaterial
 {
-    Color                   emissive;       //!< 自己発光カラーです.
-    Color                   color;          //!< マテリアルカラーです.
+    Color4                  emissive;       //!< 自己発光カラーです.
+    Color4                  color;          //!< マテリアルカラーです.
     const Texture2D*        pTexture;       //!< 2次元テクスチャです.
     const TextureSampler*   pSampler;       //!< テクスチャサンプラーです.
     f32                     threshold;      //!< 閾値です.
@@ -79,15 +79,15 @@ struct MaterialBase : public IMaterial
     //---------------------------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです.
     //---------------------------------------------------------------------------------------------
-    MaterialBase( const Color&, const Color& );
+    MaterialBase( const Color4&, const Color4& );
 
     //---------------------------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです.
     //---------------------------------------------------------------------------------------------
     MaterialBase
     (
-        const Color&,
-        const Color&,
+        const Color4&,
+        const Color4&,
         const Texture2D*,
         const TextureSampler*
     );
@@ -100,7 +100,7 @@ struct MaterialBase : public IMaterial
     //---------------------------------------------------------------------------------------------
     //! @brief      自己発行カラーを取得します.
     //---------------------------------------------------------------------------------------------
-    virtual Color GetEmissive() const override;
+    virtual Color4 GetEmissive() const override;
 
     //---------------------------------------------------------------------------------------------
     //! @brief      ロシアンルーレットの閾値を取得します.
@@ -110,7 +110,7 @@ struct MaterialBase : public IMaterial
     //---------------------------------------------------------------------------------------------
     //! @brief      色を求めます.
     //---------------------------------------------------------------------------------------------
-    virtual Color ComputeColor( ShadingArg& arg ) const override;
+    virtual Color4 ComputeColor( ShadingArg& arg ) const override;
 
     //---------------------------------------------------------------------------------------------
     //! @brief      アルファテストを行います.
@@ -118,7 +118,7 @@ struct MaterialBase : public IMaterial
     virtual bool AlphaTest( const Vector2& texcoord, const f32 value ) const override;
 
 #if 1
-    virtual Color GetDebugColor() const
+    virtual Color4 GetDebugColor() const
     { return color; }
 #endif
 };
@@ -137,15 +137,15 @@ struct Matte : public MaterialBase
     //---------------------------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです.
     //---------------------------------------------------------------------------------------------
-    Matte( const Color&, const Color& );
+    Matte( const Color4&, const Color4& );
 
     //---------------------------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです.
     //---------------------------------------------------------------------------------------------
     Matte
     ( 
-        const Color&,
-        const Color&,
+        const Color4&,
+        const Color4&,
         const Texture2D*,
         const TextureSampler*
     );
@@ -153,7 +153,7 @@ struct Matte : public MaterialBase
     //---------------------------------------------------------------------------------------------
     //! @brief      色を求めます.
     //---------------------------------------------------------------------------------------------
-    Color ComputeColor( ShadingArg& arg ) const override;
+    Color4 ComputeColor( ShadingArg& arg ) const override;
 };
 
 
@@ -170,15 +170,15 @@ struct Mirror : public MaterialBase
     //---------------------------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです.
     //---------------------------------------------------------------------------------------------
-    Mirror( const Color&, const Color& = Color( 0.0f, 0.0f, 0.0f ) );
+    Mirror( const Color4&, const Color4& = Color4( 0.0f, 0.0f, 0.0f, 1.0f ) );
 
     //---------------------------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです.
     //---------------------------------------------------------------------------------------------
     Mirror
     (
-        const Color&,
-        const Color&,
+        const Color4&,
+        const Color4&,
         const Texture2D*,
         const TextureSampler*
     );
@@ -186,7 +186,7 @@ struct Mirror : public MaterialBase
     //---------------------------------------------------------------------------------------------
     //! @brief      色を求めます.
     //---------------------------------------------------------------------------------------------
-    Color ComputeColor( ShadingArg& arg ) const override;
+    Color4 ComputeColor( ShadingArg& arg ) const override;
 };
 
 
@@ -208,8 +208,8 @@ struct Glass : public MaterialBase
     Glass
     (
         const f32,
-        const Color&,
-        const Color& = Color( 0.0f, 0.0f, 0.0f )
+        const Color4&,
+        const Color4& = Color4( 0.0f, 0.0f, 0.0f, 1.0f )
     );
 
     //---------------------------------------------------------------------------------------------
@@ -218,8 +218,8 @@ struct Glass : public MaterialBase
     Glass
     (
         const f32,
-        const Color&,
-        const Color&,
+        const Color4&,
+        const Color4&,
         const Texture2D*,
         const TextureSampler*
     );
@@ -227,7 +227,7 @@ struct Glass : public MaterialBase
     //---------------------------------------------------------------------------------------------
     //! @brief      色を求めます.
     //---------------------------------------------------------------------------------------------
-    Color ComputeColor( ShadingArg& arg ) const override;
+    Color4 ComputeColor( ShadingArg& arg ) const override;
 };
 
 
@@ -236,8 +236,8 @@ struct Glass : public MaterialBase
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 struct Glossy : public IMaterial
 {
-    Color                   emissive;       //!< 自己発光カラーです.
-    Color                   specular;       //!< 鏡面反射色です.
+    Color4                  emissive;       //!< 自己発光カラーです.
+    Color4                  specular;       //!< 鏡面反射色です.
     f32                     power;          //!< 鏡面反射強度です.
     f32                     threshold;      //!< 閾値です.
     const Texture2D*        pTexture;       //!< 2次元テクスチャです.
@@ -253,9 +253,9 @@ struct Glossy : public IMaterial
     //---------------------------------------------------------------------------------------------
     Glossy
     ( 
-        const Color&,
+        const Color4&,
         const f32,
-        const Color& = Color( 0.0f, 0.0f, 0.0f )
+        const Color4& = Color4( 0.0f, 0.0f, 0.0f, 1.0f )
     );
 
     //---------------------------------------------------------------------------------------------
@@ -263,9 +263,9 @@ struct Glossy : public IMaterial
     //---------------------------------------------------------------------------------------------
     Glossy
     (
-        const Color&,
+        const Color4&,
         const f32,
-        const Color&,
+        const Color4&,
         const Texture2D*,
         const TextureSampler*
     );
@@ -273,7 +273,7 @@ struct Glossy : public IMaterial
     //---------------------------------------------------------------------------------------------
     //! @brief      自己発行カラーを取得します.
     //---------------------------------------------------------------------------------------------
-    Color GetEmissive() const override;
+    Color4 GetEmissive() const override;
 
     //---------------------------------------------------------------------------------------------
     //! @brief      ロシアンルーレットの閾値を取得します.
@@ -283,7 +283,7 @@ struct Glossy : public IMaterial
     //---------------------------------------------------------------------------------------------
     //! @brief      色を求めます.
     //---------------------------------------------------------------------------------------------
-    Color ComputeColor( ShadingArg& ) const override;
+    Color4 ComputeColor( ShadingArg& ) const override;
 
     //---------------------------------------------------------------------------------------------
     //! @brief      アルファテストを行います.
@@ -291,8 +291,8 @@ struct Glossy : public IMaterial
     bool AlphaTest( const Vector2& texcoord, const f32 value ) const override;
 
 #if 1
-    Color GetDebugColor() const override
-    { return Color( 0.0f, 1.0f, 0.0f ); }
+    Color4 GetDebugColor() const override
+    { return Color4( 0.0f, 1.0f, 0.0f, 1.0f ); }
 #endif
 };
 

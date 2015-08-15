@@ -67,7 +67,7 @@ public:
     //! @brief      IBLテクスチャをフェッチします.
     //---------------------------------------------------------------------------------------------
     S3D_INLINE
-    Color SampleIBL( const Vector3& dir )
+    Color4 SampleIBL( const Vector3& dir )
     { return m_IBL.Sample( dir ); }
 
 protected:

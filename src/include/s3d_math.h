@@ -35,7 +35,8 @@ struct  BoundingBox8;
 //-------------------------------------------------------------------------------------------------
 // Type Definitions.
 //-------------------------------------------------------------------------------------------------
-typedef Vector3 Color;
+typedef Vector3 Color3;
+typedef Vector4 Color4;
 
 
 //-------------------------------------------------------------------------------------------------
@@ -1220,6 +1221,64 @@ public:
     #endif//S3D_IS_SIMD
     }
 
+    S3D_INLINE
+    Vector4 operator * (const Vector4 &b) const
+    {
+    #if S3D_IS_SIMD
+        return Vector4( _mm_mul_ps( v, b.v ) );
+    #else
+        return Vector4(
+            x * b.x,
+            y * b.y,
+            z * b.z,
+            w * b.w );
+    #endif
+    }
+
+    S3D_INLINE
+    Vector4 operator / ( const Vector4& b) const
+    {
+    #if S3D_IS_SIMD
+        return Vector4( _mm_div_ps( v, b.v ) );
+    #else
+        return Vector4(
+            x / b.x,
+            y / b.y,
+            z / b.z,
+            w / b.w );
+    #endif
+    }
+
+    S3D_INLINE
+    Vector4 operator + ( const f32 b ) const
+    {
+    #if S3D_IS_SIMD
+        b128 s = _mm_set1_ps( b );
+        return Vector4( _mm_add_ps( v, s ) );
+    #else
+        return Vector4(
+            x + b,
+            y + b,
+            z + b,
+            w + b );
+    #endif
+    }
+
+    S3D_INLINE
+    Vector4 operator - ( const f32 b ) const
+    {
+    #if S3D_IS_SIMD
+        b128 s = _mm_set1_ps( b );
+        return Vector4( _mm_sub_ps( v, s ) );
+    #else
+        return Vector4(
+            x - b,
+            y - b,
+            z - b,
+            w - b );
+    #endif
+    }
+
     //---------------------------------------------------------------------------------------------
     //! @brief      乗算演算子です.
     //---------------------------------------------------------------------------------------------
@@ -1493,6 +1552,36 @@ Vector4 operator * (const f32 f, const Vector4 &v)
         f * v.z,
         f * v.w );
 #endif//S3D_IS_SIMD
+}
+
+S3D_INLINE
+Vector4 operator + (const f32 f, const Vector4& v)
+{
+#if S3D_IS_SIMD
+    b128 s = _mm_set1_ps( f );
+    return Vector4( _mm_add_ps( s, v.v ) );
+#else
+    return Vector4(
+        s + v.x,
+        s + v.y,
+        s + v.z,
+        s + v.w );
+#endif
+}
+
+S3D_INLINE
+Vector4 operator - ( const f32 f, const Vector4& v)
+{
+#if S3D_IS_SIMD
+    b128 s = _mm_set1_ps( f );
+    return Vector4( _mm_sub_ps( s, v.v ) );
+#else
+    return Vector4(
+        f - v.x,
+        f - v.y,
+        f - v.z,
+        f - v.w );
+#endif
 }
 
 

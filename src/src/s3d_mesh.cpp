@@ -100,8 +100,8 @@ namespace s3d {
 //----------------------------------------------------------------------------------------
 MeshMaterial::MeshMaterial
 (
-    const Color&    diffuse,
-    const Color&    emissive
+    const Color4&    diffuse,
+    const Color4&    emissive
 )
 : Diffuse       ( diffuse )
 , Emissive      ( emissive )
@@ -115,7 +115,7 @@ MeshMaterial::MeshMaterial
 //---------------------------------------------------------------------------------------
 //      自己照明成分を取得します.
 //---------------------------------------------------------------------------------------
-Color MeshMaterial::GetEmissive() const
+Color4 MeshMaterial::GetEmissive() const
 {
     return Emissive; 
 }
@@ -137,14 +137,14 @@ bool MeshMaterial::AlphaTest( const Vector2& texcoord, const f32 value ) const
 }
 
 #if 1
-Color MeshMaterial::GetDebugColor() const
+Color4 MeshMaterial::GetDebugColor() const
 { return Diffuse; }
 #endif
 
 //---------------------------------------------------------------------------------------
 //      色を計算します.
 //---------------------------------------------------------------------------------------
-Color MeshMaterial::ComputeColor( ShadingArg& arg ) const
+Color4 MeshMaterial::ComputeColor( ShadingArg& arg ) const
 {
     // ========================
     // Lambert BRDF.
@@ -170,9 +170,9 @@ Color MeshMaterial::ComputeColor( ShadingArg& arg ) const
     arg.output = dir;
 
     // 重み更新 (飛ぶ方向が不定なので確率で割る必要あり).
-    Color result;
+    Color4 result;
     if ( pDiffuseMap != nullptr )
-    { result = Color::Mul( Diffuse, pDiffuseMap->Sample( ( *pDiffuseSmp ), arg.texcoord ) ) / arg.prob; }
+    { result = Color4::Mul( Diffuse, pDiffuseMap->Sample( ( *pDiffuseSmp ), arg.texcoord ) ) / arg.prob; }
     else
     { result = Diffuse / arg.prob; }
 
@@ -359,7 +359,19 @@ bool Mesh::LoadFromFile( const char* filename )
         SMD_MATERIAL material;
         fread( &material, sizeof( SMD_MATERIAL ), 1, pFile );
 
-        m_Materials[i] = MeshMaterial( material.Diffuse, material.Emissive );
+        Color4 diffuse;
+        diffuse.x = material.Diffuse.x;
+        diffuse.y = material.Diffuse.y;
+        diffuse.z = material.Diffuse.z;
+        diffuse.w = 1.0f;
+
+        Color4 emissive;
+        emissive.x = material.Emissive.x;
+        emissive.y = material.Emissive.y;
+        emissive.z = material.Emissive.z;
+        emissive.w = 1.0f;
+
+        m_Materials[i] = MeshMaterial( diffuse, emissive );
         if ( material.DiffuseMap >= 0 )
         {
             m_Materials[ i ].pDiffuseMap = &m_Textures[ material.DiffuseMap ];

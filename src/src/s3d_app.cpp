@@ -14,10 +14,9 @@
 #include <s3d_camera.h>
 #include <s3d_shape.h>
 #include <s3d_material.h>
-#include <s3d_filter.h>
+#include <s3d_tonemapper.h>
 #include <s3d_timer.h>
 #include <s3d_bvh.h>
-#include <s3d_bvh2.h>
 #include <s3d_mesh.h>
 #include <iostream>
 #include <direct.h>

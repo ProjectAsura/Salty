@@ -7,24 +7,12 @@
 //----------------------------------------------------------------------------------------
 // Includes
 //----------------------------------------------------------------------------------------
-#include <s3d_mesh.h>
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <s3d_mesh.h>
 #include <s3d_bvh.h>
-#include <s3d_bvh2.h>
-
-#ifndef DLOG
-    #if defined(DEBUG) || defined(_DEBUG)
-        #define DLOG( x, ... )   printf_s( "[File:%s, Line:%d] "x"\n", __FILE__, __LINE__ , ##__VA_ARGS__ )
-    #else
-        #define DLOG( x, ... )   void(0)
-    #endif
-#endif//DLOG
-
-#ifndef ILOG
-#define ILOG( x, ... )      printf_s( x"\n", ##__VA_ARGS__ )
-#endif//ILOG
+#include <s3d_logger.h>
 
 
 namespace /* anonymous */ {

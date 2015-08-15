@@ -1,6 +1,6 @@
 ﻿//------------------------------------------------------------------------------------------------
-// File : s3d_filter.h
-// Desc : Filter Module.
+// File : s3d_tonemapper.h
+// Desc : Tone Mapper Module.
 // Copyright(c) Project Asura. All right reserved.
 //------------------------------------------------------------------------------------------------
 #pragma once

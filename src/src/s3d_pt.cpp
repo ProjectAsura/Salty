@@ -15,7 +15,7 @@
 #include <s3d_pt.h>
 #include <s3d_logger.h>
 #include <s3d_timer.h>
-#include <s3d_filter.h>
+#include <s3d_tonemapper.h>
 #include <s3d_bmp.h>
 #include <s3d_camera.h>
 #include <s3d_shape.h>

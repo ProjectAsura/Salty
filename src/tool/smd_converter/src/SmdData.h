@@ -187,8 +187,11 @@ struct SMD_TRIANGLE
 struct SMD_MATERIAL
 {
     SMD_FVEC3   diffuse;                //!< 拡散反射色です.
+    SMD_FVEC3   specular;               //!< 鏡面反射色です.
+    float       power;                  //!< 鏡面反射強度です.
     SMD_FVEC3   emissive;               //!< 自己照明色です.
-    int         diffuseMap;             //!< ディフューズマップ名です.
+    int         diffuseMap;             //!< ディフューズマップです.
+    int         specularMap;            //!< スペキュラーマップです.
 };
 
 ///////////////////////////////////////////////////////////////////////////////

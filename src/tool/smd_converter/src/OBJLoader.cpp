@@ -1404,6 +1404,12 @@ void OBJMESH::WriteDirect( FILE* pFile )
         material.emissive.y = m_Materials[ i ].emissive.y;
         material.emissive.z = m_Materials[ i ].emissive.z;
 
+        material.specular.x = m_Materials[i].specular.x;
+        material.specular.y = m_Materials[i].specular.y;
+        material.specular.z = m_Materials[i].specular.z;
+        
+        material.power = m_Materials[i].shininess;
+
         // テクスチャインデックスを求める.
         int textureIndex = -1;
         for( size_t j=0; j<textureList.size(); ++j )

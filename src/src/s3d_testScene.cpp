@@ -41,9 +41,9 @@ Mirror g_Mirror[] = {
 };
 
 // Refraction (Crystal)
-Glass g_Crystal[] = {
-    Glass( 1.54f, Color4( 0.85f, 0.65f, 0.65f, 1.0f ) ),
-    Glass( 2.5f,  Color4( 0.9f,  0.85f, 0.85f, 1.0f ) ),
+Dielectric g_Crystal[] = {
+    Dielectric( 1.54f, Color4( 0.85f, 0.65f, 0.65f, 1.0f ) ),
+    Dielectric( 2.5f,  Color4( 0.9f,  0.85f, 0.85f, 1.0f ) ),
 };
 
 // Phong
@@ -147,7 +147,7 @@ namespace s3d {
 TestScene::TestScene( const u32 width, const u32 height )
 : Scene()
 {
-    if ( !g_Mesh.LoadFromFile( "res/mesh/lucy/lucy_low.smd" ) )
+    if ( !g_Mesh.LoadFromFile( "res/mesh/lucy/lucy_2.smd" ) )
     {
         assert( false );
     }

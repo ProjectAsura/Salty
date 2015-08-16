@@ -22,9 +22,13 @@ namespace s3d {
 struct MeshMaterial : IMaterial
 {
     Color4          Diffuse;        //!< 拡散反射成分です.
+    Color4          Specular;       //!< 鏡面反射成分です.
+    f32             Power;          //!< 鏡面反射強度です.
     Color4          Emissive;       //!< 自己照明成分です.
     Texture2D*      pDiffuseMap;    //!< ディフューズマップです.
+    Texture2D*      pSpecularMap;   //!< スペキュラーマップです.
     TextureSampler* pDiffuseSmp;    //!< ディフューズマップのサンプラーです.
+    TextureSampler* pSpecularSmp;   //!< スペキュラーマップのサンプラーです.
     f32             Threshold;      //!< 閾値です.
 
     //------------------------------------------------------------------------------
@@ -36,7 +40,11 @@ struct MeshMaterial : IMaterial
     //------------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです.
     //------------------------------------------------------------------------------
-    MeshMaterial( const Color4& diffuse, const Color4& emissive );
+    MeshMaterial( 
+        const Color4& diffuse,
+        const Color4& specular,
+        const f32     power,
+        const Color4& emissive );
 
     //------------------------------------------------------------------------------
     //! @brief      自己照明成分を取得します.

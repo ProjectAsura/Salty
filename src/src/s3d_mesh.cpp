@@ -74,8 +74,11 @@ struct SMD_TRIANGLE
 struct SMD_MATERIAL
 {
     s3d::Vector3    Diffuse;            //!< 拡散反射成分です.
+    s3d::Vector3    Specular;           //!< 鏡面反射成分です.
+    f32             Power;              //!< 鏡面反射強度です.
     s3d::Vector3    Emissive;           //!< 自己照明成分です.
     s32             DiffuseMap;         //!< ディフューズマップです.
+    s32             SpecularMap;        //!< スペキュラーマップです.
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -101,12 +104,16 @@ namespace s3d {
 MeshMaterial::MeshMaterial
 (
     const Color4&    diffuse,
+    const Color4&    specular,
+    const f32        power,
     const Color4&    emissive
 )
 : Diffuse       ( diffuse )
+, Specular      ( specular )
+, Power         ( power )
 , Emissive      ( emissive )
 , pDiffuseMap   ( nullptr )
-, pDiffuseSmp   ( nullptr )
+, pSpecularSmp  ( nullptr )
 {
     Threshold = Max( diffuse.x, diffuse.y );
     Threshold = Max( diffuse.z, Threshold );
@@ -146,37 +153,77 @@ Color4 MeshMaterial::GetDebugColor() const
 //---------------------------------------------------------------------------------------
 Color4 MeshMaterial::ComputeColor( ShadingArg& arg ) const
 {
-    // ========================
-    // Lambert BRDF.
-    // ========================
-
     // 補正済み法線データ (レイの入出を考慮済み).
-    const Vector3 normalMod = ( Vector3::Dot( arg.normal, arg.input ) < 0.0 ) ? arg.normal : -arg.normal;
+    auto cosine = Vector3::Dot( arg.normal, arg.input );
+    const Vector3 normalMod = ( cosine < 0.0 ) ? arg.normal : -arg.normal;
+    if ( cosine < 0.0f ) cosine = -cosine;
 
-    // normalModの方向を基準とした正規直交基底(w, u, v)を作る。
-    // この基底に対する半球内で次のレイを飛ばす。
-    OrthonormalBasis onb;
-    onb.InitFromW( normalMod );
+    auto temp1 = 1.0f - cosine;
+    const auto R0 = 0.5f;
+    auto R = R0 + ( 1.0f - R0 ) * temp1 * temp1 * temp1 * temp1 * temp1;
+    auto P = ( R + 0.5f ) / 2.0f;
 
-    // インポータンスサンプリング.
-    const f32 phi = F_2PI * arg.random.GetAsF32( );
-    const f32 r = SafeSqrt( arg.random.GetAsF32( ) );
-    const f32 x = r * cosf( phi );
-    const f32 y = r * sinf( phi );
-    const f32 z = SafeSqrt( 1.0f - ( x * x ) - ( y * y ) );
+    if ( arg.random.GetAsF32() <= P )
+    {
+        // normalModの方向を基準とした正規直交基底(w, u, v)を作る。
+        // この基底に対する半球内で次のレイを飛ばす。
+        OrthonormalBasis onb;
+        onb.InitFromW( normalMod );
 
-    // 出射方向.
-    Vector3 dir = Vector3::UnitVector( onb.u * x + onb.v * y + onb.w * z );
-    arg.output = dir;
+        // インポータンスサンプリング.
+        const f32 phi = F_2PI * arg.random.GetAsF32( );
+        const f32 r = SafeSqrt( arg.random.GetAsF32( ) );
+        const f32 x = r * cosf( phi );
+        const f32 y = r * sinf( phi );
+        const f32 z = SafeSqrt( 1.0f - ( x * x ) - ( y * y ) );
 
-    // 重み更新 (飛ぶ方向が不定なので確率で割る必要あり).
-    Color4 result;
-    if ( pDiffuseMap != nullptr )
-    { result = Color4::Mul( Diffuse, pDiffuseMap->Sample( ( *pDiffuseSmp ), arg.texcoord ) ) / arg.prob; }
+        // 出射方向.
+        Vector3 dir = Vector3::UnitVector( onb.u * x + onb.v * y + onb.w * z );
+        arg.output = dir;
+
+        // 重み更新 (飛ぶ方向が不定なので確率で割る必要あり).
+        Color4 result;
+        if ( pDiffuseMap != nullptr )
+        { result = Color4::Mul( Diffuse, pDiffuseMap->Sample( ( *pDiffuseSmp ), arg.texcoord ) ) * R / P; }
+        else
+        { result = Diffuse  * R / P; }
+
+        return result;
+    }
     else
-    { result = Diffuse / arg.prob; }
+    {
+        // インポータンスサンプリング.
+        const f32 phi = F_2PI * arg.random.GetAsF32();
+        const f32 cosTheta = powf( 1.0f - arg.random.GetAsF32(), 1.0f / ( Power + 1.0f ) );
+        const f32 sinTheta = SafeSqrt( 1.0f - ( cosTheta * cosTheta ) );
+        const f32 x = cosf( phi ) * sinTheta;
+        const f32 y = sinf( phi ) * sinTheta;
+        const f32 z = cosTheta;
 
-    return result;
+        // 反射ベクトル.
+        Vector3 w = Vector3::Reflect( arg.input, normalMod );
+        w.Normalize();
+
+        // 基底ベクトルを求める.
+        OrthonormalBasis onb;
+        onb.InitFromW( w );
+
+        // 出射方向.
+        auto dir = Vector3::UnitVector( onb.u * x + onb.v * y + onb.w * z );
+
+        // 出射方向と法線ベクトルの内積を求める.
+        auto dots = Vector3::Dot( dir, normalMod );
+
+        arg.output = dir;
+
+        // 重み更新.
+        if ( pSpecularMap != nullptr && pSpecularSmp != nullptr )
+        {
+            return Color4::Mul( Specular, pSpecularMap->Sample( (*pSpecularSmp), arg.texcoord ) ) * dots * ( 1.0f - R ) / ( 1.0f - P );
+        }
+
+        return Specular * dots * ( 1.0f - R ) / ( 1.0f - P );
+    }
 }
 
 
@@ -371,7 +418,13 @@ bool Mesh::LoadFromFile( const char* filename )
         emissive.z = material.Emissive.z;
         emissive.w = 1.0f;
 
-        m_Materials[i] = MeshMaterial( diffuse, emissive );
+        Color4 specular;
+        specular.x = material.Specular.x;
+        specular.y = material.Specular.y;
+        specular.z = material.Specular.z;
+        specular.w = 1.0f;
+
+        m_Materials[i] = MeshMaterial( diffuse, specular, material.Power, emissive );
         if ( material.DiffuseMap >= 0 )
         {
             m_Materials[ i ].pDiffuseMap = &m_Textures[ material.DiffuseMap ];
@@ -417,7 +470,7 @@ bool Mesh::LoadFromFile( const char* filename )
     }
 
     // BVHを構築します.
-    m_pBVH = QBVH::BuildBranch( &m_Triangles[0], static_cast<u32>(m_Triangles.size()) );
+    m_pBVH = OBVH::BuildBranch( &m_Triangles[0], static_cast<u32>(m_Triangles.size()) );
 
     return true;
 }

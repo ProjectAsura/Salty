@@ -156,6 +156,8 @@ Color4 MeshMaterial::ComputeColor( ShadingArg& arg ) const
     // 補正済み法線データ (レイの入出を考慮済み).
     auto cosine = Vector3::Dot( arg.normal, arg.input );
     const Vector3 normalMod = ( cosine < 0.0 ) ? arg.normal : -arg.normal;
+
+#if 0
     if ( cosine < 0.0f ) cosine = -cosine;
 
     auto temp1 = 1.0f - cosine;
@@ -224,6 +226,32 @@ Color4 MeshMaterial::ComputeColor( ShadingArg& arg ) const
 
         return Specular * dots * ( 1.0f - R ) / ( 1.0f - P );
     }
+#else
+        // normalModの方向を基準とした正規直交基底(w, u, v)を作る。
+        // この基底に対する半球内で次のレイを飛ばす。
+        OrthonormalBasis onb;
+        onb.InitFromW( normalMod );
+
+        // インポータンスサンプリング.
+        const f32 phi = F_2PI * arg.random.GetAsF32( );
+        const f32 r = SafeSqrt( arg.random.GetAsF32( ) );
+        const f32 x = r * cosf( phi );
+        const f32 y = r * sinf( phi );
+        const f32 z = SafeSqrt( 1.0f - ( x * x ) - ( y * y ) );
+
+        // 出射方向.
+        Vector3 dir = Vector3::UnitVector( onb.u * x + onb.v * y + onb.w * z );
+        arg.output = dir;
+
+        // 重み更新 (飛ぶ方向が不定なので確率で割る必要あり).
+        Color4 result;
+        if ( pDiffuseMap != nullptr )
+        { result = Color4::Mul( Diffuse, pDiffuseMap->Sample( ( *pDiffuseSmp ), arg.texcoord ) ) * arg.prob; }
+        else
+        { result = Diffuse * arg.prob; }
+
+        return result;
+#endif
 }
 
 
@@ -294,6 +322,7 @@ bool Mesh::LoadFromFile( const char* filename )
     errno_t err = fopen_s( &pFile, filename, "rb" );
     if ( err != 0 )
     {
+        ELOG( "Error : Load Faile Failed. filename = %s", filename );
         return false;
     }
 

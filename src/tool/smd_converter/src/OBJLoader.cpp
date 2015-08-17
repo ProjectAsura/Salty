@@ -1757,16 +1757,16 @@ bool OBJMESH::SaveToBinary( const char* filename )
         return false;
     }
 
-    if ( m_NumMaterials == m_NumSubsets )
+    //if ( m_NumMaterials == m_NumSubsets )
     {
         // 最適化の必要がないのでそのまま書き込み.
         WriteDirect( pFile );
     }
-    else
-    {
-        // 最適化しながら書き込み.
-        WriteOptimize( pFile );
-    }
+    //else
+    //{
+    //    // 最適化しながら書き込み.
+    //    WriteOptimize( pFile );
+    //}
 
     // ファイルを閉じる.
     fclose( pFile );

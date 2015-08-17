@@ -180,6 +180,7 @@ void PathTracer::Watcher()
         // 15分の規定時間に達した場合.
         if ( min > 14.9 )
         {
+            sprintf_s( filename, "img/%03d.bmp", counter );
             ILOG( "Rendering Imcompleted..." );
             break;
         }
@@ -187,6 +188,7 @@ void PathTracer::Watcher()
         // レンダリングが正常終了した場合.
         if ( m_IsFinish )
         {
+            sprintf_s( filename, "img/%03d.bmp", counter );
             ILOG( "Rendering Completed !!!" );
             break;
         }

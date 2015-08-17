@@ -1013,6 +1013,20 @@ public:
         /* DO_NOTHING */
     }
 
+    S3D_INLINE
+    Vector4( const Vector3& val, const f32 nw )
+#if S3D_IS_SIMD
+    : v( _mm_set_ps( nw, val.z, val.y, val.x ) )
+#else
+    : x( val.x )
+    , y( val.y )
+    , z( val.z )
+    , w( nw )
+#endif
+    {
+        /* DO_NOTHING */
+    }
+
   #if S3D_IS_SIMD
     //---------------------------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです.

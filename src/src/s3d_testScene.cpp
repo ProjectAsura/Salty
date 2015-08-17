@@ -18,7 +18,7 @@ namespace /* anonymous */ {
 
 using namespace s3d;
 
-Texture2D   g_TextureWall( "./res/texture/wall.bmp" );
+Texture2D   g_TextureWall( "./res/texture/brick.bmp" );
 Texture2D   g_TextureLeaf( "./res/texture/aglaonema_leaf.tga" );
 Texture2D   g_TextureTile( "./res/texture/tile.bmp" );
 TextureSampler g_Sampler = TextureSampler();
@@ -147,7 +147,7 @@ namespace s3d {
 TestScene::TestScene( const u32 width, const u32 height )
 : Scene()
 {
-    if ( !g_Mesh.LoadFromFile( "res/mesh/lucy/lucy_2.smd" ) )
+    if ( !g_Mesh.LoadFromFile( "res/mesh/pig/pig.smd" ) )
     {
         assert( false );
     }

@@ -10,6 +10,7 @@
 #include <s3d_texture.h>
 #include <s3d_bmp.h>
 #include <s3d_tga.h>
+#include <s3d_logger.h>
 
 #include <cassert>
 #include <cstdio>
@@ -46,6 +47,10 @@ Texture2D::Texture2D( const char* filename )
       && ( filename[0] != '\0' ) )
     {
         bool result = LoadFromFile( filename );
+        if ( !result )
+        {
+            ELOG( "Error : Load File Failed. filename = %s", filename );
+        }
         assert( result == true );
         S3D_UNUSED_VAR( result );
     }

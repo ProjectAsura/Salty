@@ -47,7 +47,7 @@ struct TextureSampler
     //------------------------------------------------------------------------------
     TextureSampler()
     : address       ( TEXTURE_ADDRESS_WRAP )
-    , filter        ( TEXTURE_FILTER_NEAREST )
+    , filter        ( TEXTURE_FILTER_BILINEAR )
     , boarderColor  ( 0.0f, 0.0f, 0.0f, 1.0f )
     { /* DO_NOTHING */ }
 

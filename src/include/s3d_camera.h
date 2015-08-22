@@ -216,10 +216,10 @@ public:
             auto diff = SampleLens();
 
             auto hitDist  = m_FocalDistance / fabs(dir.z);
-            auto focusPos = m_Position + dir * hitDist;
+            auto focusPos = pos + dir * hitDist;
             
             ray.pos = m_Position + Vector3(diff, 0.0f);
-            ray.dir = Vector3::UnitVector(focusPos - ray.dir);
+            ray.dir = Vector3::UnitVector(focusPos - m_Position);
         }
 
         return ray;

@@ -22,6 +22,7 @@ public:
 
 private:
     std::vector<IShape*>    m_Shapes;
+    std::vector<Instance*>   m_Instances;
 };
 
 } // namespace s3d

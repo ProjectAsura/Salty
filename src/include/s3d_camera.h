@@ -134,4 +134,139 @@ private:
 };
 
 
+class ThinLensCamera : public ICamera
+{
+    //=============================================================================================
+    // list of friend classes and methods.
+    //=============================================================================================
+    /* NOTHING */
+
+public:
+    //=============================================================================================
+    // public variables.
+    //=============================================================================================
+    /* NOTHING */
+
+    //=============================================================================================
+    // public methods.
+    //=============================================================================================
+
+    //---------------------------------------------------------------------------------------------
+    //! @brief      コンストラクタです.
+    //---------------------------------------------------------------------------------------------
+    ThinLensCamera()
+    : m_LensRadius   ( 0.0f )
+    , m_FocalDistance( 0.0f )
+    { /* DO_NOTHING */ }
+
+    //---------------------------------------------------------------------------------------------
+    //! @brief      デストラクタです.
+    //---------------------------------------------------------------------------------------------
+    virtual ~ThinLensCamera()
+    { /* DO_NOTHING */ }
+
+    //---------------------------------------------------------------------------------------------
+    //! @brief      更新処理を行います.
+    //---------------------------------------------------------------------------------------------
+    void Update
+    (
+        const Vector3 position,
+        const Vector3 target,
+        const Vector3 upward,
+        const f32     fov,
+        const f32     aspectRatio,
+        const f32     nearClip,
+        const f32     focalDistance,
+        const f32     lensRadius
+    )
+    {
+        m_Position  = position;
+        m_Target    = target;
+        m_Upward    = upward;
+
+        m_Fov         = fov;
+        m_AspectRatio = aspectRatio;
+        m_NearClip    = nearClip;
+
+        m_FocalDistance = focalDistance;
+        m_LensRadius    = lensRadius;
+
+        // 視線ベクトルを求める.
+        m_Direction = Vector3::UnitVector( m_Target - m_Position );
+
+        // スクリーンを張るベクトル.
+        m_CX = Vector3::UnitVector( Vector3::Cross( m_Direction, m_Upward ) ) * m_Fov * m_AspectRatio;
+        m_CY = Vector3::UnitVector( Vector3::Cross( m_CX, m_Direction ) ) * m_Fov;
+
+        // スクリーンの中心へのベクトル.
+        m_CZ = m_Position + ( m_Direction * m_NearClip );
+    }
+
+    //---------------------------------------------------------------------------------------------
+    //! @brief      スクリーンまでへのレイを取得します.
+    //---------------------------------------------------------------------------------------------
+    Ray GetRay( const f32 x, const f32 y ) override
+    {
+        Vector3 pos = ( m_CX * x ) + ( m_CY * y ) + m_CZ;
+        Vector3 dir = Vector3::UnitVector( pos - m_Position );
+        auto ray = Ray( m_Position, dir );
+
+        if ( m_LensRadius > 0.0f )
+        {
+            auto diff = SampleLens();
+
+            auto hitDist  = m_FocalDistance / fabs(dir.z);
+            auto focusPos = m_Position + dir * hitDist;
+            
+            ray.pos = m_Position + Vector3(diff, 0.0f);
+            ray.dir = Vector3::UnitVector(focusPos - ray.dir);
+        }
+
+        return ray;
+    }
+
+protected:
+    //=============================================================================================
+    // protected variables.
+    //=============================================================================================
+    /* NOTHING */
+
+    //=============================================================================================
+    // protected methods.
+    //=============================================================================================
+    /* NOTHING */
+
+private:
+    //=============================================================================================
+    // private variables.
+    //=============================================================================================
+    Vector3 m_Position;     //!< カメラ位置です.
+    Vector3 m_Target;       //!< カメラの注視点です.
+    Vector3 m_Upward;       //!< カメラの上向きベクトルです.
+    Vector3 m_Direction;    //!< カメラの視線ベクトルです.
+
+    f32 m_Fov;              //!< 垂直画角です.
+    f32 m_AspectRatio;      //!< アスペクト比です.
+    f32 m_NearClip;         //!< スクリーンまでの距離です.
+
+    Vector3 m_CX;           //!< スクリーンX方向を構成するベクトルです.
+    Vector3 m_CY;           //!< スクリーンY方向を構成するベクトルです.
+    Vector3 m_CZ;           //!< カメラ位置とスクリーン中心を結ぶベクトルです.
+
+    Random  m_Random;
+    f32     m_LensRadius;       //!< レンズ半径.
+    f32     m_FocalDistance;    //!< 焦点距離.
+
+    //=============================================================================================
+    // private methods.
+    //=============================================================================================
+    Vector2 SampleLens()
+    {
+        auto theta = F_2PI * m_Random.GetAsF32();
+        auto r = m_LensRadius * SafeSqrt(m_Random.GetAsF32());
+        return Vector2( r * cosf(theta), r * sinf(theta) );
+    }
+};
+
+
 } // namespace s3d

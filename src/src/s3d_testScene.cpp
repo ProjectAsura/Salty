@@ -152,6 +152,10 @@ TestScene::TestScene( const u32 width, const u32 height )
         assert( false );
     }
 
+
+    m_Instances.push_back( new Instance( &g_Mesh, Matrix::Translate( 1.0f, 0.0f, 0.0 )) );
+    m_Instances.push_back( new Instance( &g_Mesh, Matrix::Translate( 0.0f, 0.0f, -10.0f)) );
+
     //m_Shapes.push_back( &g_Quads[0] );
     //m_Shapes.push_back( &g_Quads[1] );
     //m_Shapes.push_back( &g_Quads[2] );
@@ -161,6 +165,9 @@ TestScene::TestScene( const u32 width, const u32 height )
     m_Shapes.push_back( &g_Mesh );
     m_Shapes.push_back( &g_Spheres[0] );
     m_Shapes.push_back( &g_Spheres[1] );
+    m_Shapes.push_back( m_Instances[0] );
+    m_Shapes.push_back( m_Instances[1] );
+
     //m_Shapes.push_back( &g_Spheres[2] );
     //m_Shapes.push_back( &g_Spheres[3] );
     //m_Shapes.push_back( &g_Spheres[4] );
@@ -169,18 +176,20 @@ TestScene::TestScene( const u32 width, const u32 height )
 
     m_pBVH = OBVH::BuildBranch( &m_Shapes[0], static_cast<u32>( m_Shapes.size() ) );
 
-    auto camera = new PinholeCamera();
+    auto camera = new ThinLensCamera();
     camera->Update( 
         Vector3( 50.0f, 52.0f, 220.0f ),
         Vector3( 50.0f, 50.0f, 180.0f ),
         Vector3( 0.0f, 1.0f, 0.0f ),
         F_PIDIV4,
         (f32)width / (f32)height,
-        1.0f );
+        1.0f, 
+        1000.0f, 
+        1.5f );
 
     m_pCamera = camera;
 
-    if ( !m_IBL.Init( "res/ibl/Mans_Outside_2k.hdr") )
+    if ( !m_IBL.Init( "res/ibl/10-Shiodome_Stairs_3k.hdr") )
     {
         assert(false);
     }
@@ -202,6 +211,11 @@ TestScene::~TestScene()
     SafeDelete( m_pCamera );
 
     m_Shapes.clear();
+    for( auto i=0; i<m_Instances.size(); ++i)
+    {
+        SafeDelete(m_Instances[i]);
+    }
+    m_Instances.clear();
 
     g_Mesh.Release();
 }

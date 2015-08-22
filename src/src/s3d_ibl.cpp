@@ -71,7 +71,7 @@ Color4 IBL::GetPixel(s32 x, s32 y) const
 }
 
 //--------------------------------------------------------------------------------------------
-//      最近傍法を適用してサンプリングします.
+//      最近傍フィルタを適用してサンプリングします.
 //--------------------------------------------------------------------------------------------
 Color4 IBL::NearestSample(const Vector2& uv) const
 {
@@ -111,9 +111,9 @@ Color4 IBL::Sample( const Vector3& dir, const TEXTURE_FILTER_MODE filter )
     const auto theta = acosf( dir.y );
     uv.y = theta / F_PI;
 
-    if ( !IsZero(dir.x) )
+    if ( !IsZero(dir.x) && !IsZero(dir.z) )
     {
-        auto phi = acosf( dir.x / sqrtf( dir.x * dir.x + dir.z * dir.z ) );
+        auto phi = atan2( dir.z, dir.x );
         if ( dir.z < 0.0f )
             phi += F_2PI;
         uv.x = phi / F_2PI;

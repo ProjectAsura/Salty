@@ -280,7 +280,7 @@ bool ReadHdrData( FILE* pFile, const s32 width, const s32 height, f32** ppPixels
     if ( pixels == nullptr )
     { return false; }
 
-    for( auto y = height - 1, i=0; y >= 0; y--, ++i )
+    for( auto y=0; y<height; ++y )
     {
         if ( !ReadColor( pFile, pLines, width ) )
         {
@@ -292,7 +292,7 @@ bool ReadHdrData( FILE* pFile, const s32 width, const s32 height, f32** ppPixels
         for( auto x =0; x < width; x++ )
         {
             auto pix = RGBEToVec3( pLines[x] );
-            auto idx = ( x * 3 ) + ( i * width *  3);
+            auto idx = ( x * 3 ) + ( y * width *  3);
             pixels[idx + 0] = pix.x;
             pixels[idx + 1] = pix.y;
             pixels[idx + 2] = pix.z;

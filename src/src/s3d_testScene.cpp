@@ -192,7 +192,7 @@ TestScene::TestScene( const u32 width, const u32 height )
         F_PIDIV4,
         (f32)width / (f32)height,
         1.0f, 
-        50.0f, 
+        120.0f, 
         1.5f );
 
     m_pCamera = camera;

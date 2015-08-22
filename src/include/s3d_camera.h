@@ -213,13 +213,13 @@ public:
 
         if ( m_LensRadius > 0.0f )
         {
-            auto diff = SampleLens();
+            auto diff = Vector3( SampleLens(), 0.0f );
 
             auto hitDist  = m_FocalDistance / fabs(dir.z);
-            auto focusPos = pos + dir * hitDist;
-            
-            ray.pos = m_Position + Vector3(diff, 0.0f);
-            ray.dir = Vector3::UnitVector(focusPos - m_Position);
+            auto focusPos = m_Position + dir * hitDist;
+         
+            ray.pos = m_Position + diff;
+            ray.dir = Vector3::UnitVector(focusPos - ray.pos);
         }
 
         return ray;

@@ -41,6 +41,7 @@ public:
     Scene()
     : m_pBVH   ( nullptr )
     , m_pCamera( nullptr )
+    , m_Filter ( TEXTURE_FILTER_BILINEAR )
     { /* DO_NOTHING */ }
 
     //---------------------------------------------------------------------------------------------
@@ -68,15 +69,16 @@ public:
     //---------------------------------------------------------------------------------------------
     S3D_INLINE
     Color4 SampleIBL( const Vector3& dir )
-    { return m_IBL.Sample( dir ); }
+    { return m_IBL.Sample( dir, m_Filter ); }
 
 protected:
     //=============================================================================================
     // protected variables.
     //=============================================================================================
-    IShape*     m_pBVH;
-    ICamera*    m_pCamera;
-    IBL         m_IBL;
+    IShape*             m_pBVH;
+    ICamera*            m_pCamera;
+    IBL                 m_IBL;
+    TEXTURE_FILTER_MODE m_Filter;
 
     //=============================================================================================
     // protected methods.

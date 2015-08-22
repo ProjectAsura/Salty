@@ -234,7 +234,7 @@ Color4 PathTracer::Radiance( const Ray& input )
         assert( material != nullptr );
 
         // アルファテスト.
-        if ( !material->AlphaTest( record.texcoord, 0.1f ) )
+        if ( !material->AlphaTest( record.texcoord, 0.01f ) )
         {
             L += Color4::Mul( W, m_pScene->SampleIBL( ray.dir ) );
             break;
@@ -290,8 +290,8 @@ void PathTracer::TracePath()
     { coreCount--; }
 
     // レンダーターゲットを生成.
-    m_RenderTarget = new Color4 [ m_Config.Width * m_Config.Height ];
-    m_Intermediate = new Color4 [ m_Config.Width * m_Config.Height ];
+    m_RenderTarget = static_cast<Color4*>(_aligned_malloc( sizeof(Color4) * m_Config.Width * m_Config.Height, 16 ));
+    m_Intermediate = static_cast<Color4*>(_aligned_malloc( sizeof(Color4) * m_Config.Width * m_Config.Height, 16 ));
 
     const auto sampleCount    = m_Config.SampleCount * m_Config.SubSampleCount * m_Config.SubSampleCount;
     const auto invSampleCount = 1.0f / static_cast<f32>( sampleCount );
@@ -340,8 +340,16 @@ void PathTracer::TracePath()
     thd.join();
 
     // レンダーターゲット解放.
-    SafeDeleteArray( m_RenderTarget );
-    SafeDeleteArray( m_Intermediate );
+    if ( m_RenderTarget != nullptr )
+    {
+        _aligned_free( m_RenderTarget );
+        m_RenderTarget = nullptr;
+    }
+    if ( m_Intermediate != nullptr )
+    {
+        _aligned_free( m_Intermediate );
+        m_Intermediate = nullptr;
+    }
 }
 
 } // namespace s3d

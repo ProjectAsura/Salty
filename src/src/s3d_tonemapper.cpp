@@ -165,7 +165,9 @@ void ToneMapper::ReinhardToneMapping
             auto Ld  = L * ( 1.0f + ( L / maxLw2 ) ) / ( 1.0f + L );
 
             // トーンマッピングした結果を格納.
-            pResult[idx] = Ld;
+            pResult[idx].x = pow( Ld.x, 1.0f / 2.2f );
+            pResult[idx].y = pow( Ld.y, 1.0f / 2.2f );
+            pResult[idx].z = pow( Ld.z, 1.0f / 2.2f );
             pResult[idx].w = pPixels[idx].w;    // アルファはそのまま.
         }
     }
@@ -205,7 +207,10 @@ void ToneMapper::FilmicToneMapping
 
             auto color = Uncharted2Tonemap( 2.0f * texelColor ) / Uncharted2Tonemap( LinearWhite );
 
-            pResult[idx] = color;
+            pResult[idx].x = pow( color.x, 1.0f / 2.2f );
+            pResult[idx].y = pow( color.y, 1.0f / 2.2f );
+            pResult[idx].z = pow( color.z, 1.0f / 2.2f );
+            pResult[idx].w = color.w;
         }
     }
 }

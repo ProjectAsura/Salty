@@ -54,32 +54,77 @@ void IBL::Term()
     m_Exposure = 0.0f;
 }
 
+//--------------------------------------------------------------------------------------------
+//      指定したピクセルを取得します.
+//--------------------------------------------------------------------------------------------
+Color4 IBL::GetPixel(s32 x, s32 y) const
+{
+    x = abs(x % m_Width);
+    y = abs(y % m_Height);
+
+    auto idx = y * m_Width * 3 + x * 3;
+    return Color4(
+        m_pPixels[idx + 0],
+        m_pPixels[idx + 1],
+        m_pPixels[idx + 2],
+        1.0f );
+}
+
+//--------------------------------------------------------------------------------------------
+//      最近傍法を適用してサンプリングします.
+//--------------------------------------------------------------------------------------------
+Color4 IBL::NearestSample(const Vector2& uv) const
+{
+    auto x = static_cast<s32>(uv.x * m_Width  + 0.5f);
+    auto y = static_cast<s32>(uv.y * m_Height + 0.5f);
+
+    return GetPixel(x, y);
+}
+
+//--------------------------------------------------------------------------------------------
+//      バイリニアフィルタを適用してサンプリングします.
+//--------------------------------------------------------------------------------------------
+Color4 IBL::BilinearSample(const Vector2& uv) const
+{
+    // 浮動小数点形式で画像サイズにスケーリング.
+    auto fx = uv.x * m_Width;
+    auto fy = uv.y * m_Height;
+
+    // 小数点以下を切り捨て.
+    auto x0 = static_cast<s32>( floor( fx ) );
+    auto y0 = static_cast<s32>( floor( fy ) );
+
+    auto x1 = x0 + 1;
+    auto y1 = y0 + 1;
+
+    return ( x1 - fx ) * ( ( y1 - fy ) * GetPixel( x0, y0 ) + ( fy - y0 ) * GetPixel( x0, y1 ) )
+         + ( fx - x0 ) * ( ( y1 - fy ) * GetPixel( x1, y0 ) + ( fy - y0 ) * GetPixel( x1, y1 ) );
+}
+
 //-------------------------------------------------------------------------------------------
 //      フェッチします.
 //-------------------------------------------------------------------------------------------
-Color4 IBL::Sample( const Vector3& dir )
+Color4 IBL::Sample( const Vector3& dir, const TEXTURE_FILTER_MODE filter )
 {
-    f32 u = 0.0f;
+    Vector2 uv;
+    uv.x = 0.0f;
     const auto theta = acosf( dir.y );
-    const auto v = theta / F_PI;
+    uv.y = theta / F_PI;
 
     if ( !IsZero(dir.x) )
     {
         auto phi = acosf( dir.x / sqrtf( dir.x * dir.x + dir.z * dir.z ) );
         if ( dir.z < 0.0f )
             phi += F_2PI;
-        u = phi / F_2PI;
+        uv.x = phi / F_2PI;
     }
 
-    const auto x = s32( u * m_Width  ) % m_Width;
-    const auto y = s32( v * m_Height ) % m_Height;
+    if ( filter == TEXTURE_FILTER_BILINEAR )
+    {
+        return BilinearSample( uv );
+    }
 
-    auto idx =  y * m_Width * 3 + x * 3;
-    return Color4( 
-        m_pPixels[ idx + 0 ],
-        m_pPixels[ idx + 1 ],
-        m_pPixels[ idx + 2 ],
-        1.0f );
+    return NearestSample( uv );
 }
 
 } // namespace s3d

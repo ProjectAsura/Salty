@@ -24,22 +24,30 @@ enum TEXTURE_ADDRESS_MODE
     //TEXTURE_ADDRESS_MIRROR
 };
 
+/////////////////////////////////////////////////////////////////////////////////////
+// TEXTURE_FILTER_MODE enum
+/////////////////////////////////////////////////////////////////////////////////////
+enum TEXTURE_FILTER_MODE
+{
+    TEXTURE_FILTER_NEAREST,     //!< 最近傍法.
+    TEXTURE_FILTER_BILINEAR,    //!< バイリニア補間.
+};
 
 ////////////////////////////////////////////////////////////////////////////////////
 // TextureSampler
 ////////////////////////////////////////////////////////////////////////////////////
 struct TextureSampler
 {
-    TEXTURE_ADDRESS_MODE addressU;          //!< テクスチャU座標のアドレッシングモードです.
-    TEXTURE_ADDRESS_MODE addressV;          //!< テクスチャV座標のアドレッシングモードです.
+    TEXTURE_ADDRESS_MODE address;           //!< テクスチャU座標のアドレッシングモードです.
+    TEXTURE_FILTER_MODE  filter;            //!< テクスチャフィルタリング.
     Color4               boarderColor;      //!< 境界色です.
 
     //------------------------------------------------------------------------------
     //! @brief      コンストラクタです.
     //------------------------------------------------------------------------------
     TextureSampler()
-    : addressU      ( TEXTURE_ADDRESS_WRAP )
-    , addressV      ( TEXTURE_ADDRESS_WRAP )
+    : address       ( TEXTURE_ADDRESS_WRAP )
+    , filter        ( TEXTURE_FILTER_NEAREST )
     , boarderColor  ( 0.0f, 0.0f, 0.0f, 1.0f )
     { /* DO_NOTHING */ }
 
@@ -48,12 +56,12 @@ struct TextureSampler
     //------------------------------------------------------------------------------
     TextureSampler
     ( 
-        const TEXTURE_ADDRESS_MODE _addressU,
-        const TEXTURE_ADDRESS_MODE _addressV,
+        const TEXTURE_ADDRESS_MODE _address,
+        const TEXTURE_FILTER_MODE  _filter,
         const Color4&              _boarderColor
     )
-    : addressU      ( _addressU )
-    , addressV      ( _addressV )
+    : address       ( _address )
+    , filter        ( _filter )
     , boarderColor  ( _boarderColor )
     { /* DO_NOTHING */ }
 };
@@ -143,7 +151,9 @@ private:
     //==============================================================================
     // private methods.
     //==============================================================================
-    /* NOTHING */
+    Color4 GetPixel( s32 x, s32 y, const TextureSampler& sampler ) const;
+    Color4 NearestSample ( const TextureSampler&, const Vector2& ) const;
+    Color4 BilinearSample( const TextureSampler&, const Vector2& ) const;
 };
 
 

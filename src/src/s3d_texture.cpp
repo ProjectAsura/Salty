@@ -156,6 +156,81 @@ void Texture2D::Release()
     m_Size   = 0;
 }
 
+//---------------------------------------------------------------------------------------
+//      指定されたピクセルを取得します.
+//---------------------------------------------------------------------------------------
+Color4 Texture2D::GetPixel(s32 x, s32 y, const TextureSampler& sampler ) const
+{ 
+    auto w = static_cast<s32>(m_Width);
+    auto h = static_cast<s32>(m_Height);
+
+    switch( sampler.address )
+    {
+    case TEXTURE_ADDRESS_WRAP:
+        {
+            x = abs( x % w );
+            y = abs( y % h );
+        }
+        break;
+
+    case TEXTURE_ADDRESS_BORADER:
+        {
+            if ( x >= w || y >= h || x < 0 || y < 0 )
+            { return sampler.boarderColor; }
+        }
+        break;
+
+    case TEXTURE_ADDRESS_CLAMP:
+    default:
+        {
+            x = Clamp( x, 0, w - 1 );
+            y = Clamp( y, 0, h - 1 );
+        }
+        break;
+    }
+
+    auto idx = ( m_Width * 4 * y ) + ( x * 4 );
+    assert( idx < m_Size );
+
+    return Color4(
+        m_pPixels[idx + 0],
+        m_pPixels[idx + 1],
+        m_pPixels[idx + 2],
+        m_pPixels[idx + 3] );
+}
+
+
+//---------------------------------------------------------------------------------------
+//      最近傍補間を適用してサンプリングします.
+//---------------------------------------------------------------------------------------
+Color4 Texture2D::NearestSample(const TextureSampler& sampler, const Vector2& texcoord) const
+{
+    auto x = static_cast<s32>( texcoord.x * m_Width  + 0.5f );
+    auto y = static_cast<s32>( texcoord.y * m_Height + 0.5f );
+
+    return GetPixel(x, y, sampler);
+}
+
+//---------------------------------------------------------------------------------------
+//      バイリニア補間を適用してサンプリングします.
+//---------------------------------------------------------------------------------------
+Color4 Texture2D::BilinearSample(const TextureSampler& sampler, const Vector2& texcoord) const
+{
+    // 浮動小数点形式で画像サイズにスケーリング.
+    auto fx = texcoord.x * m_Width;
+    auto fy = texcoord.y * m_Height;
+
+    // 小数点以下を切り捨て.
+    auto x0 = static_cast<s32>( floor( fx ) );
+    auto y0 = static_cast<s32>( floor( fy ) );
+
+    auto x1 = x0 + 1;
+    auto y1 = y0 + 1;
+
+    return ( x1 - fx ) * ( ( y1 - fy ) * GetPixel( x0, y0, sampler ) + ( fy - y0 ) * GetPixel( x0, y1, sampler ) )
+         + ( fx - x0 ) * ( ( y1 - fy ) * GetPixel( x1, y0, sampler ) + ( fy - y0 ) * GetPixel( x1, y1, sampler ) );    
+}
+
 //--------------------------------------------------------------------------------------
 //      テクスチャフェッチします.
 //--------------------------------------------------------------------------------------
@@ -165,99 +240,16 @@ Color4 Texture2D::Sample( const TextureSampler& sampler, const Vector2& location
     if ( m_pPixels == nullptr )
     { return Color4( 1.0f, 1.0f, 1.0f, 1.0f ); }
 
-    Vector2 uv = location;
+    if ( sampler.filter == TEXTURE_FILTER_BILINEAR )
+    { return BilinearSample( sampler, location ); }
 
-    // テクスチャU方向
-    switch( sampler.addressU )
-    {
-        // 0.0 ～ 1.0 でリピート.
-        case TEXTURE_ADDRESS_WRAP:
-        {
-            while ( uv.x > 1.0f ) 
-            { uv.x -= 1.0f; }
-
-            while ( uv.x < 0.0f )
-            { uv.x += 1.0f; }
-        }
-        break;
-
-        // 0.0 ～ 1.0 でクランプ.
-        case TEXTURE_ADDRESS_CLAMP:
-        {
-            if ( uv.x > 1.0f )
-            { uv.x = 1.0; }
-
-            if ( uv.x < 0.0f )
-            { uv.x = 0.0f; }
-        }
-        break;
-
-        // 0.0 ～ 1.0 の範囲外なら境界色.
-        case TEXTURE_ADDRESS_BORADER:
-        {
-            if ( uv.x > 1.0f )
-            { return sampler.boarderColor; }
-
-            if ( uv.x < 0.0f )
-            { return sampler.boarderColor; }
-        }
-        break;
-    }
-
-    // テクスチャV方向
-    switch( sampler.addressV )
-    {
-        // 0.0 ～ 1.0 でリピート.
-        case TEXTURE_ADDRESS_WRAP:
-        {
-            while ( uv.y > 1.0f ) 
-            { uv.y -= 1.0f; }
-
-            while ( uv.y < 0.0f )
-            { uv.y += 1.0f; }
-        }
-        break;
-
-        // 0.0 ～ 1.0 でクランプ.
-        case TEXTURE_ADDRESS_CLAMP:
-        {
-            if ( uv.y > 1.0f )
-            { uv.y = 1.0f; }
-
-            if ( uv.y < 0.0f )
-            { uv.y = 0.0f; }
-        }
-        break;
-
-        // 0.0 ～ 1.0 の範囲外なら境界色を返す.
-        case TEXTURE_ADDRESS_BORADER:
-        {
-            if ( uv.y > 1.0f )
-            { return sampler.boarderColor; }
-            if ( uv.y < 0.0f )
-            { return sampler.boarderColor; }
-        }
-        break;
-    }
-
-    // 一応念のためにチェック!
-    assert( 0.0f <= uv.x && uv.x <= 1.0f );
-    assert( 0.0f <= uv.y && uv.y <= 1.0f );
-
-    // テクスチャインデックス算出.
-    u32 x = static_cast<u32>( uv.x * ( m_Width - 1 ) );
-    u32 y = static_cast<u32>( uv.y * ( m_Height -1 ) );
-    u32 idx = ( m_Width * 4 * y ) + ( x * 4 );
-    //assert( idx < m_Size );
-
-    return Color4(
-        m_pPixels[idx + 0],
-        m_pPixels[idx + 1],
-        m_pPixels[idx + 2],
-        m_pPixels[idx + 3] );
+    return NearestSample( sampler, location );
 }
 
-bool Texture2D::AlphaTest( const TextureSampler& sampler, const Vector2& location, const f32 value ) const
+//---------------------------------------------------------------------------------------
+//      アルファテストを行います.
+//---------------------------------------------------------------------------------------
+bool Texture2D::AlphaTest( const TextureSampler& sampler, const Vector2& texcoord, const f32 value ) const
 {
     if ( m_ComponentCount != 4 )
     { return true; }
@@ -265,92 +257,13 @@ bool Texture2D::AlphaTest( const TextureSampler& sampler, const Vector2& locatio
     if ( m_pPixels == nullptr )
     { return true; }
 
-    Vector2 uv = location;
+    Color4 result;
+    if ( sampler.filter == TEXTURE_FILTER_BILINEAR )
+    { result = BilinearSample( sampler, texcoord ); }
+    else
+    { result = NearestSample( sampler, texcoord ); }
 
-    // テクスチャU方向
-    switch( sampler.addressU )
-    {
-        // 0.0 ～ 1.0 でリピート.
-        case TEXTURE_ADDRESS_WRAP:
-        {
-            while ( uv.x > 1.0f ) 
-            { uv.x -= 1.0f; }
-
-            while ( uv.x < 0.0f )
-            { uv.x += 1.0f; }
-        }
-        break;
-
-        // 0.0 ～ 1.0 でクランプ.
-        case TEXTURE_ADDRESS_CLAMP:
-        {
-            if ( uv.x > 1.0f )
-            { uv.x = 1.0; }
-
-            if ( uv.x < 0.0f )
-            { uv.x = 0.0f; }
-        }
-        break;
-
-        // 0.0 ～ 1.0 の範囲外なら境界色.
-        case TEXTURE_ADDRESS_BORADER:
-        {
-            if ( uv.x > 1.0f )
-            { uv.x = 1.0; }
-
-            if ( uv.x < 0.0f )
-            { uv.x = 0.0f; }
-        }
-        break;
-    }
-
-    // テクスチャV方向
-    switch( sampler.addressV )
-    {
-        // 0.0 ～ 1.0 でリピート.
-        case TEXTURE_ADDRESS_WRAP:
-        {
-            while ( uv.y > 1.0f ) 
-            { uv.y -= 1.0f; }
-
-            while ( uv.y < 0.0f )
-            { uv.y += 1.0f; }
-        }
-        break;
-
-        // 0.0 ～ 1.0 でクランプ.
-        case TEXTURE_ADDRESS_CLAMP:
-        {
-            if ( uv.y > 1.0f )
-            { uv.y = 1.0f; }
-
-            if ( uv.y < 0.0f )
-            { uv.y = 0.0f; }
-        }
-        break;
-
-        // 0.0 ～ 1.0 の範囲外なら境界色を返す.
-        case TEXTURE_ADDRESS_BORADER:
-        {
-            if ( uv.y > 1.0f )
-            { uv.y = 1.0f; }
-            if ( uv.y < 0.0f )
-            { uv.y = 0.0f; }
-        }
-        break;
-    }
-
-    // 一応念のためにチェック!
-    assert( 0.0f <= uv.x && uv.x <= 1.0f );
-    assert( 0.0f <= uv.y && uv.y <= 1.0f );
-
-    // テクスチャインデックス算出.
-    u32 x = static_cast<u32>( uv.x * ( m_Width - 1 ) );
-    u32 y = static_cast<u32>( uv.y * ( m_Height -1 ) );
-    u32 idx = ( m_Width * 4 * y ) + ( x * 4 );
-    //assert( idx < m_Size );
-
-    return ( m_pPixels[idx + 3] >= value );
+    return ( result.w >= value );
 }
 
 } // namespace s3d

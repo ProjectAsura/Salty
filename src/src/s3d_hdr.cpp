@@ -9,6 +9,7 @@
 //------------------------------------------------------------------------------------------
 #include <s3d_hdr.h>
 #include <s3d_math.h>
+#include <s3d_logger.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -318,15 +319,24 @@ bool LoadFromHDR( const char* filename, s32& width, s32& height, f32& gamma, f32
 
     auto err = fopen_s( &pFile, filename, "rb" );
     if ( err != 0 )
-    { return false; }
+    {
+        ELOG( "Error : LoadFromHDR() Failed. File Open Failed. filename = %s", filename );
+        return false;
+    }
 
     gamma    = 1.0f;
     exposure = 1.0f;
     if ( !ReadHdrHeader( pFile, width, height, gamma, exposure ) )
-    { return false; }
+    {
+        ELOG( "Error : LoadFromHDR() Failed. Header Read Failed. filename = %s", filename );
+        return false;
+    }
 
     if ( !ReadHdrData( pFile, width, height, ppPixels ) )
-    { return false; }
+    {
+        ELOG( "Error : LoadFromHDR() Failed. Data Read Failed. filename = %s", filename );
+        return false;
+    }
 
     return true;
 }
@@ -339,7 +349,10 @@ bool SaveToHDR( const char* filename, const s32 width, const s32 height, const f
     FILE* pFile;
     auto err = fopen_s( &pFile, filename, "wb" );
     if ( err != 0 )
-    { return false; }
+    {
+        ELOG( "Error : SaveToHDR() Failed. File Open Failed. filename = %s", filename );
+        return false;
+    }
 
     WriteHdrHeader( pFile, width, height, gamma, exposure );
 

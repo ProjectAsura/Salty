@@ -12,6 +12,8 @@
 //----------------------------------------------------------------------------
 #include <s3d_math.h>
 #include <s3d_shape.h>
+#include <vector>
+#include <array>
 
 
 namespace s3d {
@@ -22,9 +24,8 @@ namespace s3d {
 struct BVH : public IShape, public IDisposable
 {
 public:
-    BoundingBox box;            //!< バウンディングボックスです.
-    IShape*     pLeft;          //!< 左のブランチです.
-    IShape*     pRight;         //!< 右のブランチです.
+    BoundingBox box;                    //!< バウンディングボックスです.
+    std::array<IShape*, 2> pChildren;   //!< チャイルドです.
 
     //-------------------------------------------------------------------------
     //! @brief      コンストラクタです.

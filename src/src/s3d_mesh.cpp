@@ -115,8 +115,8 @@ MeshMaterial::MeshMaterial
 , pDiffuseMap   ( nullptr )
 , pSpecularSmp  ( nullptr )
 {
-    Threshold = Max( diffuse.x, diffuse.y );
-    Threshold = Max( diffuse.z, Threshold );
+    Threshold = Max( diffuse.GetX(), diffuse.GetY() );
+    Threshold = Max( diffuse.GetZ(), Threshold );
 }
 
 //---------------------------------------------------------------------------------------
@@ -435,23 +435,9 @@ bool Mesh::LoadFromFile( const char* filename )
         SMD_MATERIAL material;
         fread( &material, sizeof( SMD_MATERIAL ), 1, pFile );
 
-        Color4 diffuse;
-        diffuse.x = material.Diffuse.x;
-        diffuse.y = material.Diffuse.y;
-        diffuse.z = material.Diffuse.z;
-        diffuse.w = 1.0f;
-
-        Color4 emissive;
-        emissive.x = material.Emissive.x;
-        emissive.y = material.Emissive.y;
-        emissive.z = material.Emissive.z;
-        emissive.w = 1.0f;
-
-        Color4 specular;
-        specular.x = material.Specular.x;
-        specular.y = material.Specular.y;
-        specular.z = material.Specular.z;
-        specular.w = 1.0f;
+        Color4 diffuse ( material.Diffuse.x,  material.Diffuse.y,  material.Diffuse.z,  1.0f );
+        Color4 emissive( material.Emissive.x, material.Emissive.y, material.Emissive.z, 1.0f );
+        Color4 specular( material.Specular.x, material.Specular.y, material.Specular.z, 1.0f );
 
         m_Materials[i] = MeshMaterial( diffuse, specular, material.Power, emissive );
         if ( material.DiffuseMap >= 0 )

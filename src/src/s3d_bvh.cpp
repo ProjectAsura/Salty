@@ -28,7 +28,7 @@ const u32 QbvhTable[][4] =  {
 //---------------------------------------------------------------------------
 //      分割します.
 //---------------------------------------------------------------------------
-s32 Split( s3d::IShape** ppShapes, s32 size, f64 pivotVal, s32 axis )
+s32 MedianSplit( s3d::IShape** ppShapes, s32 size, f64 pivotVal, s32 axis )
 {
     s3d::BoundingBox bbox;
     f64 centroid;
@@ -74,6 +74,11 @@ s32 GetAxisIndex( s3d::Vector3 size )
     return axis;
 }
 
+bool SahSplit( std::vector<s3d::IShape*> shapes, u32& bestIndex, u32& bestAxis )
+{
+    return false;
+}
+
 } // namespace /* anonymous */
 
 
@@ -87,9 +92,8 @@ namespace s3d {
 //      コンストラクタです.
 //--------------------------------------------------------------------------
 BVH::BVH()
-: box  ()
-, pLeft ( nullptr )
-, pRight( nullptr )
+: box       ()
+, pChildren ()
 { /* DO_NOTHING */ }
 
 //--------------------------------------------------------------------------
@@ -97,17 +101,18 @@ BVH::BVH()
 //--------------------------------------------------------------------------
 BVH::BVH( IShape* pShape1, IShape* pShape2, const BoundingBox& bbox )
 : box  ( bbox )
-, pLeft ( pShape1 )
-, pRight( pShape2 )
-{ /* DO_NOTHING */ }
+{
+    pChildren[0] = pShape1;
+    pChildren[1] = pShape2;
+}
 
 //--------------------------------------------------------------------------
 //      引数付きコンストラクタです.
 //--------------------------------------------------------------------------
 BVH::BVH( IShape* pShape1, IShape* pShape2 )
-: pLeft ( pShape1 )
-, pRight( pShape2 )
 {
+    pChildren[0] = pShape1;
+    pChildren[1] = pShape2;
     box = BoundingBox::Merge( pShape1->GetBox(), pShape2->GetBox() );
 }
 
@@ -116,22 +121,16 @@ BVH::BVH( IShape* pShape1, IShape* pShape2 )
 //--------------------------------------------------------------------------
 void BVH::Dispose()
 {
-    if ( pLeft->IsPrimitive() )
-    { pLeft = nullptr; }
-    else
+    for( u32 i=0; i<pChildren.size(); ++i )
     {
-        BVH* pBVH = dynamic_cast<BVH*>( pLeft );
-        if ( pBVH != nullptr )
-        { pBVH->Dispose(); }
-    }
-
-    if ( pRight->IsPrimitive() )
-    { pRight = nullptr; }
-    else
-    {
-        BVH* pBVH = dynamic_cast<BVH*>( pRight );
-        if ( pBVH != nullptr )
-        { pBVH->Dispose(); }
+        if ( pChildren[i]->IsPrimitive() )
+        { pChildren[i] = nullptr; }
+        else
+        {
+            auto bvh = dynamic_cast<BVH*>( pChildren[i] );
+            if ( bvh != nullptr )
+            { bvh->Dispose(); }
+        }
     }
 
     delete this;
@@ -145,10 +144,11 @@ bool BVH::IsHit( const Ray& ray, HitRecord& record ) const
     if ( !box.IsHit( ray ) )
     { return false; }
 
-    bool isHit1 = pRight->IsHit( ray, record );
-    bool isHit2 = pLeft->IsHit( ray, record );
+    auto hit = false;
+    for( auto shape : pChildren)
+    { hit |= shape->IsHit( ray, record ); }
 
-    return ( isHit1 || isHit2 );
+    return hit;
 }
 
 //--------------------------------------------------------------------------
@@ -173,7 +173,7 @@ bool BVH::IsPrimitive() const
 //      中心座標を取得します.
 //--------------------------------------------------------------------------
 Vector3 BVH::GetCenter() const
-{ return ( pLeft->GetCenter() + pRight->GetCenter() ) / 2.0f; }
+{ return ( pChildren[0]->GetCenter() + pChildren[1]->GetCenter() ) / 2.0f; }
 
 //--------------------------------------------------------------------------
 //      ブランチを構築します.
@@ -195,7 +195,7 @@ IShape* BVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     s32 axis = GetAxisIndex( size );
 
     // 中間値.
-    s32 midPoint = Split( ppShapes, numShapes, pivot.a[axis], axis );
+    s32 midPoint = MedianSplit( ppShapes, numShapes, pivot.a[axis], axis );
 
     s32 idx[2] = {
         0,
@@ -344,7 +344,7 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     s32 axis = GetAxisIndex( size );
 
     // 中間値.
-    s32 midPoint = Split( ppShapes, numShapes, pivot.a[axis], axis );
+    s32 midPoint = MedianSplit( ppShapes, numShapes, pivot.a[axis], axis );
 
     s32 idx1[2] = {
         0,
@@ -374,8 +374,8 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     Vector3 pivotR = ( bboxR.maxi + bboxR.mini ) / 2.0;
 
     // 分割する.
-    s32 midPointL = Split( &ppShapes[idx1[0]], num1[0], pivotL.a[axisL], axisL );
-    s32 midPointR = Split( &ppShapes[idx1[1]], num1[1], pivotR.a[axisR], axisR );
+    s32 midPointL = MedianSplit( &ppShapes[idx1[0]], num1[0], pivotL.a[axisL], axisL );
+    s32 midPointR = MedianSplit( &ppShapes[idx1[1]], num1[1], pivotR.a[axisR], axisR );
 
     s32 idx2[4] = {
         idx1[0],
@@ -543,7 +543,7 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     s32 axis = GetAxisIndex( size );
 
     // 中間値.
-    s32 midPoint = Split( ppShapes, numShapes, pivot.a[axis], axis );
+    s32 midPoint = MedianSplit( ppShapes, numShapes, pivot.a[axis], axis );
 
     s32 idx1[2] = {
         0,
@@ -576,8 +576,8 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     Vector3 pivotR = ( bboxR.maxi + bboxR.mini ) / 2.0f;
 
     // 分割する.
-    s32 midPointL = Split( &ppShapes[idx1[0]], num1[0], pivotL.a[axisL], axisL );
-    s32 midPointR = Split( &ppShapes[idx1[1]], num1[1], pivotR.a[axisR], axisR );
+    s32 midPointL = MedianSplit( &ppShapes[idx1[0]], num1[0], pivotL.a[axisL], axisL );
+    s32 midPointR = MedianSplit( &ppShapes[idx1[1]], num1[1], pivotR.a[axisR], axisR );
 
    s32 idx2[4] = {
         idx1[0],
@@ -623,10 +623,10 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     Vector3 pivot4 = ( bbox4.maxi + bbox4.mini ) / 2.0f;
 
     // 分割する.
-    s32 midPoint1 = Split( &ppShapes[idx2[0]], num2[0], pivot1.a[axis1], axis1 );
-    s32 midPoint2 = Split( &ppShapes[idx2[1]], num2[1], pivot2.a[axis2], axis2 );
-    s32 midPoint3 = Split( &ppShapes[idx2[2]], num2[2], pivot3.a[axis3], axis3 );
-    s32 midPoint4 = Split( &ppShapes[idx2[3]], num2[3], pivot4.a[axis4], axis4 );
+    s32 midPoint1 = MedianSplit( &ppShapes[idx2[0]], num2[0], pivot1.a[axis1], axis1 );
+    s32 midPoint2 = MedianSplit( &ppShapes[idx2[1]], num2[1], pivot2.a[axis2], axis2 );
+    s32 midPoint3 = MedianSplit( &ppShapes[idx2[2]], num2[2], pivot3.a[axis3], axis3 );
+    s32 midPoint4 = MedianSplit( &ppShapes[idx2[3]], num2[3], pivot4.a[axis4], axis4 );
 
     s32 idx3[8] = {
         idx2[0],

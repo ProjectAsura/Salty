@@ -48,8 +48,8 @@ MaterialBase::MaterialBase
 , pTexture  ( nullptr )
 , pSampler  ( nullptr )
 {
-    threshold = Max( color.x, color.y );
-    threshold = Max( color.z, threshold );
+    threshold = Max( color.GetX(), color.GetY() );
+    threshold = Max( color.GetZ(), threshold );
 }
 
 //--------------------------------------------------------------------------------
@@ -67,8 +67,8 @@ MaterialBase::MaterialBase
 , pTexture  ( _pTexture )
 , pSampler  ( _pSampler )
 {
-    threshold = Max( color.x, color.y );
-    threshold = Max( color.z, threshold );
+    threshold = Max( color.GetX(), color.GetY() );
+    threshold = Max( color.GetZ(), threshold );
 }
 
 //--------------------------------------------------------------------------------
@@ -410,8 +410,8 @@ Glossy::Glossy
 , pTexture  ( nullptr )
 , pSampler  ( nullptr )
 {
-    threshold = Max( specular.x, specular.y );
-    threshold = Max( specular.z, threshold );
+    threshold = Max( specular.GetX(), specular.GetY() );
+    threshold = Max( specular.GetZ(), threshold );
 }
 
 //--------------------------------------------------------------------------------
@@ -431,8 +431,8 @@ Glossy::Glossy
 , pTexture( _pTexture )
 , pSampler( _pSampler )
 {
-    threshold = Max( specular.x, specular.y );
-    threshold = Max( specular.z, threshold );
+    threshold = Max( specular.GetX(), specular.GetY() );
+    threshold = Max( specular.GetZ(), threshold );
 }
 
 //--------------------------------------------------------------------------------

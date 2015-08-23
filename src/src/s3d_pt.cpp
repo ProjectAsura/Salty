@@ -265,7 +265,7 @@ Color4 PathTracer::Radiance( const Ray& input )
         ray.Update( record.position, arg.output );
 
         // 重みがゼロになったら以降の更新は無駄なので打ち切りにする.
-        if ( IsZero(W.x) && IsZero(W.y) && IsZero(W.z) )
+        if ( IsZero(W.GetX()) && IsZero(W.GetY()) && IsZero(W.GetZ()) )
         { break; }
     }
 

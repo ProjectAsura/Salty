@@ -1518,6 +1518,60 @@ void OBJMESH::WriteDirect( FILE* pFile )
                 fwrite( &value, sizeof(value), 1, pFile );
             }
             break;
+
+        // Lambert + Diffuse
+        case SMD_MATERILA_TYPE_PLASTIC:
+            {
+                SMD_PLASTIC value;
+                value.diffuse.x = m_Materials[i].diffuse.x;
+                value.diffuse.y = m_Materials[i].diffuse.y;
+                value.diffuse.z = m_Materials[i].diffuse.z;
+
+                value.specular.x = m_Materials[i].specular.x;
+                value.specular.y = m_Materials[i].specular.y;
+                value.specular.z = m_Materials[i].specular.z;
+
+                value.power = m_Materials[i].shininess;
+
+                value.emissive.x = m_Materials[i].emissive.x;
+                value.emissive.y = m_Materials[i].emissive.y;
+                value.emissive.z = m_Materials[i].emissive.z;
+
+                // テクスチャインデックスを求める.
+                int diffuseMap = -1;
+                int specularMap = -1;
+                for( size_t j=0; j<textureList.size(); ++j )
+                {
+                    // リストに登録されているかチェック.
+                    if ( strcmp( textureList[j].filename, m_Materials[i].diffuseMapName ) == 0 )
+                    {
+                        // 発見したインデックスを設定.
+                        diffuseMap = j;
+
+                        // ループ脱出.
+                        break;
+                    }
+                }
+
+                for( size_t j=0; j<textureList.size(); ++j )
+                {
+                    // リストに登録されているかチェック.
+                    if ( strcmp( textureList[j].filename, m_Materials[i].specularMapName ) == 0 )
+                    {
+                        // 発見したインデックスを設定.
+                        specularMap = j;
+
+                        // ループ脱出.
+                        break;
+                    }
+                }
+
+                value.diffuseMap = diffuseMap;
+                value.specularMap = specularMap;
+
+                fwrite( &value, sizeof(value), 1, pFile );
+            }
+            break;
         }
     }
 

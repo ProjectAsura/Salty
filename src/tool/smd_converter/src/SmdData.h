@@ -187,6 +187,7 @@ enum SMD_MATERIAL_TYPE
     SMD_MATERIAL_TYPE_MIRROR,
     SMD_MATERIAL_TYPE_DIELECTRIC,
     SMD_MATERIAL_TYPE_GLOSSY,
+    SMD_MATERILA_TYPE_PLASTIC,
 };
 
 struct SMD_MATTE
@@ -217,6 +218,16 @@ struct SMD_GLOSSY
     float       power;
     SMD_FVEC3   emissive;
     int         colorMap;
+};
+
+struct SMD_PLASTIC
+{
+    SMD_FVEC3   diffuse;
+    SMD_FVEC3   specular;
+    float       power;
+    SMD_FVEC3   emissive;
+    int         diffuseMap;
+    int         specularMap;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -258,7 +269,8 @@ static const unsigned int  SMD_INDEX_STRUCT_SIZE    = sizeof( unsigned int );
 static const unsigned int  SMD_MATERIAL_STRUCT_SIZE = sizeof( SMD_MATTE ) 
                                                     + sizeof( SMD_MIRROR )
                                                     + sizeof( SMD_DIELECTRIC )
-                                                    + sizeof( SMD_GLOSSY );
+                                                    + sizeof( SMD_GLOSSY )
+                                                    + sizeof( SMD_PLASTIC );
 
 //!< サブセット構造体のサイズです.
 static const unsigned int  SMD_SUBSET_STRUCT_SIZE   = sizeof( SMD_SUBSET );

@@ -506,4 +506,149 @@ bool Glossy::AlphaTest( const Vector2& texcoord, const f32 value ) const
 }
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Plastric structure
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+//-------------------------------------------------------------------------------------------------
+//      コンストラクタです.
+//-------------------------------------------------------------------------------------------------
+Plastic::Plastic()
+: diffuse    ( 0.0f, 0.0f, 0.0f, 1.0f )
+, specular   ( 0.0f, 0.0f, 0.0f, 1.0f )
+, power      ( 1.0f )
+, emissive   ( 0.0f, 0.0f, 0.0f, 1.0f )
+, pDiffuseMap( nullptr )
+, pDiffuseSmp( nullptr )
+, threshold  ( 0.0f )
+{ /* DO_NOTHING */ }
+
+//-------------------------------------------------------------------------------------------------
+//      引数付きコンストラクタです.
+//-------------------------------------------------------------------------------------------------
+Plastic::Plastic
+(
+    const Color4&           dif,
+    const Color4&           spe,
+    const f32               pow,
+    const Color4&           emi,
+    const Texture2D*        tex,
+    const TextureSampler*   smp
+)
+: diffuse    ( dif )
+, specular   ( spe )
+, power      ( pow )
+, emissive   ( emi )
+, pDiffuseMap( tex )
+, pDiffuseSmp( smp )
+{
+    threshold = Max( diffuse.GetX(), diffuse.GetY() );
+    threshold = Max( diffuse.GetZ(), threshold );
+    threshold = Max( specular.GetX(), threshold );
+    threshold = Max( specular.GetY(), threshold );
+    threshold = Max( specular.GetZ(), threshold );
+}
+
+//-------------------------------------------------------------------------------------------------
+//      自己発光カラーを取得します.
+//-------------------------------------------------------------------------------------------------
+Color4 Plastic::GetEmissive() const
+{
+    return emissive;
+}
+
+//-------------------------------------------------------------------------------------------------
+//      ロシアンルーレットの閾値を取得します.
+//-------------------------------------------------------------------------------------------------
+f32 Plastic::GetThreshold() const
+{
+    return threshold;
+}
+
+//-------------------------------------------------------------------------------------------------
+//      シェーディングします.
+//-------------------------------------------------------------------------------------------------
+Color4 Plastic::ComputeColor( ShadingArg& arg ) const
+{
+    // 補正済み法線データ (レイの入出を考慮済み).
+    auto cosine = Vector3::Dot( arg.normal, arg.input );
+    const Vector3 normalMod = ( cosine < 0.0 ) ? arg.normal : -arg.normal;
+
+    if ( cosine < 0.0f ) cosine = -cosine;
+
+    auto temp1 = 1.0f - cosine;
+    const auto R0 = 0.5f;
+    auto R = R0 + ( 1.0f - R0 ) * temp1 * temp1 * temp1 * temp1 * temp1;
+    auto P = ( R + 0.5f ) / 2.0f;
+
+    if ( arg.random.GetAsF32() <= P )
+    {
+        // normalModの方向を基準とした正規直交基底(w, u, v)を作る。
+        // この基底に対する半球内で次のレイを飛ばす。
+        OrthonormalBasis onb;
+        onb.InitFromW( normalMod );
+
+        // インポータンスサンプリング.
+        const f32 phi = F_2PI * arg.random.GetAsF32( );
+        const f32 r = SafeSqrt( arg.random.GetAsF32( ) );
+        const f32 x = r * cosf( phi );
+        const f32 y = r * sinf( phi );
+        const f32 z = SafeSqrt( 1.0f - ( x * x ) - ( y * y ) );
+
+        // 出射方向.
+        Vector3 dir = Vector3::UnitVector( onb.u * x + onb.v * y + onb.w * z );
+        arg.output = dir;
+
+        // 重み更新 (飛ぶ方向が不定なので確率で割る必要あり).
+        Color4 result;
+        if ( pDiffuseMap != nullptr )
+        { result = Color4::Mul( diffuse, pDiffuseMap->Sample( ( *pDiffuseSmp ), arg.texcoord ) ) * R / P; }
+        else
+        { result = diffuse  * R / P; }
+
+        return result;
+    }
+    else
+    {
+        // インポータンスサンプリング.
+        const f32 phi = F_2PI * arg.random.GetAsF32();
+        const f32 cosTheta = powf( 1.0f - arg.random.GetAsF32(), 1.0f / ( power + 1.0f ) );
+        const f32 sinTheta = SafeSqrt( 1.0f - ( cosTheta * cosTheta ) );
+        const f32 x = cosf( phi ) * sinTheta;
+        const f32 y = sinf( phi ) * sinTheta;
+        const f32 z = cosTheta;
+
+        // 反射ベクトル.
+        Vector3 w = Vector3::Reflect( arg.input, normalMod );
+        w.Normalize();
+
+        // 基底ベクトルを求める.
+        OrthonormalBasis onb;
+        onb.InitFromW( w );
+
+        // 出射方向.
+        auto dir = Vector3::UnitVector( onb.u * x + onb.v * y + onb.w * z );
+
+        // 出射方向と法線ベクトルの内積を求める.
+        auto dots = Vector3::Dot( dir, normalMod );
+
+        arg.output = dir;
+
+        return specular * dots * ( 1.0f - R ) / ( 1.0f - P );
+    }
+}
+
+//-------------------------------------------------------------------------------------------------
+//      アルファテストを行います.
+//-------------------------------------------------------------------------------------------------
+bool Plastic::AlphaTest( const Vector2& texcoord, const f32 value ) const
+{
+    if ( pDiffuseMap == nullptr || pDiffuseSmp == nullptr )
+    { return true; }
+
+    return pDiffuseMap->AlphaTest( (*pDiffuseSmp), texcoord, value );
+}
+
+
+
 } // namespace s3d

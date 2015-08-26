@@ -182,7 +182,7 @@ TestScene::TestScene( const u32 width, const u32 height )
 
     m_Shapes.shrink_to_fit();
 
-    m_pBVH = OBVH::BuildBranch( &m_Shapes[0], static_cast<u32>( m_Shapes.size() ) );
+    m_pBVH = OBVH::Build( m_Shapes );
 
     auto camera = new ThinLensCamera();
     camera->Update( 

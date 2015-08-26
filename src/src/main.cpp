@@ -37,7 +37,7 @@ int main( int argc, char **argv )
         config.Height         = 720;
         config.SampleCount    = 2048;
         config.SubSampleCount = 1;
-        config.MaxBounceCount = 32;
+        config.MaxBounceCount = 8;
     #else
         // デバッグ用.
         config.Width          = 320;

@@ -9,6 +9,7 @@
 //---------------------------------------------------------------------------
 #include <s3d_bvh.h>
 #include <new>
+#include <deque>
 
 
 namespace /* anonymous */ {
@@ -79,7 +80,7 @@ s32 GetAxisIndex( s3d::Vector3 size )
 //-------------------------------------------------------------------------------------------------
 bool SahSplit( std::vector<s3d::IShape*> shapes, s32& bestIndex, s32& bestAxis )
 {
-    if ( shapes.size() <= 2 )
+    if ( shapes.size() <= 4 )
     { return false; }
 
     auto bestCost = F32_MAX;
@@ -88,68 +89,69 @@ bool SahSplit( std::vector<s3d::IShape*> shapes, s32& bestIndex, s32& bestAxis )
 
     for( auto axis = 0; axis < 3; ++axis )
     {
-        std::vector<s3d::IShape*> axisSortedL(shapes);
-        std::vector<s3d::IShape*> axisSortedR;
-
         // 現在の軸においてボックスの重心座標を用いてソートを行う.
         std::sort(
-            axisSortedL.begin(), 
-            axisSortedL.end(),
+            shapes.begin(), 
+            shapes.end(),
             [axis](const s3d::IShape* l, const s3d::IShape* r)
             {
                 auto boxL = l->GetBox();
                 auto boxR = r->GetBox();
-                assert( !boxL.isEmpty );
-                assert( !boxR.isEmpty );
-                auto cl = ( boxL.maxi.a[axis] + boxL.mini.a[axis] ) * 0.5f;
-                auto cr = ( boxR.maxi.a[axis] + boxR.mini.a[axis] ) * 0.5f;
-                return cl < cr;
+                assert( !boxL.empty );
+                assert( !boxR.empty );
+                return boxL.center.a[axis] < boxR.center.a[axis];
             }
         );
 
-        std::vector<f32> leftArea (axisSortedL.size() + 1, F32_MAX);
-        std::vector<f32> rightArea(axisSortedL.size() + 1, F32_MAX);
+        std::deque<f32> s1A(shapes.size() + 1, F32_MAX);
+        std::deque<f32> s2A(shapes.size() + 1, F32_MAX);
+        s3d::BoundingBox s1Box = s3d::BoundingBox();
 
-        axisSortedR.push_back( axisSortedL.back() );
-        axisSortedL.pop_back();
+        std::deque<s3d::IShape*> s1;
+        std::deque<s3d::IShape*> s2(shapes.begin(), shapes.end());
 
-        s3d::BoundingBox box = CreateMergedBox( &axisSortedR[0], static_cast<u32>(axisSortedR.size()) );
-
-        for( auto i=static_cast<int>(axisSortedL.size()); i>=0; i-- )
+        for( s32 i=0; i<=s32(shapes.size()); ++i )
         {
-            rightArea[i] = SurfaceArea( box );
-            auto pShape = axisSortedL.back();
-            box = s3d::BoundingBox::Merge( box, pShape->GetBox() );
+            s1A[i] = s3d::SurfaceArea( s1Box );
 
-            axisSortedR.push_back( pShape );
-            axisSortedL.pop_back();
+            if ( s2.size() > 0 )
+            {
+                auto p = s2.front();
+                s1.push_back(p);
+                s2.pop_front();
+
+                s1Box = s3d::BoundingBox::Merge( s1Box, p->GetBox() );
+            }
         }
 
-        axisSortedL.push_back( axisSortedR.back() );
-        axisSortedR.pop_back();
+        auto s2Box = s3d::BoundingBox();
 
-        box = CreateMergedBox( &axisSortedL[0], static_cast<u32>(axisSortedL.size()) );
-
-        s32 idx = 0;
-        for( auto i=static_cast<int>(axisSortedR.size()); i>=0; i--, idx++ )
+        for( s32 i=s32(shapes.size()); i>=0; --i )
         {
-            leftArea[idx] = SurfaceArea( box );
-            auto pShape = axisSortedR.back();
-            box = s3d::BoundingBox::Merge( box, pShape->GetBox() );
+            s2A[i] = s3d::SurfaceArea( s2Box );
 
-            axisSortedL.push_back( pShape );
-            axisSortedR.pop_back();
-
-            // "Ray Tracing Deformable Scenes Using Dynamic Bounding Volume Hierarchies"
-            //  ACM Transactions on Graphics 26(1), 2007
-            // Equation(2) により評価する.
-            auto cost = leftArea[idx] * axisSortedL.size() + rightArea[idx] * axisSortedR.size(); // 大小さえわかればいいので，定数を省いた.
-
-            if ( cost < bestCost )
+            if ( s1.size() > 0 && s2.size() > 0 )
             {
-                bestCost  = cost;
-                bestIndex = idx;
-                bestAxis  = axis;
+                // "Ray Tracing Deformable Scenes Using Dynamic Bounding Volume Hierarchies"
+                //  ACM Transactions on Graphics 26(1), 2007
+                // Equation(2) により評価する.
+                auto cost = s1A[i] * s1.size() + s2A[i] * s2.size(); // 大小さえわかればいいので，定数を省いた.
+
+                if ( cost < bestCost )
+                {
+                    bestCost  = cost;
+                    bestIndex = i;
+                    bestAxis  = axis;
+                }
+            }
+
+            if ( s1.size() > 0 )
+            {
+                auto p = s1.back();
+                s2.push_front(p);
+                s1.pop_back();
+
+                s2Box = s3d::BoundingBox::Merge( s2Box, p->GetBox() );
             }
         }
     }
@@ -166,11 +168,9 @@ bool SahSplit( std::vector<s3d::IShape*> shapes, s32& bestIndex, s32& bestAxis )
         {
             auto boxL = l->GetBox();
             auto boxR = r->GetBox();
-            assert( !boxL.isEmpty );
-            assert( !boxR.isEmpty );
-            auto cl = ( boxL.maxi.a[bestAxis] + boxL.mini.a[bestAxis] ) * 0.5f;
-            auto cr = ( boxR.maxi.a[bestAxis] + boxR.mini.a[bestAxis] ) * 0.5f;
-            return cl < cr;
+            assert( !boxL.empty );
+            assert( !boxR.empty );
+            return boxL.center.a[bestAxis] < boxR.center.a[bestAxis];
         }
     );
 
@@ -320,12 +320,12 @@ IShape* BVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 IShape* BVH::Build(std::vector<IShape*>& shapes)
 {
     if ( shapes.size() <= 2 )
-    { return new Leaf(shapes.size(), &shapes[0]); }
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
 
     s32 bestIndex = -1;
     s32 bestAxis  = -1;
     if ( !SahSplit( shapes, bestIndex, bestAxis ) )
-    { return new Leaf(shapes.size(), &shapes[0]); }
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
 
     std::vector<IShape*> left(shapes.begin(), shapes.begin() + bestIndex);
     std::vector<IShape*> right(shapes.begin() + bestIndex, shapes.end());
@@ -367,6 +367,10 @@ QBVH::QBVH( IShape* shape0, IShape* shape1, IShape* shape2, IShape* shape3, s32 
     BoundingBox box3 = shape3->GetBox();
 
     box = BoundingBox4( box0, box1, box2, box3 );
+
+    assert( 0 <= axisTop && axisTop <= 2 );
+    assert( 0 <= axisLeft && axisLeft <= 2 );
+    assert( 0 <= axisRight && axisRight <= 2 );
 }
 
 
@@ -396,7 +400,7 @@ bool QBVH::IsHit( const Ray& ray, HitRecord& record ) const
     { return false; }
 
     // 巡回テーブルのインデックスを算出.
-    u32 idx = ( ray.sign[axisTop]  << 2 )
+    s32 idx = ( ray.sign[axisTop]  << 2 )
             | ( ray.sign[axisLeft] << 1 )
             | ( ray.sign[axisRight] );
 
@@ -530,12 +534,12 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 IShape* QBVH::Build(std::vector<IShape*>& shapes)
 {
     if ( shapes.size() <= 4 )
-    { return new Leaf(shapes.size(), &shapes[0]); }
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
 
     s32 bestIndex = -1;
     s32 bestAxis  = -1;
     if ( !SahSplit( shapes, bestIndex, bestAxis ) )
-    { return new Leaf(shapes.size(), &shapes[0]); }
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
 
     std::vector<IShape*> left(shapes.begin(), shapes.begin() + bestIndex);
     std::vector<IShape*> right(shapes.begin() + bestIndex, shapes.end());
@@ -545,10 +549,10 @@ IShape* QBVH::Build(std::vector<IShape*>& shapes)
     s32 bestAxisL  = -1;
     s32 bestAxisR  = -1;
     if ( !SahSplit( left, bestIndexL, bestAxisL ) )
-    { return new Leaf(shapes.size(), &shapes[0]); }
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
 
     if ( !SahSplit( right, bestIndexR, bestAxisR ) )
-    { return new Leaf(shapes.size(), &shapes[0]); }
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
 
     std::vector<IShape*> a(left.begin(), left.begin() + bestIndexL);
     std::vector<IShape*> b(left.begin() + bestIndexL, left.end());
@@ -561,9 +565,9 @@ IShape* QBVH::Build(std::vector<IShape*>& shapes)
         Build(b),
         Build(c),
         Build(d),
-        bestIndex,
-        bestIndexL,
-        bestIndexR);
+        bestAxis,
+        bestAxisL,
+        bestAxisR);
 }
 
 //--------------------------------------------------------------------------
@@ -875,12 +879,12 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 IShape* OBVH::Build(std::vector<IShape*>& shapes)
 {
     if ( shapes.size() <= 8 )
-    { return new Leaf(shapes.size(), &shapes[0]); }
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
 
     s32 bestIndex = -1;
     s32 bestAxis  = -1;
     if ( !SahSplit( shapes, bestIndex, bestAxis ) )
-    { return new Leaf(shapes.size(), &shapes[0]); }
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
 
     std::vector<IShape*> left(shapes.begin(), shapes.begin() + bestIndex);
     std::vector<IShape*> right(shapes.begin() + bestIndex, shapes.end());
@@ -888,10 +892,10 @@ IShape* OBVH::Build(std::vector<IShape*>& shapes)
     s32 bestIndexL = -1, bestIndexR = -1;
     s32 bestAxisL  = -1, bestAxisR  = -1;
     if ( !SahSplit( left, bestIndexL, bestAxisL ) )
-    { return new Leaf(shapes.size(), &shapes[0]); }
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
 
     if ( !SahSplit( right, bestIndexR, bestAxisR ) )
-    { return new Leaf(shapes.size(), &shapes[0]); }
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
 
     std::vector<IShape*> a(left.begin(), left.begin() + bestIndexL);
     std::vector<IShape*> b(left.begin() + bestIndexL, left.end());
@@ -902,16 +906,16 @@ IShape* OBVH::Build(std::vector<IShape*>& shapes)
     s32 bestAxisA  = -1, bestAxisB  = -1, bestAxisC  = -1, bestAxisD  = -1;
 
     if ( !SahSplit( a, bestIndexA, bestAxisA ) )
-    { return new Leaf(shapes.size(), &shapes[0]); }
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
 
     if ( !SahSplit( b, bestIndexB, bestAxisB ) )
-    { return new Leaf(shapes.size(), &shapes[0]); }
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
 
     if ( !SahSplit( c, bestIndexC, bestAxisC ) )
-    { return new Leaf(shapes.size(), &shapes[0]); }
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
 
     if ( !SahSplit( d, bestIndexD, bestAxisD ) )
-    { return new Leaf(shapes.size(), &shapes[0]); }
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
 
     std::vector<IShape*> e( a.begin(), a.begin() + bestIndexA );
     std::vector<IShape*> f( a.begin() + bestIndexA, a.end() );

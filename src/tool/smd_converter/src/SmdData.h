@@ -181,17 +181,42 @@ struct SMD_TRIANGLE
     int           materialId;       //!< マテリアルインデックスです.
 };
 
-///////////////////////////////////////////////////////////////////////////////
-// SMD_MATERIAL structure
-///////////////////////////////////////////////////////////////////////////////
-struct SMD_MATERIAL
+enum SMD_MATERIAL_TYPE
 {
-    SMD_FVEC3   diffuse;                //!< 拡散反射色です.
-    SMD_FVEC3   specular;               //!< 鏡面反射色です.
-    float       power;                  //!< 鏡面反射強度です.
-    SMD_FVEC3   emissive;               //!< 自己照明色です.
-    int         diffuseMap;             //!< ディフューズマップです.
-    int         specularMap;            //!< スペキュラーマップです.
+    SMD_MATERIAL_TYPE_MATTE = 0,
+    SMD_MATERIAL_TYPE_MIRROR,
+    SMD_MATERIAL_TYPE_DIELECTRIC,
+    SMD_MATERIAL_TYPE_GLOSSY,
+};
+
+struct SMD_MATTE
+{
+    SMD_FVEC3   color;
+    SMD_FVEC3   emissive;
+    int         colorMap;
+};
+
+struct SMD_MIRROR
+{
+    SMD_FVEC3   color;
+    SMD_FVEC3   emissive;
+    int         colorMap;
+};
+
+struct SMD_DIELECTRIC
+{
+    SMD_FVEC3   color;
+    float       ior;
+    SMD_FVEC3   emissive;
+    int         colorMap;
+};
+
+struct SMD_GLOSSY
+{
+    SMD_FVEC3   color;
+    float       power;
+    SMD_FVEC3   emissive;
+    int         colorMap;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -216,7 +241,7 @@ struct SMD_SUBSET
 static const unsigned char SMD_MAGIC[ 4 ]           = { 'S', 'M', 'D', '\0' };
 
 //!< ファイルバージョンです.
-static const unsigned int  SMD_VERSION              = 0x00000001;
+static const unsigned int  SMD_VERSION              = 0x00000002;
 
 //!< データヘッダのサイズです.
 static const unsigned int  SMD_DATA_HEADER_SIZE     = sizeof( SMD_DATA_HEADER );
@@ -230,7 +255,10 @@ static const unsigned int  SMD_TRIANGLE_STRUCT_SIZE = sizeof( SMD_TRIANGLE );
 static const unsigned int  SMD_INDEX_STRUCT_SIZE    = sizeof( unsigned int );
 
 //!< マテリアル構造体のサイズです.
-static const unsigned int  SMD_MATERIAL_STRUCT_SIZE = sizeof( SMD_MATERIAL );
+static const unsigned int  SMD_MATERIAL_STRUCT_SIZE = sizeof( SMD_MATTE ) 
+                                                    + sizeof( SMD_MIRROR )
+                                                    + sizeof( SMD_DIELECTRIC )
+                                                    + sizeof( SMD_GLOSSY );
 
 //!< サブセット構造体のサイズです.
 static const unsigned int  SMD_SUBSET_STRUCT_SIZE   = sizeof( SMD_SUBSET );

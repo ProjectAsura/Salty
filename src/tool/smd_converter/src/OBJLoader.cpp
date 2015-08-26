@@ -209,6 +209,9 @@ void InitMaterial( OBJMATERIAL* pMaterial )
     pMaterial->shininess = 0.0f;
     pMaterial->alpha     = 1.0f;
 
+    // 拡張データ.
+    pMaterial->materialType = 0;
+    pMaterial->ior          = 1.0f;
 }
 
 //-----------------------------------------------------------------------
@@ -850,6 +853,18 @@ bool OBJMESH::LoadMTLFile( const char* filename )
             //SetDirectoryPath( displacementMapName, m_directoryPath );
             strcpy( t_materials[iMtlCount].displacementMapName, displacementMapName );
         }
+        else if ( 0 == strcmp( buf, "#type" ) )
+        {
+            int materialType = 0;
+            file >> materialType;
+            t_materials[iMtlCount].materialType = materialType;
+        }
+        else if ( 0 == strcmp( buf, "#ior" ) )
+        {
+            float ior = 1.0f;
+            file >> ior;
+            t_materials[iMtlCount].ior = ior;
+        }
 
         file.ignore( OBJ_BUFFER_LENGTH, '\n' );
     }
@@ -1349,6 +1364,163 @@ void OBJMESH::WriteDirect( FILE* pFile )
     // ヘッダーを書き込み.
     fwrite( &fileHeader, sizeof( SMD_FILE_HEADER ), 1, pFile );
 
+    // テクスチャファイル名を書き込む.
+    for( size_t j=0; j<textureList.size(); ++j )
+    {
+        SMD_TEXTURE texture = textureList[j];
+        fwrite( &texture, sizeof( SMD_TEXTURE ), 1, pFile );
+    }
+
+    // マテリアルデータを書き込み.
+    for( size_t i=0; i<m_NumMaterials; ++i )
+    {
+        // マテリアルタイプを書き込み.
+        fwrite( &m_Materials[i].materialType, sizeof(int), 1, pFile );
+
+        switch( m_Materials[i].materialType )
+        {
+        // Lambert
+        case SMD_MATERIAL_TYPE_MATTE:
+            {
+                SMD_MATTE value;
+                value.color.x = m_Materials[i].diffuse.x;
+                value.color.y = m_Materials[i].diffuse.y;
+                value.color.z = m_Materials[i].diffuse.z;
+
+                value.emissive.x = m_Materials[i].emissive.x;
+                value.emissive.y = m_Materials[i].emissive.y;
+                value.emissive.z = m_Materials[i].emissive.z;
+
+                // テクスチャインデックスを求める.
+                int textureIndex = -1;
+                for( size_t j=0; j<textureList.size(); ++j )
+                {
+                    // リストに登録されているかチェック.
+                    if ( strcmp( textureList[j].filename, m_Materials[i].diffuseMapName ) == 0 )
+                    {
+                        // 発見したインデックスを設定.
+                        textureIndex = j;
+
+                        // ループ脱出.
+                        break;
+                    }
+                }
+
+                value.colorMap = textureIndex;
+
+                // マテリアル書き込み.
+                fwrite( &value, sizeof(value), 1, pFile );
+            }
+            break;
+
+        // Perfect Specular
+        case SMD_MATERIAL_TYPE_MIRROR:
+            {
+                SMD_MIRROR value;
+                value.color.x = m_Materials[i].diffuse.x;
+                value.color.y = m_Materials[i].diffuse.y;
+                value.color.z = m_Materials[i].diffuse.z;
+
+                value.emissive.x = m_Materials[i].emissive.x;
+                value.emissive.y = m_Materials[i].emissive.y;
+                value.emissive.z = m_Materials[i].emissive.z;
+
+                // テクスチャインデックスを求める.
+                int textureIndex = -1;
+                for( size_t j=0; j<textureList.size(); ++j )
+                {
+                    // リストに登録されているかチェック.
+                    if ( strcmp( textureList[j].filename, m_Materials[i].diffuseMapName ) == 0 )
+                    {
+                        // 発見したインデックスを設定.
+                        textureIndex = j;
+
+                        // ループ脱出.
+                        break;
+                    }
+                }
+
+                value.colorMap = textureIndex;
+
+                // マテリアル書き込み.
+                fwrite( &value, sizeof(value), 1, pFile );
+            }
+            break;
+
+        // Dielectric
+        case SMD_MATERIAL_TYPE_DIELECTRIC:
+            {
+                SMD_DIELECTRIC value;
+                value.color.x = m_Materials[i].specular.x;
+                value.color.y = m_Materials[i].specular.y;
+                value.color.z = m_Materials[i].specular.z;
+
+                value.emissive.x = m_Materials[i].emissive.x;
+                value.emissive.y = m_Materials[i].emissive.y;
+                value.emissive.z = m_Materials[i].emissive.z;
+
+                value.ior = m_Materials[i].ior;
+
+                // テクスチャインデックスを求める.
+                int textureIndex = -1;
+                for( size_t j=0; j<textureList.size(); ++j )
+                {
+                    // リストに登録されているかチェック.
+                    if ( strcmp( textureList[j].filename, m_Materials[i].specularMapName ) == 0 )
+                    {
+                        // 発見したインデックスを設定.
+                        textureIndex = j;
+
+                        // ループ脱出.
+                        break;
+                    }
+                }
+
+                value.colorMap = textureIndex;
+
+                // マテリアル書き込み.
+                fwrite( &value, sizeof(value), 1, pFile );
+            }
+            break;
+
+        // Phong
+        case SMD_MATERIAL_TYPE_GLOSSY:
+            {
+                SMD_GLOSSY value;
+                value.color.x = m_Materials[i].specular.x;
+                value.color.y = m_Materials[i].specular.y;
+                value.color.z = m_Materials[i].specular.z;
+
+                value.power = m_Materials[i].shininess;
+
+                value.emissive.x = m_Materials[i].emissive.x;
+                value.emissive.y = m_Materials[i].emissive.y;
+                value.emissive.z = m_Materials[i].emissive.z;
+
+                // テクスチャインデックスを求める.
+                int textureIndex = -1;
+                for( size_t j=0; j<textureList.size(); ++j )
+                {
+                    // リストに登録されているかチェック.
+                    if ( strcmp( textureList[j].filename, m_Materials[i].specularMapName ) == 0 )
+                    {
+                        // 発見したインデックスを設定.
+                        textureIndex = j;
+
+                        // ループ脱出.
+                        break;
+                    }
+                }
+
+                value.colorMap = textureIndex;
+
+                // マテリアル書き込み.
+                fwrite( &value, sizeof(value), 1, pFile );
+            }
+            break;
+        }
+    }
+
     // サブセットをデータを書き込み.
     for (size_t i = 0; i<m_NumSubsets; ++i)
     {
@@ -1386,360 +1558,10 @@ void OBJMESH::WriteDirect( FILE* pFile )
         }
     }
 
-    // マテリアルデータを書き込み.
-    for( size_t i=0; i<m_NumMaterials; ++i )
-    {
-        SMD_MATERIAL material;
-
-        // ゼロクリアする.
-        ZeroMemory( &material, sizeof( SMD_MATERIAL ) );
-
-        // 拡散反射色.
-        material.diffuse.x = m_Materials[ i ].diffuse.x;
-        material.diffuse.y = m_Materials[ i ].diffuse.y;
-        material.diffuse.z = m_Materials[ i ].diffuse.z;
-
-        // 自己照明.
-        material.emissive.x = m_Materials[ i ].emissive.x;
-        material.emissive.y = m_Materials[ i ].emissive.y;
-        material.emissive.z = m_Materials[ i ].emissive.z;
-
-        material.specular.x = m_Materials[i].specular.x;
-        material.specular.y = m_Materials[i].specular.y;
-        material.specular.z = m_Materials[i].specular.z;
-        
-        material.power = m_Materials[i].shininess;
-
-        // テクスチャインデックスを求める.
-        int textureIndex = -1;
-        for( size_t j=0; j<textureList.size(); ++j )
-        {
-            // リストに登録されているかチェック.
-            if ( strcmp( textureList[j].filename, m_Materials[i].diffuseMapName ) == 0 )
-            {
-                // 発見したインデックスを設定.
-                textureIndex = j;
-
-                // ループ脱出.
-                break;
-            }
-        }
-
-        // テクスチャインデックスを設定する.
-        material.diffuseMap = textureIndex;
-
-#if 0
-        //printf_s( "ambient  = ( %f, %f, %f )\n", material.ambientR, material.ambientG, material.ambientB );
-        //printf_s( "diffuse  = ( %f, %f, %f )\n", material.diffuseR, material.diffuseG, material.diffuseB );
-        //printf_s( "specular = ( %f, %f, %f )\n", material.specularR, material.specularG, material.specularB );
-        //printf_s( "emissive = ( %f, %f, %f )\n", material.emissiveR, material.emissiveG, material.emissiveB );
-        //printf_s( "power    = %f\n", material.power  );
-        //printf_s( "alpha    = %f\n", material.bumpMap );
-        //printf_s( "ambientmap  = %s\n", material.ambientMap );
-        //printf_s( "diffusemap  = %s\n", material.diffuseMap );
-        //printf_s( "specularmap = %s\n", material.specularMap );
-        //printf_s( "bumpmap     = %s\n", material.bumpMap );
-        //printf_s( "displacementmap = %s\n", material.displacementMap );
-        //printf_s( "\n" );
-#endif
-
-        // マテリアルデータを書き込む.
-        fwrite( &material, sizeof( SMD_MATERIAL ), 1, pFile );
-    }
-
-    // テクスチャファイル名を書き込む.
-    for( size_t j=0; j<textureList.size(); ++j )
-    {
-        SMD_TEXTURE texture = textureList[j];
-        fwrite( &texture, sizeof( SMD_TEXTURE ), 1, pFile );
-    }
-
     // 不要なメモリを破棄.
     textureList.clear();
 }
 
-//-----------------------------------------------------------------------
-// Name : CompareSubset()
-// Desc : サブセットの大小比較を行います.
-//-----------------------------------------------------------------------
-static int CompareSubset( const void* pA, const void* pB )
-{
-    OBJSUBSET* a = (OBJSUBSET*)pA;
-    OBJSUBSET* b = (OBJSUBSET*)pB;
-
-    // pAの方がマテリアル番号が大きい場合.
-    if ( a->materialIndex > b->materialIndex )
-    { return 1; }
-
-    // マテリアル番号が同じ場合.
-    if ( a->materialIndex == b->materialIndex )
-    {
-        // pAの開始面番号が大きい場合.
-        if ( a->faceStart > b->faceStart )
-        { return 1; }
-        // pAとpBの開始面番号が同じ場合.
-        else if ( a->faceStart == b->faceStart )
-        { return 0; }
-        // pAの開始面番号が小さい場合.
-        else
-        { return -1; }
-    }
-
-    // pAの方がマテリアル番号が小さい場合.
-    if ( a->materialIndex < b->materialIndex )
-    { return -1; }
-
-    // ありえないけど0を返す.
-    return 0;
-};
-
-//-----------------------------------------------------------------------
-// Name : WriteOptimize()
-// Desc : 最適化しながらバイナリ書き込みします.
-//-----------------------------------------------------------------------
-void OBJMESH::WriteOptimize( FILE* pFile )
-{
-    // サブセットをマテリアルインデックスでクイックソートする.
-    OBJSUBSET* pSubsets = new OBJSUBSET[ m_NumSubsets ];
-    for( size_t i=0; i<m_NumSubsets; ++i )
-    {
-        pSubsets[ i ] = m_Subsets[ i ];
-    }
-    qsort( pSubsets, m_NumSubsets, sizeof( OBJSUBSET ), CompareSubset );
-
-#if 0
-    //for( size_t i=0; i<m_NumSubsets; ++i )
-    //{
-    //    printf_s( "pSubset[ %d ]\n", i );
-    //    printf_s( "    startIndex = %d\n", pSubsets[ i ].faceStart );
-    //    printf_s( "    indexCount = %d\n", pSubsets[ i ].faceCount );
-    //    printf_s( "    materialId = %d\n", pSubsets[ i ].materialIndex );
-    //}
-#endif
-
-    // 整形後用のサブセットのメモリを確保.
-    OBJSUBSET* pSortedSubsets = new OBJSUBSET[ m_NumMaterials ];
-
-    for( size_t i=0; i<m_NumMaterials; ++i )
-    {
-        pSortedSubsets[ i ].faceCount = 0;
-        pSortedSubsets[ i ].faceStart = 0;
-        pSortedSubsets[ i ].materialIndex = 0;
-    }
-
-    unsigned int matIdx    = -1;
-    unsigned int faceCount = 0;
-    int idx = -1;
-
-    // 整形後用のサブセットを構築.
-    for( size_t i=0; i<m_NumSubsets; ++i )
-    {
-        if ( matIdx == (int)pSubsets[ i ].materialIndex )
-        {
-            faceCount += pSubsets[ i ].faceCount;
-            pSortedSubsets[ idx ].faceCount += pSubsets[ i ].faceCount;
-        }
-        else
-        {
-            idx++;
-            pSortedSubsets[ idx ].faceStart = faceCount;
-            pSortedSubsets[ idx ].faceCount = pSubsets[ i ].faceCount;
-            pSortedSubsets[ idx ].materialIndex = pSubsets[ i ].materialIndex;
-            matIdx = pSubsets[ i ].materialIndex;
-            faceCount += pSubsets[ i ].faceCount;
-
-#if 0
-            //printf_s( "idx = %d\n", idx );
-            //printf_s( "faceCount = %d\n", faceCount );
-            //printf_s( "matIdx = %d\n", matIdx );
-#endif
-        }
-    }
-
-#if 0
-    //for( size_t i=0; i<m_NumMaterials; ++i )
-    //{
-    //    printf_s( "pSortedSubset[ %d ]\n", i );
-    //    printf_s( "    startIndex = %d\n", pSortedSubsets[ i ].faceStart );
-    //    printf_s( "    indexCount = %d\n", pSortedSubsets[ i ].faceCount );
-    //    printf_s( "    materialId = %d\n", pSortedSubsets[ i ].materialIndex );
-    //}
-#endif
-
-    // テクスチャファイルリストを構築する.
-    std::vector<SMD_TEXTURE> textureList;
-
-    // マテリアル数だけループする.
-    for (size_t i = 0; i<m_NumMaterials; ++i)
-    {
-        // 発見フラグをOFF.
-        bool isFind = false;
-
-        // リストに登録されているかチェックしながらリストに登録する.
-        for (size_t j = 0; j<textureList.size(); ++j)
-        {
-            // リストに格納されているかチェック.
-            if (strcmp(textureList[j].filename, m_Materials[i].diffuseMapName) == 0)
-            {
-                // 発見フラグをON.
-                isFind = true;
-
-                // ループ脱出.
-                break;
-            }
-        }
-
-        // 発見されていなければ登録する.
-        if (!isFind && (strcmp(m_Materials[i].diffuseMapName, "\0") != 0) )
-        {
-            // ファイル名を設定.
-            SMD_TEXTURE texture;
-            strcpy(texture.filename, m_Materials[i].diffuseMapName);
-
-            // 末尾に登録.
-            textureList.push_back(texture);
-        }
-    }
-
-    // メモリサイズを最適化.
-    if (textureList.size() > 0)
-    {
-        size_t size = textureList.size();
-        textureList.resize(size);
-    }
-
-    // データヘッダーを設定.
-    SMD_DATA_HEADER dataHeader;
-    dataHeader.numTriangles  = m_NumIndices / 3;
-    dataHeader.numMaterials = m_NumMaterials;
-    dataHeader.numTextures = (unsigned int)textureList.size();
-    dataHeader.triangleStructureSize = SMD_TRIANGLE_STRUCT_SIZE;
-    dataHeader.materialStructureSize = SMD_MATERIAL_STRUCT_SIZE;
-    dataHeader.textureStructureSize  = SMD_TEXTURE_STRUCT_SIZE;
-
-    // ファイルヘッダーを設定.
-    SMD_FILE_HEADER fileHeader;
-    memcpy( &fileHeader.magic, SMD_MAGIC, sizeof( unsigned char ) * 4 );
-    fileHeader.version        = SMD_VERSION;
-    fileHeader.dataHeaderSize = SMD_DATA_HEADER_SIZE;
-    fileHeader.dataHeader     = dataHeader;
-
-#if 0
-    //printf_s( "File Version  = 0x%08x\n", fileHeader.version );
-    //printf_s( "Num Vertices  = %d\n", dataHeader.numVertices );
-    //printf_s( "Num Indices   = %d\n", dataHeader.numIndices );
-    //printf_s( "Num Materials = %d\n", dataHeader.numMaterials );
-    //printf_s( "Num Subsets   = %d\n", dataHeader.numSubsets );
-#endif
-
-    // ヘッダーを書き込み.
-    fwrite( &fileHeader, sizeof( SMD_FILE_HEADER ), 1, pFile );
-
-    // 整形済みサブセットは最終的にはマテリアル数と一致するので，マテリアル数分だけループする.
-    for (size_t i = 0; i < m_NumMaterials; ++i)
-    {
-        // 頂点数だけ処理します.
-        for (size_t j = 0; j < pSortedSubsets[i].faceCount; j+=3)
-        {
-            // 頂点インデックスです.
-            unsigned int idx = pSortedSubsets[i].faceStart + j;
-
-            // 格納用三角形データです.
-            SMD_TRIANGLE triangle;
-
-            // 頂点データを設定します.
-            for (size_t k = 0; k < 3; ++k)
-            {
-                // 位置座標データを設定します.
-                triangle.vertex[k].position.x = m_Vertices[idx + k].position.x;
-                triangle.vertex[k].position.y = m_Vertices[idx + k].position.y;
-                triangle.vertex[k].position.z = m_Vertices[idx + k].position.z;
-
-                // 法線ベクトルデータを設定します.
-                triangle.vertex[k].normal.x = m_Vertices[idx + k].normal.x;
-                triangle.vertex[k].normal.y = m_Vertices[idx + k].normal.y;
-                triangle.vertex[k].normal.z = m_Vertices[idx + k].normal.z;
-
-                // テクスチャ座標データを設定します.
-                triangle.vertex[k].texcoord.x = m_Vertices[idx + k].texcoord.x;
-                triangle.vertex[k].texcoord.y = m_Vertices[idx + k].texcoord.y;
-            }
-
-            // マテリアルインデックスを設定します.
-            triangle.materialId = pSortedSubsets[i].materialIndex;
-
-            // 三角形データを書き込みます.
-            fwrite(&triangle, sizeof(SMD_TRIANGLE), 1, pFile);
-        }
-    }
-
-    // マテリアルデータを書き込み.
-    for( size_t i=0; i<m_NumMaterials; ++i )
-    {
-        SMD_MATERIAL material;
-        // ゼロクリア.
-        ZeroMemory( &material, sizeof( SMD_MATERIAL ) );
-
-        // 拡散反射色.
-        material.diffuse.x = m_Materials[ i ].diffuse.x;
-        material.diffuse.y = m_Materials[ i ].diffuse.y;
-        material.diffuse.z = m_Materials[ i ].diffuse.z;
-
-        // 自己照明.
-        material.emissive.x = m_Materials[ i ].emissive.x;
-        material.emissive.y = m_Materials[ i ].emissive.y;
-        material.emissive.z = m_Materials[ i ].emissive.z;
-
-        // テクスチャインデックスを探し出す.
-        int textureIndex = -1;
-        for( size_t j=0; j<textureList.size(); ++j )
-        {
-            if ( strcmp( textureList[j].filename, m_Materials[i].diffuseMapName ) == 0 )
-            {
-                textureIndex = j;
-                break;
-            }
-        }
-
-        // テクスチャインデックスを設定.
-        material.diffuseMap = textureIndex;
-
-#if 0
-        //printf_s( "ambient  = ( %f, %f, %f )\n", material.ambientR, material.ambientG, material.ambientB );
-        //printf_s( "diffuse  = ( %f, %f, %f )\n", material.diffuseR, material.diffuseG, material.diffuseB );
-        //printf_s( "specular = ( %f, %f, %f )\n", material.specularR, material.specularG, material.specularB );
-        //printf_s( "emissive = ( %f, %f, %f )\n", material.emissiveR, material.emissiveG, material.emissiveB );
-        //printf_s( "power    = %f\n", material.power  );
-        //printf_s( "alpha    = %f\n", material.bumpMap );
-        //printf_s( "ambientmap  = %s\n", material.ambientMap );
-        //printf_s( "diffusemap  = %s\n", material.diffuseMap );
-        //printf_s( "specularmap = %s\n", material.specularMap );
-        //printf_s( "bumpmap     = %s\n", material.bumpMap );
-        //printf_s( "displacementmap = %s\n", material.displacementMap );
-        //printf_s( "\n" );
-#endif
-
-        // マテリアルデータを書き込みます.
-        fwrite( &material, sizeof( SMD_MATERIAL ), 1, pFile );
-    }
-
-    // テクスチャファイル名を書き出す.
-    for( size_t j=0; j<textureList.size(); ++j )
-    {
-        SMD_TEXTURE texture = textureList[j];
-        fwrite( &texture, sizeof( SMD_TEXTURE ), 1, pFile );
-    }
-
-    // テクスチャリストを解放.
-    textureList.clear();
-
-    // 不要なメモリを解放.
-    delete [] pSortedSubsets;
-    pSortedSubsets = nullptr;
-
-    delete [] pSubsets;
-    pSubsets = nullptr;
-};
 
 //-----------------------------------------------------------------------
 // Name : SaveToBinary()
@@ -1757,16 +1579,7 @@ bool OBJMESH::SaveToBinary( const char* filename )
         return false;
     }
 
-    //if ( m_NumMaterials == m_NumSubsets )
-    {
-        // 最適化の必要がないのでそのまま書き込み.
-        WriteDirect( pFile );
-    }
-    //else
-    //{
-    //    // 最適化しながら書き込み.
-    //    WriteOptimize( pFile );
-    //}
+    WriteDirect( pFile );
 
     // ファイルを閉じる.
     fclose( pFile );

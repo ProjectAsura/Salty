@@ -20,9 +20,19 @@ namespace /* anonymous */ {
 //----------------------------------------------------------------------------------------
 // Constant Values.
 //----------------------------------------------------------------------------------------
-static const u32 SMD_CURRENT_VERSION = 0x00000001;
+static const u32 SMD_CURRENT_VERSION = 0x00000002;
 static const u8  SMD_FILE_TAG[4]     = { 'S', 'M', 'D', '\0' };
 
+//////////////////////////////////////////////////////////////////////////////////////////
+// SMD_MATERIAL_TYPE
+//////////////////////////////////////////////////////////////////////////////////////////
+enum SMD_MATERIAL_TYPE
+{
+    SMD_MATERIAL_TYPE_MATTE = 0,        //!< Lambert
+    SMD_MATERIAL_TYPE_MIRROR,           //!< Perfect Specular
+    SMD_MATERIAL_TYPE_DIELECTRIC,       //!< Dielectric
+    SMD_MATERIAL_TYPE_GLOSSY,           //!< Phong
+};
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // SMD_DATA_HEADER structure
@@ -68,18 +78,6 @@ struct SMD_TRIANGLE
     s32             MaterialId;     //!< マテリアルインデックスです.
 };
 
-//////////////////////////////////////////////////////////////////////////////////////////
-// SMD_MTERIAL structure
-//////////////////////////////////////////////////////////////////////////////////////////
-struct SMD_MATERIAL
-{
-    s3d::Vector3    Diffuse;            //!< 拡散反射成分です.
-    s3d::Vector3    Specular;           //!< 鏡面反射成分です.
-    f32             Power;              //!< 鏡面反射強度です.
-    s3d::Vector3    Emissive;           //!< 自己照明成分です.
-    s32             DiffuseMap;         //!< ディフューズマップです.
-    s32             SpecularMap;        //!< スペキュラーマップです.
-};
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // SMD_MATTE structure
@@ -137,167 +135,6 @@ struct SMD_TEXTURE
 namespace s3d {
 
 //////////////////////////////////////////////////////////////////////////////////////////
-// MeshMaterial
-//////////////////////////////////////////////////////////////////////////////////////////
-
-//----------------------------------------------------------------------------------------
-//      引数付きコンストラクタです.
-//----------------------------------------------------------------------------------------
-MeshMaterial::MeshMaterial
-(
-    const Color4&    diffuse,
-    const Color4&    specular,
-    const f32        power,
-    const Color4&    emissive
-)
-: Diffuse       ( diffuse )
-, Specular      ( specular )
-, Power         ( power )
-, Emissive      ( emissive )
-, pDiffuseMap   ( nullptr )
-, pSpecularSmp  ( nullptr )
-{
-    Threshold = Max( diffuse.GetX(), diffuse.GetY() );
-    Threshold = Max( diffuse.GetZ(), Threshold );
-}
-
-//---------------------------------------------------------------------------------------
-//      自己照明成分を取得します.
-//---------------------------------------------------------------------------------------
-Color4 MeshMaterial::GetEmissive() const
-{
-    return Emissive; 
-}
-
-//---------------------------------------------------------------------------------------
-//      ロシアンルーレットの閾値を取得します.
-//---------------------------------------------------------------------------------------
-f32 MeshMaterial::GetThreshold() const
-{
-    return Threshold;
-}
-
-bool MeshMaterial::AlphaTest( const Vector2& texcoord, const f32 value ) const
-{
-    if ( pDiffuseMap == nullptr || pDiffuseSmp == nullptr )
-    { return true; }
-
-    return pDiffuseMap->AlphaTest( (*pDiffuseSmp), texcoord, value );
-}
-
-#if 1
-Color4 MeshMaterial::GetDebugColor() const
-{ return Diffuse; }
-#endif
-
-//---------------------------------------------------------------------------------------
-//      色を計算します.
-//---------------------------------------------------------------------------------------
-Color4 MeshMaterial::ComputeColor( ShadingArg& arg ) const
-{
-    // 補正済み法線データ (レイの入出を考慮済み).
-    auto cosine = Vector3::Dot( arg.normal, arg.input );
-    const Vector3 normalMod = ( cosine < 0.0 ) ? arg.normal : -arg.normal;
-
-#if 0
-    if ( cosine < 0.0f ) cosine = -cosine;
-
-    auto temp1 = 1.0f - cosine;
-    const auto R0 = 0.5f;
-    auto R = R0 + ( 1.0f - R0 ) * temp1 * temp1 * temp1 * temp1 * temp1;
-    auto P = ( R + 0.5f ) / 2.0f;
-
-    if ( arg.random.GetAsF32() <= P )
-    {
-        // normalModの方向を基準とした正規直交基底(w, u, v)を作る。
-        // この基底に対する半球内で次のレイを飛ばす。
-        OrthonormalBasis onb;
-        onb.InitFromW( normalMod );
-
-        // インポータンスサンプリング.
-        const f32 phi = F_2PI * arg.random.GetAsF32( );
-        const f32 r = SafeSqrt( arg.random.GetAsF32( ) );
-        const f32 x = r * cosf( phi );
-        const f32 y = r * sinf( phi );
-        const f32 z = SafeSqrt( 1.0f - ( x * x ) - ( y * y ) );
-
-        // 出射方向.
-        Vector3 dir = Vector3::UnitVector( onb.u * x + onb.v * y + onb.w * z );
-        arg.output = dir;
-
-        // 重み更新 (飛ぶ方向が不定なので確率で割る必要あり).
-        Color4 result;
-        if ( pDiffuseMap != nullptr )
-        { result = Color4::Mul( Diffuse, pDiffuseMap->Sample( ( *pDiffuseSmp ), arg.texcoord ) ) * R / P; }
-        else
-        { result = Diffuse  * R / P; }
-
-        return result;
-    }
-    else
-    {
-        // インポータンスサンプリング.
-        const f32 phi = F_2PI * arg.random.GetAsF32();
-        const f32 cosTheta = powf( 1.0f - arg.random.GetAsF32(), 1.0f / ( Power + 1.0f ) );
-        const f32 sinTheta = SafeSqrt( 1.0f - ( cosTheta * cosTheta ) );
-        const f32 x = cosf( phi ) * sinTheta;
-        const f32 y = sinf( phi ) * sinTheta;
-        const f32 z = cosTheta;
-
-        // 反射ベクトル.
-        Vector3 w = Vector3::Reflect( arg.input, normalMod );
-        w.Normalize();
-
-        // 基底ベクトルを求める.
-        OrthonormalBasis onb;
-        onb.InitFromW( w );
-
-        // 出射方向.
-        auto dir = Vector3::UnitVector( onb.u * x + onb.v * y + onb.w * z );
-
-        // 出射方向と法線ベクトルの内積を求める.
-        auto dots = Vector3::Dot( dir, normalMod );
-
-        arg.output = dir;
-
-        // 重み更新.
-        if ( pSpecularMap != nullptr && pSpecularSmp != nullptr )
-        {
-            return Color4::Mul( Specular, pSpecularMap->Sample( (*pSpecularSmp), arg.texcoord ) ) * dots * ( 1.0f - R ) / ( 1.0f - P );
-        }
-
-        return Specular * dots * ( 1.0f - R ) / ( 1.0f - P );
-    }
-#else
-        // normalModの方向を基準とした正規直交基底(w, u, v)を作る。
-        // この基底に対する半球内で次のレイを飛ばす。
-        OrthonormalBasis onb;
-        onb.InitFromW( normalMod );
-
-        // インポータンスサンプリング.
-        const f32 phi = F_2PI * arg.random.GetAsF32( );
-        const f32 r = SafeSqrt( arg.random.GetAsF32( ) );
-        const f32 x = r * cosf( phi );
-        const f32 y = r * sinf( phi );
-        const f32 z = SafeSqrt( 1.0f - ( x * x ) - ( y * y ) );
-
-        // 出射方向.
-        Vector3 dir = Vector3::UnitVector( onb.u * x + onb.v * y + onb.w * z );
-        arg.output = dir;
-
-        // 重み更新 (飛ぶ方向が不定なので確率で割る必要あり).
-        Color4 result;
-        if ( pDiffuseMap != nullptr )
-        { result = Color4::Mul( Diffuse, pDiffuseMap->Sample( ( *pDiffuseSmp ), arg.texcoord ) ) * arg.prob; }
-        else
-        { result = Diffuse * arg.prob; }
-
-        return result;
-#endif
-}
-
-
-//////////////////////////////////////////////////////////////////////////////////////////
 // Mesh class
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -338,7 +175,15 @@ void Mesh::Release()
         m_Triangles.clear();
     }
 
-    m_Materials.clear();
+    if ( !m_Materials.empty() )
+    {
+        for( size_t i=0; i<m_Materials.size(); ++i )
+        {
+            SafeDelete( m_Materials[i] );
+        }
+        m_Materials.clear();
+    }
+
     m_Textures.clear();
 }
 
@@ -419,6 +264,111 @@ bool Mesh::LoadFromFile( const char* filename )
 
     m_Center = Vector3( 0.0f, 0.0f, 0.0f );
 
+    // テクスチャデータを読み込みます.
+    if ( !m_Textures.empty() )
+    {
+        for ( size_t i = 0; i < m_Textures.size(); ++i )
+        {
+            SMD_TEXTURE texture;
+            fread( &texture, sizeof( SMD_TEXTURE ), 1, pFile );
+
+            std::string path = dirPath + "/" + texture.FileName;
+            if ( !m_Textures[ i ].LoadFromFile( path.c_str() ) )
+            {
+                ILOG( "Warning : Texture Load Failed. filename = %s", path.c_str() );
+            }
+        #if 0
+            ILOG( "Texture[%d] : ", i );
+            ILOG( "    File Name : %s", path.c_str() );
+        #endif
+        }
+    }
+
+    // マテリアルデータを読み込みます.
+    for ( size_t i = 0; i < m_Materials.size(); ++i )
+    {
+        // マテリアルタイプ読み込み.
+        s32 materialType = -1;
+        fread( &materialType, sizeof(s32), 1, pFile );
+
+        switch( materialType )
+        {
+        case SMD_MATERIAL_TYPE_MATTE:
+        default:
+            {
+                SMD_MATTE value;
+                fread( &value, sizeof(value), 1, pFile );
+
+                auto material = new Matte( Color4(value.Color, 1.0f), Color4(value.Emissive, 1.0f) );
+                if ( value.ColorMap >= 0 )
+                {
+                    material->pTexture = &m_Textures[value.ColorMap];
+                    material->pSampler = &m_DiffuseSmp;
+                }
+
+                m_Materials[i] = material;
+            }
+            break;
+
+        case SMD_MATERIAL_TYPE_MIRROR:
+            {
+                SMD_MIRROR value;
+                fread( &value, sizeof(value), 1, pFile );
+
+                auto material = new Mirror( Color4(value.Color, 1.0f), Color4(value.Emissive, 1.0f) );
+                if ( value.ColorMap >= 0 )
+                {
+                    material->pTexture = &m_Textures[value.ColorMap];
+                    material->pSampler = &m_SpecularSmp;
+                }
+
+                m_Materials[i] = material;
+            }
+            break;
+
+        case SMD_MATERIAL_TYPE_DIELECTRIC:
+            {
+                SMD_DIELECTRIC value;
+                fread( &value, sizeof(value), 1, pFile );
+
+                auto material = new Dielectric( value.Ior, Color4(value.Color, 1.0f), Color4(value.Emissive, 1.0f) );
+                if ( value.ColorMap >= 0 )
+                {
+                    material->pTexture = &m_Textures[value.ColorMap];
+                    material->pSampler = &m_SpecularSmp;
+                }
+
+                m_Materials[i] = material;
+            }
+            break;
+
+        case SMD_MATERIAL_TYPE_GLOSSY:
+            {
+                SMD_GLOSSY value;
+                fread( &value, sizeof(value), 1, pFile );
+
+                auto material = new Glossy( Color4(value.Color, 1.0f), value.Power, Color4(value.Emissive, 1.0f) );
+                if ( value.ColorMap >= 0 )
+                {
+                    material->pTexture = &m_Textures[value.ColorMap];
+                    material->pSampler = &m_SpecularSmp;
+                }
+
+                m_Materials[i] = material;
+            }
+            break;
+        }
+
+    #if 0
+        ILOG( "Material[%d] : ", i );
+        ILOG( "    Emissive ( %f, %f, %f )", m_pMaterials[ i ].Emissive.x, m_pMaterials[ i ].Emissive.y, m_pMaterials[ i ].Emissive.z );
+        ILOG( "    Diffuse  ( %f, %f, %f )", m_pMaterials[ i ].Diffuse.x, m_pMaterials[ i ].Diffuse.y, m_pMaterials[ i ].Diffuse.z );
+        ILOG( "    DiffuseMap  : 0x%x", m_pMaterials[ i ].pDiffuseMap );
+        ILOG( "    DiffuseSmp  : 0x%x", m_pMaterials[ i ].pDiffuseSmp );
+        ILOG( "    Threshold : %f",     m_pMaterials[ i ].Threshold );
+    #endif
+    }
+
     // 三角形データを読み込みます.
     for ( size_t i = 0; i < m_Triangles.size(); ++i )
     {
@@ -446,7 +396,7 @@ bool Mesh::LoadFromFile( const char* filename )
 
         if ( triangle.MaterialId >= 0 )
         {
-            tri->pMaterial = &m_Materials[ triangle.MaterialId ];
+            tri->pMaterial = m_Materials[ triangle.MaterialId ];
         }
 
         m_Triangles[ i ] = tri;
@@ -470,61 +420,6 @@ bool Mesh::LoadFromFile( const char* filename )
     }
 
     m_Center /= ( m_Triangles.size() * 3.0f );
-
-    // マテリアルデータを読み込みます.
-    for ( size_t i = 0; i < m_Materials.size(); ++i )
-    {
-        SMD_MATERIAL material;
-        fread( &material, sizeof( SMD_MATERIAL ), 1, pFile );
-
-        Color4 diffuse ( material.Diffuse.x,  material.Diffuse.y,  material.Diffuse.z,  1.0f );
-        Color4 emissive( material.Emissive.x, material.Emissive.y, material.Emissive.z, 1.0f );
-        Color4 specular( material.Specular.x, material.Specular.y, material.Specular.z, 1.0f );
-
-        m_Materials[i] = MeshMaterial( diffuse, specular, material.Power, emissive );
-        if ( material.DiffuseMap >= 0 )
-        {
-            m_Materials[ i ].pDiffuseMap = &m_Textures[ material.DiffuseMap ];
-            m_Materials[ i ].pDiffuseSmp = &m_DiffuseSmp;
-        }
-
-    #if 0
-        ILOG( "Material[%d] : ", i );
-        ILOG( "    Emissive ( %f, %f, %f )", m_pMaterials[ i ].Emissive.x, m_pMaterials[ i ].Emissive.y, m_pMaterials[ i ].Emissive.z );
-        ILOG( "    Diffuse  ( %f, %f, %f )", m_pMaterials[ i ].Diffuse.x, m_pMaterials[ i ].Diffuse.y, m_pMaterials[ i ].Diffuse.z );
-        ILOG( "    DiffuseMap  : 0x%x", m_pMaterials[ i ].pDiffuseMap );
-        ILOG( "    DiffuseSmp  : 0x%x", m_pMaterials[ i ].pDiffuseSmp );
-        ILOG( "    Threshold : %f",     m_pMaterials[ i ].Threshold );
-    #endif
-    }
-
-    // テクスチャデータを読み込みます.
-    if ( !m_Textures.empty() )
-    {
-        for ( size_t i = 0; i < m_Textures.size(); ++i )
-        {
-            SMD_TEXTURE texture;
-            fread( &texture, sizeof( SMD_TEXTURE ), 1, pFile );
-
-            std::string path = dirPath + "/" + texture.FileName;
-            if ( !m_Textures[ i ].LoadFromFile( path.c_str() ) )
-            {
-                ILOG( "Warning : Texture Load Failed. filename = %s", path.c_str() );
-                for( size_t j=0; j<m_Materials.size(); ++j )
-                {
-                    if ( m_Materials[j].pDiffuseMap == (&m_Textures[i]) )
-                    {
-                        m_Materials[j].pDiffuseMap = nullptr;
-                        m_Materials[j].pDiffuseSmp = nullptr;
-                    }
-                }
-            }
-        #if 0
-            ILOG( "Texture[%d] : ", i );
-            ILOG( "    File Name : %s", path.c_str() );
-        #endif
-        }
-    }
 
     // BVHを構築します.
 #if 0

@@ -234,12 +234,14 @@ Color4 PathTracer::Radiance( const Ray& input )
         assert( shape    != nullptr );
         assert( material != nullptr );
 
+    #if 0
         // アルファテスト.
         if ( !material->AlphaTest( record.texcoord, 0.01f ) )
         {
             L += Color4::Mul( W, m_pScene->SampleIBL( ray.dir ) );
             break;
         }
+    #endif
 
         // 自己発光による放射輝度.
         L += Color4::Mul( W, material->GetEmissive() );

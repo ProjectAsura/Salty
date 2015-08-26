@@ -80,12 +80,15 @@ s32 GetAxisIndex( s3d::Vector3 size )
 //-------------------------------------------------------------------------------------------------
 bool SahSplit( std::vector<s3d::IShape*> shapes, s32& bestIndex, s32& bestAxis )
 {
-    if ( shapes.size() <= 4 )
+    if ( shapes.size() <= 2 )
     { return false; }
 
-    auto bestCost = F32_MAX;
     bestAxis  = -1;
     bestIndex = -1;
+
+    auto boxRoot = s3d::CreateMergedBox(&shapes[0], u32(shapes.size()));
+    auto S = s3d::SurfaceArea( boxRoot );
+    auto bestCost = S * (shapes.size() * 1.0f - 2.0f);
 
     for( auto axis = 0; axis < 3; ++axis )
     {
@@ -125,6 +128,11 @@ bool SahSplit( std::vector<s3d::IShape*> shapes, s32& bestIndex, s32& bestAxis )
         }
 
         auto s2Box = s3d::BoundingBox();
+
+        s1.clear();
+        s2.clear();
+
+        s1 = std::deque<s3d::IShape*>(shapes.begin(), shapes.end());
 
         for( s32 i=s32(shapes.size()); i>=0; --i )
         {
@@ -399,6 +407,7 @@ bool QBVH::IsHit( const Ray& ray, HitRecord& record ) const
     if ( !box.IsHit( Ray4( ray ), mask ) )
     { return false; }
 
+#if 0
     // 巡回テーブルのインデックスを算出.
     s32 idx = ( ray.sign[axisTop]  << 2 )
             | ( ray.sign[axisLeft] << 1 )
@@ -415,6 +424,15 @@ bool QBVH::IsHit( const Ray& ray, HitRecord& record ) const
     }
 
     return false;
+#else
+    auto hit = false;
+    for( auto i=0; i<4; ++i )
+    {
+        if ( mask & ( 0x1 << i ) )
+        { hit |= pShape[i]->IsHit( ray, record ); }
+    }
+    return hit;
+#endif
 }
 
 //--------------------------------------------------------------------------
@@ -686,7 +704,7 @@ bool OBVH::IsHit( const Ray& ray, HitRecord& record ) const
     // まず子のバウンディングボックスと交差判定.
     s32 mask = 0;
     if ( !box.IsHit( Ray8( ray ), mask ) )
-    { return record.distance < F_MAX; }
+    { return false; }
 
     // 次にバウンディングボックスとヒットした子のみたどっていく.
     auto hit = false;

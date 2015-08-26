@@ -507,6 +507,9 @@ void Leaf::Dispose()
 //-------------------------------------------------------------------------------------
 bool Leaf::IsHit( const Ray& ray, HitRecord& record ) const
 {
+    //if ( !box.IsHit(ray) )
+    //{ return false; }
+
     auto hit = false;
     for( u32 i=0; i<size; ++i )
     { hit |= ppShapes[ i ]->IsHit( ray, record ); }

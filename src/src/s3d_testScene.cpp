@@ -20,7 +20,7 @@ using namespace s3d;
 
 Texture2D   g_TextureWall( "./res/texture/brick.bmp" );
 //Texture2D   g_TextureLeaf( "./res/texture/aglaonema_leaf.tga" );
-Texture2D   g_TextureTile( "./res/texture/tile.bmp" );
+Texture2D   g_TextureTile( "./res/texture/table.bmp" );
 TextureSampler g_Sampler = TextureSampler();
 
 // Lambert
@@ -130,10 +130,10 @@ Quad g_Quads[] = {
     // ‰º.
     Quad(
         Face4(
-            Vertex( Vector3( 0, 0.0, 250.0 ),      Vector2( 0.0, 0.0 ) ),
-            Vertex( Vector3( 0, 0.0,  0.0 ),       Vector2( 0.0, 3.0 ) ),
-            Vertex( Vector3( 100, 0.0,  0.0 ),     Vector2( 3.0, 3.0 ) ),
-            Vertex( Vector3( 100, 0.0, 250.0 ),    Vector2( 3.0, 0.0 ) ) ),
+            Vertex( Vector3( -50, 0.0, 250.0 ),      Vector2( 0.0, 0.0 ) ),
+            Vertex( Vector3( -50, 0.0, -150.0 ),       Vector2( 0.0, 2.0 ) ),
+            Vertex( Vector3( 150, 0.0, -150.0 ),     Vector2( 2.0, 2.0 ) ),
+            Vertex( Vector3( 150, 0.0, 250.0 ),    Vector2( 2.0, 0.0 ) ) ),
         g_pMaterials[1]
    ),
 };
@@ -147,17 +147,17 @@ namespace s3d {
 TestScene::TestScene( const u32 width, const u32 height )
 : Scene()
 {
-    if ( !g_Mesh.LoadFromFile( "res/mesh/lucy/lucy_low.smd" ) )
+    if ( !g_Mesh.LoadFromFile( "res/mesh/can/coke_can.smd" ) )
     {
         assert( false );
     }
 
 
-    m_Instances.push_back( new Instance( &g_Mesh, Matrix::Translate( -25.0f, 0.0f, -50.0 )) );
-    m_Instances.push_back( new Instance( &g_Mesh, Matrix::Translate( -50.0f, 0.0f, -100.0f)) );
-    m_Instances.push_back( new Instance( &g_Mesh, Matrix::Translate( -75.0f, 0.0f, -150.0f)) );
-    m_Instances.push_back( new Instance( &g_Mesh, Matrix::Translate( -100.0f, 0.0f, -200.0f)) );
-    m_Instances.push_back( new Instance( &g_Mesh, Matrix::Translate( -125.0f, 0.0f, -250.0f)) );
+    m_Instances.push_back( new Instance( &g_Mesh, Matrix::Translate( 100.0f, 20.0f, 100.0 )) );
+    m_Instances.push_back( new Instance( &g_Mesh, Matrix::RotateY(ToRad(-30.0f)) * Matrix::Translate( 75.0f, 20.0f, 75.0f)) );
+    m_Instances.push_back( new Instance( &g_Mesh, Matrix::RotateY(ToRad(59.5f)) * Matrix::Translate( 50.0f, 20.0f, 50.0f)) );
+    m_Instances.push_back( new Instance( &g_Mesh, Matrix::RotateY(ToRad(130.3f)) * Matrix::Translate( 25.0f, 20.0f, 25.0f)) );
+    m_Instances.push_back( new Instance( &g_Mesh, Matrix::RotateY(ToRad(260.0f)) * Matrix::Translate( 0.0f, 20.0f, 0.0f)) );
 
 
     //m_Shapes.push_back( &g_Quads[0] );
@@ -166,7 +166,6 @@ TestScene::TestScene( const u32 width, const u32 height )
     //m_Shapes.push_back( &g_Quads[3] );
     //m_Shapes.push_back( &g_Quads[4] );
     m_Shapes.push_back( &g_Quads[5] );
-    m_Shapes.push_back( &g_Mesh );
     m_Shapes.push_back( &g_Spheres[0] );
     m_Shapes.push_back( &g_Spheres[1] );
     m_Shapes.push_back( m_Instances[0] );

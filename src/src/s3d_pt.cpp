@@ -17,6 +17,7 @@
 #include <s3d_timer.h>
 #include <s3d_tonemapper.h>
 #include <s3d_bmp.h>
+#include <s3d_hdr.h>
 #include <s3d_camera.h>
 #include <s3d_shape.h>
 #include <s3d_material.h>
@@ -115,6 +116,7 @@ bool PathTracer::Run( const Config& config )
 
     // 画像出力用ディレクトリ作成.
     _mkdir( "./img" );
+    _mkdir( "./dbg" );
 
     // コンフィグ設定.
     m_Config = config;
@@ -170,6 +172,9 @@ void PathTracer::Watcher()
             sprintf_s( filename, "img/%03d.bmp", counter );
             Capture( filename );
             counter++;
+
+            sprintf_s( filename, "dbg/%03d.hdr", counter );
+            SaveToHDR( filename, m_Config.Width, m_Config.Height, 1.0f, 1.0f, &m_RenderTarget[0].x);
 
             ILOG( "Captured. %5.2lf min", min );
 
@@ -296,7 +301,13 @@ void PathTracer::TracePath()
     m_RenderTarget = static_cast<Color4*>(_aligned_malloc( sizeof(Color4) * m_Config.Width * m_Config.Height, 16 ));
     m_Intermediate = static_cast<Color4*>(_aligned_malloc( sizeof(Color4) * m_Config.Width * m_Config.Height, 16 ));
 
-    const auto sampleCount    = m_Config.SampleCount * m_Config.SubSampleCount * m_Config.SubSampleCount;
+    for( auto i=0; i<m_Config.Width * m_Config.Height; ++i )
+    {
+        m_RenderTarget[i] = Color4(0.0f, 0.0f, 0.0f, 0.0f);
+        m_Intermediate[i] = Color4(0.0f, 0.0f, 0.0f, 0.0f);
+    }
+
+    const auto sampleCount    = m_Config.SampleCount * m_Config.SubSampleCount  * m_Config.SubSampleCount;
     const auto invSampleCount = 1.0f / static_cast<f32>( sampleCount );
 
     const auto rate     = 1.0f / static_cast<f32>( m_Config.SubSampleCount );

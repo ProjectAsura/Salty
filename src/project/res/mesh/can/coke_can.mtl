@@ -1,0 +1,25 @@
+# Created by Metasequoia
+
+newmtl __default
+#type 3
+Ka 0.48000 0.48000 0.48000
+Kd 0.64000 0.64000 0.64000
+Ks 1.00000 1.00000 1.00000
+Ns 1000.00000
+
+newmtl Mat_3
+#type 3
+Ka 0.48000 0.48000 0.48000
+Kd 0.64000 0.64000 0.64000
+Ks 1.00000 1.00000 1.00000
+Ns 1000.00000
+map_Kd texture/label.bmp
+map_Ks texture/label.bmp
+
+newmtl mat1
+#type 3
+Ka 0.48000 0.48000 0.48000
+Kd 0.64000 0.64000 0.64000
+Ks 1.00000 1.00000 1.00000
+Ns 1000.00000
+

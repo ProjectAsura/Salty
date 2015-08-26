@@ -1566,14 +1566,8 @@ public:
     f32 Dot (const Vector4 &v1, const Vector4 &v2) 
     {
     #if S3D_IS_SIMD
-        Vector4 t1 = v2;
-        Vector4 t2 = _mm_mul_ps( v1.v, t1.v );
-        t2 = _mm_shuffle_ps( t2.v, v1.v, _MM_SHUFFLE( 1, 0, 0, 0 ) );
-        t2 = _mm_add_ps( t2.v, t1.v );
-        t1 = _mm_shuffle_ps( t1.v, t2.v, _MM_SHUFFLE( 0, 3, 0, 0 ) );
-        t1 = _mm_add_ps( t1.v, t2.v );
-        auto ret = _mm_shuffle_ps( t1.v, t1.v, _MM_SHUFFLE( 2, 2, 2, 2 ) );
-        return _mm_cvtss_f32( ret );
+        Vector4 ret = _mm_mul_ps( v1.v, v2.v );
+        return ret.GetX() + ret.GetY() + ret.GetZ() + ret.GetW();
     #else
         return ( v1.x * v2.x ) + ( v1.y * v2.y ) + ( v1.z * v2.z ) + ( v1.w * v2.w );
     #endif

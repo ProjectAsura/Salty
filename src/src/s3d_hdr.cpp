@@ -360,12 +360,12 @@ bool SaveToHDR( const char* filename, const s32 width, const s32 height, const f
     {
         std::vector<RGBE> line;
         line.resize(width);
-        for( auto j=width-1; j>=0; --j )
+        for( auto j=0; j<width; ++j )
         {
             auto p = Vec3ToRGBE( Vector3(
-                                    pPixels[ (j * 3 + 0) + (i * width * 3) ],
-                                    pPixels[ (j * 3 + 1) + (i * width * 3) ],
-                                    pPixels[ (j * 3 + 2) + (i * width * 3) ] ) );
+                                    pPixels[ (j * 4 + 0) + (i * width * 4) ],
+                                    pPixels[ (j * 4 + 1) + (i * width * 4) ],
+                                    pPixels[ (j * 4 + 2) + (i * width * 4) ] ) );
             line[j] = p;
         }
 

@@ -497,7 +497,7 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
         numShapes - u32(midPoint),
     };
 
-    if ( num1[0] == 0 || num1[1] == 0 )
+    if ( num1[0] <= 2 || num1[1] <= 2 )
     { return new Leaf( numShapes, ppShapes ); }
 
     // 更に分割するためにAABBを求める.
@@ -781,7 +781,7 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
         numShapes - u32(midPoint)
     };
 
-    if ( num1[0] == 0 || num1[1] == 0 )
+    if ( num1[0] <= 4 || num1[1] <= 4 )
     { return new Leaf( numShapes, ppShapes ); }
 
     // -------------------------
@@ -819,7 +819,7 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
         num1[1] - u32(midPointR)
     };
 
-    if ( num2[0] == 0 || num2[1] == 0 || num2[2] == 0 || num2[3] == 0 )
+    if ( num2[0] <= 2 || num2[1] <= 2 || num2[2] <= 2 || num2[3] <= 2 )
     { return new Leaf( numShapes, ppShapes ); }
 
     // -------------------------

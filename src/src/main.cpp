@@ -17,16 +17,17 @@
 #include <crtdbg.h>
 #endif
 #include <s3d_pt.h>
+#include <s3d_hdr.h>
 
 //-----------------------------------------------------------------------------
 //! @brief      メインエントリーポイントです.
 //-----------------------------------------------------------------------------
 int main( int argc, char **argv ) 
 {
-#if S3D_DEBUG
+  #if S3D_DEBUG
     // リークチェック.
     _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
-#endif
+  #endif
     {
         // アプリケーションの構成設定.
         s3d::PathTracer::Config config;

@@ -50,10 +50,10 @@ s3d::Vector3 RGBEToVec3( const RGBE& val )
     s3d::Vector3 result;
     if ( val.e )
     {
-        auto f = powf( 2.0f, val.e - 128.0f );
-        result.x = val.r * f;
-        result.y = val.g * f;
-        result.z = val.b * f;
+        auto f = ldexp( 1.0, val.e - (int)(128+8) );
+        result.x = static_cast<f32>( val.r * f );
+        result.y = static_cast<f32>( val.g * f );
+        result.z = static_cast<f32>( val.b * f );
     }
     else 
     {
@@ -363,9 +363,9 @@ bool SaveToHDR( const char* filename, const s32 width, const s32 height, const f
         for( auto j=0; j<width; ++j )
         {
             auto p = Vec3ToRGBE( Vector3(
-                                    pPixels[ (j * 4 + 0) + (i * width * 4) ],
-                                    pPixels[ (j * 4 + 1) + (i * width * 4) ],
-                                    pPixels[ (j * 4 + 2) + (i * width * 4) ] ) );
+                                    pPixels[ (j * 3 + 0) + (i * width * 3) ],
+                                    pPixels[ (j * 3 + 1) + (i * width * 3) ],
+                                    pPixels[ (j * 3 + 2) + (i * width * 3) ] ) );
             line[j] = p;
         }
 

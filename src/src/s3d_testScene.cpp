@@ -18,14 +18,13 @@ namespace /* anonymous */ {
 
 using namespace s3d;
 
-Texture2D   g_TextureWall( "./res/texture/brick.bmp" );
 //Texture2D   g_TextureLeaf( "./res/texture/aglaonema_leaf.tga" );
 Texture2D   g_TextureTile( "./res/texture/table.bmp" );
 TextureSampler g_Sampler = TextureSampler();
 
 // Lambert
 Matte g_Matte[] = {
-    Matte( Color4( 0.75f, 0.75f, 0.75f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f ), &g_TextureWall, &g_Sampler ),
+    Matte( Color4( 0.75f, 0.75f, 0.75f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f ) ),
     Matte( Color4( 0.75f, 0.75f, 0.75f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f ), &g_TextureTile, &g_Sampler ),
     Matte( Color4( 0.0f,  0.0f,  0.0f,  1.0f ), Color4( 100.0f, 100.0f, 100.0f, 1.0f ) ),
     Matte( Color4( 0.5f,  0.0f,  0.0f,  1.0f ), Color4( 36.0f, 1.0f, 1.0f, 1.0f ) ),
@@ -140,6 +139,7 @@ Quad g_Quads[] = {
 
 Mesh g_Mesh;
 Mesh g_Mesh2;
+Mesh g_Mesh3;
 
 }
 
@@ -158,12 +158,20 @@ TestScene::TestScene( const u32 width, const u32 height )
         assert( false );
     }
 
+    if ( !g_Mesh3.LoadFromFile( "res/mesh/paper_cup/paper_cup.smd") )
+    {
+        assert(false);
+    }
+
 
     m_Instances.push_back( new Instance( &g_Mesh, Matrix::Translate( 100.0f, 20.0f, 100.0 )) );
     m_Instances.push_back( new Instance( &g_Mesh, Matrix::RotateY(ToRad(-30.0f)) *Matrix::RotateX(ToRad(90.0)) * Matrix::RotateY(ToRad(-70.0)) * Matrix::Translate( 75.0f, 10.0f, 85.0f)) );
     m_Instances.push_back( new Instance( &g_Mesh2, Matrix::RotateY(ToRad(59.5f)) * Matrix::Translate( 75.0f, 20.0f, 50.0f)) );
     m_Instances.push_back( new Instance( &g_Mesh2, Matrix::RotateY(ToRad(130.3f)) * Matrix::Translate( 60.0f, 20.0f, 35.0f)) );
     m_Instances.push_back( new Instance( &g_Mesh2, Matrix::RotateY(ToRad(260.0f)) * Matrix::Translate( 90.0f, 20.0f, 35.0f)) );
+    m_Instances.push_back( new Instance( &g_Mesh3, Matrix::Translate( 50.0f, 20.0f, -55.0f )));
+    m_Instances.push_back( new Instance( &g_Mesh3, Matrix::Translate( 100.0f, 20.0f, -70.0f )));
+
 
     //m_Shapes.push_back( &g_Quads[0] );
     //m_Shapes.push_back( &g_Quads[1] );
@@ -178,7 +186,9 @@ TestScene::TestScene( const u32 width, const u32 height )
     m_Shapes.push_back( m_Instances[2] );
     m_Shapes.push_back( m_Instances[3] );
     m_Shapes.push_back( m_Instances[4] );
-
+    m_Shapes.push_back( m_Instances[5] );
+    m_Shapes.push_back( m_Instances[6] );
+    
 
     m_Shapes.push_back( &g_Spheres[2] );
     //m_Shapes.push_back( &g_Spheres[3] );
@@ -205,7 +215,7 @@ TestScene::TestScene( const u32 width, const u32 height )
 
     m_pCamera = camera;
 
-    if ( !m_IBL.Init( "res/ibl/10-Shiodome_Stairs_3k.hdr") )
+    if ( !m_IBL.Init( "res/ibl/HDR_041_Path.hdr") )
     {
         assert(false);
     }

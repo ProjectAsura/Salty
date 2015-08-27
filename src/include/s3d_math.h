@@ -1566,7 +1566,7 @@ public:
     f32 Dot (const Vector4 &v1, const Vector4 &v2) 
     {
     #if S3D_IS_SIMD
-        Vector4 ret = _mm_mul_ps( v1.v, v2.v );
+        Vector4 ret( _mm_mul_ps( v1.v, v2.v ) );
         return ret.GetX() + ret.GetY() + ret.GetZ() + ret.GetW();
     #else
         return ( v1.x * v2.x ) + ( v1.y * v2.y ) + ( v1.z * v2.z ) + ( v1.w * v2.w );
@@ -2251,38 +2251,38 @@ public:
     S3D_INLINE
     Matrix operator * ( const Matrix& value ) const
     {
-    #if S3D_IS_SIMD
-        b128 r0 = _mm_set_ps( value._41, value._31, value._21, value._11 );
-        b128 r1 = _mm_set_ps( value._42, value._32, value._22, value._12 );
-        b128 r2 = _mm_set_ps( value._43, value._33, value._23, value._13 );
-        b128 r3 = _mm_set_ps( value._44, value._34, value._24, value._14 );
+    //#if S3D_IS_SIMD
+    //    auto r0 = Vector4( _mm_set_ps( value._41, value._31, value._21, value._11 ) );
+    //    auto r1 = Vector4( _mm_set_ps( value._42, value._32, value._22, value._12 ) );
+    //    auto r2 = Vector4( _mm_set_ps( value._43, value._33, value._23, value._13 ) );
+    //    auto r3 = Vector4( _mm_set_ps( value._44, value._34, value._24, value._14 ) );
 
-        auto e0 = _mm_set_ps(
-            Vector4::Dot( v0, r3 ),
-            Vector4::Dot( v0, r2 ),
-            Vector4::Dot( v0, r1 ),
-            Vector4::Dot( v0, r0 ) );
+    //    auto e0 = _mm_set_ps(
+    //        Vector4::Dot( v0, r3 ),
+    //        Vector4::Dot( v0, r2 ),
+    //        Vector4::Dot( v0, r1 ),
+    //        Vector4::Dot( v0, r0 ) );
 
-        auto e1 = _mm_set_ps(
-            Vector4::Dot( v1, r3 ),
-            Vector4::Dot( v1, r2 ),
-            Vector4::Dot( v1, r1 ),
-            Vector4::Dot( v1, r0 ) );
+    //    auto e1 = _mm_set_ps(
+    //        Vector4::Dot( v1, r3 ),
+    //        Vector4::Dot( v1, r2 ),
+    //        Vector4::Dot( v1, r1 ),
+    //        Vector4::Dot( v1, r0 ) );
 
-        auto e2 = _mm_set_ps(
-            Vector4::Dot( v2, r3 ),
-            Vector4::Dot( v2, r2 ),
-            Vector4::Dot( v2, r1 ),
-            Vector4::Dot( v2, r0 ) );
+    //    auto e2 = _mm_set_ps(
+    //        Vector4::Dot( v2, r3 ),
+    //        Vector4::Dot( v2, r2 ),
+    //        Vector4::Dot( v2, r1 ),
+    //        Vector4::Dot( v2, r0 ) );
 
-        auto e3 = _mm_set_ps(
-            Vector4::Dot( v3, r3 ),
-            Vector4::Dot( v3, r2 ),
-            Vector4::Dot( v3, r1 ),
-            Vector4::Dot( v3, r0 ) );
+    //    auto e3 = _mm_set_ps(
+    //        Vector4::Dot( v3, r3 ),
+    //        Vector4::Dot( v3, r2 ),
+    //        Vector4::Dot( v3, r1 ),
+    //        Vector4::Dot( v3, r0 ) );
 
-        return Matrix( e0, e1, e2, e3 );
-    #else
+    //    return Matrix( e0, e1, e2, e3 );
+    //#else
         return Matrix(
                 ( _11 * value._11 ) + ( _12 * value._21 ) + ( _13 * value._31 ) + ( _14 * value._41 ),
                 ( _11 * value._12 ) + ( _12 * value._22 ) + ( _13 * value._32 ) + ( _14 * value._42 ),
@@ -2303,7 +2303,7 @@ public:
                 ( _41 * value._12 ) + ( _42 * value._22 ) + ( _43 * value._32 ) + ( _44 * value._42 ),
                 ( _41 * value._13 ) + ( _42 * value._23 ) + ( _43 * value._33 ) + ( _44 * value._43 ),
                 ( _41 * value._14 ) + ( _42 * value._24 ) + ( _43 * value._34 ) + ( _44 * value._44 ) );
-    #endif//S3D_IS_SIMD
+    //#endif//S3D_IS_SIMD
     }
 
     //---------------------------------------------------------------------------------------------

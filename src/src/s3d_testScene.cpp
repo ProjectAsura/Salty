@@ -25,8 +25,8 @@ TextureSampler g_Sampler = TextureSampler();
 // Lambert
 Matte g_Matte[] = {
     Matte( Color4( 0.75f, 0.75f, 0.75f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f ) ),
-    Matte( Color4( 0.75f, 0.75f, 0.75f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f ), &g_TextureTile, &g_Sampler ),
-    Matte( Color4( 0.0f,  0.0f,  0.0f,  1.0f ), Color4( 100.0f, 100.0f, 100.0f, 1.0f ) ),
+    Matte( Color4( 0.5f, 0.5f, 0.5f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f ), &g_TextureTile, &g_Sampler ),
+    Matte( Color4( 0.0f,  0.0f,  0.0f,  1.0f ), Color4( 10.0f, 10.0f, 10.0f, 1.0f ) ),
     Matte( Color4( 0.5f,  0.0f,  0.0f,  1.0f ), Color4( 36.0f, 1.0f, 1.0f, 1.0f ) ),
     Matte( Color4( 0.0f,  0.0f,  0.5f,  1.0f ), Color4( 1.0f, 1.0f, 36.0f, 1.0f ) ), 
     Matte( Color4( 0.75f, 0.75f, 0.75f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f) ),
@@ -67,7 +67,7 @@ IMaterial* g_pMaterials[] = {
 Sphere g_Spheres[] = {
     Sphere( 16.5f,  Vector3( 25.0f,   26.5f, 57.0f ), g_pMaterials[5] ),    // …»
     Sphere( 7.5f,   Vector3( 50.0f,    6.5f, 78.0f ), g_pMaterials[4] ),    // ‹¾.
-    Sphere( 15.0f,  Vector3( 50.0f,  150.0f, 81.6f ), g_pMaterials[2] ),    // Æ–¾
+    Sphere( 15.0f,  Vector3( 50.0f,  150.0f, 90.0f ), g_pMaterials[2] ),    // Æ–¾
     Sphere( 5.0f,   Vector3( 10.0f,   90.0f, 30.0f ), g_pMaterials[7] ),
     Sphere( 2.5f,   Vector3( 10.0f,   20.0f, 120.0f ), g_pMaterials[8] ),
 };
@@ -165,10 +165,11 @@ TestScene::TestScene( const u32 width, const u32 height )
 
 
     m_Instances.push_back( new Instance( &g_Mesh, Matrix::Translate( 100.0f, 20.0f, 100.0 )) );
-    m_Instances.push_back( new Instance( &g_Mesh, Matrix::RotateY(ToRad(-30.0f)) *Matrix::RotateX(ToRad(90.0)) * Matrix::RotateY(ToRad(-70.0)) * Matrix::Translate( 75.0f, 10.0f, 85.0f)) );
+    m_Instances.push_back( new Instance( &g_Mesh, Matrix::RotateY(ToRad(-30.0f)) *Matrix::RotateX(ToRad(90.0)) * Matrix::RotateY(ToRad(-55.0)) * Matrix::Translate( 70.0f, 10.0f, 90.0f)) );
     m_Instances.push_back( new Instance( &g_Mesh2, Matrix::RotateY(ToRad(59.5f)) * Matrix::Translate( 75.0f, 20.0f, 50.0f)) );
     m_Instances.push_back( new Instance( &g_Mesh2, Matrix::RotateY(ToRad(130.3f)) * Matrix::Translate( 60.0f, 20.0f, 35.0f)) );
     m_Instances.push_back( new Instance( &g_Mesh2, Matrix::RotateY(ToRad(260.0f)) * Matrix::Translate( 90.0f, 20.0f, 35.0f)) );
+    m_Instances.push_back( new Instance( &g_Mesh, Matrix::RotateX(ToRad(90.0f)) * Matrix::RotateY(ToRad(70.0f)) * Matrix::Translate( 10.0f, 10.0f, 10.0f)) );
     m_Instances.push_back( new Instance( &g_Mesh3, Matrix::Translate( 50.0f, 20.0f, -55.0f )));
     m_Instances.push_back( new Instance( &g_Mesh3, Matrix::Translate( 100.0f, 20.0f, -70.0f )));
 
@@ -188,6 +189,7 @@ TestScene::TestScene( const u32 width, const u32 height )
     m_Shapes.push_back( m_Instances[4] );
     m_Shapes.push_back( m_Instances[5] );
     m_Shapes.push_back( m_Instances[6] );
+    m_Shapes.push_back( m_Instances[7] );
     
 
     m_Shapes.push_back( &g_Spheres[2] );
@@ -204,13 +206,12 @@ TestScene::TestScene( const u32 width, const u32 height )
 
     auto camera = new ThinLensCamera();
     camera->Update( 
-        Vector3( 50.0f, 52.0f, 220.0f ),
-        Vector3( 50.0f, 50.0f, 180.0f ),
+        Vector3( 80.0f, 45.0f, 220.0f ),
+        Vector3( 50.0f, 40.0f, 100.0f ),
         Vector3( 0.0f, 1.0f, 0.0f ),
         F_PIDIV4,
         (f32)width / (f32)height,
         1.0f, 
-        120.0f, 
         1.5f );
 
     m_pCamera = camera;

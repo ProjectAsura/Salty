@@ -27,6 +27,7 @@ bool SaveToHDR(
     const char* filename,
     const s32   width,
     const s32   height,
+    const s32   component,
     const f32   gamma,
     const f32   expsoure,
     const f32*  pPixel );

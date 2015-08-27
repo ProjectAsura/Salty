@@ -174,7 +174,7 @@ void PathTracer::Watcher()
             counter++;
 
             sprintf_s( filename, "dbg/%03d.hdr", counter );
-            SaveToHDR( filename, m_Config.Width, m_Config.Height, 1.0f, 1.0f, &m_RenderTarget[0].x);
+            SaveToHDR( filename, m_Config.Width, m_Config.Height, 4, 1.0f, 1.0f, &m_RenderTarget[0].x);
 
             ILOG( "Captured. %5.2lf min", min );
 

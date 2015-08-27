@@ -27,7 +27,7 @@ TextureSampler g_Sampler = TextureSampler();
 Matte g_Matte[] = {
     Matte( Color4( 0.75f, 0.75f, 0.75f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f ), &g_TextureWall, &g_Sampler ),
     Matte( Color4( 0.75f, 0.75f, 0.75f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f ), &g_TextureTile, &g_Sampler ),
-    Matte( Color4( 0.0f,  0.0f,  0.0f,  1.0f ), Color4( 500.0f, 500.0f, 500.0f, 1.0f ) ),
+    Matte( Color4( 0.0f,  0.0f,  0.0f,  1.0f ), Color4( 100.0f, 100.0f, 100.0f, 1.0f ) ),
     Matte( Color4( 0.5f,  0.0f,  0.0f,  1.0f ), Color4( 36.0f, 1.0f, 1.0f, 1.0f ) ),
     Matte( Color4( 0.0f,  0.0f,  0.5f,  1.0f ), Color4( 1.0f, 1.0f, 36.0f, 1.0f ) ), 
     Matte( Color4( 0.75f, 0.75f, 0.75f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f) ),
@@ -68,7 +68,7 @@ IMaterial* g_pMaterials[] = {
 Sphere g_Spheres[] = {
     Sphere( 16.5f,  Vector3( 25.0f,   26.5f, 57.0f ), g_pMaterials[5] ),    // êÖèª
     Sphere( 7.5f,   Vector3( 50.0f,    6.5f, 78.0f ), g_pMaterials[4] ),    // ãæ.
-    Sphere( 15.0f,  Vector3( 50.0f,  110.0f, 81.6f ), g_pMaterials[2] ),    // è∆ñæ
+    Sphere( 15.0f,  Vector3( 50.0f,  150.0f, 81.6f ), g_pMaterials[2] ),    // è∆ñæ
     Sphere( 5.0f,   Vector3( 10.0f,   90.0f, 30.0f ), g_pMaterials[7] ),
     Sphere( 2.5f,   Vector3( 10.0f,   20.0f, 120.0f ), g_pMaterials[8] ),
 };
@@ -154,7 +154,7 @@ TestScene::TestScene( const u32 width, const u32 height )
 
 
     m_Instances.push_back( new Instance( &g_Mesh, Matrix::Translate( 100.0f, 20.0f, 100.0 )) );
-    m_Instances.push_back( new Instance( &g_Mesh, Matrix::RotateY(ToRad(-30.0f)) * Matrix::Translate( 75.0f, 20.0f, 75.0f)) );
+    m_Instances.push_back( new Instance( &g_Mesh, Matrix::RotateY(ToRad(-30.0f)) *Matrix::RotateX(ToRad(90.0)) * Matrix::RotateY(ToRad(-70.0)) * Matrix::Translate( 75.0f, 10.0f, 85.0f)) );
     m_Instances.push_back( new Instance( &g_Mesh, Matrix::RotateY(ToRad(59.5f)) * Matrix::Translate( 50.0f, 20.0f, 50.0f)) );
     m_Instances.push_back( new Instance( &g_Mesh, Matrix::RotateY(ToRad(130.3f)) * Matrix::Translate( 25.0f, 20.0f, 25.0f)) );
     m_Instances.push_back( new Instance( &g_Mesh, Matrix::RotateY(ToRad(260.0f)) * Matrix::Translate( 0.0f, 20.0f, 0.0f)) );
@@ -166,8 +166,8 @@ TestScene::TestScene( const u32 width, const u32 height )
     //m_Shapes.push_back( &g_Quads[3] );
     //m_Shapes.push_back( &g_Quads[4] );
     m_Shapes.push_back( &g_Quads[5] );
-    m_Shapes.push_back( &g_Spheres[0] );
-    m_Shapes.push_back( &g_Spheres[1] );
+    //m_Shapes.push_back( &g_Spheres[0] );
+    //m_Shapes.push_back( &g_Spheres[1] );
     m_Shapes.push_back( m_Instances[0] );
     m_Shapes.push_back( m_Instances[1] );
     m_Shapes.push_back( m_Instances[2] );
@@ -175,7 +175,7 @@ TestScene::TestScene( const u32 width, const u32 height )
     m_Shapes.push_back( m_Instances[4] );
 
 
-    //m_Shapes.push_back( &g_Spheres[2] );
+    m_Shapes.push_back( &g_Spheres[2] );
     //m_Shapes.push_back( &g_Spheres[3] );
     //m_Shapes.push_back( &g_Spheres[4] );
 
@@ -200,7 +200,7 @@ TestScene::TestScene( const u32 width, const u32 height )
 
     m_pCamera = camera;
 
-    if ( !m_IBL.Init( "res/ibl/10-Shiodome_Stairs_3k.hdr") )
+    if ( !m_IBL.Init( "res/ibl/Ridgecrest_Road_Ref.hdr") )
     {
         assert(false);
     }

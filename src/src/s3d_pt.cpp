@@ -116,7 +116,6 @@ bool PathTracer::Run( const Config& config )
 
     // 画像出力用ディレクトリ作成.
     _mkdir( "./img" );
-    _mkdir( "./dbg" );
 
     // コンフィグ設定.
     m_Config = config;
@@ -172,7 +171,6 @@ void PathTracer::Watcher()
             sprintf_s( filename, "img/%03d.bmp", counter );
             Capture( filename );
             counter++;
-
 
             ILOG( "Captured. %5.2lf min", min );
 

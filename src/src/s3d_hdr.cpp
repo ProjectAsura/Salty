@@ -73,7 +73,7 @@ RGBE Vec3ToRGBE( const s3d::Vector3& val )
     RGBE result;
     double d = s3d::Max( val.x, s3d::Max( val.y, val.z ) );
 
-    if ( d <= 1e-32 )
+    if ( d <= DBL_EPSILON )
     {
         result.r = 0;
         result.g = 0;

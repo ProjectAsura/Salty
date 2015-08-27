@@ -139,6 +139,7 @@ Quad g_Quads[] = {
 };
 
 Mesh g_Mesh;
+Mesh g_Mesh2;
 
 }
 
@@ -152,13 +153,17 @@ TestScene::TestScene( const u32 width, const u32 height )
         assert( false );
     }
 
+    if ( !g_Mesh2.LoadFromFile( "res/mesh/can/pepsi_can.smd" ) )
+    {
+        assert( false );
+    }
+
 
     m_Instances.push_back( new Instance( &g_Mesh, Matrix::Translate( 100.0f, 20.0f, 100.0 )) );
     m_Instances.push_back( new Instance( &g_Mesh, Matrix::RotateY(ToRad(-30.0f)) *Matrix::RotateX(ToRad(90.0)) * Matrix::RotateY(ToRad(-70.0)) * Matrix::Translate( 75.0f, 10.0f, 85.0f)) );
-    m_Instances.push_back( new Instance( &g_Mesh, Matrix::RotateY(ToRad(59.5f)) * Matrix::Translate( 50.0f, 20.0f, 50.0f)) );
-    m_Instances.push_back( new Instance( &g_Mesh, Matrix::RotateY(ToRad(130.3f)) * Matrix::Translate( 25.0f, 20.0f, 25.0f)) );
-    m_Instances.push_back( new Instance( &g_Mesh, Matrix::RotateY(ToRad(260.0f)) * Matrix::Translate( 0.0f, 20.0f, 0.0f)) );
-
+    m_Instances.push_back( new Instance( &g_Mesh2, Matrix::RotateY(ToRad(59.5f)) * Matrix::Translate( 75.0f, 20.0f, 50.0f)) );
+    m_Instances.push_back( new Instance( &g_Mesh2, Matrix::RotateY(ToRad(130.3f)) * Matrix::Translate( 60.0f, 20.0f, 35.0f)) );
+    m_Instances.push_back( new Instance( &g_Mesh2, Matrix::RotateY(ToRad(260.0f)) * Matrix::Translate( 90.0f, 20.0f, 35.0f)) );
 
     //m_Shapes.push_back( &g_Quads[0] );
     //m_Shapes.push_back( &g_Quads[1] );
@@ -200,7 +205,7 @@ TestScene::TestScene( const u32 width, const u32 height )
 
     m_pCamera = camera;
 
-    if ( !m_IBL.Init( "res/ibl/Ridgecrest_Road_Ref.hdr") )
+    if ( !m_IBL.Init( "res/ibl/10-Shiodome_Stairs_3k.hdr") )
     {
         assert(false);
     }

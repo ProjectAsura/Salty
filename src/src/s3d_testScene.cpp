@@ -25,8 +25,8 @@ TextureSampler g_Sampler = TextureSampler();
 // Lambert
 Matte g_Matte[] = {
     Matte( Color4( 0.75f, 0.75f, 0.75f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f ) ),
-    Matte( Color4( 0.5f, 0.5f, 0.5f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f ), &g_TextureTile, &g_Sampler ),
-    Matte( Color4( 0.0f,  0.0f,  0.0f,  1.0f ), Color4( 10.0f, 10.0f, 10.0f, 1.0f ) ),
+    Matte( Color4( 0.95f, 0.95f, 0.95f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f ), &g_TextureTile, &g_Sampler ),
+    Matte( Color4( 0.0f,  0.0f,  0.0f,  1.0f ), Color4( 100.0f, 100.0f, 100.0f, 1.0f ) ),
     Matte( Color4( 0.5f,  0.0f,  0.0f,  1.0f ), Color4( 36.0f, 1.0f, 1.0f, 1.0f ) ),
     Matte( Color4( 0.0f,  0.0f,  0.5f,  1.0f ), Color4( 1.0f, 1.0f, 36.0f, 1.0f ) ), 
     Matte( Color4( 0.75f, 0.75f, 0.75f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f) ),
@@ -170,8 +170,8 @@ TestScene::TestScene( const u32 width, const u32 height )
     m_Instances.push_back( new Instance( &g_Mesh2, Matrix::RotateY(ToRad(130.3f)) * Matrix::Translate( 60.0f, 20.0f, 35.0f)) );
     m_Instances.push_back( new Instance( &g_Mesh2, Matrix::RotateY(ToRad(260.0f)) * Matrix::Translate( 90.0f, 20.0f, 35.0f)) );
     m_Instances.push_back( new Instance( &g_Mesh, Matrix::RotateX(ToRad(90.0f)) * Matrix::RotateY(ToRad(70.0f)) * Matrix::Translate( 10.0f, 10.0f, 10.0f)) );
-    m_Instances.push_back( new Instance( &g_Mesh3, Matrix::Translate( 50.0f, 20.0f, -55.0f )));
-    m_Instances.push_back( new Instance( &g_Mesh3, Matrix::Translate( 100.0f, 20.0f, -70.0f )));
+    m_Instances.push_back( new Instance( &g_Mesh3, Matrix::Translate( 30.0f, 20.0f, -55.0f )));
+    m_Instances.push_back( new Instance( &g_Mesh3, Matrix::Translate( 70.0f, 20.0f, -70.0f )));
 
 
     //m_Shapes.push_back( &g_Quads[0] );
@@ -206,10 +206,10 @@ TestScene::TestScene( const u32 width, const u32 height )
 
     auto camera = new ThinLensCamera();
     camera->Update( 
-        Vector3( 80.0f, 45.0f, 220.0f ),
+        Vector3( 80.0f, 50.0f, 250.0f ),
         Vector3( 50.0f, 40.0f, 100.0f ),
         Vector3( 0.0f, 1.0f, 0.0f ),
-        F_PIDIV4,
+        ToRad(39.6f),
         (f32)width / (f32)height,
         1.0f, 
         1.5f );

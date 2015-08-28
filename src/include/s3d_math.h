@@ -2662,20 +2662,20 @@ Vector3 Vector3::TransformCoord( const Vector3& coord, const Matrix& matrix )
 S3D_INLINE
 Vector4 Vector4::Transform( const Vector4& position, const Matrix& matrix )
 {
-#if S3D_IS_SIMD
-    return Vector4(
-        Vector4::Dot( position.v, matrix.v0 ),
-        Vector4::Dot( position.v, matrix.v1 ),
-        Vector4::Dot( position.v, matrix.v2 ),
-        Vector4::Dot( position.v, matrix.v3 ) );
-#else
+//#if S3D_IS_SIMD
+//    return Vector4(
+//        Vector4::Dot( position.v, matrix.v0 ),
+//        Vector4::Dot( position.v, matrix.v1 ),
+//        Vector4::Dot( position.v, matrix.v2 ),
+//        Vector4::Dot( position.v, matrix.v3 ) );
+//#else
     return Vector4(
         ( position.x * matrix._11 ) + ( position.y * matrix._21 ) + ( position.z * matrix._31 ) + ( position.w * matrix._41 ),
         ( position.x * matrix._12 ) + ( position.y * matrix._22 ) + ( position.z * matrix._32 ) + ( position.w * matrix._42 ),
         ( position.x * matrix._13 ) + ( position.y * matrix._23 ) + ( position.z * matrix._33 ) + ( position.w * matrix._43 ),
         ( position.x * matrix._14 ) + ( position.y * matrix._24 ) + ( position.z * matrix._34 ) + ( position.w * matrix._44 )
     );
-#endif
+//#endif
 }
 
 

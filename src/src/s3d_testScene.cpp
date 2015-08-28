@@ -27,7 +27,7 @@ Matte g_Matte[] = {
     Matte( Color4( 0.75f, 0.75f, 0.75f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f ) ),
     Matte( Color4( 0.95f, 0.95f, 0.95f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f ), &g_TextureTile, &g_Sampler ),
     Matte( Color4( 0.0f,  0.0f,  0.0f,  1.0f ), Color4( 100.0f, 100.0f, 100.0f, 1.0f ) ),
-    Matte( Color4( 0.5f,  0.0f,  0.0f,  1.0f ), Color4( 36.0f, 1.0f, 1.0f, 1.0f ) ),
+    Matte( Color4( 0.0f,  0.0f,  0.0f,  1.0f ), Color4( 10.0f, 10.0f, 10.0f, 1.0f ) ),
     Matte( Color4( 0.0f,  0.0f,  0.5f,  1.0f ), Color4( 1.0f, 1.0f, 36.0f, 1.0f ) ), 
     Matte( Color4( 0.75f, 0.75f, 0.75f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f) ),
 
@@ -68,7 +68,7 @@ Sphere g_Spheres[] = {
     Sphere( 16.5f,  Vector3( 25.0f,   26.5f, 57.0f ), g_pMaterials[5] ),    // …»
     Sphere( 7.5f,   Vector3( 50.0f,    6.5f, 78.0f ), g_pMaterials[4] ),    // ‹¾.
     Sphere( 15.0f,  Vector3( 50.0f,  150.0f, 90.0f ), g_pMaterials[2] ),    // Æ–¾
-    Sphere( 5.0f,   Vector3( 10.0f,   90.0f, 30.0f ), g_pMaterials[7] ),
+    Sphere( 15.0f,   Vector3( 50.0f,   100.0f, 100.0f ), g_pMaterials[3] ),
     Sphere( 2.5f,   Vector3( 10.0f,   20.0f, 120.0f ), g_pMaterials[8] ),
 };
 
@@ -140,6 +140,7 @@ Quad g_Quads[] = {
 Mesh g_Mesh;
 Mesh g_Mesh2;
 Mesh g_Mesh3;
+Mesh g_Mesh4;
 
 }
 
@@ -148,6 +149,7 @@ namespace s3d {
 TestScene::TestScene( const u32 width, const u32 height )
 : Scene()
 {
+#if 1
     if ( !g_Mesh.LoadFromFile( "res/mesh/can/coke_can.smd" ) )
     {
         assert( false );
@@ -196,14 +198,6 @@ TestScene::TestScene( const u32 width, const u32 height )
     //m_Shapes.push_back( &g_Spheres[3] );
     //m_Shapes.push_back( &g_Spheres[4] );
 
-    m_Shapes.shrink_to_fit();
-
-#if 0
-    m_pBVH = OBVH::Build( m_Shapes );
-#else
-    m_pBVH = OBVH::BuildBranch(&m_Shapes[0], u32(m_Shapes.size()));
-#endif
-
     auto camera = new ThinLensCamera();
     camera->Update( 
         Vector3( 80.0f, 50.0f, 250.0f ),
@@ -213,6 +207,47 @@ TestScene::TestScene( const u32 width, const u32 height )
         (f32)width / (f32)height,
         1.0f, 
         1.5f );
+
+#if 0
+    m_pBVH = OBVH::Build( m_Shapes );
+#else
+    m_pBVH = OBVH::BuildBranch(&m_Shapes[0], u32(m_Shapes.size()));
+#endif
+
+
+#else
+    if ( !g_Mesh4.LoadFromFile("res/mesh/test_sphere.smd") )
+    {
+        assert(false);
+    }
+
+    m_Instances.push_back( new Instance( &g_Mesh4, Matrix::Translate( 45.0f, 80.0f, 100.0 )) );
+
+
+    m_Shapes.push_back( m_Instances[0] );
+    //m_Shapes.push_back( &g_Spheres[3] );
+
+    auto camera = new ThinLensCamera();
+    camera->Update( 
+        Vector3( 50.0f, 50.0f, 250.0f ),
+        Vector3( 50.0f, 40.0f, 100.0f ),
+        Vector3( 0.0f, 1.0f, 0.0f ),
+        ToRad(39.6f),
+        (f32)width / (f32)height,
+        1.0f, 
+        0.1f );
+#if 0
+    m_pBVH = OBVH::Build( m_Shapes );
+#else
+    m_pBVH = OBVH::BuildBranch(&m_Shapes[0], u32(m_Shapes.size()));
+#endif
+
+
+#endif
+
+    m_Shapes.shrink_to_fit();
+
+
 
     m_pCamera = camera;
 

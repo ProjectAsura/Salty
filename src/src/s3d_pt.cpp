@@ -189,9 +189,9 @@ void PathTracer::Watcher()
         // レンダリングが正常終了した場合.
         if ( m_IsFinish )
         {
-            sprintf_s( filename, "img/%03d.bmp", counter );            
+            sprintf_s( filename, "img/%03d.bmp", counter );
             ILOG( "Rendering Completed !!!" );
-            ILOG( "Rendering Time %ld min", min);
+            ILOG( "Rendering Time %lf min", min );
             break;
         }
 

@@ -41,11 +41,11 @@ int main( int argc, char **argv )
         config.MaxBounceCount = 16;
     #else
         // デバッグ用.
-        config.Width          = 320;
-        config.Height         = 180;
-        config.SampleCount    = 1024;
-        config.SubSampleCount = 2;
-        config.MaxBounceCount = 8;
+        config.Width          = 256;
+        config.Height         = 256;
+        config.SampleCount    = 4096;
+        config.SubSampleCount = 1;
+        config.MaxBounceCount = 32;
     #endif
 
         s3d::PathTracer renderer;

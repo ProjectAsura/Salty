@@ -1,5 +1,5 @@
 ﻿    
-    Copyright (c) 2012 Project Asura
+    Copyright (c) 2015 Project Asura
 
   Permission is hereby granted, free of charge, to any person obtaining a 
  copy of this software and associated documentation files (the "Software"),

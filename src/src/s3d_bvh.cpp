@@ -407,7 +407,7 @@ bool QBVH::IsHit( const Ray& ray, HitRecord& record ) const
     if ( !box.IsHit( Ray4( ray ), mask ) )
     { return false; }
 
-#if 0
+#if 0 /* バグっているため封印. */
     // 巡回テーブルのインデックスを算出.
     s32 idx = ( ray.sign[axisTop]  << 2 )
             | ( ray.sign[axisLeft] << 1 )

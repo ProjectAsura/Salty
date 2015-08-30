@@ -9,6 +9,7 @@
 //---------------------------------------------------------------------------
 #include <s3d_bvh.h>
 #include <new>
+#include <deque>
 
 
 namespace /* anonymous */ {
@@ -28,7 +29,7 @@ const u32 QbvhTable[][4] =  {
 //---------------------------------------------------------------------------
 //      分割します.
 //---------------------------------------------------------------------------
-s32 Split( s3d::IShape** ppShapes, s32 size, f64 pivotVal, s32 axis )
+s32 MedianSplit( s3d::IShape** ppShapes, s32 size, f64 pivotVal, s32 axis )
 {
     s3d::BoundingBox bbox;
     f64 centroid;
@@ -74,6 +75,116 @@ s32 GetAxisIndex( s3d::Vector3 size )
     return axis;
 }
 
+//-------------------------------------------------------------------------------------------------
+//      SAHによる分割を行います.
+//-------------------------------------------------------------------------------------------------
+bool SahSplit( std::vector<s3d::IShape*> shapes, s32& bestIndex, s32& bestAxis )
+{
+    if ( shapes.size() <= 2 )
+    { return false; }
+
+    bestAxis  = -1;
+    bestIndex = -1;
+
+    auto boxRoot = s3d::CreateMergedBox(&shapes[0], u32(shapes.size()));
+    auto S = s3d::SurfaceArea( boxRoot );
+    auto bestCost = S * (shapes.size() * 1.0f - 2.0f);
+
+    for( auto axis = 0; axis < 3; ++axis )
+    {
+        // 現在の軸においてボックスの重心座標を用いてソートを行う.
+        std::sort(
+            shapes.begin(), 
+            shapes.end(),
+            [axis](const s3d::IShape* l, const s3d::IShape* r)
+            {
+                auto boxL = l->GetBox();
+                auto boxR = r->GetBox();
+                assert( !boxL.empty );
+                assert( !boxR.empty );
+                return boxL.center.a[axis] < boxR.center.a[axis];
+            }
+        );
+
+        std::deque<f32> s1A(shapes.size() + 1, F32_MAX);
+        std::deque<f32> s2A(shapes.size() + 1, F32_MAX);
+        s3d::BoundingBox s1Box = s3d::BoundingBox();
+
+        std::deque<s3d::IShape*> s1;
+        std::deque<s3d::IShape*> s2(shapes.begin(), shapes.end());
+
+        for( s32 i=0; i<=s32(shapes.size()); ++i )
+        {
+            s1A[i] = s3d::SurfaceArea( s1Box );
+
+            if ( s2.size() > 0 )
+            {
+                auto p = s2.front();
+                s1.push_back(p);
+                s2.pop_front();
+
+                s1Box = s3d::BoundingBox::Merge( s1Box, p->GetBox() );
+            }
+        }
+
+        auto s2Box = s3d::BoundingBox();
+
+        s1.clear();
+        s2.clear();
+
+        s1 = std::deque<s3d::IShape*>(shapes.begin(), shapes.end());
+
+        for( s32 i=s32(shapes.size()); i>=0; --i )
+        {
+            s2A[i] = s3d::SurfaceArea( s2Box );
+
+            if ( s1.size() > 0 && s2.size() > 0 )
+            {
+                // "Ray Tracing Deformable Scenes Using Dynamic Bounding Volume Hierarchies"
+                //  ACM Transactions on Graphics 26(1), 2007
+                // Equation(2) により評価する.
+                auto cost = s1A[i] * s1.size() + s2A[i] * s2.size(); // 大小さえわかればいいので，定数を省いた.
+
+                if ( cost < bestCost )
+                {
+                    bestCost  = cost;
+                    bestIndex = i;
+                    bestAxis  = axis;
+                }
+            }
+
+            if ( s1.size() > 0 )
+            {
+                auto p = s1.back();
+                s2.push_front(p);
+                s1.pop_back();
+
+                s2Box = s3d::BoundingBox::Merge( s2Box, p->GetBox() );
+            }
+        }
+    }
+
+    // 葉ノードよりも良いパーティションが見つからなかった.
+    if ( bestAxis == -1 )
+    { return false; }
+
+    // "最良の軸" で S をソートする.
+    std::sort( 
+        shapes.begin(),
+        shapes.end(),
+        [bestAxis]( const s3d::IShape* l, const s3d::IShape* r)
+        {
+            auto boxL = l->GetBox();
+            auto boxR = r->GetBox();
+            assert( !boxL.empty );
+            assert( !boxR.empty );
+            return boxL.center.a[bestAxis] < boxR.center.a[bestAxis];
+        }
+    );
+
+    return true;
+}
+
 } // namespace /* anonymous */
 
 
@@ -87,27 +198,29 @@ namespace s3d {
 //      コンストラクタです.
 //--------------------------------------------------------------------------
 BVH::BVH()
-: box  ()
-, pLeft ( nullptr )
-, pRight( nullptr )
-{ /* DO_NOTHING */ }
+: box()
+{
+    pShape[0] = nullptr;
+    pShape[1] = nullptr;
+}
 
 //--------------------------------------------------------------------------
 //      引数付きコンストラクタです.
 //--------------------------------------------------------------------------
 BVH::BVH( IShape* pShape1, IShape* pShape2, const BoundingBox& bbox )
 : box  ( bbox )
-, pLeft ( pShape1 )
-, pRight( pShape2 )
-{ /* DO_NOTHING */ }
+{
+    pShape[0] = pShape1;
+    pShape[1] = pShape2;
+}
 
 //--------------------------------------------------------------------------
 //      引数付きコンストラクタです.
 //--------------------------------------------------------------------------
 BVH::BVH( IShape* pShape1, IShape* pShape2 )
-: pLeft ( pShape1 )
-, pRight( pShape2 )
 {
+    pShape[0] = pShape1;
+    pShape[1] = pShape2;
     box = BoundingBox::Merge( pShape1->GetBox(), pShape2->GetBox() );
 }
 
@@ -116,22 +229,16 @@ BVH::BVH( IShape* pShape1, IShape* pShape2 )
 //--------------------------------------------------------------------------
 void BVH::Dispose()
 {
-    if ( pLeft->IsPrimitive() )
-    { pLeft = nullptr; }
-    else
+    for( u32 i=0; i<2; ++i )
     {
-        BVH* pBVH = dynamic_cast<BVH*>( pLeft );
-        if ( pBVH != nullptr )
-        { pBVH->Dispose(); }
-    }
-
-    if ( pRight->IsPrimitive() )
-    { pRight = nullptr; }
-    else
-    {
-        BVH* pBVH = dynamic_cast<BVH*>( pRight );
-        if ( pBVH != nullptr )
-        { pBVH->Dispose(); }
+        if ( pShape[i]->IsPrimitive() )
+        { pShape[i] = nullptr; }
+        else
+        {
+            auto bvh = dynamic_cast<BVH*>( pShape[i] );
+            if ( bvh != nullptr )
+            { bvh->Dispose(); }
+        }
     }
 
     delete this;
@@ -145,10 +252,11 @@ bool BVH::IsHit( const Ray& ray, HitRecord& record ) const
     if ( !box.IsHit( ray ) )
     { return false; }
 
-    bool isHit1 = pRight->IsHit( ray, record );
-    bool isHit2 = pLeft->IsHit( ray, record );
+    auto hit = false;
+    for( u32 i=0; i<2; ++i )
+    { hit |= pShape[i]->IsHit( ray, record ); }
 
-    return ( isHit1 || isHit2 );
+    return hit;
 }
 
 //--------------------------------------------------------------------------
@@ -173,7 +281,7 @@ bool BVH::IsPrimitive() const
 //      中心座標を取得します.
 //--------------------------------------------------------------------------
 Vector3 BVH::GetCenter() const
-{ return ( pLeft->GetCenter() + pRight->GetCenter() ) / 2.0f; }
+{ return box.center; }
 
 //--------------------------------------------------------------------------
 //      ブランチを構築します.
@@ -195,7 +303,7 @@ IShape* BVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     s32 axis = GetAxisIndex( size );
 
     // 中間値.
-    s32 midPoint = Split( ppShapes, numShapes, pivot.a[axis], axis );
+    s32 midPoint = MedianSplit( ppShapes, numShapes, pivot.a[axis], axis );
 
     s32 idx[2] = {
         0,
@@ -217,6 +325,24 @@ IShape* BVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     return new BVH( left, right, bbox );
 }
 
+IShape* BVH::Build(std::vector<IShape*>& shapes)
+{
+    if ( shapes.size() <= 2 )
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
+
+    s32 bestIndex = -1;
+    s32 bestAxis  = -1;
+    if ( !SahSplit( shapes, bestIndex, bestAxis ) )
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
+
+    std::vector<IShape*> left(shapes.begin(), shapes.begin() + bestIndex);
+    std::vector<IShape*> right(shapes.begin() + bestIndex, shapes.end());
+
+    return new BVH(
+        Build(left),
+        Build(right));
+}
+
 
 ////////////////////////////////////////////////////////////////////////////
 // QBVH structure
@@ -233,23 +359,28 @@ QBVH::QBVH()
     pShape[3] = nullptr;
 }
 
-//--------------------------------------------------------------------------
-//      引数付きコンストラクタです.
-//--------------------------------------------------------------------------
-QBVH::QBVH( IShape** ppShapes )
+QBVH::QBVH( IShape* shape0, IShape* shape1, IShape* shape2, IShape* shape3, s32 top, s32 left, s32 right )
+: axisTop  ( top )
+, axisLeft ( left )
+, axisRight( right )
 {
-    pShape[0] = ppShapes[ 0 ];
-    pShape[1] = ppShapes[ 1 ];
-    pShape[2] = ppShapes[ 2 ];
-    pShape[3] = ppShapes[ 3 ];
+    pShape[0] = shape0;
+    pShape[1] = shape1;
+    pShape[2] = shape2;
+    pShape[3] = shape3;
 
-    BoundingBox box0 = ppShapes[ 0 ]->GetBox();
-    BoundingBox box1 = ppShapes[ 1 ]->GetBox();
-    BoundingBox box2 = ppShapes[ 2 ]->GetBox();
-    BoundingBox box3 = ppShapes[ 3 ]->GetBox();
+    BoundingBox box0 = shape0->GetBox();
+    BoundingBox box1 = shape1->GetBox();
+    BoundingBox box2 = shape2->GetBox();
+    BoundingBox box3 = shape3->GetBox();
 
     box = BoundingBox4( box0, box1, box2, box3 );
+
+    assert( 0 <= axisTop && axisTop <= 2 );
+    assert( 0 <= axisLeft && axisLeft <= 2 );
+    assert( 0 <= axisRight && axisRight <= 2 );
 }
+
 
 //--------------------------------------------------------------------------
 //      引数付きコンストラクタです.
@@ -276,8 +407,9 @@ bool QBVH::IsHit( const Ray& ray, HitRecord& record ) const
     if ( !box.IsHit( Ray4( ray ), mask ) )
     { return false; }
 
+#if 0
     // 巡回テーブルのインデックスを算出.
-    u32 idx = ( ray.sign[axisTop]  << 2 )
+    s32 idx = ( ray.sign[axisTop]  << 2 )
             | ( ray.sign[axisLeft] << 1 )
             | ( ray.sign[axisRight] );
 
@@ -292,6 +424,15 @@ bool QBVH::IsHit( const Ray& ray, HitRecord& record ) const
     }
 
     return false;
+#else
+    auto hit = false;
+    for( auto i=0; i<4; ++i )
+    {
+        if ( mask & ( 0x1 << i ) )
+        { hit |= pShape[i]->IsHit( ray, record ); }
+    }
+    return hit;
+#endif
 }
 
 //--------------------------------------------------------------------------
@@ -344,7 +485,7 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     s32 axis = GetAxisIndex( size );
 
     // 中間値.
-    s32 midPoint = Split( ppShapes, numShapes, pivot.a[axis], axis );
+    s32 midPoint = MedianSplit( ppShapes, numShapes, pivot.a[axis], axis );
 
     s32 idx1[2] = {
         0,
@@ -356,7 +497,7 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
         numShapes - u32(midPoint),
     };
 
-    if ( num1[0] == 0 || num1[1] == 0 )
+    if ( num1[0] <= 2 || num1[1] <= 2 )
     { return new Leaf( numShapes, ppShapes ); }
 
     // 更に分割するためにAABBを求める.
@@ -374,8 +515,8 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     Vector3 pivotR = ( bboxR.maxi + bboxR.mini ) / 2.0;
 
     // 分割する.
-    s32 midPointL = Split( &ppShapes[idx1[0]], num1[0], pivotL.a[axisL], axisL );
-    s32 midPointR = Split( &ppShapes[idx1[1]], num1[1], pivotR.a[axisR], axisR );
+    s32 midPointL = MedianSplit( &ppShapes[idx1[0]], num1[0], pivotL.a[axisL], axisL );
+    s32 midPointR = MedianSplit( &ppShapes[idx1[1]], num1[1], pivotR.a[axisR], axisR );
 
     s32 idx2[4] = {
         idx1[0],
@@ -406,6 +547,45 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     // 16byteアライメントでメモリを確保.
     u8* pBuf = (u8*)_aligned_malloc( sizeof(QBVH), 16 );
     return new (pBuf) QBVH( pShapes, BoundingBox4( box ), axis, axisL, axisR );
+}
+
+IShape* QBVH::Build(std::vector<IShape*>& shapes)
+{
+    if ( shapes.size() <= 4 )
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
+
+    s32 bestIndex = -1;
+    s32 bestAxis  = -1;
+    if ( !SahSplit( shapes, bestIndex, bestAxis ) )
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
+
+    std::vector<IShape*> left(shapes.begin(), shapes.begin() + bestIndex);
+    std::vector<IShape*> right(shapes.begin() + bestIndex, shapes.end());
+
+    s32 bestIndexL = -1;
+    s32 bestIndexR = -1;
+    s32 bestAxisL  = -1;
+    s32 bestAxisR  = -1;
+    if ( !SahSplit( left, bestIndexL, bestAxisL ) )
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
+
+    if ( !SahSplit( right, bestIndexR, bestAxisR ) )
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
+
+    std::vector<IShape*> a(left.begin(), left.begin() + bestIndexL);
+    std::vector<IShape*> b(left.begin() + bestIndexL, left.end());
+    std::vector<IShape*> c(right.begin(), right.begin() + bestIndexR);
+    std::vector<IShape*> d(right.begin() + bestIndexR, right.end());
+
+    auto buf = (u8*)_aligned_malloc( sizeof(QBVH), 16 );
+    return new(buf) QBVH(
+        Build(a),
+        Build(b),
+        Build(c),
+        Build(d),
+        bestAxis,
+        bestAxisL,
+        bestAxisR);
 }
 
 //--------------------------------------------------------------------------
@@ -460,6 +640,52 @@ OBVH::OBVH( IShape** ppShapes )
     box = BoundingBox8( boxes );
 }
 
+OBVH::OBVH
+(
+    IShape* shape0,
+    IShape* shape1,
+    IShape* shape2,
+    IShape* shape3,
+    IShape* shape4,
+    IShape* shape5,
+    IShape* shape6,
+    IShape* shape7,
+    s32 top,
+    s32 left,
+    s32 right,
+    s32 a,
+    s32 b,
+    s32 c,
+    s32 d
+)
+: axisTop( top )
+, axisL( left )
+, axisR( right )
+, axisA( a )
+, axisB( b )
+, axisC( c )
+, axisD( d )
+{
+    pShape[0] = shape0;
+    pShape[1] = shape1;
+    pShape[2] = shape2;
+    pShape[3] = shape3;
+    pShape[4] = shape4;
+    pShape[5] = shape5;
+    pShape[6] = shape6;
+    pShape[7] = shape7;
+
+    box = BoundingBox8(
+        shape0->GetBox(),
+        shape1->GetBox(),
+        shape2->GetBox(),
+        shape3->GetBox(),
+        shape4->GetBox(),
+        shape5->GetBox(),
+        shape6->GetBox(),
+        shape7->GetBox());
+}
+
 //--------------------------------------------------------------------------
 //      引数付きコンストラクタです.
 //--------------------------------------------------------------------------
@@ -478,7 +704,7 @@ bool OBVH::IsHit( const Ray& ray, HitRecord& record ) const
     // まず子のバウンディングボックスと交差判定.
     s32 mask = 0;
     if ( !box.IsHit( Ray8( ray ), mask ) )
-    { return record.distance < F_MAX; }
+    { return false; }
 
     // 次にバウンディングボックスとヒットした子のみたどっていく.
     auto hit = false;
@@ -543,7 +769,7 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     s32 axis = GetAxisIndex( size );
 
     // 中間値.
-    s32 midPoint = Split( ppShapes, numShapes, pivot.a[axis], axis );
+    s32 midPoint = MedianSplit( ppShapes, numShapes, pivot.a[axis], axis );
 
     s32 idx1[2] = {
         0,
@@ -555,7 +781,7 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
         numShapes - u32(midPoint)
     };
 
-    if ( num1[0] == 0 || num1[1] == 0 )
+    if ( num1[0] <= 4 || num1[1] <= 4 )
     { return new Leaf( numShapes, ppShapes ); }
 
     // -------------------------
@@ -576,8 +802,8 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     Vector3 pivotR = ( bboxR.maxi + bboxR.mini ) / 2.0f;
 
     // 分割する.
-    s32 midPointL = Split( &ppShapes[idx1[0]], num1[0], pivotL.a[axisL], axisL );
-    s32 midPointR = Split( &ppShapes[idx1[1]], num1[1], pivotR.a[axisR], axisR );
+    s32 midPointL = MedianSplit( &ppShapes[idx1[0]], num1[0], pivotL.a[axisL], axisL );
+    s32 midPointR = MedianSplit( &ppShapes[idx1[1]], num1[1], pivotR.a[axisR], axisR );
 
    s32 idx2[4] = {
         idx1[0],
@@ -593,7 +819,7 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
         num1[1] - u32(midPointR)
     };
 
-    if ( num2[0] == 0 || num2[1] == 0 || num2[2] == 0 || num2[3] == 0 )
+    if ( num2[0] <= 2 || num2[1] <= 2 || num2[2] <= 2 || num2[3] <= 2 )
     { return new Leaf( numShapes, ppShapes ); }
 
     // -------------------------
@@ -623,10 +849,10 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     Vector3 pivot4 = ( bbox4.maxi + bbox4.mini ) / 2.0f;
 
     // 分割する.
-    s32 midPoint1 = Split( &ppShapes[idx2[0]], num2[0], pivot1.a[axis1], axis1 );
-    s32 midPoint2 = Split( &ppShapes[idx2[1]], num2[1], pivot2.a[axis2], axis2 );
-    s32 midPoint3 = Split( &ppShapes[idx2[2]], num2[2], pivot3.a[axis3], axis3 );
-    s32 midPoint4 = Split( &ppShapes[idx2[3]], num2[3], pivot4.a[axis4], axis4 );
+    s32 midPoint1 = MedianSplit( &ppShapes[idx2[0]], num2[0], pivot1.a[axis1], axis1 );
+    s32 midPoint2 = MedianSplit( &ppShapes[idx2[1]], num2[1], pivot2.a[axis2], axis2 );
+    s32 midPoint3 = MedianSplit( &ppShapes[idx2[2]], num2[2], pivot3.a[axis3], axis3 );
+    s32 midPoint4 = MedianSplit( &ppShapes[idx2[3]], num2[3], pivot4.a[axis4], axis4 );
 
     s32 idx3[8] = {
         idx2[0],
@@ -666,6 +892,75 @@ IShape* OBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     // 32byteアライメントでメモリを確保.
     u8* pBuf = (u8*)_aligned_malloc( sizeof(OBVH), 32 );
     return new (pBuf) OBVH( pShapes, box );
+}
+
+IShape* OBVH::Build(std::vector<IShape*>& shapes)
+{
+    if ( shapes.size() <= 8 )
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
+
+    s32 bestIndex = -1;
+    s32 bestAxis  = -1;
+    if ( !SahSplit( shapes, bestIndex, bestAxis ) )
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
+
+    std::vector<IShape*> left(shapes.begin(), shapes.begin() + bestIndex);
+    std::vector<IShape*> right(shapes.begin() + bestIndex, shapes.end());
+
+    s32 bestIndexL = -1, bestIndexR = -1;
+    s32 bestAxisL  = -1, bestAxisR  = -1;
+    if ( !SahSplit( left, bestIndexL, bestAxisL ) )
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
+
+    if ( !SahSplit( right, bestIndexR, bestAxisR ) )
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
+
+    std::vector<IShape*> a(left.begin(), left.begin() + bestIndexL);
+    std::vector<IShape*> b(left.begin() + bestIndexL, left.end());
+    std::vector<IShape*> c(right.begin(), right.begin() + bestIndexR);
+    std::vector<IShape*> d(right.begin() + bestIndexR, right.end());
+
+    s32 bestIndexA = -1, bestIndexB = -1, bestIndexC = -1, bestIndexD = -1;
+    s32 bestAxisA  = -1, bestAxisB  = -1, bestAxisC  = -1, bestAxisD  = -1;
+
+    if ( !SahSplit( a, bestIndexA, bestAxisA ) )
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
+
+    if ( !SahSplit( b, bestIndexB, bestAxisB ) )
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
+
+    if ( !SahSplit( c, bestIndexC, bestAxisC ) )
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
+
+    if ( !SahSplit( d, bestIndexD, bestAxisD ) )
+    { return new Leaf(u32(shapes.size()), &shapes[0]); }
+
+    std::vector<IShape*> e( a.begin(), a.begin() + bestIndexA );
+    std::vector<IShape*> f( a.begin() + bestIndexA, a.end() );
+    std::vector<IShape*> g( b.begin(), b.begin() + bestIndexB );
+    std::vector<IShape*> h( b.begin() + bestIndexB, b.end() );
+    std::vector<IShape*> i( c.begin(), c.begin() + bestIndexC );
+    std::vector<IShape*> j( c.begin() + bestIndexC, c.end() );
+    std::vector<IShape*> k( d.begin(), d.begin() + bestIndexD );
+    std::vector<IShape*> l( d.begin() + bestIndexD, d.end() );
+
+    auto buf = (u8*)_aligned_malloc( sizeof(OBVH), 32 );
+    return new(buf) OBVH(
+        Build(e),
+        Build(f),
+        Build(g),
+        Build(h),
+        Build(i),
+        Build(j),
+        Build(k),
+        Build(l),
+        bestAxis,
+        bestAxisL,
+        bestAxisR,
+        bestAxisA,
+        bestAxisB,
+        bestAxisC,
+        bestAxisD);
 }
 
 //--------------------------------------------------------------------------

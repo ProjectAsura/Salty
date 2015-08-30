@@ -50,10 +50,10 @@ s3d::Vector3 RGBEToVec3( const RGBE& val )
     s3d::Vector3 result;
     if ( val.e )
     {
-        auto f = powf( 2.0f, val.e - 128.0f );
-        result.x = val.r * f;
-        result.y = val.g * f;
-        result.z = val.b * f;
+        auto f = ldexp( 1.0, val.e - (int)(128+8) );
+        result.x = static_cast<f32>( val.r * f );
+        result.y = static_cast<f32>( val.g * f );
+        result.z = static_cast<f32>( val.b * f );
     }
     else 
     {
@@ -73,7 +73,7 @@ RGBE Vec3ToRGBE( const s3d::Vector3& val )
     RGBE result;
     double d = s3d::Max( val.x, s3d::Max( val.y, val.z ) );
 
-    if ( d <= 1e-32 )
+    if ( d <= DBL_EPSILON )
     {
         result.r = 0;
         result.g = 0;
@@ -344,7 +344,7 @@ bool LoadFromHDR( const char* filename, s32& width, s32& height, f32& gamma, f32
 //------------------------------------------------------------------------------------------
 //      HDRファイルにデータをセーブします.
 //------------------------------------------------------------------------------------------
-bool SaveToHDR( const char* filename, const s32 width, const s32 height, const f32 gamma, const f32 exposure, const f32* pPixels )
+bool SaveToHDR( const char* filename, const s32 width, const s32 height, const s32 component, const f32 gamma, const f32 exposure, const f32* pPixels )
 {
     FILE* pFile;
     auto err = fopen_s( &pFile, filename, "wb" );
@@ -356,16 +356,16 @@ bool SaveToHDR( const char* filename, const s32 width, const s32 height, const f
 
     WriteHdrHeader( pFile, width, height, gamma, exposure );
 
-    for( auto i = 0; i < height; i++ )
+    for( auto i = height-1; i >=0; --i )
     {
         std::vector<RGBE> line;
         line.resize(width);
-        for( auto j=width-1; j>=0; --j )
+        for( auto j=0; j<width; ++j )
         {
             auto p = Vec3ToRGBE( Vector3(
-                                    pPixels[ (j * 3 + 0) + (i * width * 3) ],
-                                    pPixels[ (j * 3 + 1) + (i * width * 3) ],
-                                    pPixels[ (j * 3 + 2) + (i * width * 3) ] ) );
+                                    pPixels[ (j * component + 0) + (i * width * component) ],
+                                    pPixels[ (j * component + 1) + (i * width * component) ],
+                                    pPixels[ (j * component + 2) + (i * width * component) ] ) );
             line[j] = p;
         }
 

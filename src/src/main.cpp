@@ -17,16 +17,17 @@
 #include <crtdbg.h>
 #endif
 #include <s3d_pt.h>
+#include <s3d_hdr.h>
 
 //-----------------------------------------------------------------------------
 //! @brief      メインエントリーポイントです.
 //-----------------------------------------------------------------------------
 int main( int argc, char **argv ) 
 {
-#if S3D_DEBUG
+  #if S3D_DEBUG
     // リークチェック.
     _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
-#endif
+  #endif
     {
         // アプリケーションの構成設定.
         s3d::PathTracer::Config config;
@@ -37,14 +38,14 @@ int main( int argc, char **argv )
         config.Height         = 720;
         config.SampleCount    = 2048;
         config.SubSampleCount = 1;
-        config.MaxBounceCount = 32;
+        config.MaxBounceCount = 16;
     #else
         // デバッグ用.
-        config.Width          = 320;
-        config.Height         = 180;
-        config.SampleCount    = 1024;
-        config.SubSampleCount = 2;
-        config.MaxBounceCount = 8;
+        config.Width          = 256;
+        config.Height         = 256;
+        config.SampleCount    = 4096;
+        config.SubSampleCount = 1;
+        config.MaxBounceCount = 32;
     #endif
 
         s3d::PathTracer renderer;

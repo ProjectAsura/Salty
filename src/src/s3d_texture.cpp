@@ -263,7 +263,7 @@ bool Texture2D::AlphaTest( const TextureSampler& sampler, const Vector2& texcoor
     else
     { result = NearestSample( sampler, texcoord ); }
 
-    return ( result.w >= value );
+    return ( result.GetW() >= value );
 }
 
 } // namespace s3d

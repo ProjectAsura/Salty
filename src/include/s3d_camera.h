@@ -176,7 +176,6 @@ public:
         const f32     fov,
         const f32     aspectRatio,
         const f32     nearClip,
-        const f32     focalDistance,
         const f32     lensRadius
     )
     {
@@ -188,7 +187,7 @@ public:
         m_AspectRatio = aspectRatio;
         m_NearClip    = nearClip;
 
-        m_FocalDistance = focalDistance;
+        m_FocalDistance = ( target - position ).Length();
         m_LensRadius    = lensRadius;
 
         // 視線ベクトルを求める.

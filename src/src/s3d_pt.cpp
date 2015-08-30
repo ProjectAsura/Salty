@@ -17,6 +17,7 @@
 #include <s3d_timer.h>
 #include <s3d_tonemapper.h>
 #include <s3d_bmp.h>
+#include <s3d_hdr.h>
 #include <s3d_camera.h>
 #include <s3d_shape.h>
 #include <s3d_material.h>
@@ -102,7 +103,7 @@ bool PathTracer::Run( const Config& config )
     // 起動画面.
     ILOG( "//=================================================================" );
     ILOG( "//  Path Tarcer \"Salty\"" );
-    ILOG( "//  Version : 3.0 alpha 1" );
+    ILOG( "//  Version : Alpha 3.0" );
     ILOG( "//  Author  : Pocol" );
     ILOG( "//=================================================================" );
     ILOG( " Configuration : " );
@@ -190,6 +191,7 @@ void PathTracer::Watcher()
         {
             sprintf_s( filename, "img/%03d.bmp", counter );
             ILOG( "Rendering Completed !!!" );
+            ILOG( "Rendering Time %lf min", min );
             break;
         }
 
@@ -233,12 +235,14 @@ Color4 PathTracer::Radiance( const Ray& input )
         assert( shape    != nullptr );
         assert( material != nullptr );
 
+    #if 0
         // アルファテスト.
         if ( !material->AlphaTest( record.texcoord, 0.01f ) )
         {
             L += Color4::Mul( W, m_pScene->SampleIBL( ray.dir ) );
             break;
         }
+    #endif
 
         // 自己発光による放射輝度.
         L += Color4::Mul( W, material->GetEmissive() );
@@ -265,7 +269,7 @@ Color4 PathTracer::Radiance( const Ray& input )
         ray.Update( record.position, arg.output );
 
         // 重みがゼロになったら以降の更新は無駄なので打ち切りにする.
-        if ( IsZero(W.x) && IsZero(W.y) && IsZero(W.z) )
+        if ( IsZero(W.GetX()) && IsZero(W.GetY()) && IsZero(W.GetZ()) )
         { break; }
     }
 
@@ -293,7 +297,13 @@ void PathTracer::TracePath()
     m_RenderTarget = static_cast<Color4*>(_aligned_malloc( sizeof(Color4) * m_Config.Width * m_Config.Height, 16 ));
     m_Intermediate = static_cast<Color4*>(_aligned_malloc( sizeof(Color4) * m_Config.Width * m_Config.Height, 16 ));
 
-    const auto sampleCount    = m_Config.SampleCount * m_Config.SubSampleCount * m_Config.SubSampleCount;
+    for( auto i=0; i<m_Config.Width * m_Config.Height; ++i )
+    {
+        m_RenderTarget[i] = Color4(0.0f, 0.0f, 0.0f, 0.0f);
+        m_Intermediate[i] = Color4(0.0f, 0.0f, 0.0f, 0.0f);
+    }
+
+    const auto sampleCount    = m_Config.SampleCount * m_Config.SubSampleCount  * m_Config.SubSampleCount;
     const auto invSampleCount = 1.0f / static_cast<f32>( sampleCount );
 
     const auto rate     = 1.0f / static_cast<f32>( m_Config.SubSampleCount );

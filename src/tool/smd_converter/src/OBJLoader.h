@@ -134,6 +134,8 @@ struct OBJMATERIAL
     OBJVEC3 emissive;                               //!< 自己照明色です.
     float   shininess;                              //!< 鏡面反射強度です.
     float   alpha;                                  //!< 透過度です.
+    int     materialType;                           //!< マテリアルタイプ.
+    float   ior;                                    //!< 屈折率.
     char    ambientMapName     [OBJ_NAME_LENGTH];   //!< アンビエントマップ名です.
     char    diffuseMapName     [OBJ_NAME_LENGTH];   //!< ディフューズマップ名です.
     char    specularMapName    [OBJ_NAME_LENGTH];   //!< スペキュラーマップ名です.
@@ -274,14 +276,6 @@ private:
     //! @param [in]     pFile       ファイルポインタ.
     //------------------------------------------------------------------------------------
     void WriteDirect  ( FILE* pFile );
-
-    //------------------------------------------------------------------------------------
-    //! @brief      最適化しながらバイナリ書き込みします.
-    //!
-    //! @param [in]     pFile       ファイルポインタ.
-    //------------------------------------------------------------------------------------
-    void WriteOptimize( FILE* pFile );
-
 
 protected:
     //====================================================================================

@@ -260,6 +260,14 @@ public:
     , y( value.y )
     { /* DO_NOTHING */ }
 
+    S3D_INLINE
+    operator float* ()
+    { return &x; }
+
+    S3D_INLINE
+    operator const float* () const
+    { return &x; }
+
     //---------------------------------------------------------------------------------------------
     //! @brief      等価演算子です.
     //---------------------------------------------------------------------------------------------
@@ -573,6 +581,14 @@ public:
     , y( value.y )
     , z( value.z )
     { /* DO_NOTHING */ }
+
+    S3D_INLINE
+    operator float* ()
+    { return &x; }
+
+    S3D_INLINE
+    operator const float* () const
+    { return &x; }
 
     //---------------------------------------------------------------------------------------------
     //! @brief      等価比較演算子です.
@@ -985,6 +1001,9 @@ struct S3D_ALIGN(16) Vector4
 public:
     union 
     {
+    #if S3D_IS_SIMD
+        b128    v;      //!< パック化された値です.
+    #endif
         struct
         {
             f32 x;      //!< X成分です.
@@ -993,9 +1012,6 @@ public:
             f32 w;      //!< W成分です.
         };
         f32     a[4];   //!< 各成分を表す配列です.
-    #if S3D_IS_SIMD
-        b128    v;      //!< パック化された値です.
-    #endif//S3D_IS_SIMD
     };
 
     //---------------------------------------------------------------------------------------------
@@ -1022,16 +1038,19 @@ public:
         /* DO_NOTHING */
     }
 
+    //---------------------------------------------------------------------------------------------
+    //! @brief      引数付きコンストラクタです.
+    //---------------------------------------------------------------------------------------------
     S3D_INLINE
     Vector4( const Vector3& val, const f32 nw )
-#if S3D_IS_SIMD
+  #if S3D_IS_SIMD
     : v( _mm_set_ps( nw, val.z, val.y, val.x ) )
-#else
+  #else
     : x( val.x )
     , y( val.y )
     , z( val.z )
     , w( nw )
-#endif
+  #endif
     {
         /* DO_NOTHING */
     }
@@ -1060,6 +1079,69 @@ public:
     , w( value.w )
   #endif
     { /* DO_NOTHING */ }
+
+    S3D_INLINE
+    operator float* ()
+    { return &x; }
+
+    S3D_INLINE
+    operator const float* () const
+    { return &x; }
+
+    //---------------------------------------------------------------------------------------------
+    //! @brief      X成分を取得します.
+    //---------------------------------------------------------------------------------------------
+    S3D_INLINE
+    f32 GetX() const
+    {
+    #if S3D_IS_SIMD
+        return _mm_cvtss_f32( v );
+    #else
+        return x;
+    #endif
+    }
+
+    //---------------------------------------------------------------------------------------------
+    //! @brief      Y成分を取得します.
+    //---------------------------------------------------------------------------------------------
+    S3D_INLINE
+    f32 GetY() const
+    {
+    #if S3D_IS_SIMD
+        auto temp = _mm_shuffle_ps( v, v, _MM_SHUFFLE( 1, 1, 1, 1 ) );
+        return _mm_cvtss_f32( temp );
+    #else
+        return y;
+    #endif
+    }
+
+    //---------------------------------------------------------------------------------------------
+    //! @brief      Z成分を取得します.
+    //---------------------------------------------------------------------------------------------
+    S3D_INLINE
+    f32 GetZ() const
+    {
+    #if S3D_IS_SIMD
+        auto temp = _mm_shuffle_ps( v, v, _MM_SHUFFLE( 2, 2, 2, 2 ) );
+        return _mm_cvtss_f32( temp );
+    #else
+        return z;
+    #endif
+    }
+
+    //---------------------------------------------------------------------------------------------
+    //! @brief      W成分を取得します.
+    //---------------------------------------------------------------------------------------------
+    S3D_INLINE
+    f32 GetW() const
+    {
+    #if S3D_IS_SIMD
+        auto temp = _mm_shuffle_ps( v, v, _MM_SHUFFLE( 3, 3, 3, 3 ) );
+        return _mm_cvtss_f32( temp );
+    #else
+        return w;
+    #endif
+    }
 
     //---------------------------------------------------------------------------------------------
     //! @brief      等価比較演算子です.
@@ -1346,8 +1428,7 @@ public:
     f32 LengthSq() const
     { 
     #if S3D_IS_SIMD
-        Vector4 t = _mm_mul_ps( v, v );
-        return ( t.x + t.y + t.z + t.w );
+        return Dot( v, v );
     #else
         return ( x * x ) + ( y * y ) + ( z * z ) + ( w * w );
     #endif//S3D_IS_SIMD
@@ -1360,8 +1441,7 @@ public:
     f32 Length() const
     {
     #if S3D_IS_SIMD
-        Vector4 t = _mm_mul_ps( v, v );
-        return sqrtf( t.x + t.y + t.z + t.w );
+        return sqrtf( Dot( v, v ) );
     #else
         return sqrtf( ( x * x ) + ( y * y ) + ( z * z ) + ( w * w ) );
     #endif
@@ -1374,8 +1454,7 @@ public:
     void Normalize()
     {
     #if S3D_IS_SIMD
-        Vector4 t = _mm_mul_ps( v, v );
-        register f32 mag = sqrtf( t.x + t.y + t.z + t.w );
+        auto mag = sqrtf( Dot( v, v ) );
         assert( mag > 0.0f );
         b128 c = _mm_set1_ps( mag );
         v = _mm_div_ps( v, c );
@@ -1396,8 +1475,7 @@ public:
     void SafeNormalize()
     {
     #if S3D_IS_SIMD
-        Vector4 t = _mm_mul_ps( v, v );
-        register f32 mag = sqrtf( t.x + t.y + t.z + t.w );
+        auto mag = sqrtf( Dot( v, v) );
         if ( mag > 0.0f )
         {
             b128 c = _mm_set1_ps( mag );
@@ -1422,8 +1500,7 @@ public:
     Vector4 UnitVector (const Vector4 &v)
     {
     #if S3D_IS_SIMD
-        Vector4 t = _mm_mul_ps( v.v, v.v );
-        register f32 mag = sqrtf( t.x + t.y + t.z + t.w );
+        auto mag = sqrtf( Dot( v, v ) );
         assert( mag > 0.0f );
         b128 c = _mm_set1_ps( mag );
         return Vector4( _mm_div_ps( v.v, c ) );
@@ -1445,8 +1522,7 @@ public:
     Vector4 SafeUnitVector (const Vector4& v)
     {
     #if S3D_IS_SIMD
-        Vector4 t = _mm_mul_ps( v.v, v.v );
-        register f32 mag = sqrtf( t.x + t.y + t.z + t.w );
+        auto mag = sqrtf( Dot( v, v ) );
         if ( mag > 0.0f )
         {
             b128 c = _mm_set1_ps( mag );
@@ -1490,8 +1566,8 @@ public:
     f32 Dot (const Vector4 &v1, const Vector4 &v2) 
     {
     #if S3D_IS_SIMD
-        Vector4 t = _mm_mul_ps( v1.v, v2.v );
-        return ( t.x + t.y + t.z + t.w );
+        Vector4 ret( _mm_mul_ps( v1.v, v2.v ) );
+        return ret.GetX() + ret.GetY() + ret.GetZ() + ret.GetW();
     #else
         return ( v1.x * v2.x ) + ( v1.y * v2.y ) + ( v1.z * v2.z ) + ( v1.w * v2.w );
     #endif
@@ -1505,8 +1581,7 @@ public:
     Vector4 Reflect( const Vector4& i, const Vector4& n )
     {
     #if S3D_IS_SIMD
-        Vector4 t = _mm_mul_ps( n.v, i.v );
-        register f32 _2dot = 2.0f * ( t.x + t.y + t.z + t.z );
+        register f32 _2dot = 2.0f * Dot( i, n );
         b128 c = _mm_set1_ps( _2dot );
         b128 b = _mm_mul_ps( c, n.v );
         return Vector4( _mm_sub_ps( i.v, b ) );
@@ -2002,50 +2077,29 @@ public:
         b128 r2 = _mm_set_ps( value._43, value._33, value._23, value._13 );
         b128 r3 = _mm_set_ps( value._44, value._34, value._24, value._14 );
 
-        Vector4 m0 = _mm_mul_ps( v0, r0 );
-        Vector4 m1 = _mm_mul_ps( v0, r1 );
-        Vector4 m2 = _mm_mul_ps( v0, r2 );
-        Vector4 m3 = _mm_mul_ps( v0, r3 );
-
-        v0 = _mm_set_ps(
-            m3.x + m3.y + m3.z + m3.w,
-            m2.x + m2.y + m2.z + m2.w,
-            m1.x + m1.y + m1.z + m1.w,
-            m0.x + m0.y + m0.z + m0.w );
-
-        m0 = _mm_mul_ps( v1, r0 );
-        m1 = _mm_mul_ps( v1, r1 );
-        m2 = _mm_mul_ps( v1, r2 );
-        m3 = _mm_mul_ps( v1, r3 );
+        v0 = _mm_set_ps( 
+            Vector4::Dot( v0, r3 ),
+            Vector4::Dot( v0, r2 ),
+            Vector4::Dot( v0, r1 ),
+            Vector4::Dot( v0, r0 ) );
 
         v1 = _mm_set_ps(
-            m3.x + m3.y + m3.z + m3.w,
-            m2.x + m2.y + m2.z + m2.w,
-            m1.x + m1.y + m1.z + m1.w,
-            m0.x + m0.y + m0.z + m0.w );
-
-        m0 = _mm_mul_ps( v2, r0 );
-        m1 = _mm_mul_ps( v2, r1 );
-        m2 = _mm_mul_ps( v2, r2 );
-        m3 = _mm_mul_ps( v2, r3 );
+            Vector4::Dot( v1, r3 ),
+            Vector4::Dot( v1, r2 ),
+            Vector4::Dot( v1, r1 ),
+            Vector4::Dot( v1, r0 ) );
 
         v2 = _mm_set_ps(
-            m3.x + m3.y + m3.z + m3.w,
-            m2.x + m2.y + m2.z + m2.w,
-            m1.x + m1.y + m1.z + m1.w,
-            m0.x + m0.y + m0.z + m0.w );
-
-        m0 = _mm_mul_ps( v3, r0 );
-        m1 = _mm_mul_ps( v3, r1 );
-        m2 = _mm_mul_ps( v3, r2 );
-        m3 = _mm_mul_ps( v3, r3 );
+            Vector4::Dot( v2, r3 ),
+            Vector4::Dot( v2, r2 ),
+            Vector4::Dot( v2, r1 ), 
+            Vector4::Dot( v2, r0 ) );
 
         v3 = _mm_set_ps(
-            m3.x + m3.y + m3.z + m3.w,
-            m2.x + m2.y + m2.z + m2.w,
-            m1.x + m1.y + m1.z + m1.w,
-            m0.x + m0.y + m0.z + m0.w );
-
+            Vector4::Dot( v3, r3 ),
+            Vector4::Dot( v3, r2 ),
+            Vector4::Dot( v3, r1 ),
+            Vector4::Dot( v3, r0 ) );
     #else
         {
             auto m11 = ( _11 * value._11 ) + ( _12 * value._21 ) + ( _13 * value._31 ) + ( _14 * value._41 );
@@ -2197,58 +2251,38 @@ public:
     S3D_INLINE
     Matrix operator * ( const Matrix& value ) const
     {
-    #if S3D_IS_SIMD
-        b128 r0 = _mm_set_ps( value._41, value._31, value._21, value._11 );
-        b128 r1 = _mm_set_ps( value._42, value._32, value._22, value._12 );
-        b128 r2 = _mm_set_ps( value._43, value._33, value._23, value._13 );
-        b128 r3 = _mm_set_ps( value._44, value._34, value._24, value._14 );
+    //#if S3D_IS_SIMD
+    //    auto r0 = Vector4( _mm_set_ps( value._41, value._31, value._21, value._11 ) );
+    //    auto r1 = Vector4( _mm_set_ps( value._42, value._32, value._22, value._12 ) );
+    //    auto r2 = Vector4( _mm_set_ps( value._43, value._33, value._23, value._13 ) );
+    //    auto r3 = Vector4( _mm_set_ps( value._44, value._34, value._24, value._14 ) );
 
-        Vector4 m0 = _mm_mul_ps( v0, r0 );
-        Vector4 m1 = _mm_mul_ps( v0, r1 );
-        Vector4 m2 = _mm_mul_ps( v0, r2 );
-        Vector4 m3 = _mm_mul_ps( v0, r3 );
+    //    auto e0 = _mm_set_ps(
+    //        Vector4::Dot( v0, r3 ),
+    //        Vector4::Dot( v0, r2 ),
+    //        Vector4::Dot( v0, r1 ),
+    //        Vector4::Dot( v0, r0 ) );
 
-        b128 e0 = _mm_set_ps(
-            m3.x + m3.y + m3.z + m3.w,
-            m2.x + m2.y + m2.z + m2.w,
-            m1.x + m1.y + m1.z + m1.w,
-            m0.x + m0.y + m0.z + m0.w );
+    //    auto e1 = _mm_set_ps(
+    //        Vector4::Dot( v1, r3 ),
+    //        Vector4::Dot( v1, r2 ),
+    //        Vector4::Dot( v1, r1 ),
+    //        Vector4::Dot( v1, r0 ) );
 
-        m0 = _mm_mul_ps( v1, r0 );
-        m1 = _mm_mul_ps( v1, r1 );
-        m2 = _mm_mul_ps( v1, r2 );
-        m3 = _mm_mul_ps( v1, r3 );
+    //    auto e2 = _mm_set_ps(
+    //        Vector4::Dot( v2, r3 ),
+    //        Vector4::Dot( v2, r2 ),
+    //        Vector4::Dot( v2, r1 ),
+    //        Vector4::Dot( v2, r0 ) );
 
-        b128 e1 = _mm_set_ps(
-            m3.x + m3.y + m3.z + m3.w,
-            m2.x + m2.y + m2.z + m2.w,
-            m1.x + m1.y + m1.z + m1.w,
-            m0.x + m0.y + m0.z + m0.w );
+    //    auto e3 = _mm_set_ps(
+    //        Vector4::Dot( v3, r3 ),
+    //        Vector4::Dot( v3, r2 ),
+    //        Vector4::Dot( v3, r1 ),
+    //        Vector4::Dot( v3, r0 ) );
 
-        m0 = _mm_mul_ps( v2, r0 );
-        m1 = _mm_mul_ps( v2, r1 );
-        m2 = _mm_mul_ps( v2, r2 );
-        m3 = _mm_mul_ps( v2, r3 );
-
-        b128 e2 = _mm_set_ps(
-            m3.x + m3.y + m3.z + m3.w,
-            m2.x + m2.y + m2.z + m2.w,
-            m1.x + m1.y + m1.z + m1.w,
-            m0.x + m0.y + m0.z + m0.w );
-
-        m0 = _mm_mul_ps( v3, r0 );
-        m1 = _mm_mul_ps( v3, r1 );
-        m2 = _mm_mul_ps( v3, r2 );
-        m3 = _mm_mul_ps( v3, r3 );
-
-        b128 e3 = _mm_set_ps(
-            m3.x + m3.y + m3.z + m3.w,
-            m2.x + m2.y + m2.z + m2.w,
-            m1.x + m1.y + m1.z + m1.w,
-            m0.x + m0.y + m0.z + m0.w );
-
-        return Matrix( e0, e1, e2, e3 );
-    #else
+    //    return Matrix( e0, e1, e2, e3 );
+    //#else
         return Matrix(
                 ( _11 * value._11 ) + ( _12 * value._21 ) + ( _13 * value._31 ) + ( _14 * value._41 ),
                 ( _11 * value._12 ) + ( _12 * value._22 ) + ( _13 * value._32 ) + ( _14 * value._42 ),
@@ -2269,7 +2303,7 @@ public:
                 ( _41 * value._12 ) + ( _42 * value._22 ) + ( _43 * value._32 ) + ( _44 * value._42 ),
                 ( _41 * value._13 ) + ( _42 * value._23 ) + ( _43 * value._33 ) + ( _44 * value._43 ),
                 ( _41 * value._14 ) + ( _42 * value._24 ) + ( _43 * value._34 ) + ( _44 * value._44 ) );
-    #endif//S3D_IS_SIMD
+    //#endif//S3D_IS_SIMD
     }
 
     //---------------------------------------------------------------------------------------------
@@ -2628,12 +2662,20 @@ Vector3 Vector3::TransformCoord( const Vector3& coord, const Matrix& matrix )
 S3D_INLINE
 Vector4 Vector4::Transform( const Vector4& position, const Matrix& matrix )
 {
+//#if S3D_IS_SIMD
+//    return Vector4(
+//        Vector4::Dot( position.v, matrix.v0 ),
+//        Vector4::Dot( position.v, matrix.v1 ),
+//        Vector4::Dot( position.v, matrix.v2 ),
+//        Vector4::Dot( position.v, matrix.v3 ) );
+//#else
     return Vector4(
         ( position.x * matrix._11 ) + ( position.y * matrix._21 ) + ( position.z * matrix._31 ) + ( position.w * matrix._41 ),
         ( position.x * matrix._12 ) + ( position.y * matrix._22 ) + ( position.z * matrix._32 ) + ( position.w * matrix._42 ),
         ( position.x * matrix._13 ) + ( position.y * matrix._23 ) + ( position.z * matrix._33 ) + ( position.w * matrix._43 ),
         ( position.x * matrix._14 ) + ( position.y * matrix._24 ) + ( position.z * matrix._34 ) + ( position.w * matrix._44 )
     );
+//#endif
 }
 
 
@@ -2645,7 +2687,8 @@ struct BoundingBox
 public:
     Vector3 mini;        //!< 最小値です.
     Vector3 maxi;        //!< 最大値です.
-    bool    isEmpty;
+    Vector3 center;      //!< 中心座標です.
+    bool    empty;       //!< 空かどうか?
 
     //-------------------------------------------------------------------------------
     //! @brief      コンストラクタです.
@@ -2654,7 +2697,8 @@ public:
     BoundingBox()
     : mini(  F_MAX,  F_MAX,  F_MAX )
     , maxi( -F_MAX, -F_MAX, -F_MAX )
-    , isEmpty( true )
+    , center( 0.0f, 0.0f, 0.0f )
+    , empty ( true )
     { /* DO_NOTHING */ }
 
     //-------------------------------------------------------------------------------
@@ -2662,9 +2706,10 @@ public:
     //-------------------------------------------------------------------------------
     S3D_INLINE
     BoundingBox( const Vector3& value )
-    : mini( value )
-    , maxi( value )
-    , isEmpty( false )
+    : mini  ( value )
+    , maxi  ( value )
+    , center( value )
+    , empty ( false )
     { /* DO_NOTHING */ }
 
     //-------------------------------------------------------------------------------
@@ -2672,9 +2717,10 @@ public:
     //-------------------------------------------------------------------------------
     S3D_INLINE
     BoundingBox( const Vector3& _mini, const Vector3& _maxi )
-    : mini( _mini )
-    , maxi( _maxi )
-    , isEmpty( false )
+    : mini  ( _mini )
+    , maxi  ( _maxi )
+    , center( ( _mini + _maxi ) * 0.5f )
+    , empty ( false )
     { /* DO_NOTHING */ }
 
     //-------------------------------------------------------------------------------
@@ -2682,9 +2728,10 @@ public:
     //-------------------------------------------------------------------------------
     S3D_INLINE
     BoundingBox( const BoundingBox& value )
-    : mini( value.mini )
-    , maxi( value.maxi )
-    , isEmpty( value.isEmpty )
+    : mini  ( value.mini )
+    , maxi  ( value.maxi )
+    , center( value.center )
+    , empty ( value.empty )
     { /* DO_NOTHING */ }
 
     //-------------------------------------------------------------------------------
@@ -2693,7 +2740,7 @@ public:
     S3D_INLINE
     bool IsHit( const Ray& ray ) const
     {
-        if ( isEmpty )
+        if ( empty )
         { return false; }
 
         const Vector3* v[ 2 ] = { &mini, &maxi };
@@ -2716,22 +2763,23 @@ public:
         return true;
     }
 
+
     //-------------------------------------------------------------------------------
     //! @brief      2つのバウンディングボックスをマージします.
     //-------------------------------------------------------------------------------
     S3D_INLINE
     static BoundingBox Merge( const BoundingBox& a, const BoundingBox& b )
     {
-        if ( !a.isEmpty && !b.isEmpty )
+        if ( !a.empty && !b.empty )
         {
             auto mini = Vector3::Min( a.mini, b.mini );
             auto maxi = Vector3::Max( a.maxi, b.maxi );
 
             return BoundingBox( mini, maxi );
         }
-        else if ( a.isEmpty && !b.isEmpty )
+        else if ( a.empty && !b.empty )
         { return b; }
-        else if ( !a.isEmpty && b.isEmpty )
+        else if ( !a.empty && b.empty )
         { return a; }
 
         return a;
@@ -2743,7 +2791,7 @@ public:
     S3D_INLINE
     static BoundingBox Merge( const BoundingBox& box, const Vector3& p )
     {
-        if ( !box.isEmpty )
+        if ( !box.empty )
         {
             auto mini = Vector3::Min( box.mini, p );
             auto maxi = Vector3::Max( box.maxi, p );
@@ -2779,44 +2827,20 @@ public:
     BoundingBox4()
     {
     #if S3D_IS_SIMD
-        value[0][0] = _mm_set1_ps( F_MAX );
-        value[0][1] = _mm_set1_ps( F_MAX );
-        value[0][2] = _mm_set1_ps( F_MAX );
-
-        value[1][0] = _mm_set1_ps( F_MIN );
-        value[1][1] = _mm_set1_ps( F_MIN );
-        value[1][2] = _mm_set1_ps( F_MIN );
+        for( auto i=0; i<3; ++i )
+        {
+            value[0][i] = _mm_set1_ps( F_MAX );
+            value[1][i] = _mm_set1_ps( F_MIN );
+        }
     #else
-        value[0][0].m128_f32[0] = F_MAX;    // Empty
-        value[0][0].m128_f32[1] = F_MAX;    // Empty
-        value[0][0].m128_f32[2] = F_MAX;    // Empty
-        value[0][0].m128_f32[3] = F_MAX;    // Empty
-
-        value[0][1].m128_f32[0] = F_MAX;    // Empty
-        value[0][1].m128_f32[1] = F_MAX;    // Empty
-        value[0][1].m128_f32[2] = F_MAX;    // Empty
-        value[0][1].m128_f32[3] = F_MAX;    // Empty
-
-        value[0][2].m128_f32[0] = F_MAX;    // Empty
-        value[0][2].m128_f32[1] = F_MAX;    // Empty
-        value[0][2].m128_f32[2] = F_MAX;    // Empty
-        value[0][2].m128_f32[3] = F_MAX;    // Empty
-
-
-        value[1][0].m128_f32[0] = F_MIN;    // Empty
-        value[1][0].m128_f32[1] = F_MIN;    // Empty
-        value[1][0].m128_f32[2] = F_MIN;    // Empty
-        value[1][0].m128_f32[3] = F_MIN;    // Empty
-
-        value[1][1].m128_f32[0] = F_MIN;    // Empty
-        value[1][1].m128_f32[1] = F_MIN;    // Empty
-        value[1][1].m128_f32[2] = F_MIN;    // Empty
-        value[1][1].m128_f32[3] = F_MIN;    // Empty
-
-        value[1][2].m128_f32[0] = F_MIN;    // Empty
-        value[1][2].m128_f32[1] = F_MIN;    // Empty
-        value[1][2].m128_f32[2] = F_MIN;    // Empty
-        value[1][2].m128_f32[3] = F_MIN;    // Empty
+        for( auto i=0; i<3; ++i )
+        {
+            for( auto j=0; j<4; ++j )
+            {
+                value[0][i].m128_f32[j] = F_MAX;
+                value[1][i].m128_f32[j] = F_MIN;
+            }
+        }
     #endif//S3D_IS_SIMD
     }
 

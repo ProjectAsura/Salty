@@ -93,6 +93,23 @@ T Uncharted2Tonemap( const T& color )
     return ( (color * ( A * color + C * B) + D * E ) / ( color *( A* color + B ) + D * F )) - E / F;
 }
 
+//------------------------------------------------------------------------------------------------
+//      ACES Film
+//------------------------------------------------------------------------------------------------
+s3d::Vector4 ACESFilm( const s3d::Vector4& color )
+{
+    const auto a = 2.51f;
+    const auto b = 0.03f;
+    const auto c = 2.43f;
+    const auto d = 0.59f;
+    const auto e = 0.14f;
+    return s3d::Vector4(
+        s3d::Saturate((color.GetX() * (a * color.GetX() + b)) / (color.GetX() * (c * color.GetX() + d) + e)),
+        s3d::Saturate((color.GetY() * (a * color.GetY() + b)) / (color.GetY() * (c * color.GetY() + d) + e)),
+        s3d::Saturate((color.GetZ() * (a * color.GetZ() + b)) / (color.GetZ() * (c * color.GetZ() + d) + e)),
+        color.GetW());
+}
+
 } // namespace /* anonymous */
 
 
@@ -121,8 +138,12 @@ void ToneMapper::Map
             ReinhardToneMapping( width, height, pPixels, pResult );
             break;
 
-        case TONE_MAPPING_FILMIC:
-            FilmicToneMapping( width, height, pPixels, pResult );
+        case TONE_MAPPING_UNCHARTED2_FILMIC:
+            Uncharted2FilmicToneMapping( width, height, pPixels, pResult );
+            break;
+
+        case TONE_MAPPING_ACES_FILMIC:
+            ACESFilmicToneMapping( width, height, pPixels, pResult );
             break;
     }
 }
@@ -175,9 +196,9 @@ void ToneMapper::ReinhardToneMapping
 }
 
 //------------------------------------------------------------------------------------------------
-//      Filmic トーンマッピング.
+//      Uncharted2 Filmic トーンマッピング.
 //------------------------------------------------------------------------------------------------
-void ToneMapper::FilmicToneMapping
+void ToneMapper::Uncharted2FilmicToneMapping
 (
     const s32     width,
     const s32     height,
@@ -214,6 +235,48 @@ void ToneMapper::FilmicToneMapping
                 pow( color.GetY(), 1.0f / 2.2f ),
                 pow( color.GetZ(), 1.0f / 2.2f ),
                 pPixels[idx].GetW() );
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------
+//      ACES Filmic トーンマッピング.
+//------------------------------------------------------------------------------------------------
+void ToneMapper::ACESFilmicToneMapping
+(
+    const s32     width,
+    const s32     height,
+    const Color4* pPixels,
+    Color4*       pResult
+)
+{
+    assert(pPixels != nullptr);
+    auto a = 0.18f;
+    auto aveLw = 0.0f;
+    auto maxLw = 0.0f;
+
+    // 対数平均と最大輝度値を求める.
+    ComputeLogarithmicAverage(width, height, pPixels, 0.00001f, aveLw, maxLw);
+
+    auto coeff = a / aveLw;
+
+    for (auto i = 0; i<height; ++i)
+    {
+        for (auto j = 0; j<width; ++j)
+        {
+            // ピクセル番号.
+            auto idx = (i * width) + j;
+
+            auto texelColor = pPixels[idx] * coeff;
+
+            auto color = ACESFilm(texelColor);
+
+            // トーンマッピングした結果を格納.
+            pResult[idx] = Color4(
+                pow(color.GetX(), 1.0f / 2.2f),
+                pow(color.GetY(), 1.0f / 2.2f),
+                pow(color.GetZ(), 1.0f / 2.2f),
+                pPixels[idx].GetW());
         }
     }
 }

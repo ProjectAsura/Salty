@@ -19,8 +19,9 @@ namespace s3d {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 enum TONE_MAPPING_TYPE
 {
-    TONE_MAPPING_REINHARD,          //!< Reinhard 方式.
-    TONE_MAPPING_FILMIC,            //!< Uncharted2 方式.
+    TONE_MAPPING_REINHARD,              //!< Reinhard 方式.
+    TONE_MAPPING_UNCHARTED2_FILMIC,     //!< Uncharted2 方式.
+    TONE_MAPPING_ACES_FILMIC,           //!< ACES
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -32,8 +33,9 @@ public:
     static void Map( TONE_MAPPING_TYPE type, const s32 width, const s32 height, const Color4* pPixels, Color4* pResult );
 
 private:
-    static void ReinhardToneMapping( const s32 width, const s32 height, const Color4* pPixels, Color4* pResult );
-    static void FilmicToneMapping  ( const s32 width, const s32 height, const Color4* pPixels, Color4* pResult );
+    static void ReinhardToneMapping         ( const s32 width, const s32 height, const Color4* pPixels, Color4* pResult );
+    static void Uncharted2FilmicToneMapping ( const s32 width, const s32 height, const Color4* pPixels, Color4* pResult );
+    static void ACESFilmicToneMapping       ( const s32 width, const s32 height, const Color4* pPixels, Color4* pResult );
 };
 
 

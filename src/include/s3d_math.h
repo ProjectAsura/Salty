@@ -1001,9 +1001,7 @@ struct S3D_ALIGN(16) Vector4
 public:
     union 
     {
-    #if S3D_IS_SIMD
         b128    v;      //!< パック化された値です.
-    #endif
         struct
         {
             f32 x;      //!< X成分です.
@@ -1026,14 +1024,7 @@ public:
     //---------------------------------------------------------------------------------------------
     S3D_INLINE
     Vector4( const f32 nx, const f32 ny, const f32 nz, const f32 nw ) 
-  #if S3D_IS_SIMD
     : v( _mm_set_ps( nw, nz, ny, nx ) )
-  #else
-    : x( nx )
-    , y( ny )
-    , z( nz )
-    , w( nz )
-  #endif
     {
         /* DO_NOTHING */
     }
@@ -1043,19 +1034,11 @@ public:
     //---------------------------------------------------------------------------------------------
     S3D_INLINE
     Vector4( const Vector3& val, const f32 nw )
-  #if S3D_IS_SIMD
     : v( _mm_set_ps( nw, val.z, val.y, val.x ) )
-  #else
-    : x( val.x )
-    , y( val.y )
-    , z( val.z )
-    , w( nw )
-  #endif
     {
         /* DO_NOTHING */
     }
 
-  #if S3D_IS_SIMD
     //---------------------------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです.
     //---------------------------------------------------------------------------------------------
@@ -1063,30 +1046,14 @@ public:
     Vector4( const b128 nv )
     : v( nv )
     { /* DO_NOTHING */ }
-  #endif//S3D_IS_SIMD
 
     //---------------------------------------------------------------------------------------------
     //! @brief      コピーコンストラクタです.
     //---------------------------------------------------------------------------------------------
     S3D_INLINE
     Vector4( const Vector4& value )
-  #if S3D_IS_SIMD
     : v( value.v )
-  #else
-    : x( value.x )
-    , y( value.y )
-    , z( value.z )
-    , w( value.w )
-  #endif
     { /* DO_NOTHING */ }
-
-    S3D_INLINE
-    operator float* ()
-    { return &x; }
-
-    S3D_INLINE
-    operator const float* () const
-    { return &x; }
 
     //---------------------------------------------------------------------------------------------
     //! @brief      X成分を取得します.
@@ -1094,11 +1061,7 @@ public:
     S3D_INLINE
     f32 GetX() const
     {
-    #if S3D_IS_SIMD
         return _mm_cvtss_f32( v );
-    #else
-        return x;
-    #endif
     }
 
     //---------------------------------------------------------------------------------------------
@@ -1107,12 +1070,8 @@ public:
     S3D_INLINE
     f32 GetY() const
     {
-    #if S3D_IS_SIMD
         auto temp = _mm_shuffle_ps( v, v, _MM_SHUFFLE( 1, 1, 1, 1 ) );
         return _mm_cvtss_f32( temp );
-    #else
-        return y;
-    #endif
     }
 
     //---------------------------------------------------------------------------------------------
@@ -1121,12 +1080,8 @@ public:
     S3D_INLINE
     f32 GetZ() const
     {
-    #if S3D_IS_SIMD
         auto temp = _mm_shuffle_ps( v, v, _MM_SHUFFLE( 2, 2, 2, 2 ) );
         return _mm_cvtss_f32( temp );
-    #else
-        return z;
-    #endif
     }
 
     //---------------------------------------------------------------------------------------------
@@ -1135,12 +1090,8 @@ public:
     S3D_INLINE
     f32 GetW() const
     {
-    #if S3D_IS_SIMD
         auto temp = _mm_shuffle_ps( v, v, _MM_SHUFFLE( 3, 3, 3, 3 ) );
         return _mm_cvtss_f32( temp );
-    #else
-        return w;
-    #endif
     }
 
     //---------------------------------------------------------------------------------------------
@@ -1149,15 +1100,8 @@ public:
     S3D_INLINE
     bool operator == ( const Vector4& b ) const
     {
-    #if S3D_IS_SIMD
         b128 c = _mm_cmpeq_ps( v, b.v );
         return ((_mm_movemask_ps(c) == 0x0f) != 0);
-    #else
-        return ( x == b.x )
-            && ( y == b.y )
-            && ( z == b.z )
-            && ( w == b.w );
-    #endif//S3D_IS_SIMD
     }
 
     //---------------------------------------------------------------------------------------------
@@ -1166,15 +1110,8 @@ public:
     S3D_INLINE
     bool operator != ( const Vector4& b ) const
     {
-    #if S3D_IS_SIMD
         b128 c = _mm_cmpneq_ps( v, b.v );
         return ((_mm_movemask_ps(c)) != 0);
-    #else
-        return ( x != b.x )
-            || ( y != b.y )
-            || ( z != b.z )
-            || ( w != b.w );
-    #endif//S3D_IS_SIMD
     }
 
     //---------------------------------------------------------------------------------------------
@@ -1183,14 +1120,7 @@ public:
     S3D_INLINE
     Vector4& operator = ( const Vector4& b )
     {
-    #if S3D_IS_SIMD
         v = b.v;
-    #else
-        x = b.x;
-        y = b.y;
-        z = b.z;
-        w = b.w;
-    #endif//S3D_IS_SIMD
         return (*this);
     }
 
@@ -1200,14 +1130,7 @@ public:
     S3D_INLINE
     Vector4& operator += ( const Vector4& b )
     {
-    #if S3D_IS_SIMD
         v = _mm_add_ps( v, b.v );
-    #else
-        x += b.x;
-        y += b.y;
-        z += b.z;
-        w += b.w;
-    #endif//S3D_IS_SIMD
         return (*this);
     }
 
@@ -1217,14 +1140,7 @@ public:
     S3D_INLINE
     Vector4& operator -= ( const Vector4& b )
     {
-    #if S3D_IS_SIMD
         v = _mm_sub_ps( v, b.v );
-    #else
-        x -= b.x;
-        y -= b.y;
-        z -= b.z;
-        w -= b.w;
-    #endif
         return (*this);
     }
 
@@ -1234,15 +1150,8 @@ public:
     S3D_INLINE
     Vector4& operator *= ( const f32 b )
     {
-    #if S3D_IS_SIMD
         b128 c = _mm_set_ps( b, b, b, b );
         v = _mm_mul_ps( v, c );
-    #else
-        x *= b;
-        y *= b;
-        z *= b;
-        w *= b;
-    #endif
         return (*this);
     }
 
@@ -1253,15 +1162,8 @@ public:
     Vector4& operator /= ( const f32 b )
     {
         assert( !IsZero( b ) );
-    #if S3D_IS_SIMD
         b128 c = _mm_set_ps( b, b, b, b );
         v = _mm_div_ps( v, c );
-    #else
-        x /= b;
-        y /= b;
-        z /= b;
-        w /= b;
-    #endif
         return (*this);
     }
 
@@ -1280,12 +1182,8 @@ public:
     S3D_INLINE
     Vector4 operator - () const
     {
-    #if S3D_IS_SIMD
         auto z = _mm_setzero_ps();
         return Vector4( _mm_sub_ps( z, v ) );
-    #else
-        return Vector4( -x, -y, -z, -w );
-    #endif//S3D_IS_SIMD
     }
 
     //---------------------------------------------------------------------------------------------
@@ -1294,15 +1192,7 @@ public:
     S3D_INLINE
     Vector4 operator + (const Vector4 &b) const
     {
-    #if S3D_IS_SIMD
         return Vector4( _mm_add_ps( v, b.v ) );
-    #else
-        return Vector4(
-            x + b.x,
-            y + b.y,
-            z + b.z,
-            w + b.w);
-    #endif//S3D_IS_SIMD
     }
 
     //---------------------------------------------------------------------------------------------
@@ -1311,73 +1201,33 @@ public:
     S3D_INLINE
     Vector4 operator - (const Vector4 &b) const
     {
-    #if S3D_IS_SIMD
         return Vector4( _mm_sub_ps( v, b.v ) );
-    #else
-        return Vector4(
-            x - b.x,
-            y - b.y,
-            z - b.z,
-            w - b.w);
-    #endif//S3D_IS_SIMD
     }
 
     S3D_INLINE
     Vector4 operator * (const Vector4 &b) const
     {
-    #if S3D_IS_SIMD
         return Vector4( _mm_mul_ps( v, b.v ) );
-    #else
-        return Vector4(
-            x * b.x,
-            y * b.y,
-            z * b.z,
-            w * b.w );
-    #endif
     }
 
     S3D_INLINE
     Vector4 operator / ( const Vector4& b) const
     {
-    #if S3D_IS_SIMD
         return Vector4( _mm_div_ps( v, b.v ) );
-    #else
-        return Vector4(
-            x / b.x,
-            y / b.y,
-            z / b.z,
-            w / b.w );
-    #endif
     }
 
     S3D_INLINE
     Vector4 operator + ( const f32 b ) const
     {
-    #if S3D_IS_SIMD
         auto s = _mm_set1_ps( b );
         return Vector4( _mm_add_ps( v, s ) );
-    #else
-        return Vector4(
-            x + b,
-            y + b,
-            z + b,
-            w + b );
-    #endif
     }
 
     S3D_INLINE
     Vector4 operator - ( const f32 b ) const
     {
-    #if S3D_IS_SIMD
         auto s = _mm_set1_ps( b );
         return Vector4( _mm_sub_ps( v, s ) );
-    #else
-        return Vector4(
-            x - b,
-            y - b,
-            z - b,
-            w - b );
-    #endif
     }
 
     //---------------------------------------------------------------------------------------------
@@ -1386,16 +1236,8 @@ public:
     S3D_INLINE
     Vector4 operator * (const f32 b) const
     {
-    #if S3D_IS_SIMD
         auto s = _mm_set1_ps( b );
         return Vector4( _mm_mul_ps( v, s ) );
-    #else
-        return Vector4(
-            x * b,
-            y * b,
-            z * b,
-            w * b);
-    #endif//S3D_IS_SIMD
     }
 
     //---------------------------------------------------------------------------------------------
@@ -1405,16 +1247,8 @@ public:
     Vector4 operator / (const f32 b) const
     {
         assert( !IsZero( b ) );
-    #if S3D_IS_SIMD
         auto s = _mm_set1_ps( b );
         return Vector4( _mm_div_ps( v, s ) );
-    #else
-        return Vector4(
-            x / b,
-            y / b,
-            z / b,
-            w / b);
-    #endif//S3D_IS_SIMD
     }
 
     //---------------------------------------------------------------------------------------------
@@ -1423,11 +1257,7 @@ public:
     S3D_INLINE
     f32 LengthSq() const
     { 
-    #if S3D_IS_SIMD
         return Dot( v, v );
-    #else
-        return ( x * x ) + ( y * y ) + ( z * z ) + ( w * w );
-    #endif//S3D_IS_SIMD
     }
 
     //---------------------------------------------------------------------------------------------
@@ -1436,11 +1266,7 @@ public:
     S3D_INLINE 
     f32 Length() const
     {
-    #if S3D_IS_SIMD
         return sqrtf( Dot( v, v ) );
-    #else
-        return sqrtf( ( x * x ) + ( y * y ) + ( z * z ) + ( w * w ) );
-    #endif
     }
 
     //---------------------------------------------------------------------------------------------
@@ -1449,19 +1275,10 @@ public:
     S3D_INLINE
     void Normalize()
     {
-    #if S3D_IS_SIMD
         auto mag = sqrtf( Dot( v, v ) );
         assert( mag > 0.0f );
         b128 c = _mm_set1_ps( mag );
         v = _mm_div_ps( v, c );
-    #else
-        auto mag = sqrtf( x * x + y * y + z * z + w * w );
-        assert( mag > 0.0f );
-        x /= mag;
-        y /= mag;
-        z /= mag;
-        w /= mag;
-    #endif//S3D_IS_SIMD
     }
 
     //---------------------------------------------------------------------------------------------
@@ -1470,23 +1287,12 @@ public:
     S3D_INLINE
     void SafeNormalize()
     {
-    #if S3D_IS_SIMD
         auto mag = sqrtf( Dot( v, v) );
         if ( mag > 0.0f )
         {
             b128 c = _mm_set1_ps( mag );
             v = _mm_div_ps( v, c );
         }
-    #else
-        auto mag = sqrtf( x * x + y * y + z * z + w * w );
-        if ( mag > 0.0f )
-        {
-             x /= mag;
-             y /= mag;
-             z /= mag;
-             w /= mag;
-        }
-    #endif// S3D_IS_SIMD
     }
 
     //---------------------------------------------------------------------------------------------
@@ -1495,20 +1301,10 @@ public:
     static S3D_INLINE
     Vector4 UnitVector (const Vector4 &v)
     {
-    #if S3D_IS_SIMD
         auto mag = sqrtf( Dot( v, v ) );
         assert( mag > 0.0f );
         b128 c = _mm_set1_ps( mag );
         return Vector4( _mm_div_ps( v.v, c ) );
-    #else
-        auto mag = sqrtf( v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w );
-        assert( mag > 0.0f );
-        return Vector4(
-            v.x / mag,
-            v.y / mag,
-            v.z / mag,
-            v.w / mag );
-    #endif//S3D_IS_SIMD
     }
 
     //---------------------------------------------------------------------------------------------
@@ -1517,24 +1313,12 @@ public:
     static S3D_INLINE
     Vector4 SafeUnitVector (const Vector4& v)
     {
-    #if S3D_IS_SIMD
         auto mag = sqrtf( Dot( v, v ) );
         if ( mag > 0.0f )
         {
             b128 c = _mm_set1_ps( mag );
             return Vector4( _mm_div_ps( v.v, c ) );
         }
-    #else
-        auto mag = sqrtf( v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w );
-        if ( mag > 0.0f )
-        {
-            return Vector4(
-                v.x / mag,
-                v.y / mag,
-                v.z / mag,
-                v.w / mag );
-        }
-    #endif
         return v;
     }
 
@@ -1544,15 +1328,7 @@ public:
     static S3D_INLINE
     Vector4 Mul (const Vector4 &v1, const Vector4 &v2)
     { 
-    #if S3D_IS_SIMD
         return Vector4( _mm_mul_ps( v1.v, v2.v ) );
-    #else
-        return Vector4(
-            v1.x * v2.x,
-            v1.y * v2.y,
-            v1.z * v2.z,
-            v1.w * v2.w );
-    #endif//S3D_IS_SIMD
     }
 
     //---------------------------------------------------------------------------------------------
@@ -1561,11 +1337,7 @@ public:
     static S3D_INLINE
     f32 Dot (const Vector4 &v1, const Vector4 &v2) 
     {
-    #if S3D_IS_SIMD
         return _mm_cvtss_f32( _mm_dp_ps( v1.v, v2.v, 0xff) );
-    #else
-        return ( v1.x * v2.x ) + ( v1.y * v2.y ) + ( v1.z * v2.z ) + ( v1.w * v2.w );
-    #endif
     }
 
 
@@ -1575,21 +1347,10 @@ public:
     static S3D_INLINE
     Vector4 Reflect( const Vector4& i, const Vector4& n )
     {
-    #if S3D_IS_SIMD
         register f32 _2dot = 2.0f * Dot( i, n );
         b128 c = _mm_set1_ps( _2dot );
         b128 b = _mm_mul_ps( c, n.v );
         return Vector4( _mm_sub_ps( i.v, b ) );
-    #else
-        auto dot = ( n.x * i.x ) + ( n.y * i.y ) + ( n.z * i.z ) + ( n.w * i.w );
-        auto _2dot = 2.0f * dot;
-
-        return Vector4(
-            i.x - ( _2dot * n.x ),
-            i.y - ( _2dot * n.y ),
-            i.z - ( _2dot * n.z ),
-            i.w - ( _2dot * n.w ) );
-    #endif//S3D_IS_SIMD
     }
 
     //----------------------------------------------------------------------------------------------
@@ -1598,15 +1359,7 @@ public:
     static S3D_INLINE
     Vector4 Min( const Vector4& a, const Vector4& b )
     {
-    #if S3D_IS_SIMD
         return Vector4( _mm_min_ps( a.v, b.v ) );
-    #else
-        return Vector4( 
-            ( a.x < b.x ) ? a.x : b.x,
-            ( a.y < b.y ) ? a.y : b.y,
-            ( a.z < b.z ) ? a.z : b.z,
-            ( a.w < b.w ) ? a.w : b.w );
-    #endif//S3D_IS_SIMD
     }
 
     //----------------------------------------------------------------------------------------------
@@ -1615,15 +1368,7 @@ public:
     static S3D_INLINE
     Vector4 Max( const Vector4& a, const Vector4& b )
     {
-    #if S3D_IS_SIMD
         return Vector4( _mm_max_ps( a.v, b.v ) );
-    #else
-        return Vector4(
-            ( a.x > b.x ) ? a.x : b.x,
-            ( a.y > b.y ) ? a.y : b.y,
-            ( a.z > b.z ) ? a.z : b.z,
-            ( a.w > b.w ) ? a.w : b.w );
-    #endif//S3D_IS_SIMD
     }
 
     static Vector4 Transform( const Vector4& value, const Matrix& matrix );
@@ -1635,46 +1380,22 @@ public:
 S3D_INLINE 
 Vector4 operator * (const f32 f, const Vector4 &v)
 {
-#if S3D_IS_SIMD
     b128 c = _mm_set1_ps( f );
     return Vector4( _mm_mul_ps( c, v.v ) );
-#else
-    return Vector4(
-        f * v.x,
-        f * v.y,
-        f * v.z,
-        f * v.w );
-#endif//S3D_IS_SIMD
 }
 
 S3D_INLINE
 Vector4 operator + (const f32 f, const Vector4& v)
 {
-#if S3D_IS_SIMD
     b128 s = _mm_set1_ps( f );
     return Vector4( _mm_add_ps( s, v.v ) );
-#else
-    return Vector4(
-        s + v.x,
-        s + v.y,
-        s + v.z,
-        s + v.w );
-#endif
 }
 
 S3D_INLINE
 Vector4 operator - ( const f32 f, const Vector4& v)
 {
-#if S3D_IS_SIMD
     b128 s = _mm_set1_ps( f );
     return Vector4( _mm_sub_ps( s, v.v ) );
-#else
-    return Vector4(
-        f - v.x,
-        f - v.y,
-        f - v.z,
-        f - v.w );
-#endif
 }
 
 
@@ -1737,7 +1458,6 @@ struct Ray4
     //-------------------------------------------------------------------------------------
     Ray4( const Ray& ray )
     {
-    #if S3D_IS_SIMD
         pos[0] = _mm_set1_ps( ray.pos.x );
         pos[1] = _mm_set1_ps( ray.pos.y );
         pos[2] = _mm_set1_ps( ray.pos.z );
@@ -1745,37 +1465,7 @@ struct Ray4
         invDir[0] = _mm_set1_ps( ray.invDir.x );
         invDir[1] = _mm_set1_ps( ray.invDir.y );
         invDir[2] = _mm_set1_ps( ray.invDir.z );
-    #else
-        pos[0].m128_f32[0] = ray.pos.x;
-        pos[0].m128_f32[1] = ray.pos.x;
-        pos[0].m128_f32[2] = ray.pos.x;
-        pos[0].m128_f32[3] = ray.pos.x;
 
-        pos[1].m128_f32[0] = ray.pos.y;
-        pos[1].m128_f32[1] = ray.pos.y;
-        pos[1].m128_f32[2] = ray.pos.y;
-        pos[1].m128_f32[3] = ray.pos.y;
-
-        pos[2].m128_f32[0] = ray.pos.z;
-        pos[2].m128_f32[1] = ray.pos.z;
-        pos[2].m128_f32[2] = ray.pos.z;
-        pos[2].m128_f32[3] = ray.pos.z;
-
-        invDir[0].m128_f32[0] = ray.invDir.x;
-        invDir[0].m128_f32[1] = ray.invDir.x;
-        invDir[0].m128_f32[2] = ray.invDir.x;
-        invDir[0].m128_f32[3] = ray.invDir.x;
-
-        invDir[1].m128_f32[0] = ray.invDir.y;
-        invDir[1].m128_f32[1] = ray.invDir.y;
-        invDir[1].m128_f32[2] = ray.invDir.y;
-        invDir[1].m128_f32[3] = ray.invDir.y;
-
-        invDir[2].m128_f32[0] = ray.invDir.z;
-        invDir[2].m128_f32[1] = ray.invDir.z;
-        invDir[2].m128_f32[2] = ray.invDir.z;
-        invDir[2].m128_f32[3] = ray.invDir.z;
-    #endif
         sign[0] = ray.sign[0];
         sign[1] = ray.sign[1];
         sign[2] = ray.sign[2];
@@ -1815,7 +1505,6 @@ struct Ray8
     //-------------------------------------------------------------------------------------
     Ray8( const Ray& ray )
     {
-    #if ( S3D_IS_SIMD && S3D_IS_AVX )
         pos[0] = _mm256_set1_ps( ray.pos.x );
         pos[1] = _mm256_set1_ps( ray.pos.y );
         pos[2] = _mm256_set1_ps( ray.pos.z );
@@ -1823,61 +1512,7 @@ struct Ray8
         invDir[0] = _mm256_set1_ps( ray.invDir.x );
         invDir[1] = _mm256_set1_ps( ray.invDir.y );
         invDir[2] = _mm256_set1_ps( ray.invDir.z );
-    #else
-        pos[0].m256_f32[0] = ray.pos.x;
-        pos[0].m256_f32[1] = ray.pos.x;
-        pos[0].m256_f32[2] = ray.pos.x;
-        pos[0].m256_f32[3] = ray.pos.x;
-        pos[0].m256_f32[4] = ray.pos.x;
-        pos[0].m256_f32[5] = ray.pos.x;
-        pos[0].m256_f32[6] = ray.pos.x;
-        pos[0].m256_f32[7] = ray.pos.x;
 
-        pos[1].m256_f32[0] = ray.pos.y;
-        pos[1].m256_f32[1] = ray.pos.y;
-        pos[1].m256_f32[2] = ray.pos.y;
-        pos[1].m256_f32[3] = ray.pos.y;
-        pos[1].m256_f32[4] = ray.pos.y;
-        pos[1].m256_f32[5] = ray.pos.y;
-        pos[1].m256_f32[6] = ray.pos.y;
-        pos[1].m256_f32[7] = ray.pos.y;
-
-        pos[2].m256_f32[0] = ray.pos.z;
-        pos[2].m256_f32[1] = ray.pos.z;
-        pos[2].m256_f32[2] = ray.pos.z;
-        pos[2].m256_f32[3] = ray.pos.z;
-        pos[2].m256_f32[4] = ray.pos.z;
-        pos[2].m256_f32[5] = ray.pos.z;
-        pos[2].m256_f32[6] = ray.pos.z;
-        pos[2].m256_f32[7] = ray.pos.z;
-
-        invDir[0].m256_f32[0] = ray.invDir.x;
-        invDir[0].m256_f32[1] = ray.invDir.x;
-        invDir[0].m256_f32[2] = ray.invDir.x;
-        invDir[0].m256_f32[3] = ray.invDir.x;
-        invDir[0].m256_f32[4] = ray.invDir.x;
-        invDir[0].m256_f32[5] = ray.invDir.x;
-        invDir[0].m256_f32[6] = ray.invDir.x;
-        invDir[0].m256_f32[7] = ray.invDir.x;
-
-        invDir[1].m256_f32[0] = ray.invDir.y;
-        invDir[1].m256_f32[1] = ray.invDir.y;
-        invDir[1].m256_f32[2] = ray.invDir.y;
-        invDir[1].m256_f32[3] = ray.invDir.y;
-        invDir[1].m256_f32[4] = ray.invDir.y;
-        invDir[1].m256_f32[5] = ray.invDir.y;
-        invDir[1].m256_f32[6] = ray.invDir.y;
-        invDir[1].m256_f32[7] = ray.invDir.y;
-
-        invDir[2].m256_f32[0] = ray.invDir.z;
-        invDir[2].m256_f32[1] = ray.invDir.z;
-        invDir[2].m256_f32[2] = ray.invDir.z;
-        invDir[2].m256_f32[3] = ray.invDir.z;
-        invDir[2].m256_f32[4] = ray.invDir.z;
-        invDir[2].m256_f32[5] = ray.invDir.z;
-        invDir[2].m256_f32[6] = ray.invDir.z;
-        invDir[2].m256_f32[7] = ray.invDir.z;
-    #endif// ( S3D_IS_SIMD && S3D_IS_AVX )
         sign[0] = ray.sign[0];
         sign[1] = ray.sign[1];
         sign[2] = ray.sign[2];
@@ -1923,7 +1558,6 @@ public:
             f32 _41, _42, _43, _44;
         };
         f32     a[16];
-    #if S3D_IS_SIMD
         struct
         {
             b128    v0;
@@ -1931,7 +1565,6 @@ public:
             b128    v2;
             b128    v3;
         };
-    #endif
     };
 
     //======================================================================================
@@ -1956,17 +1589,10 @@ public:
         const f32 m31, const f32 m32, const f32 m33, const f32 m34,
         const f32 m41, const f32 m42, const f32 m43, const f32 m44
     )
-  #if S3D_IS_SIMD
     : v0( _mm_set_ps( m14, m13, m12, m11 ) )
     , v1( _mm_set_ps( m24, m23, m22, m21 ) )
     , v2( _mm_set_ps( m34, m33, m32, m31 ) )
     , v3( _mm_set_ps( m44, m43, m42, m41 ) )
-  #else
-    : _11( m11 ), _12( m12 ), _13( m13 ), _14( m14 )
-    , _21( m21 ), _22( m22 ), _23( m23 ), _24( m24 )
-    , _31( m31 ), _32( m32 ), _33( m33 ), _34( m34 )
-    , _41( m41 ), _42( m42 ), _43( m43 ), _44( m44 )
-  #endif//S3D_IS_SIMD
     { /* DO_NOTHING */ }
 
   #if S3D_IS_SIMD
@@ -1987,17 +1613,10 @@ public:
     //---------------------------------------------------------------------------------------------
     S3D_INLINE
     Matrix( const Matrix& value)
-  #if S3D_IS_SIMD
     : v0 ( value.v0 )
     , v1 ( value.v1 )
     , v2 ( value.v2 )
     , v3 ( value.v3 )
-  #else
-    : _11( value._11 ), _12( value._12 ), _13( value._13 ), _14( value._14 )
-    , _21( value._21 ), _22( value._22 ), _23( value._23 ), _24( value._24 )
-    , _31( value._31 ), _32( value._32 ), _33( value._33 ), _34( value._34 )
-    , _41( value._41 ), _42( value._42 ), _43( value._43 ), _44( value._44 )
-  #endif//S3D_IS_SIMD
     { /* DO_NOTHING */ }
 
     //---------------------------------------------------------------------------------------------
@@ -2006,17 +1625,10 @@ public:
     S3D_INLINE
     Matrix& operator =  ( const Matrix& value )
     {
-    #if S3D_IS_SIMD
         v0 = value.v0;
         v1 = value.v1;
         v2 = value.v2;
         v3 = value.v3;
-    #else
-        _11 = value._11; _12 = value._12; _13 = value._13; _14 = value._14;
-        _21 = value._21; _22 = value._22; _23 = value._23; _24 = value._24;
-        _31 = value._31; _32 = value._32; _33 = value._33; _34 = value._34;
-        _41 = value._41; _42 = value._42; _43 = value._43; _44 = value._44;
-    #endif//S3D_IS_SIMD
         return (*this);
     }
 
@@ -2026,17 +1638,10 @@ public:
     S3D_INLINE
     Matrix& operator += ( const Matrix& value )
     {
-    #if S3D_IS_SIMD
         v0 = _mm_add_ps( v0, value.v0 );
         v1 = _mm_add_ps( v1, value.v1 );
         v2 = _mm_add_ps( v2, value.v2 );
         v3 = _mm_add_ps( v3, value.v3 );
-    #else
-        _11 += value._11; _12 += value._12; _13 += value._13; _14 += value._14;
-        _21 += value._21; _22 += value._22; _23 += value._23; _24 += value._24;
-        _31 += value._31; _32 += value._32; _33 += value._33; _34 += value._34;
-        _41 += value._41; _42 += value._42; _43 += value._43; _44 += value._44;
-    #endif//S3D_IS_SIMD
         return (*this);
     }
 
@@ -2046,17 +1651,10 @@ public:
     S3D_INLINE
     Matrix& operator -= ( const Matrix& value )
     {
-    #if S3D_IS_SIMD
         v0 = _mm_sub_ps( v0, value.v0 );
         v1 = _mm_sub_ps( v1, value.v1 );
         v2 = _mm_sub_ps( v2, value.v2 );
         v3 = _mm_sub_ps( v3, value.v3 );
-    #else
-        _11 -= value._11; _12 -= value._12; _13 -= value._13; _14 -= value._14;
-        _21 -= value._21; _22 -= value._22; _23 -= value._23; _24 -= value._24;
-        _31 -= value._31; _32 -= value._32; _33 -= value._33; _34 -= value._34;
-        _41 -= value._41; _42 -= value._42; _43 -= value._43; _44 -= value._44;
-    #endif//S3D_IS_SIMD
         return (*this);
     }
 
@@ -2066,85 +1664,14 @@ public:
     S3D_INLINE
     Matrix& operator *= ( const Matrix& value )
     {
-    #if S3D_IS_SIMD
-        b128 r0 = _mm_set_ps( value._41, value._31, value._21, value._11 );
-        b128 r1 = _mm_set_ps( value._42, value._32, value._22, value._12 );
-        b128 r2 = _mm_set_ps( value._43, value._33, value._23, value._13 );
-        b128 r3 = _mm_set_ps( value._44, value._34, value._24, value._14 );
-
-        v0 = _mm_set_ps( 
-            Vector4::Dot( v0, r3 ),
-            Vector4::Dot( v0, r2 ),
-            Vector4::Dot( v0, r1 ),
-            Vector4::Dot( v0, r0 ) );
-
-        v1 = _mm_set_ps(
-            Vector4::Dot( v1, r3 ),
-            Vector4::Dot( v1, r2 ),
-            Vector4::Dot( v1, r1 ),
-            Vector4::Dot( v1, r0 ) );
-
-        v2 = _mm_set_ps(
-            Vector4::Dot( v2, r3 ),
-            Vector4::Dot( v2, r2 ),
-            Vector4::Dot( v2, r1 ), 
-            Vector4::Dot( v2, r0 ) );
-
-        v3 = _mm_set_ps(
-            Vector4::Dot( v3, r3 ),
-            Vector4::Dot( v3, r2 ),
-            Vector4::Dot( v3, r1 ),
-            Vector4::Dot( v3, r0 ) );
-    #else
-        {
-            auto m11 = ( _11 * value._11 ) + ( _12 * value._21 ) + ( _13 * value._31 ) + ( _14 * value._41 );
-            auto m12 = ( _11 * value._12 ) + ( _12 * value._22 ) + ( _13 * value._32 ) + ( _14 * value._42 );
-            auto m13 = ( _11 * value._13 ) + ( _12 * value._23 ) + ( _13 * value._33 ) + ( _14 * value._43 );
-            auto m14 = ( _11 * value._14 ) + ( _12 * value._24 ) + ( _13 * value._34 ) + ( _14 * value._44 );
-
-            _11 = m11;
-            _12 = m12;
-            _13 = m13;
-            _14 = m14;
-        }
-
-        {
-            auto m21 = ( _21 * value._11 ) + ( _22 * value._21 ) + ( _23 * value._31 ) + ( _24 * value._41 );
-            auto m22 = ( _21 * value._12 ) + ( _22 * value._22 ) + ( _23 * value._32 ) + ( _24 * value._42 );
-            auto m23 = ( _21 * value._13 ) + ( _22 * value._23 ) + ( _23 * value._33 ) + ( _24 * value._43 );
-            auto m24 = ( _21 * value._14 ) + ( _22 * value._24 ) + ( _23 * value._34 ) + ( _24 * value._44 );
-
-            _21 = m21;
-            _22 = m22;
-            _23 = m23;
-            _24 = m24;
-        }
-
-        {
-            auto m31 = ( _31 * value._11 ) + ( _32 * value._21 ) + ( _33 * value._31 ) + ( _34 * value._41 );
-            auto m32 = ( _31 * value._12 ) + ( _32 * value._22 ) + ( _33 * value._32 ) + ( _34 * value._42 );
-            auto m33 = ( _31 * value._13 ) + ( _32 * value._23 ) + ( _33 * value._33 ) + ( _34 * value._43 );
-            auto m34 = ( _31 * value._14 ) + ( _32 * value._24 ) + ( _33 * value._34 ) + ( _34 * value._44 );
-
-            _31 = m31;
-            _32 = m32;
-            _33 = m33;
-            _34 = m34;
-        }
-
-        {
-            auto m41 = ( _41 * value._11 ) + ( _42 * value._21 ) + ( _43 * value._31 ) + ( _44 * value._41 );
-            auto m42 = ( _41 * value._12 ) + ( _42 * value._22 ) + ( _43 * value._32 ) + ( _44 * value._42 );
-            auto m43 = ( _41 * value._13 ) + ( _42 * value._23 ) + ( _43 * value._33 ) + ( _44 * value._43 );
-            auto m44 = ( _41 * value._14 ) + ( _42 * value._24 ) + ( _43 * value._34 ) + ( _44 * value._44 );
-
-            _41 = m41;
-            _42 = m42;
-            _43 = m43;
-            _44 = m44;
-        }
-    #endif//S3D_IS_SIMD
-
+        auto e0 = Vector4::Transform( Vector4( v0 ), value );
+        auto e1 = Vector4::Transform( Vector4( v1 ), value );
+        auto e2 = Vector4::Transform( Vector4( v2 ), value );
+        auto e3 = Vector4::Transform( Vector4( v3 ), value );
+        v0 = e0.v;
+        v1 = e1.v;
+        v2 = e2.v;
+        v3 = e3.v;
         return (*this);
     }
 
@@ -2154,18 +1681,11 @@ public:
     S3D_INLINE
     Matrix& operator *= ( const f32 value )
     {
-    #if S3D_IS_SIMD
         b128 c = _mm_set_ps( value, value, value, value );
         v0 = _mm_mul_ps( v0, c );
         v1 = _mm_mul_ps( v1, c );
         v2 = _mm_mul_ps( v2, c );
         v3 = _mm_mul_ps( v3, c );
-    #else
-        _11 *= value; _12 *= value; _13 *= value; _14 *= value;
-        _21 *= value; _22 *= value; _23 *= value; _24 *= value;
-        _31 *= value; _32 *= value; _33 *= value; _34 *= value;
-        _41 *= value; _42 *= value; _43 *= value; _44 *= value;
-    #endif//S3D_IS_SIMD
         return (*this); 
     }
 
@@ -2182,20 +1702,12 @@ public:
     S3D_INLINE
     Matrix operator - () const
     {
-    #if S3D_IS_SIMD
         b128 z = _mm_setzero_ps();
         return Matrix(
             _mm_sub_ps( z, v0 ),
             _mm_sub_ps( z, v1 ),
             _mm_sub_ps( z, v2 ),
             _mm_sub_ps( z, v3 ) );
-    #else
-        return Matrix(
-            -_11, -_12, -_13, -_14,
-            -_21, -_22, -_23, -_24,
-            -_31, -_32, -_33, -_34,
-            -_41, -_42, -_43, -_44 );
-    #endif//S3D_IS_SIMD
     }
 
     //---------------------------------------------------------------------------------------------
@@ -2204,19 +1716,11 @@ public:
     S3D_INLINE
     Matrix operator + ( const Matrix& value ) const
     {
-    #if S3D_IS_SIMD
         return Matrix(
             _mm_add_ps( v0, value.v0 ),
             _mm_add_ps( v1, value.v1 ),
             _mm_add_ps( v2, value.v2 ),
             _mm_add_ps( v3, value.v3 ) );
-    #else
-        return Matrix(
-            _11 + value._11, _12 + value._12, _13 + value._13, _14 + value._14,
-            _21 + value._21, _22 + value._22, _23 + value._23, _24 + value._24,
-            _31 + value._31, _32 + value._32, _33 + value._33, _34 + value._34,
-            _41 + value._41, _42 + value._42, _43 + value._43, _44 + value._44 );
-    #endif//S3D_IS_SIMD
     }
 
     //---------------------------------------------------------------------------------------------
@@ -2225,19 +1729,11 @@ public:
     S3D_INLINE
     Matrix operator - ( const Matrix& value ) const
     {
-    #if S3D_IS_SIMD
         return Matrix(
             _mm_sub_ps( v0, value.v0 ),
             _mm_sub_ps( v1, value.v1 ),
             _mm_sub_ps( v2, value.v2 ),
             _mm_sub_ps( v3, value.v3 ) );
-    #else
-        return Matrix(
-            _11 - value._11, _12 - value._12, _13 - value._13, _14 - value._14,
-            _21 - value._21, _22 - value._22, _23 - value._23, _24 - value._24,
-            _31 - value._31, _32 - value._32, _33 - value._33, _34 - value._34,
-            _41 - value._41, _42 - value._42, _43 - value._43, _44 - value._44 );
-    #endif//S3D_IS_SIMD
     }
 
     //---------------------------------------------------------------------------------------------
@@ -2246,34 +1742,11 @@ public:
     S3D_INLINE
     Matrix operator * ( const Matrix& value ) const
     {
-    #if S3D_IS_SIMD
         auto e0 = Vector4::Transform( Vector4( v0 ), value );
         auto e1 = Vector4::Transform( Vector4( v1 ), value );
         auto e2 = Vector4::Transform( Vector4( v2 ), value );
         auto e3 = Vector4::Transform( Vector4( v3 ), value );
         return Matrix( e0.v, e1.v, e2.v, e3.v );
-    #else
-        return Matrix(
-                ( _11 * value._11 ) + ( _12 * value._21 ) + ( _13 * value._31 ) + ( _14 * value._41 ),
-                ( _11 * value._12 ) + ( _12 * value._22 ) + ( _13 * value._32 ) + ( _14 * value._42 ),
-                ( _11 * value._13 ) + ( _12 * value._23 ) + ( _13 * value._33 ) + ( _14 * value._43 ),
-                ( _11 * value._14 ) + ( _12 * value._24 ) + ( _13 * value._34 ) + ( _14 * value._44 ),
-
-                ( _21 * value._11 ) + ( _22 * value._21 ) + ( _23 * value._31 ) + ( _24 * value._41 ),
-                ( _21 * value._12 ) + ( _22 * value._22 ) + ( _23 * value._32 ) + ( _24 * value._42 ),
-                ( _21 * value._13 ) + ( _22 * value._23 ) + ( _23 * value._33 ) + ( _24 * value._43 ),
-                ( _21 * value._14 ) + ( _22 * value._24 ) + ( _23 * value._34 ) + ( _24 * value._44 ),
-
-                ( _31 * value._11 ) + ( _32 * value._21 ) + ( _33 * value._31 ) + ( _34 * value._41 ),
-                ( _31 * value._12 ) + ( _32 * value._22 ) + ( _33 * value._32 ) + ( _34 * value._42 ),
-                ( _31 * value._13 ) + ( _32 * value._23 ) + ( _33 * value._33 ) + ( _34 * value._43 ),
-                ( _31 * value._14 ) + ( _32 * value._24 ) + ( _33 * value._34 ) + ( _34 * value._44 ),
-
-                ( _41 * value._11 ) + ( _42 * value._21 ) + ( _43 * value._31 ) + ( _44 * value._41 ),
-                ( _41 * value._12 ) + ( _42 * value._22 ) + ( _43 * value._32 ) + ( _44 * value._42 ),
-                ( _41 * value._13 ) + ( _42 * value._23 ) + ( _43 * value._33 ) + ( _44 * value._43 ),
-                ( _41 * value._14 ) + ( _42 * value._24 ) + ( _43 * value._34 ) + ( _44 * value._44 ) );
-    #endif//S3D_IS_SIMD
     }
 
     //---------------------------------------------------------------------------------------------
@@ -2282,20 +1755,12 @@ public:
     S3D_INLINE
     Matrix operator * ( const f32 value ) const
     {
-    #if S3D_IS_SIMD
         b128 c = _mm_set1_ps( value );
         return Matrix(
             _mm_mul_ps( v0, c ),
             _mm_mul_ps( v1, c ),
             _mm_mul_ps( v2, c ),
             _mm_mul_ps( v3, c ) );
-    #else
-        return Matrix(
-            _11 * value, _12 * value, _13 * value, _14 * value,
-            _21 * value, _22 * value, _23 * value, _24 * value,
-            _31 * value, _32 * value, _33 * value, _34 * value,
-            _41 * value, _42 * value, _43 * value, _44 * value );
-    #endif//S3D_IS_SIMD
     }
 
     //---------------------------------------------------------------------------------------------
@@ -2633,7 +2098,6 @@ Vector3 Vector3::TransformCoord( const Vector3& coord, const Matrix& matrix )
 S3D_INLINE
 Vector4 Vector4::Transform( const Vector4& position, const Matrix& matrix )
 {
-#if S3D_IS_SIMD
     auto x = _mm_shuffle_ps( position.v, position.v, 0x00 );
     auto y = _mm_shuffle_ps( position.v, position.v, 0x55 );
     auto z = _mm_shuffle_ps( position.v, position.v, 0xaa );
@@ -2645,14 +2109,6 @@ Vector4 Vector4::Transform( const Vector4& position, const Matrix& matrix )
     w = _mm_mul_ps( w, matrix.v3 );
 
     return Vector4( _mm_add_ps( _mm_add_ps( x, y ), _mm_add_ps( z, w ) ) );
-#else
-    return Vector4(
-        ( position.x * matrix._11 ) + ( position.y * matrix._21 ) + ( position.z * matrix._31 ) + ( position.w * matrix._41 ),
-        ( position.x * matrix._12 ) + ( position.y * matrix._22 ) + ( position.z * matrix._32 ) + ( position.w * matrix._42 ),
-        ( position.x * matrix._13 ) + ( position.y * matrix._23 ) + ( position.z * matrix._33 ) + ( position.w * matrix._43 ),
-        ( position.x * matrix._14 ) + ( position.y * matrix._24 ) + ( position.z * matrix._34 ) + ( position.w * matrix._44 )
-    );
-#endif
 }
 
 

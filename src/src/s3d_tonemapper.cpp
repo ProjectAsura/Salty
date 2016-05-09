@@ -103,10 +103,12 @@ s3d::Vector4 ACESFilm( const s3d::Vector4& color )
     const auto c = 2.43f;
     const auto d = 0.59f;
     const auto e = 0.14f;
+    const auto f = 0.665406f;
+    const auto g = 12.0f;
     return s3d::Vector4(
-        s3d::Saturate((color.GetX() * (a * color.GetX() + b)) / (color.GetX() * (c * color.GetX() + d) + e)),
-        s3d::Saturate((color.GetY() * (a * color.GetY() + b)) / (color.GetY() * (c * color.GetY() + d) + e)),
-        s3d::Saturate((color.GetZ() * (a * color.GetZ() + b)) / (color.GetZ() * (c * color.GetZ() + d) + e)),
+        s3d::Saturate((color.GetX() * (a * color.GetX() * f / g + b)) / (color.GetX() * f / g * (c * color.GetX() * f + d) + e)),
+        s3d::Saturate((color.GetY() * (a * color.GetY() * f / g + b)) / (color.GetY() * f / g * (c * color.GetY() * f + d) + e)),
+        s3d::Saturate((color.GetZ() * (a * color.GetZ() * f / g + b)) / (color.GetZ() * f / g * (c * color.GetZ() * f + d) + e)),
         color.GetW());
 }
 

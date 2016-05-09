@@ -1269,13 +1269,9 @@ public:
     //! @brief      正符号演算子です.
     //---------------------------------------------------------------------------------------------
     S3D_INLINE
-    Vector4  operator + () const
+    Vector4 operator + () const
     {
-    #if S3D_IS_SIMD
-        return Vector4( v );
-    #else
-        return Vector4( x, y, z, w );
-    #endif//S3D_IS_SIMD
+        return *this;
     }
 
     //---------------------------------------------------------------------------------------------
@@ -1285,7 +1281,7 @@ public:
     Vector4 operator - () const
     {
     #if S3D_IS_SIMD
-        b128 z = _mm_setzero_ps();
+        auto z = _mm_setzero_ps();
         return Vector4( _mm_sub_ps( z, v ) );
     #else
         return Vector4( -x, -y, -z, -w );
@@ -1358,7 +1354,7 @@ public:
     Vector4 operator + ( const f32 b ) const
     {
     #if S3D_IS_SIMD
-        b128 s = _mm_set1_ps( b );
+        auto s = _mm_set1_ps( b );
         return Vector4( _mm_add_ps( v, s ) );
     #else
         return Vector4(
@@ -1373,7 +1369,7 @@ public:
     Vector4 operator - ( const f32 b ) const
     {
     #if S3D_IS_SIMD
-        b128 s = _mm_set1_ps( b );
+        auto s = _mm_set1_ps( b );
         return Vector4( _mm_sub_ps( v, s ) );
     #else
         return Vector4(
@@ -1391,7 +1387,7 @@ public:
     Vector4 operator * (const f32 b) const
     {
     #if S3D_IS_SIMD
-        b128 s = _mm_set1_ps( b );
+        auto s = _mm_set1_ps( b );
         return Vector4( _mm_mul_ps( v, s ) );
     #else
         return Vector4(
@@ -1410,7 +1406,7 @@ public:
     {
         assert( !IsZero( b ) );
     #if S3D_IS_SIMD
-        b128 s = _mm_set1_ps( b );
+        auto s = _mm_set1_ps( b );
         return Vector4( _mm_div_ps( v, s ) );
     #else
         return Vector4(
@@ -1566,8 +1562,7 @@ public:
     f32 Dot (const Vector4 &v1, const Vector4 &v2) 
     {
     #if S3D_IS_SIMD
-        Vector4 ret( _mm_mul_ps( v1.v, v2.v ) );
-        return ret.GetX() + ret.GetY() + ret.GetZ() + ret.GetW();
+        return _mm_cvtss_f32( _mm_dp_ps( v1.v, v2.v, 0xff) );
     #else
         return ( v1.x * v2.x ) + ( v1.y * v2.y ) + ( v1.z * v2.z ) + ( v1.w * v2.w );
     #endif
@@ -2251,38 +2246,13 @@ public:
     S3D_INLINE
     Matrix operator * ( const Matrix& value ) const
     {
-    //#if S3D_IS_SIMD
-    //    auto r0 = Vector4( _mm_set_ps( value._41, value._31, value._21, value._11 ) );
-    //    auto r1 = Vector4( _mm_set_ps( value._42, value._32, value._22, value._12 ) );
-    //    auto r2 = Vector4( _mm_set_ps( value._43, value._33, value._23, value._13 ) );
-    //    auto r3 = Vector4( _mm_set_ps( value._44, value._34, value._24, value._14 ) );
-
-    //    auto e0 = _mm_set_ps(
-    //        Vector4::Dot( v0, r3 ),
-    //        Vector4::Dot( v0, r2 ),
-    //        Vector4::Dot( v0, r1 ),
-    //        Vector4::Dot( v0, r0 ) );
-
-    //    auto e1 = _mm_set_ps(
-    //        Vector4::Dot( v1, r3 ),
-    //        Vector4::Dot( v1, r2 ),
-    //        Vector4::Dot( v1, r1 ),
-    //        Vector4::Dot( v1, r0 ) );
-
-    //    auto e2 = _mm_set_ps(
-    //        Vector4::Dot( v2, r3 ),
-    //        Vector4::Dot( v2, r2 ),
-    //        Vector4::Dot( v2, r1 ),
-    //        Vector4::Dot( v2, r0 ) );
-
-    //    auto e3 = _mm_set_ps(
-    //        Vector4::Dot( v3, r3 ),
-    //        Vector4::Dot( v3, r2 ),
-    //        Vector4::Dot( v3, r1 ),
-    //        Vector4::Dot( v3, r0 ) );
-
-    //    return Matrix( e0, e1, e2, e3 );
-    //#else
+    #if S3D_IS_SIMD
+        auto e0 = Vector4::Transform( Vector4( v0 ), value );
+        auto e1 = Vector4::Transform( Vector4( v1 ), value );
+        auto e2 = Vector4::Transform( Vector4( v2 ), value );
+        auto e3 = Vector4::Transform( Vector4( v3 ), value );
+        return Matrix( e0.v, e1.v, e2.v, e3.v );
+    #else
         return Matrix(
                 ( _11 * value._11 ) + ( _12 * value._21 ) + ( _13 * value._31 ) + ( _14 * value._41 ),
                 ( _11 * value._12 ) + ( _12 * value._22 ) + ( _13 * value._32 ) + ( _14 * value._42 ),
@@ -2303,7 +2273,7 @@ public:
                 ( _41 * value._12 ) + ( _42 * value._22 ) + ( _43 * value._32 ) + ( _44 * value._42 ),
                 ( _41 * value._13 ) + ( _42 * value._23 ) + ( _43 * value._33 ) + ( _44 * value._43 ),
                 ( _41 * value._14 ) + ( _42 * value._24 ) + ( _43 * value._34 ) + ( _44 * value._44 ) );
-    //#endif//S3D_IS_SIMD
+    #endif//S3D_IS_SIMD
     }
 
     //---------------------------------------------------------------------------------------------
@@ -2356,6 +2326,7 @@ public:
     S3D_INLINE
     static Matrix Invert( const Matrix& value )
     {
+        /* TODO : SIMD化 */
         Matrix result;
         auto det = value.Det();
         assert( !IsZero(det) );
@@ -2662,20 +2633,26 @@ Vector3 Vector3::TransformCoord( const Vector3& coord, const Matrix& matrix )
 S3D_INLINE
 Vector4 Vector4::Transform( const Vector4& position, const Matrix& matrix )
 {
-//#if S3D_IS_SIMD
-//    return Vector4(
-//        Vector4::Dot( position.v, matrix.v0 ),
-//        Vector4::Dot( position.v, matrix.v1 ),
-//        Vector4::Dot( position.v, matrix.v2 ),
-//        Vector4::Dot( position.v, matrix.v3 ) );
-//#else
+#if S3D_IS_SIMD
+    auto x = _mm_shuffle_ps( position.v, position.v, 0x00 );
+    auto y = _mm_shuffle_ps( position.v, position.v, 0x55 );
+    auto z = _mm_shuffle_ps( position.v, position.v, 0xaa );
+    auto w = _mm_shuffle_ps( position.v, position.v, 0xff );
+
+    x = _mm_mul_ps( x, matrix.v0 );
+    y = _mm_mul_ps( y, matrix.v1 );
+    z = _mm_mul_ps( z, matrix.v2 );
+    w = _mm_mul_ps( w, matrix.v3 );
+
+    return Vector4( _mm_add_ps( _mm_add_ps( x, y ), _mm_add_ps( z, w ) ) );
+#else
     return Vector4(
         ( position.x * matrix._11 ) + ( position.y * matrix._21 ) + ( position.z * matrix._31 ) + ( position.w * matrix._41 ),
         ( position.x * matrix._12 ) + ( position.y * matrix._22 ) + ( position.z * matrix._32 ) + ( position.w * matrix._42 ),
         ( position.x * matrix._13 ) + ( position.y * matrix._23 ) + ( position.z * matrix._33 ) + ( position.w * matrix._43 ),
         ( position.x * matrix._14 ) + ( position.y * matrix._24 ) + ( position.z * matrix._34 ) + ( position.w * matrix._44 )
     );
-//#endif
+#endif
 }
 
 
@@ -2826,22 +2803,13 @@ public:
     S3D_INLINE
     BoundingBox4()
     {
-    #if S3D_IS_SIMD
+        auto mini = _mm_set1_ps(  F_MAX );
+        auto maxi = _mm_set1_ps( -F_MAX );
         for( auto i=0; i<3; ++i )
         {
-            value[0][i] = _mm_set1_ps( F_MAX );
-            value[1][i] = _mm_set1_ps( F_MIN );
+            value[0][i] = mini;
+            value[1][i] = maxi;
         }
-    #else
-        for( auto i=0; i<3; ++i )
-        {
-            for( auto j=0; j<4; ++j )
-            {
-                value[0][i].m128_f32[j] = F_MAX;
-                value[1][i].m128_f32[j] = F_MIN;
-            }
-        }
-    #endif//S3D_IS_SIMD
     }
 
     //--------------------------------------------------------------------------------
@@ -2856,7 +2824,6 @@ public:
         const BoundingBox& box3
     )
     {
-    #if S3D_IS_SIMD
         value[0][0] = _mm_set_ps( box3.mini.x, box2.mini.x, box1.mini.x, box0.mini.x );
         value[0][1] = _mm_set_ps( box3.mini.y, box2.mini.y, box1.mini.y, box0.mini.y );
         value[0][2] = _mm_set_ps( box3.mini.z, box2.mini.z, box1.mini.z, box0.mini.z );
@@ -2864,38 +2831,6 @@ public:
         value[1][0] = _mm_set_ps( box3.maxi.x, box2.maxi.x, box1.maxi.x, box0.maxi.x );
         value[1][1] = _mm_set_ps( box3.maxi.y, box2.maxi.y, box1.maxi.y, box0.maxi.y );
         value[1][2] = _mm_set_ps( box3.maxi.z, box2.maxi.z, box1.maxi.z, box0.maxi.z );
-    #else
-        value[0][0].m128_f32[0] = box0.mini.x;
-        value[0][0].m128_f32[1] = box1.mini.x;
-        value[0][0].m128_f32[2] = box2.mini.x;
-        value[0][0].m128_f32[3] = box3.mini.x;
-
-        value[0][1].m128_f32[0] = box0.mini.y;
-        value[0][1].m128_f32[1] = box1.mini.y;
-        value[0][1].m128_f32[2] = box2.mini.y;
-        value[0][1].m128_f32[3] = box3.mini.y;
-
-        value[0][2].m128_f32[0] = box0.mini.z;
-        value[0][2].m128_f32[1] = box1.mini.z;
-        value[0][2].m128_f32[2] = box2.mini.z;
-        value[0][2].m128_f32[3] = box3.mini.z;
-
-
-        value[1][0].m128_f32[0] = box0.maxi.x;
-        value[1][0].m128_f32[1] = box1.maxi.x;
-        value[1][0].m128_f32[2] = box2.maxi.x;
-        value[1][0].m128_f32[3] = box3.maxi.x;
-
-        value[1][1].m128_f32[0] = box0.maxi.y;
-        value[1][1].m128_f32[1] = box1.maxi.y;
-        value[1][1].m128_f32[2] = box2.maxi.y;
-        value[1][1].m128_f32[3] = box3.maxi.y;
-
-        value[1][2].m128_f32[0] = box0.maxi.z;
-        value[1][2].m128_f32[1] = box1.maxi.z;
-        value[1][2].m128_f32[2] = box2.maxi.z;
-        value[1][2].m128_f32[3] = box3.maxi.z;
-    #endif//S3D_IS_SIMD
     }
 
     //--------------------------------------------------------------------------------
@@ -2904,7 +2839,6 @@ public:
     S3D_INLINE
     BoundingBox4( const BoundingBox* box )
     {
-    #if S3D_IS_SIMD
         value[0][0] = _mm_set_ps( box[3].mini.x, box[2].mini.x, box[1].mini.x, box[0].mini.x );
         value[0][1] = _mm_set_ps( box[3].mini.y, box[2].mini.y, box[1].mini.y, box[0].mini.y );
         value[0][2] = _mm_set_ps( box[3].mini.z, box[2].mini.z, box[1].mini.z, box[0].mini.z );
@@ -2912,38 +2846,6 @@ public:
         value[1][0] = _mm_set_ps( box[3].maxi.x, box[2].maxi.x, box[1].maxi.x, box[0].maxi.x );
         value[1][1] = _mm_set_ps( box[3].maxi.y, box[2].maxi.y, box[1].maxi.y, box[0].maxi.y );
         value[1][2] = _mm_set_ps( box[3].maxi.z, box[2].maxi.z, box[1].maxi.z, box[0].maxi.z );
-    #else
-        value[0][0].m128_f32[0] = box[0].mini.x;
-        value[0][0].m128_f32[1] = box[1].mini.x;
-        value[0][0].m128_f32[2] = box[2].mini.x;
-        value[0][0].m128_f32[3] = box[3].mini.x;
-
-        value[0][1].m128_f32[0] = box[0].mini.y;
-        value[0][1].m128_f32[1] = box[1].mini.y;
-        value[0][1].m128_f32[2] = box[2].mini.y;
-        value[0][1].m128_f32[3] = box[3].mini.y;
-
-        value[0][2].m128_f32[0] = box[0].mini.z;
-        value[0][2].m128_f32[1] = box[1].mini.z;
-        value[0][2].m128_f32[2] = box[2].mini.z;
-        value[0][2].m128_f32[3] = box[3].mini.z;
-
-
-        value[1][0].m128_f32[0] = box[0].maxi.x;
-        value[1][0].m128_f32[1] = box[1].maxi.x;
-        value[1][0].m128_f32[2] = box[2].maxi.x;
-        value[1][0].m128_f32[3] = box[3].maxi.x;
-
-        value[1][1].m128_f32[0] = box[0].maxi.y;
-        value[1][1].m128_f32[1] = box[1].maxi.y;
-        value[1][1].m128_f32[2] = box[2].maxi.y;
-        value[1][1].m128_f32[3] = box[3].maxi.y;
-
-        value[1][2].m128_f32[0] = box[0].maxi.z;
-        value[1][2].m128_f32[1] = box[1].maxi.z;
-        value[1][2].m128_f32[2] = box[2].maxi.z;
-        value[1][2].m128_f32[3] = box[3].maxi.z;
-    #endif//S3D_IS_SIMD
     }
 
     //--------------------------------------------------------------------------------
@@ -2976,59 +2878,33 @@ public:
     S3D_INLINE
     bool IsHit( const Ray4& ray, s32& mask ) const
     {
-    #if S3D_IS_SIMD
-        b128 tmin = _mm_set1_ps( -F_HIT_MAX );
-        b128 tmax = _mm_set1_ps(  F_HIT_MAX );
+        auto tmin = _mm_set1_ps(  F_HIT_MAX );
+        auto tmax = _mm_set1_ps( -F_HIT_MAX );
 
-        s32 idx0, idx1;
+        auto flag = 0;
 
         for( auto i=0; i<3; ++i )
         {
-            idx0 = ray.sign[ i ];
-            idx1 = 1 - idx0;
-            tmin = _mm_max_ps( tmin, _mm_mul_ps( _mm_sub_ps( value[ idx0 ][ i ], ray.pos[ i ] ), ray.invDir[ i ] ) );
-            tmax = _mm_min_ps( tmax, _mm_mul_ps( _mm_sub_ps( value[ idx1 ][ i ], ray.pos[ i ] ), ray.invDir[ i ] ) );
-        }
+            auto t0 = _mm_mul_ps( _mm_sub_ps( value[ 0 ][ i ], ray.pos[ i ] ), ray.invDir[ i ] );
+            auto t1 = _mm_mul_ps( _mm_sub_ps( value[ 1 ][ i ], ray.pos[ i ] ), ray.invDir[ i ] );
 
-        mask = _mm_movemask_ps( _mm_cmpge_ps( tmax, tmin ) );
-        return ( mask > 0 );
-    #else
-        b128 tmin;
-        b128 tmax;
+            auto n = _mm_min_ps( t0, t1 );
+            auto f = _mm_max_ps( t0, t1 );
 
-        for( auto i=0; i<4; ++i)
-        {
-            tmin.m128_f32[i] = -F_HIT_MAX;
-            tmax.m128_f32[i] =  F_HIT_MAX;
-        }
+            tmin = _mm_max_ps( tmin, n );
+            tmax = _mm_min_ps( tmax, f );
 
-        s32 idx0, idx1;
-        b128 flg;
+            flag |= _mm_movemask_ps( _mm_cmpge_ps( tmin, tmax ) );
 
-        for( u32 j=0; j<3; ++j )
-        {
-            idx0 = ray.sign[ j ];
-            idx1 = 1 - idx0;
-            for ( u32 i=0; i<4; ++i )
+            if (flag == 0xf)
             {
-                auto t0 = ( value[ idx0 ][ j ].m128_f32[ i ] - ray.pos[ j ].m128_f32[ i ] ) * ray.invDir[ j ].m128_f32[ i ];
-                auto t1 = ( value[ idx1 ][ j ].m128_f32[ i ] - ray.pos[ j ].m128_f32[ i ] ) * ray.invDir[ j ].m128_f32[ i ];
-                tmin.m128_f32[ i ] = s3d::Max( tmin.m128_f32[ i ], t0 );
-                tmax.m128_f32[ i ] = s3d::Min( tmax.m128_f32[ i ], t1 );
+                mask = 0;
+                return false;
             }
         }
 
-        for( u32 i=0; i<4; ++i )
-        {
-            flg.m128_u32[ i ] = ( tmax.m128_f32[ i ] >= tmin.m128_f32[ i ] ) ? 0xffffffff : 0x0;
-        }
-
-        mask = ( (flg.m128_u32[3] > 0 ? 0x1 : 0 ) << 3
-               | (flg.m128_u32[2] > 0 ? 0x1 : 0 ) << 2
-               | (flg.m128_u32[1] > 0 ? 0x1 : 0 ) << 1
-               | (flg.m128_u32[0] > 0 ? 0x1 : 0 ) );
+        mask = flag ^ 0xf;
         return ( mask > 0 );
-    #endif
     }
 
     //--------------------------------------------------------------------------------
@@ -3055,57 +2931,15 @@ public:
     S3D_INLINE
     static BoundingBox4 Merge( const BoundingBox4& a, const BoundingBox4& b )
     {
-    #if S3D_IS_SIMD
-        b128 miniX = _mm_min_ps( a.value[0][0], b.value[0][0] );
-        b128 miniY = _mm_min_ps( a.value[0][1], b.value[0][1] );
-        b128 miniZ = _mm_min_ps( a.value[0][2], b.value[0][2] );
+        auto miniX = _mm_min_ps( a.value[0][0], b.value[0][0] );
+        auto miniY = _mm_min_ps( a.value[0][1], b.value[0][1] );
+        auto miniZ = _mm_min_ps( a.value[0][2], b.value[0][2] );
 
-        b128 maxiX = _mm_max_ps( a.value[1][0], b.value[1][0] );
-        b128 maxiY = _mm_max_ps( a.value[1][1], b.value[1][1] );
-        b128 maxiZ = _mm_max_ps( a.value[1][2], b.value[1][2] );
-
-        return BoundingBox4( miniX, miniY, miniZ, maxiX, maxiY, maxiZ );
-    #else
-        b128 miniX = { 
-            ( a.value[0][0].m128_f32[0] < b.value[0][0].m128_f32[0] ) ? a.value[0][0].m128_f32[0] : b.value[0][0].m128_f32[0],
-            ( a.value[0][0].m128_f32[1] < b.value[0][0].m128_f32[1] ) ? a.value[0][0].m128_f32[1] : b.value[0][0].m128_f32[1],
-            ( a.value[0][0].m128_f32[2] < b.value[0][0].m128_f32[2] ) ? a.value[0][0].m128_f32[2] : b.value[0][0].m128_f32[2],
-            ( a.value[0][0].m128_f32[3] < b.value[0][0].m128_f32[3] ) ? a.value[0][0].m128_f32[3] : b.value[0][0].m128_f32[3]
-        };
-        b128 miniY = { 
-            ( a.value[0][1].m128_f32[0] < b.value[0][1].m128_f32[0] ) ? a.value[0][1].m128_f32[0] : b.value[0][1].m128_f32[0],
-            ( a.value[0][1].m128_f32[1] < b.value[0][1].m128_f32[1] ) ? a.value[0][1].m128_f32[1] : b.value[0][1].m128_f32[1],
-            ( a.value[0][1].m128_f32[2] < b.value[0][1].m128_f32[2] ) ? a.value[0][1].m128_f32[2] : b.value[0][1].m128_f32[2],
-            ( a.value[0][1].m128_f32[3] < b.value[0][1].m128_f32[3] ) ? a.value[0][1].m128_f32[3] : b.value[0][1].m128_f32[3]
-        };
-        b128 miniZ = { 
-            ( a.value[0][2].m128_f32[0] < b.value[0][2].m128_f32[0] ) ? a.value[0][2].m128_f32[0] : b.value[0][2].m128_f32[0],
-            ( a.value[0][2].m128_f32[1] < b.value[0][2].m128_f32[1] ) ? a.value[0][2].m128_f32[1] : b.value[0][2].m128_f32[1],
-            ( a.value[0][2].m128_f32[2] < b.value[0][2].m128_f32[2] ) ? a.value[0][2].m128_f32[2] : b.value[0][2].m128_f32[2],
-            ( a.value[0][2].m128_f32[3] < b.value[0][2].m128_f32[3] ) ? a.value[0][2].m128_f32[3] : b.value[0][2].m128_f32[3]
-        };
-
-        b128 maxiX = { 
-            ( a.value[1][0].m128_f32[0] > b.value[1][0].m128_f32[0] ) ? a.value[1][0].m128_f32[0] : b.value[1][0].m128_f32[0],
-            ( a.value[1][0].m128_f32[1] > b.value[1][0].m128_f32[1] ) ? a.value[1][0].m128_f32[1] : b.value[1][0].m128_f32[1],
-            ( a.value[1][0].m128_f32[2] > b.value[1][0].m128_f32[2] ) ? a.value[1][0].m128_f32[2] : b.value[1][0].m128_f32[2],
-            ( a.value[1][0].m128_f32[3] > b.value[1][0].m128_f32[3] ) ? a.value[1][0].m128_f32[3] : b.value[1][0].m128_f32[3]
-        };
-        b128 maxiY = { 
-            ( a.value[1][1].m128_f32[0] > b.value[1][1].m128_f32[0] ) ? a.value[1][1].m128_f32[0] : b.value[1][1].m128_f32[0],
-            ( a.value[1][1].m128_f32[1] > b.value[1][1].m128_f32[1] ) ? a.value[1][1].m128_f32[1] : b.value[1][1].m128_f32[1],
-            ( a.value[1][1].m128_f32[2] > b.value[1][1].m128_f32[2] ) ? a.value[1][1].m128_f32[2] : b.value[1][1].m128_f32[2],
-            ( a.value[1][1].m128_f32[3] > b.value[1][1].m128_f32[3] ) ? a.value[1][1].m128_f32[3] : b.value[1][1].m128_f32[3]
-        };
-        b128 maxiZ = { 
-            ( a.value[1][2].m128_f32[0] > b.value[1][2].m128_f32[0] ) ? a.value[1][2].m128_f32[0] : b.value[1][2].m128_f32[0],
-            ( a.value[1][2].m128_f32[1] > b.value[1][2].m128_f32[1] ) ? a.value[1][2].m128_f32[1] : b.value[1][2].m128_f32[1],
-            ( a.value[1][2].m128_f32[2] > b.value[1][2].m128_f32[2] ) ? a.value[1][2].m128_f32[2] : b.value[1][2].m128_f32[2],
-            ( a.value[1][2].m128_f32[3] > b.value[1][2].m128_f32[3] ) ? a.value[1][2].m128_f32[3] : b.value[1][2].m128_f32[3]
-        };
+        auto maxiX = _mm_max_ps( a.value[1][0], b.value[1][0] );
+        auto maxiY = _mm_max_ps( a.value[1][1], b.value[1][1] );
+        auto maxiZ = _mm_max_ps( a.value[1][2], b.value[1][2] );
 
         return BoundingBox4( miniX, miniY, miniZ, maxiX, maxiY, maxiZ );
-#endif//S3D_IS_SIMD
     }
 };
 
@@ -3125,69 +2959,15 @@ public:
     S3D_INLINE
     BoundingBox8()
     {
-    #if ( S3D_IS_SIMD && S3D_IS_AVX )
-        value[0][0] = _mm256_set1_ps( F_MAX );
-        value[0][1] = _mm256_set1_ps( F_MAX );
-        value[0][2] = _mm256_set1_ps( F_MAX );
+        auto mini = _mm256_set1_ps(  F_MAX );
+        auto maxi = _mm256_set1_ps( -F_MAX );
+        value[0][0] = mini;
+        value[0][1] = mini;
+        value[0][2] = mini;
 
-        value[1][0] = _mm256_set1_ps( -F_MAX );
-        value[1][1] = _mm256_set1_ps( -F_MAX );
-        value[1][2] = _mm256_set1_ps( -F_MAX );
-    #else
-        value[0][0].m256_f32[0] = F_MAX;    // Empty
-        value[0][0].m256_f32[1] = F_MAX;    // Empty
-        value[0][0].m256_f32[2] = F_MAX;    // Empty
-        value[0][0].m256_f32[3] = F_MAX;    // Empty
-        value[0][0].m256_f32[4] = F_MAX;    // Empty
-        value[0][0].m256_f32[5] = F_MAX;    // Empty
-        value[0][0].m256_f32[6] = F_MAX;    // Empty
-        value[0][0].m256_f32[7] = F_MAX;    // Empty
-
-        value[0][1].m256_f32[0] = F_MAX;    // Empty
-        value[0][1].m256_f32[1] = F_MAX;    // Empty
-        value[0][1].m256_f32[2] = F_MAX;    // Empty
-        value[0][1].m256_f32[3] = F_MAX;    // Empty
-        value[0][1].m256_f32[4] = F_MAX;    // Empty
-        value[0][1].m256_f32[5] = F_MAX;    // Empty
-        value[0][1].m256_f32[6] = F_MAX;    // Empty
-        value[0][1].m256_f32[7] = F_MAX;    // Empty
-
-        value[0][2].m256_f32[0] = F_MAX;    // Empty
-        value[0][2].m256_f32[1] = F_MAX;    // Empty
-        value[0][2].m256_f32[2] = F_MAX;    // Empty
-        value[0][2].m256_f32[3] = F_MAX;    // Empty
-        value[0][2].m256_f32[4] = F_MAX;    // Empty
-        value[0][2].m256_f32[5] = F_MAX;    // Empty
-        value[0][2].m256_f32[6] = F_MAX;    // Empty
-        value[0][2].m256_f32[7] = F_MAX;    // Empty
-
-        value[1][0].m256_f32[0] = -F_MAX;    // Empty
-        value[1][0].m256_f32[1] = -F_MAX;    // Empty
-        value[1][0].m256_f32[2] = -F_MAX;    // Empty
-        value[1][0].m256_f32[3] = -F_MAX;    // Empty
-        value[1][0].m256_f32[4] = -F_MAX;    // Empty
-        value[1][0].m256_f32[5] = -F_MAX;    // Empty
-        value[1][0].m256_f32[6] = -F_MAX;    // Empty
-        value[1][0].m256_f32[7] = -F_MAX;    // Empty
-
-        value[1][1].m256_f32[0] = -F_MAX;    // Empty
-        value[1][1].m256_f32[1] = -F_MAX;    // Empty
-        value[1][1].m256_f32[2] = -F_MAX;    // Empty
-        value[1][1].m256_f32[3] = -F_MAX;    // Empty
-        value[1][1].m256_f32[4] = -F_MAX;    // Empty
-        value[1][1].m256_f32[5] = -F_MAX;    // Empty
-        value[1][1].m256_f32[6] = -F_MAX;    // Empty
-        value[1][1].m256_f32[7] = -F_MAX;    // Empty
-
-        value[1][2].m256_f32[0] = -F_MAX;    // Empty
-        value[1][2].m256_f32[1] = -F_MAX;    // Empty
-        value[1][2].m256_f32[2] = -F_MAX;    // Empty
-        value[1][2].m256_f32[3] = -F_MAX;    // Empty
-        value[1][2].m256_f32[4] = -F_MAX;    // Empty
-        value[1][2].m256_f32[5] = -F_MAX;    // Empty
-        value[1][2].m256_f32[6] = -F_MAX;    // Empty
-        value[1][2].m256_f32[7] = -F_MAX;    // Empty
-    #endif// ( S3D_IS_SIMD && S3D_IS_AVX )
+        value[1][0] = maxi;
+        value[1][1] = maxi;
+        value[1][2] = maxi;
     }
 
     //---------------------------------------------------------------------------------------------
@@ -3206,7 +2986,6 @@ public:
         const BoundingBox& box7
     )
     {
-    #if ( S3D_IS_SIMD && S3D_IS_AVX )
         value[0][0] = _mm256_set_ps( box7.mini.x, box6.mini.x, box5.mini.x, box4.mini.x, box3.mini.x, box2.mini.x, box1.mini.x, box0.mini.x );
         value[0][1] = _mm256_set_ps( box7.mini.y, box6.mini.y, box5.mini.y, box4.mini.y, box3.mini.y, box2.mini.y, box1.mini.y, box0.mini.y );
         value[0][2] = _mm256_set_ps( box7.mini.z, box6.mini.z, box5.mini.z, box4.mini.z, box3.mini.z, box2.mini.z, box1.mini.z, box0.mini.z );
@@ -3214,61 +2993,6 @@ public:
         value[1][0] = _mm256_set_ps( box7.maxi.x, box6.maxi.x, box5.maxi.x, box4.maxi.x, box3.maxi.x, box2.maxi.x, box1.maxi.x, box0.maxi.x );
         value[1][1] = _mm256_set_ps( box7.maxi.y, box6.maxi.y, box5.maxi.y, box4.maxi.y, box3.maxi.y, box2.maxi.y, box1.maxi.y, box0.maxi.y );
         value[1][2] = _mm256_set_ps( box7.maxi.z, box6.maxi.z, box5.maxi.z, box4.maxi.z, box3.maxi.z, box2.maxi.z, box1.maxi.z, box0.maxi.z );
-    #else
-        value[0][0].m256_f32[0] = box0.mini.x;
-        value[0][0].m256_f32[1] = box1.mini.x;
-        value[0][0].m256_f32[2] = box2.mini.x;
-        value[0][0].m256_f32[3] = box3.mini.x;
-        value[0][0].m256_f32[4] = box4.mini.x;
-        value[0][0].m256_f32[5] = box5.mini.x;
-        value[0][0].m256_f32[6] = box6.mini.x;
-        value[0][0].m256_f32[7] = box7.mini.x;
-
-        value[0][1].m256_f32[0] = box0.mini.y;
-        value[0][1].m256_f32[1] = box1.mini.y;
-        value[0][1].m256_f32[2] = box2.mini.y;
-        value[0][1].m256_f32[3] = box3.mini.y;
-        value[0][1].m256_f32[4] = box4.mini.y;
-        value[0][1].m256_f32[5] = box5.mini.y;
-        value[0][1].m256_f32[6] = box6.mini.y;
-        value[0][1].m256_f32[7] = box7.mini.y;
-
-        value[0][2].m256_f32[0] = box0.mini.z;
-        value[0][2].m256_f32[1] = box1.mini.z;
-        value[0][2].m256_f32[2] = box2.mini.z;
-        value[0][2].m256_f32[3] = box3.mini.z;
-        value[0][2].m256_f32[4] = box4.mini.z;
-        value[0][2].m256_f32[5] = box5.mini.z;
-        value[0][2].m256_f32[6] = box6.mini.z;
-        value[0][2].m256_f32[7] = box7.mini.z;
-
-        value[1][0].m256_f32[0] = box0.maxi.x;
-        value[1][0].m256_f32[1] = box1.maxi.x;
-        value[1][0].m256_f32[2] = box2.maxi.x;
-        value[1][0].m256_f32[3] = box3.maxi.x;
-        value[1][0].m256_f32[4] = box4.maxi.x;
-        value[1][0].m256_f32[5] = box5.maxi.x;
-        value[1][0].m256_f32[6] = box6.maxi.x; 
-        value[1][0].m256_f32[7] = box7.maxi.x;
-
-        value[1][1].m256_f32[0] = box0.maxi.y;
-        value[1][1].m256_f32[1] = box1.maxi.y;
-        value[1][1].m256_f32[2] = box2.maxi.y;
-        value[1][1].m256_f32[3] = box3.maxi.y;
-        value[1][1].m256_f32[4] = box4.maxi.y;
-        value[1][1].m256_f32[5] = box5.maxi.y;
-        value[1][1].m256_f32[6] = box6.maxi.y;
-        value[1][1].m256_f32[7] = box7.maxi.y;
-
-        value[1][2].m256_f32[0] = box0.maxi.z;
-        value[1][2].m256_f32[1] = box1.maxi.z;
-        value[1][2].m256_f32[2] = box2.maxi.z;
-        value[1][2].m256_f32[3] = box3.maxi.z;
-        value[1][2].m256_f32[4] = box4.maxi.z;
-        value[1][2].m256_f32[5] = box5.maxi.z;
-        value[1][2].m256_f32[6] = box6.maxi.z;
-        value[1][2].m256_f32[7] = box7.maxi.z;
-    #endif// ( S3D_IS_SIMD && S3D_IS_AVX )
     }
 
     //---------------------------------------------------------------------------------------------
@@ -3277,7 +3001,6 @@ public:
     S3D_INLINE
     BoundingBox8( const BoundingBox* box )
     {
-    #if ( S3D_IS_SIMD && S3D_IS_AVX )
         value[0][0] = _mm256_set_ps( box[7].mini.x, box[6].mini.x, box[5].mini.x, box[4].mini.x, box[3].mini.x, box[2].mini.x, box[1].mini.x, box[0].mini.x );
         value[0][1] = _mm256_set_ps( box[7].mini.y, box[6].mini.y, box[5].mini.y, box[4].mini.y, box[3].mini.y, box[2].mini.y, box[1].mini.y, box[0].mini.y );
         value[0][2] = _mm256_set_ps( box[7].mini.z, box[6].mini.z, box[5].mini.z, box[4].mini.z, box[3].mini.z, box[2].mini.z, box[1].mini.z, box[0].mini.z );
@@ -3285,61 +3008,6 @@ public:
         value[1][0] = _mm256_set_ps( box[7].maxi.x, box[6].maxi.x, box[5].maxi.x, box[4].maxi.x, box[3].maxi.x, box[2].maxi.x, box[1].maxi.x, box[0].maxi.x );
         value[1][1] = _mm256_set_ps( box[7].maxi.y, box[6].maxi.y, box[5].maxi.y, box[4].maxi.y, box[3].maxi.y, box[2].maxi.y, box[1].maxi.y, box[0].maxi.y );
         value[1][2] = _mm256_set_ps( box[7].maxi.z, box[6].maxi.z, box[5].maxi.z, box[4].maxi.z, box[3].maxi.z, box[2].maxi.z, box[1].maxi.z, box[0].maxi.z );
-    #else
-        value[0][0].m256_f32[0] = box[0].mini.x;
-        value[0][0].m256_f32[1] = box[1].mini.x;
-        value[0][0].m256_f32[2] = box[2].mini.x;
-        value[0][0].m256_f32[3] = box[3].mini.x;
-        value[0][0].m256_f32[4] = box[4].mini.x;
-        value[0][0].m256_f32[5] = box[5].mini.x;
-        value[0][0].m256_f32[6] = box[6].mini.x;
-        value[0][0].m256_f32[7] = box[7].mini.x;
-
-        value[0][1].m256_f32[0] = box[0].mini.y;
-        value[0][1].m256_f32[1] = box[1].mini.y;
-        value[0][1].m256_f32[2] = box[2].mini.y;
-        value[0][1].m256_f32[3] = box[3].mini.y;
-        value[0][1].m256_f32[4] = box[4].mini.y;
-        value[0][1].m256_f32[5] = box[5].mini.y;
-        value[0][1].m256_f32[6] = box[6].mini.y;
-        value[0][1].m256_f32[7] = box[7].mini.y;
-
-        value[0][2].m256_f32[0] = box[0].mini.z;
-        value[0][2].m256_f32[1] = box[1].mini.z;
-        value[0][2].m256_f32[2] = box[2].mini.z;
-        value[0][2].m256_f32[3] = box[3].mini.z;
-        value[0][2].m256_f32[4] = box[4].mini.z;
-        value[0][2].m256_f32[5] = box[5].mini.z;
-        value[0][2].m256_f32[6] = box[6].mini.z;
-        value[0][2].m256_f32[7] = box[7].mini.z;
-
-        value[1][0].m256_f32[0] = box[0].maxi.x;
-        value[1][0].m256_f32[1] = box[1].maxi.x;
-        value[1][0].m256_f32[2] = box[2].maxi.x;
-        value[1][0].m256_f32[3] = box[3].maxi.x;
-        value[1][0].m256_f32[4] = box[4].maxi.x;
-        value[1][0].m256_f32[5] = box[5].maxi.x;
-        value[1][0].m256_f32[6] = box[6].maxi.x; 
-        value[1][0].m256_f32[7] = box[7].maxi.x;
-
-        value[1][1].m256_f32[0] = box[0].maxi.y;
-        value[1][1].m256_f32[1] = box[1].maxi.y;
-        value[1][1].m256_f32[2] = box[2].maxi.y;
-        value[1][1].m256_f32[3] = box[3].maxi.y;
-        value[1][1].m256_f32[4] = box[4].maxi.y;
-        value[1][1].m256_f32[5] = box[5].maxi.y;
-        value[1][1].m256_f32[6] = box[6].maxi.y;
-        value[1][1].m256_f32[7] = box[7].maxi.y;
-
-        value[1][2].m256_f32[0] = box[0].maxi.z;
-        value[1][2].m256_f32[1] = box[1].maxi.z;
-        value[1][2].m256_f32[2] = box[2].maxi.z;
-        value[1][2].m256_f32[3] = box[3].maxi.z;
-        value[1][2].m256_f32[4] = box[4].maxi.z;
-        value[1][2].m256_f32[5] = box[5].maxi.z;
-        value[1][2].m256_f32[6] = box[6].maxi.z;
-        value[1][2].m256_f32[7] = box[7].maxi.z;
-    #endif// ( S3D_IS_SIMD && S3D_IS_AVX )
     }
 
     //---------------------------------------------------------------------------------------------
@@ -3371,77 +3039,32 @@ public:
     //---------------------------------------------------------------------------------------------
     bool IsHit( const Ray8& ray, s32& mask ) const
     {
-    #if ( S3D_IS_SIMD && S3D_IS_AVX )
-        b256 tmin = _mm256_set1_ps( -F_HIT_MAX );
-        b256 tmax = _mm256_set1_ps(  F_HIT_MAX );
+        auto tmin = _mm256_set1_ps( -F_HIT_MAX );
+        auto tmax = _mm256_set1_ps(  F_HIT_MAX );
 
-        s32 idx0, idx1;
+        auto flag = 0;
 
         for( auto i=0; i<3; ++i )
         {
-            idx0 = ray.sign[ i ];
-            idx1 = 1 - idx0;
-            tmin = _mm256_max_ps( tmin, _mm256_mul_ps( _mm256_sub_ps( value[ idx0 ][ i ], ray.pos[ i ] ), ray.invDir[ i ] ) );
-            tmax = _mm256_min_ps( tmax, _mm256_mul_ps( _mm256_sub_ps( value[ idx1 ][ i ], ray.pos[ i ] ), ray.invDir[ i ] ) );
+            auto t0 = _mm256_mul_ps( _mm256_sub_ps( value[ 0 ][ i ], ray.pos[ i ] ), ray.invDir[ i ] );
+            auto t1 = _mm256_mul_ps( _mm256_sub_ps( value[ 1 ][ i ], ray.pos[ i ] ), ray.invDir[ i ] );
+
+            auto n = _mm256_min_ps( t0, t1 );
+            auto f = _mm256_max_ps( t0, t1 );
+
+            tmin = _mm256_max_ps( tmin, n );
+            tmax = _mm256_min_ps( tmax, f );
+
+            flag |= _mm256_movemask_ps( _mm256_cmp_ps( tmin, tmax, _CMP_GE_OS ) );
+            if (flag == 0xff)
+            {
+                mask = 0;
+                return false;
+            }
         }
 
-        mask = _mm256_movemask_ps( _mm256_cmp_ps( tmax, tmin, _CMP_GE_OS ) );
+        mask = flag ^ 0xff;
         return ( mask > 0 );
-    #else
-        b256 tmin = { F_HIT_MIN, F_HIT_MIN, F_HIT_MIN, F_HIT_MIN, F_HIT_MIN, F_HIT_MIN, F_HIT_MIN, F_HIT_MIN };
-        b256 tmax = { F_HIT_MAX, F_HIT_MAX, F_HIT_MAX, F_HIT_MAX, F_HIT_MAX, F_HIT_MAX, F_HIT_MAX, F_HIT_MAX };
-
-        s32 idx0, idx1;
-
-        // X軸
-        idx0 = ray.sign[ 0 ];
-        idx1 = 1 - idx0;
-        for ( u32 i=0; i<8; ++i )
-        {
-            tmin.m256_f32[ i ] = s3d::Max( tmin.m256_f32[ i ], ( value[ idx0 ][ 0 ].m256_f32[ i ] - ray.pos[ 0 ].m256_f32[ i ] ) * ray.invDir[ 0 ].m256_f32[ i ] );
-            tmax.m256_f32[ i ] = s3d::Min( tmax.m256_f32[ i ], ( value[ idx1 ][ 0 ].m256_f32[ i ] - ray.pos[ 0 ].m256_f32[ i ] ) * ray.invDir[ 0 ].m256_f32[ i ] );
-        }
-
-        // Y軸
-        idx0 = ray.sign[ 1 ];
-        idx1 = 1 - idx0;
-        for ( u32 i=0; i<8; ++i )
-        {
-            tmin.m256_f32[ i ] = s3d::Max( tmin.m256_f32[ i ], ( value[ idx0 ][ 1 ].m256_f32[ i ] - ray.pos[ 1 ].m256_f32[ i ] ) * ray.invDir[ 1 ].m256_f32[ i ] );
-            tmax.m256_f32[ i ] = s3d::Min( tmax.m256_f32[ i ], ( value[ idx1 ][ 1 ].m256_f32[ i ] - ray.pos[ 1 ].m256_f32[ i ] ) * ray.invDir[ 1 ].m256_f32[ i ] );
-        }
-
-        // Z軸
-        idx0 = ray.sign[ 2 ];
-        idx1 = 1 - idx0;
-        for ( u32 i=0; i<8; ++i )
-        {
-            tmin.m256_f32[ i ] = s3d::Max( tmin.m256_f32[ i ], ( value[ idx0 ][ 2 ].m256_f32[ i ] - ray.pos[ 2 ].m256_f32[ i ] ) * ray.invDir[ 2 ].m256_f32[ i ] );
-            tmax.m256_f32[ i ] = s3d::Min( tmax.m256_f32[ i ], ( value[ idx1 ][ 2 ].m256_f32[ i ] - ray.pos[ 2 ].m256_f32[ i ] ) * ray.invDir[ 2 ].m256_f32[ i ] );
-        }
-
-        b256i flg;
-        flg.m256i_u32[0] = ( tmax.m256_f32[ 0 ] >= tmin.m256_f32[ 0 ] ) ? 0xffffffff : 0x0;
-        flg.m256i_u32[1] = ( tmax.m256_f32[ 1 ] >= tmin.m256_f32[ 1 ] ) ? 0xffffffff : 0x0;
-        flg.m256i_u32[2] = ( tmax.m256_f32[ 2 ] >= tmin.m256_f32[ 2 ] ) ? 0xffffffff : 0x0;
-        flg.m256i_u32[3] = ( tmax.m256_f32[ 3 ] >= tmin.m256_f32[ 3 ] ) ? 0xffffffff : 0x0;
-        flg.m256i_u32[4] = ( tmax.m256_f32[ 4 ] >= tmin.m256_f32[ 4 ] ) ? 0xffffffff : 0x0;
-        flg.m256i_u32[5] = ( tmax.m256_f32[ 5 ] >= tmin.m256_f32[ 5 ] ) ? 0xffffffff : 0x0;
-        flg.m256i_u32[6] = ( tmax.m256_f32[ 6 ] >= tmin.m256_f32[ 6 ] ) ? 0xffffffff : 0x0;
-        flg.m256i_u32[7] = ( tmax.m256_f32[ 7 ] >= tmin.m256_f32[ 7 ] ) ? 0xffffffff : 0x0;
-
-        mask = (
-              ( (flg.m256i_u32[7] > 0 ? 1 : 0 ) << 7 )
-            | ( (flg.m256i_u32[6] > 0 ? 1 : 0 ) << 6 )
-            | ( (flg.m256i_u32[5] > 0 ? 1 : 0 ) << 5 )
-            | ( (flg.m256i_u32[4] > 0 ? 1 : 0 ) << 4 )
-            | ( (flg.m256i_u32[3] > 0 ? 1 : 0 ) << 3 )
-            | ( (flg.m256i_u32[2] > 0 ? 1 : 0 ) << 2 )
-            | ( (flg.m256i_u32[1] > 0 ? 1 : 0 ) << 1 )
-            | ( (flg.m256i_u32[0] > 0 ? 1 : 0 ) ) );
-
-        return ( mask > 0 );
-    #endif// ( S3D_IS_SIMD && S3D_IS_AVX )
     }
 
     //---------------------------------------------------------------------------------------------
@@ -3468,81 +3091,15 @@ public:
     S3D_INLINE
     static BoundingBox8 Merge( const BoundingBox8& a, const BoundingBox8& b )
     {
-    #if ( S3D_IS_SIMD && S3D_IS_AVX )
-        b256 miniX = _mm256_min_ps( a.value[0][0], b.value[0][0] );
-        b256 miniY = _mm256_min_ps( a.value[0][1], b.value[0][1] );
-        b256 miniZ = _mm256_min_ps( a.value[0][2], b.value[0][2] );
+        auto miniX = _mm256_min_ps( a.value[0][0], b.value[0][0] );
+        auto miniY = _mm256_min_ps( a.value[0][1], b.value[0][1] );
+        auto miniZ = _mm256_min_ps( a.value[0][2], b.value[0][2] );
 
-        b256 maxiX = _mm256_max_ps( a.value[1][0], b.value[1][0] );
-        b256 maxiY = _mm256_max_ps( a.value[1][1], b.value[1][1] );
-        b256 maxiZ = _mm256_max_ps( a.value[1][2], b.value[1][2] );
-
-        return BoundingBox8( miniX, miniY, miniZ, maxiX, maxiY, maxiZ );
-    #else
-        b256 miniX = { 
-            ( a.value[0][0].m256_f32[0] < b.value[0][0].m256_f32[0] ) ? a.value[0][0].m256_f32[0] : b.value[0][0].m256_f32[0],
-            ( a.value[0][0].m256_f32[1] < b.value[0][0].m256_f32[1] ) ? a.value[0][0].m256_f32[1] : b.value[0][0].m256_f32[1],
-            ( a.value[0][0].m256_f32[2] < b.value[0][0].m256_f32[2] ) ? a.value[0][0].m256_f32[2] : b.value[0][0].m256_f32[2],
-            ( a.value[0][0].m256_f32[3] < b.value[0][0].m256_f32[3] ) ? a.value[0][0].m256_f32[3] : b.value[0][0].m256_f32[3],
-            ( a.value[0][0].m256_f32[4] < b.value[0][0].m256_f32[4] ) ? a.value[0][0].m256_f32[4] : b.value[0][0].m256_f32[4],
-            ( a.value[0][0].m256_f32[5] < b.value[0][0].m256_f32[5] ) ? a.value[0][0].m256_f32[5] : b.value[0][0].m256_f32[5],
-            ( a.value[0][0].m256_f32[6] < b.value[0][0].m256_f32[6] ) ? a.value[0][0].m256_f32[6] : b.value[0][0].m256_f32[6],
-            ( a.value[0][0].m256_f32[7] < b.value[0][0].m256_f32[7] ) ? a.value[0][0].m256_f32[7] : b.value[0][0].m256_f32[7]
-        };
-        b256 miniY = { 
-            ( a.value[0][1].m256_f32[0] < b.value[0][1].m256_f32[0] ) ? a.value[0][1].m256_f32[0] : b.value[0][1].m256_f32[0],
-            ( a.value[0][1].m256_f32[1] < b.value[0][1].m256_f32[1] ) ? a.value[0][1].m256_f32[1] : b.value[0][1].m256_f32[1],
-            ( a.value[0][1].m256_f32[2] < b.value[0][1].m256_f32[2] ) ? a.value[0][1].m256_f32[2] : b.value[0][1].m256_f32[2],
-            ( a.value[0][1].m256_f32[3] < b.value[0][1].m256_f32[3] ) ? a.value[0][1].m256_f32[3] : b.value[0][1].m256_f32[3],
-            ( a.value[0][1].m256_f32[4] < b.value[0][1].m256_f32[4] ) ? a.value[0][1].m256_f32[4] : b.value[0][1].m256_f32[4],
-            ( a.value[0][1].m256_f32[5] < b.value[0][1].m256_f32[5] ) ? a.value[0][1].m256_f32[5] : b.value[0][1].m256_f32[5],
-            ( a.value[0][1].m256_f32[6] < b.value[0][1].m256_f32[6] ) ? a.value[0][1].m256_f32[6] : b.value[0][1].m256_f32[6],
-            ( a.value[0][1].m256_f32[7] < b.value[0][1].m256_f32[7] ) ? a.value[0][1].m256_f32[7] : b.value[0][1].m256_f32[7]
-        };
-        b256 miniZ = { 
-            ( a.value[0][2].m256_f32[0] < b.value[0][2].m256_f32[0] ) ? a.value[0][2].m256_f32[0] : b.value[0][2].m256_f32[0],
-            ( a.value[0][2].m256_f32[1] < b.value[0][2].m256_f32[1] ) ? a.value[0][2].m256_f32[1] : b.value[0][2].m256_f32[1],
-            ( a.value[0][2].m256_f32[2] < b.value[0][2].m256_f32[2] ) ? a.value[0][2].m256_f32[2] : b.value[0][2].m256_f32[2],
-            ( a.value[0][2].m256_f32[3] < b.value[0][2].m256_f32[3] ) ? a.value[0][2].m256_f32[3] : b.value[0][2].m256_f32[3],
-            ( a.value[0][2].m256_f32[4] < b.value[0][2].m256_f32[4] ) ? a.value[0][2].m256_f32[4] : b.value[0][2].m256_f32[4],
-            ( a.value[0][2].m256_f32[5] < b.value[0][2].m256_f32[5] ) ? a.value[0][2].m256_f32[5] : b.value[0][2].m256_f32[5],
-            ( a.value[0][2].m256_f32[6] < b.value[0][2].m256_f32[6] ) ? a.value[0][2].m256_f32[6] : b.value[0][2].m256_f32[6],
-            ( a.value[0][2].m256_f32[7] < b.value[0][2].m256_f32[7] ) ? a.value[0][2].m256_f32[7] : b.value[0][2].m256_f32[7]
-        };
-
-        b256 maxiX = { 
-            ( a.value[1][0].m256_f32[0] > b.value[1][0].m256_f32[0] ) ? a.value[1][0].m256_f32[0] : b.value[1][0].m256_f32[0],
-            ( a.value[1][0].m256_f32[1] > b.value[1][0].m256_f32[1] ) ? a.value[1][0].m256_f32[1] : b.value[1][0].m256_f32[1],
-            ( a.value[1][0].m256_f32[2] > b.value[1][0].m256_f32[2] ) ? a.value[1][0].m256_f32[2] : b.value[1][0].m256_f32[2],
-            ( a.value[1][0].m256_f32[3] > b.value[1][0].m256_f32[3] ) ? a.value[1][0].m256_f32[3] : b.value[1][0].m256_f32[3],
-            ( a.value[1][0].m256_f32[4] > b.value[1][0].m256_f32[4] ) ? a.value[1][0].m256_f32[4] : b.value[1][0].m256_f32[4],
-            ( a.value[1][0].m256_f32[5] > b.value[1][0].m256_f32[5] ) ? a.value[1][0].m256_f32[5] : b.value[1][0].m256_f32[5],
-            ( a.value[1][0].m256_f32[6] > b.value[1][0].m256_f32[6] ) ? a.value[1][0].m256_f32[6] : b.value[1][0].m256_f32[6],
-            ( a.value[1][0].m256_f32[7] > b.value[1][0].m256_f32[7] ) ? a.value[1][0].m256_f32[7] : b.value[1][0].m256_f32[7]
-        };
-        b256 maxiY = { 
-            ( a.value[1][1].m256_f32[0] > b.value[1][1].m256_f32[0] ) ? a.value[1][1].m256_f32[0] : b.value[1][1].m256_f32[0],
-            ( a.value[1][1].m256_f32[1] > b.value[1][1].m256_f32[1] ) ? a.value[1][1].m256_f32[1] : b.value[1][1].m256_f32[1],
-            ( a.value[1][1].m256_f32[2] > b.value[1][1].m256_f32[2] ) ? a.value[1][1].m256_f32[2] : b.value[1][1].m256_f32[2],
-            ( a.value[1][1].m256_f32[3] > b.value[1][1].m256_f32[3] ) ? a.value[1][1].m256_f32[3] : b.value[1][1].m256_f32[3],
-            ( a.value[1][1].m256_f32[4] > b.value[1][1].m256_f32[4] ) ? a.value[1][1].m256_f32[4] : b.value[1][1].m256_f32[4],
-            ( a.value[1][1].m256_f32[5] > b.value[1][1].m256_f32[5] ) ? a.value[1][1].m256_f32[5] : b.value[1][1].m256_f32[5],
-            ( a.value[1][1].m256_f32[6] > b.value[1][1].m256_f32[6] ) ? a.value[1][1].m256_f32[6] : b.value[1][1].m256_f32[6],
-            ( a.value[1][1].m256_f32[7] > b.value[1][1].m256_f32[7] ) ? a.value[1][1].m256_f32[7] : b.value[1][1].m256_f32[7]
-        };
-        b256 maxiZ = { 
-            ( a.value[1][2].m256_f32[0] > b.value[1][2].m256_f32[0] ) ? a.value[1][2].m256_f32[0] : b.value[1][2].m256_f32[0],
-            ( a.value[1][2].m256_f32[1] > b.value[1][2].m256_f32[1] ) ? a.value[1][2].m256_f32[1] : b.value[1][2].m256_f32[1],
-            ( a.value[1][2].m256_f32[2] > b.value[1][2].m256_f32[2] ) ? a.value[1][2].m256_f32[2] : b.value[1][2].m256_f32[2],
-            ( a.value[1][2].m256_f32[3] > b.value[1][2].m256_f32[3] ) ? a.value[1][2].m256_f32[3] : b.value[1][2].m256_f32[3],
-            ( a.value[1][2].m256_f32[4] > b.value[1][2].m256_f32[4] ) ? a.value[1][2].m256_f32[4] : b.value[1][2].m256_f32[4],
-            ( a.value[1][2].m256_f32[5] > b.value[1][2].m256_f32[5] ) ? a.value[1][2].m256_f32[5] : b.value[1][2].m256_f32[5],
-            ( a.value[1][2].m256_f32[6] > b.value[1][2].m256_f32[6] ) ? a.value[1][2].m256_f32[6] : b.value[1][2].m256_f32[6],
-            ( a.value[1][2].m256_f32[7] > b.value[1][2].m256_f32[7] ) ? a.value[1][2].m256_f32[7] : b.value[1][2].m256_f32[7]
-        };
+        auto maxiX = _mm256_max_ps( a.value[1][0], b.value[1][0] );
+        auto maxiY = _mm256_max_ps( a.value[1][1], b.value[1][1] );
+        auto maxiZ = _mm256_max_ps( a.value[1][2], b.value[1][2] );
 
         return BoundingBox8( miniX, miniY, miniZ, maxiX, maxiY, maxiZ );
-    #endif// ( S3D_IS_SIMD && S3D_IS_AVX )
     }
 };
 
@@ -3756,10 +3313,10 @@ public:
 S3D_INLINE
 f32 SurfaceArea( const Vector3& a, const Vector3& b, const Vector3& c )
 {
-   f32 X = ( b.y - a.y ) * ( c.z - a.z ) - ( c.y - a.y ) * ( b.z - a.z );
-   f32 Y = ( b.z - a.z ) * ( c.x - a.x ) - ( c.z - a.z ) * ( b.x - a.x );
-   f32 Z = ( b.x - a.x ) * ( c.y - a.y ) - ( c.x - a.x ) * ( b.y - a.y );
-   return 0.5f * sqrtf( ( X * X ) + ( Y * Y ) + ( Z * Z ) );
+    auto X = ( b.y - a.y ) * ( c.z - a.z ) - ( c.y - a.y ) * ( b.z - a.z );
+    auto Y = ( b.z - a.z ) * ( c.x - a.x ) - ( c.z - a.z ) * ( b.x - a.x );
+    auto Z = ( b.x - a.x ) * ( c.y - a.y ) - ( c.x - a.x ) * ( b.y - a.y );
+    return 0.5f * sqrtf( ( X * X ) + ( Y * Y ) + ( Z * Z ) );
 }
 
 //------------------------------------------------------------------------------------------
@@ -3768,9 +3325,9 @@ f32 SurfaceArea( const Vector3& a, const Vector3& b, const Vector3& c )
 S3D_INLINE
 f32 SurfaceArea( const BoundingBox& box )
 {
-    f32 X = fabs( box.maxi.x - box.mini.x );
-    f32 Y = fabs( box.maxi.y - box.mini.y );
-    f32 Z = fabs( box.maxi.z - box.mini.z );
+    auto X = fabs( box.maxi.x - box.mini.x );
+    auto Y = fabs( box.maxi.y - box.mini.y );
+    auto Z = fabs( box.maxi.z - box.mini.z );
     return 2.0f * ( ( X * Y ) + ( X * Z ) + ( Y * Z ) );
 }
 

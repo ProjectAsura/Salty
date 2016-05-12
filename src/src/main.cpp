@@ -45,7 +45,7 @@ int main( int argc, char **argv )
         config.Height         = 256;
         config.SampleCount    = 4096;
         config.SubSampleCount = 1;
-        config.MaxBounceCount = 8;
+        config.MaxBounceCount = 4;
     #endif
 
         s3d::PathTracer renderer;

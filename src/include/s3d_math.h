@@ -12,7 +12,6 @@
 #include <cmath>
 #include <cfloat>
 #include <cassert>
-#include <cstdio>
 
 
 namespace s3d {
@@ -260,10 +259,16 @@ public:
     , y( value.y )
     { /* DO_NOTHING */ }
 
+    //---------------------------------------------------------------------------------------------
+    //! @brief
+    //---------------------------------------------------------------------------------------------
     S3D_INLINE
     operator float* ()
     { return &x; }
 
+    //---------------------------------------------------------------------------------------------
+    //! @brief
+    //---------------------------------------------------------------------------------------------
     S3D_INLINE
     operator const float* () const
     { return &x; }
@@ -526,8 +531,19 @@ public:
             ( a.y > b.y ) ? a.y : b.y );
     }
 
+    //---------------------------------------------------------------------------------------------
+    //! @brief
+    //---------------------------------------------------------------------------------------------
     static Vector2 Transform      ( const Vector2& position, const Matrix& matrix );
+
+    //---------------------------------------------------------------------------------------------
+    //! @brief
+    //---------------------------------------------------------------------------------------------
     static Vector2 TransformNormal( const Vector2& normal,   const Matrix& matrix );
+
+    //---------------------------------------------------------------------------------------------
+    //! @brief
+    //---------------------------------------------------------------------------------------------
     static Vector2 TransformCoord ( const Vector2& coord,    const Matrix& matrix );
 };
 
@@ -582,10 +598,16 @@ public:
     , z( value.z )
     { /* DO_NOTHING */ }
 
+    //---------------------------------------------------------------------------------------------
+    //! @brief      キャスト演算です.
+    //---------------------------------------------------------------------------------------------
     S3D_INLINE
     operator float* ()
     { return &x; }
 
+    //---------------------------------------------------------------------------------------------
+    //! @brief      キャスト演算です.
+    //---------------------------------------------------------------------------------------------
     S3D_INLINE
     operator const float* () const
     { return &x; }
@@ -735,6 +757,9 @@ public:
             z - b.z);
     }
 
+    //---------------------------------------------------------------------------------------------
+    //! @brief      加算演算子です.
+    //---------------------------------------------------------------------------------------------
     S3D_INLINE
     Vector3 operator + ( const f32 b ) const
     {
@@ -743,6 +768,9 @@ public:
             y + b,
             z + b );
     }
+    //---------------------------------------------------------------------------------------------
+    //! @brief      減算演算子です.
+    //--------------------------------------------------------------------------------------------
 
     S3D_INLINE
     Vector3 operator - ( const f32 b ) const
@@ -778,6 +806,9 @@ public:
             z / b);
     }
 
+    //---------------------------------------------------------------------------------------------
+    //! @brief      乗算演算子です.
+    //---------------------------------------------------------------------------------------------
     S3D_INLINE
     Vector3 operator * ( const Vector3& v ) const
     {
@@ -787,6 +818,9 @@ public:
             z * v.z );
     }
 
+    //---------------------------------------------------------------------------------------------
+    //! @brief      除算演算子です.
+    //---------------------------------------------------------------------------------------------
     S3D_INLINE
     Vector3 operator / ( const Vector3& v ) const
     {
@@ -968,9 +1002,20 @@ public:
         { return Vector3::UnitVector( n2a + n2b ); }
     }
 
-    static Vector3 Transform      ( const Vector3& position, const Matrix& matrix );
-    static Vector3 TransformNormal( const Vector3& normal,   const Matrix& matrix );
-    static Vector3 TransformCoord ( const Vector3& coord,    const Matrix& matrix );
+    //---------------------------------------------------------------------------------------------
+    //! @brief      指定行列で変換します.
+    //---------------------------------------------------------------------------------------------
+    static Vector3 Transform( const Vector3& position, const Matrix& matrix );
+
+    //---------------------------------------------------------------------------------------------
+    //! @brief      指定行列で法線ベクトルを変換します.
+    //---------------------------------------------------------------------------------------------
+    static Vector3 TransformNormal( const Vector3& normal, const Matrix& matrix );
+
+    //---------------------------------------------------------------------------------------------
+    //! @brief      指定行列で変換し，w = 1 に射影します.
+    //---------------------------------------------------------------------------------------------
+    static Vector3 TransformCoord ( const Vector3& coord, const Matrix& matrix );
 };
 
 //------------------------------------------------------------------------------------------
@@ -980,14 +1025,23 @@ S3D_INLINE
 Vector3 operator * (const f32 f, const Vector3 &v)
 { return v * f; }
 
+//------------------------------------------------------------------------------------------
+//! @brief      除算演算子です.
+//------------------------------------------------------------------------------------------
 S3D_INLINE
 Vector3 operator / ( const f32 f, const Vector3& v )
 { return Vector3( f / v.x, f / v.y, f / v.z ); }
 
+//------------------------------------------------------------------------------------------
+//! @brief      加算演算子です.
+//------------------------------------------------------------------------------------------
 S3D_INLINE
 Vector3 operator + ( const f32 f, const Vector3& v)
 { return Vector3( f + v.x, f + v.y, f + v.z ); }
 
+//------------------------------------------------------------------------------------------
+//! @brief      減算演算子です.
+//------------------------------------------------------------------------------------------
 S3D_INLINE
 Vector3 operator - ( const f32 f, const Vector3& v )
 { return Vector3( f - v.x, f - v.y, f - v.z ); }
@@ -1025,9 +1079,7 @@ public:
     S3D_INLINE
     Vector4( const f32 nx, const f32 ny, const f32 nz, const f32 nw ) 
     : v( _mm_set_ps( nw, nz, ny, nx ) )
-    {
-        /* DO_NOTHING */
-    }
+    { /* DO_NOTHING */ }
 
     //---------------------------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです.
@@ -1035,9 +1087,7 @@ public:
     S3D_INLINE
     Vector4( const Vector3& val, const f32 nw )
     : v( _mm_set_ps( nw, val.z, val.y, val.x ) )
-    {
-        /* DO_NOTHING */
-    }
+    { /* DO_NOTHING */ }
 
     //---------------------------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです.
@@ -1100,7 +1150,7 @@ public:
     S3D_INLINE
     bool operator == ( const Vector4& b ) const
     {
-        b128 c = _mm_cmpeq_ps( v, b.v );
+        auto c = _mm_cmpeq_ps( v, b.v );
         return ((_mm_movemask_ps(c) == 0x0f) != 0);
     }
 
@@ -1110,7 +1160,7 @@ public:
     S3D_INLINE
     bool operator != ( const Vector4& b ) const
     {
-        b128 c = _mm_cmpneq_ps( v, b.v );
+        auto c = _mm_cmpneq_ps( v, b.v );
         return ((_mm_movemask_ps(c)) != 0);
     }
 
@@ -1150,7 +1200,7 @@ public:
     S3D_INLINE
     Vector4& operator *= ( const f32 b )
     {
-        b128 c = _mm_set_ps( b, b, b, b );
+        auto c = _mm_set_ps( b, b, b, b );
         v = _mm_mul_ps( v, c );
         return (*this);
     }
@@ -1162,7 +1212,7 @@ public:
     Vector4& operator /= ( const f32 b )
     {
         assert( !IsZero( b ) );
-        b128 c = _mm_set_ps( b, b, b, b );
+        auto c = _mm_set_ps( b, b, b, b );
         v = _mm_div_ps( v, c );
         return (*this);
     }
@@ -1204,18 +1254,27 @@ public:
         return Vector4( _mm_sub_ps( v, b.v ) );
     }
 
+    //---------------------------------------------------------------------------------------------
+    //! @brief      乗算演算子です.
+    //--------------------------------------------------------------------------------------------
     S3D_INLINE
     Vector4 operator * (const Vector4 &b) const
     {
         return Vector4( _mm_mul_ps( v, b.v ) );
     }
 
+    //---------------------------------------------------------------------------------------------
+    //! @brief      除算演算子です.
+    //---------------------------------------------------------------------------------------------
     S3D_INLINE
     Vector4 operator / ( const Vector4& b) const
     {
         return Vector4( _mm_div_ps( v, b.v ) );
     }
 
+    //---------------------------------------------------------------------------------------------
+    //! @brief      加算演算子です.
+    //---------------------------------------------------------------------------------------------
     S3D_INLINE
     Vector4 operator + ( const f32 b ) const
     {
@@ -1223,6 +1282,9 @@ public:
         return Vector4( _mm_add_ps( v, s ) );
     }
 
+    //---------------------------------------------------------------------------------------------
+    //! @brief      減算演算子です.
+    //--------------------------------------------------------------------------------------------
     S3D_INLINE
     Vector4 operator - ( const f32 b ) const
     {
@@ -1275,10 +1337,9 @@ public:
     S3D_INLINE
     void Normalize()
     {
-        auto mag = sqrtf( Dot( v, v ) );
-        assert( mag > 0.0f );
-        b128 c = _mm_set1_ps( mag );
-        v = _mm_div_ps( v, c );
+        auto mag = _mm_dp_ps( v, v, 0xff );
+        mag = _mm_sqrt_ps(mag);
+        v = _mm_div_ps( v, mag );
     }
 
     //---------------------------------------------------------------------------------------------
@@ -1290,7 +1351,7 @@ public:
         auto mag = sqrtf( Dot( v, v) );
         if ( mag > 0.0f )
         {
-            b128 c = _mm_set1_ps( mag );
+            auto c = _mm_set1_ps( mag );
             v = _mm_div_ps( v, c );
         }
     }
@@ -1301,10 +1362,9 @@ public:
     static S3D_INLINE
     Vector4 UnitVector (const Vector4 &v)
     {
-        auto mag = sqrtf( Dot( v, v ) );
-        assert( mag > 0.0f );
-        b128 c = _mm_set1_ps( mag );
-        return Vector4( _mm_div_ps( v.v, c ) );
+        auto mag = _mm_dp_ps( v.v, v.v, 0xff );
+        mag = _mm_sqrt_ps( mag );
+        return Vector4( _mm_div_ps( v.v, mag ) );
     }
 
     //---------------------------------------------------------------------------------------------
@@ -1316,7 +1376,7 @@ public:
         auto mag = sqrtf( Dot( v, v ) );
         if ( mag > 0.0f )
         {
-            b128 c = _mm_set1_ps( mag );
+            auto c = _mm_set1_ps( mag );
             return Vector4( _mm_div_ps( v.v, c ) );
         }
         return v;
@@ -1347,9 +1407,9 @@ public:
     static S3D_INLINE
     Vector4 Reflect( const Vector4& i, const Vector4& n )
     {
-        register f32 _2dot = 2.0f * Dot( i, n );
-        b128 c = _mm_set1_ps( _2dot );
-        b128 b = _mm_mul_ps( c, n.v );
+        auto _2dot = 2.0f * Dot( i, n );
+        auto c = _mm_set1_ps( _2dot );
+        auto b = _mm_mul_ps( c, n.v );
         return Vector4( _mm_sub_ps( i.v, b ) );
     }
 
@@ -1371,6 +1431,9 @@ public:
         return Vector4( _mm_max_ps( a.v, b.v ) );
     }
 
+    //----------------------------------------------------------------------------------------------
+    //! @brief      指定行列で変換します.
+    //----------------------------------------------------------------------------------------------
     static Vector4 Transform( const Vector4& value, const Matrix& matrix );
 };
 
@@ -1380,21 +1443,27 @@ public:
 S3D_INLINE 
 Vector4 operator * (const f32 f, const Vector4 &v)
 {
-    b128 c = _mm_set1_ps( f );
+    auto c = _mm_set1_ps( f );
     return Vector4( _mm_mul_ps( c, v.v ) );
 }
 
+//------------------------------------------------------------------------------------------
+//! @brief      加算演算子です.
+//------------------------------------------------------------------------------------------
 S3D_INLINE
 Vector4 operator + (const f32 f, const Vector4& v)
 {
-    b128 s = _mm_set1_ps( f );
+    auto s = _mm_set1_ps( f );
     return Vector4( _mm_add_ps( s, v.v ) );
 }
 
+//------------------------------------------------------------------------------------------
+//! @brief      減算演算子です.
+//------------------------------------------------------------------------------------------
 S3D_INLINE
 Vector4 operator - ( const f32 f, const Vector4& v)
 {
-    b128 s = _mm_set1_ps( f );
+    auto s = _mm_set1_ps( f );
     return Vector4( _mm_sub_ps( s, v.v ) );
 }
 
@@ -1419,7 +1488,14 @@ struct Ray
     //! @brief      コピーコンストラクタです.
     //---------------------------------------------------------------------------------------------
     Ray( const Ray& value )
-    { Update( value.pos, value.dir ); }
+    : pos   ( value.pos )
+    , dir   ( value.dir )
+    , invDir( value.invDir )
+    {
+        sign[0] = value.sign[0];
+        sign[1] = value.sign[1];
+        sign[2] = value.sign[2];
+    }
 
     //---------------------------------------------------------------------------------------------
     //! @brief      レイを更新します.
@@ -1595,7 +1671,6 @@ public:
     , v3( _mm_set_ps( m44, m43, m42, m41 ) )
     { /* DO_NOTHING */ }
 
-  #if S3D_IS_SIMD
     //---------------------------------------------------------------------------------------------
     //! @brief      引数付きコンストラクタです.
     //---------------------------------------------------------------------------------------------
@@ -1606,7 +1681,6 @@ public:
     , v2( c2 )
     , v3( c3 )
     { /* DO_NOTHING */ }
-  #endif//S3D_IS_SIMD
 
     //---------------------------------------------------------------------------------------------
     //! @brief      コピーコンストラクタです.
@@ -1681,7 +1755,7 @@ public:
     S3D_INLINE
     Matrix& operator *= ( const f32 value )
     {
-        b128 c = _mm_set_ps( value, value, value, value );
+        auto c = _mm_set_ps( value, value, value, value );
         v0 = _mm_mul_ps( v0, c );
         v1 = _mm_mul_ps( v1, c );
         v2 = _mm_mul_ps( v2, c );
@@ -1702,7 +1776,7 @@ public:
     S3D_INLINE
     Matrix operator - () const
     {
-        b128 z = _mm_setzero_ps();
+        auto z = _mm_setzero_ps();
         return Matrix(
             _mm_sub_ps( z, v0 ),
             _mm_sub_ps( z, v1 ),
@@ -1755,7 +1829,7 @@ public:
     S3D_INLINE
     Matrix operator * ( const f32 value ) const
     {
-        b128 c = _mm_set1_ps( value );
+        auto c = _mm_set1_ps( value );
         return Matrix(
             _mm_mul_ps( v0, c ),
             _mm_mul_ps( v1, c ),
@@ -2030,6 +2104,9 @@ public:
     }
 };
 
+//------------------------------------------------------------------------------------------
+//      指定行列で変換します.
+//------------------------------------------------------------------------------------------
 S3D_INLINE
 Vector2 Vector2::Transform( const Vector2& position, const Matrix& matrix )
 {
@@ -2039,6 +2116,9 @@ Vector2 Vector2::Transform( const Vector2& position, const Matrix& matrix )
     );
 }
 
+//------------------------------------------------------------------------------------------
+//      指定行列で法線ベクトルを変換します.
+//------------------------------------------------------------------------------------------
 S3D_INLINE
 Vector2 Vector2::TransformNormal( const Vector2& normal, const Matrix& matrix )
 {
@@ -2047,6 +2127,9 @@ Vector2 Vector2::TransformNormal( const Vector2& normal, const Matrix& matrix )
         ( normal.x * matrix._12 ) + ( normal.y * matrix._22 ) );
 }
 
+//------------------------------------------------------------------------------------------
+//      指定行列で変換し，w = 1に射影します.
+//------------------------------------------------------------------------------------------
 S3D_INLINE
 Vector2 Vector2::TransformCoord( const Vector2& coord, const Matrix& matrix )
 {
@@ -2060,6 +2143,9 @@ Vector2 Vector2::TransformCoord( const Vector2& coord, const Matrix& matrix )
     );
 }
 
+//------------------------------------------------------------------------------------------
+//      指定行列で変換します.
+//------------------------------------------------------------------------------------------
 S3D_INLINE
 Vector3 Vector3::Transform( const Vector3& position, const Matrix& matrix )
 {
@@ -2070,6 +2156,9 @@ Vector3 Vector3::Transform( const Vector3& position, const Matrix& matrix )
     );
 }
 
+//------------------------------------------------------------------------------------------
+//      指定行列で法線ベクトルを変換します.
+//------------------------------------------------------------------------------------------
 S3D_INLINE
 Vector3 Vector3::TransformNormal( const Vector3& normal, const Matrix& matrix )
 {
@@ -2080,6 +2169,9 @@ Vector3 Vector3::TransformNormal( const Vector3& normal, const Matrix& matrix )
     );
 }
 
+//------------------------------------------------------------------------------------------
+//      指定行列で変換し，w = 1 に射影します.
+//------------------------------------------------------------------------------------------
 S3D_INLINE
 Vector3 Vector3::TransformCoord( const Vector3& coord, const Matrix& matrix )
 {
@@ -2095,6 +2187,9 @@ Vector3 Vector3::TransformCoord( const Vector3& coord, const Matrix& matrix )
     );
 }
 
+//------------------------------------------------------------------------------------------
+//      指定行列で変換します.
+//------------------------------------------------------------------------------------------
 S3D_INLINE
 Vector4 Vector4::Transform( const Vector4& position, const Matrix& matrix )
 {
@@ -2334,8 +2429,8 @@ public:
     S3D_INLINE
     bool IsHit( const Ray4& ray, s32& mask ) const
     {
-        auto tmin = _mm_set1_ps(  F_HIT_MAX );
-        auto tmax = _mm_set1_ps( -F_HIT_MAX );
+        auto tmin = _mm_set1_ps( -F_HIT_MAX );
+        auto tmax = _mm_set1_ps(  F_HIT_MAX );
 
         auto flag = 0;
 

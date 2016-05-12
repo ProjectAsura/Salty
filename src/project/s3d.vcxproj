@@ -22,7 +22,6 @@
     <ClInclude Include="..\include\s3d_bmp.h" />
     <ClInclude Include="..\include\s3d_bvh.h" />
     <ClInclude Include="..\include\s3d_camera.h" />
-    <ClInclude Include="..\include\s3d_demoscene.h" />
     <ClInclude Include="..\include\s3d_hdr.h" />
     <ClInclude Include="..\include\s3d_ibl.h" />
     <ClInclude Include="..\include\s3d_idisposable.h" />

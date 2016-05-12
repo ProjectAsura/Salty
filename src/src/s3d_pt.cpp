@@ -33,7 +33,7 @@ namespace /* anonymous */ {
 // Global Variables.
 //-------------------------------------------------------------------------------------------------
 std::mutex      g_Mutex;
-const s3d::TONE_MAPPING_TYPE  ToneMappingType = s3d::TONE_MAPPING_ACES_FILMIC;
+const s3d::TONE_MAPPING_TYPE  ToneMappingType = s3d::TONE_MAPPING_REINHARD;
 
 
 //-------------------------------------------------------------------------------------------------

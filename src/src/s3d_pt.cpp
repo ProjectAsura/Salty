@@ -235,14 +235,9 @@ Color4 PathTracer::Radiance( const Ray& input )
         assert( shape    != nullptr );
         assert( material != nullptr );
 
-    #if 0
-        // アルファテスト.
-        if ( !material->AlphaTest( record.texcoord, 0.01f ) )
-        {
-            L += Color4::Mul( W, m_pScene->SampleIBL( ray.dir ) );
-            break;
-        }
-    #endif
+        // 直接光をサンプリング.
+        if ( !record.pMaterial->HasDelta() )
+        { L += Color4::Mul( W, NextEventEstimation( ray, record ) );  }
 
         // 自己発光による放射輝度.
         L += Color4::Mul( W, material->GetEmissive() );
@@ -263,7 +258,7 @@ Color4 PathTracer::Radiance( const Ray& input )
         arg.texcoord = record.texcoord;
 
         // 色を求める.
-        W = Color4::Mul( W, material->ComputeColor( arg ) );
+        W = Color4::Mul( W, material->Shade( arg ) );
 
         // レイを更新.
         ray.Update( record.position, arg.output );
@@ -278,6 +273,25 @@ Color4 PathTracer::Radiance( const Ray& input )
 
     // 計算結果を返却.
     return L;
+}
+
+//-------------------------------------------------------------------------------------------------
+//      直接光ライティングを行います.
+//-------------------------------------------------------------------------------------------------
+Color4 PathTracer::NextEventEstimation( const Ray& ray, const HitRecord& record )
+{
+    auto phi = F_2PI * m_Random.GetAsF32();
+    auto x = std::cos( phi );
+    auto y = std::sin( phi );
+    auto dir = Vector3( x, y, std::sqrt( 1.0f - (x * x) - (y * y) ) );
+
+    auto shadowRay = Ray( record.position, dir );
+
+    HitRecord shadowRecord;
+    if ( m_pScene->Intersect(shadowRay, shadowRecord) )
+    { return Color4(0.0f, 0.0f, 0.0f, 1.0f); }
+
+    return m_pScene->SampleIBL( shadowRay.dir );
 }
 
 //-------------------------------------------------------------------------------------------------

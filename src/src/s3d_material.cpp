@@ -95,20 +95,11 @@ f32 MaterialBase::GetThreshold() const
 //--------------------------------------------------------------------------------
 //     色を求めます.
 //--------------------------------------------------------------------------------
-Color4 MaterialBase::ComputeColor( ShadingArg& arg ) const
+Color4 MaterialBase::Shade( ShadingArg& arg ) const
 {
     S3D_UNUSED_VAR( arg );
     return color;
 }
-
-bool MaterialBase::AlphaTest( const Vector2& texcoord, const f32 value ) const
-{
-    if ( pTexture == nullptr || pSampler == nullptr )
-    { return true; }
-
-    return pTexture->AlphaTest( (*pSampler), texcoord, value );
-}
-
 
 //////////////////////////////////////////////////////////////////////////////////
 // Matte structure
@@ -148,7 +139,7 @@ Matte::Matte
 //--------------------------------------------------------------------------------
 //      色を求めます.
 //--------------------------------------------------------------------------------
-Color4 Matte::ComputeColor( ShadingArg& arg ) const
+Color4 Matte::Shade( ShadingArg& arg ) const
 {
     // ========================
     // Lambert BRDF.
@@ -219,9 +210,15 @@ Mirror::Mirror
 { /* DO_NOTHING */ }
 
 //--------------------------------------------------------------------------------
+//      ロシアンルーレットに使用する閾値です.
+//--------------------------------------------------------------------------------
+float Mirror::GetThreshold() const
+{ return 1.0f; }
+
+//--------------------------------------------------------------------------------
 //      色を求めます.
 //--------------------------------------------------------------------------------
-Color4 Mirror::ComputeColor( ShadingArg& arg ) const
+Color4 Mirror::Shade( ShadingArg& arg ) const
 {
     // 補正済み法線データ (レイの入出を考慮済み).
     const Vector3 normalMod = ( Vector3::Dot ( arg.normal, arg.input ) < 0.0 ) ? arg.normal : -arg.normal;
@@ -246,7 +243,6 @@ Color4 Mirror::ComputeColor( ShadingArg& arg ) const
 
     return color;
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////
 // Dielectric structure
@@ -289,9 +285,15 @@ Dielectric::Dielectric
 { /* DO_NOTHING */ }
 
 //--------------------------------------------------------------------------------
+//      ロシアンルーレットに使用する閾値です.
+//--------------------------------------------------------------------------------
+float Dielectric::GetThreshold() const 
+{ return 1.0f; }
+
+//--------------------------------------------------------------------------------
 //      色を求めます.
 //--------------------------------------------------------------------------------
-Color4 Dielectric::ComputeColor( ShadingArg& arg ) const
+Color4 Dielectric::Shade( ShadingArg& arg ) const
 {
     // 補正済み法線データ (レイの入出を考慮済み).
     const Vector3 normalMod = ( Vector3::Dot ( arg.normal, arg.input ) < 0.0 ) ? arg.normal : -arg.normal;
@@ -450,7 +452,7 @@ f32 Glossy::GetThreshold() const
 //---------------------------------------------------------------------------------
 //      色を取得します.
 //---------------------------------------------------------------------------------
-Color4 Glossy::ComputeColor( ShadingArg& arg ) const
+Color4 Glossy::Shade( ShadingArg& arg ) const
 {
     // 補正済み法線データ (レイの入出を考慮済み).
     const Vector3 normalMod = ( Vector3::Dot ( arg.normal, arg.input ) < 0.0 ) ? arg.normal : -arg.normal;
@@ -493,18 +495,6 @@ Color4 Glossy::ComputeColor( ShadingArg& arg ) const
 
     return specular * dots;
 }
-
-//-------------------------------------------------------------------------------------------------
-//      アルファテストを行います.
-//-------------------------------------------------------------------------------------------------
-bool Glossy::AlphaTest( const Vector2& texcoord, const f32 value ) const
-{
-    if ( pTexture == nullptr || pSampler == nullptr )
-    { return true; }
-
-    return pTexture->AlphaTest( (*pSampler), texcoord, value );
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Plastric structure
@@ -568,7 +558,7 @@ f32 Plastic::GetThreshold() const
 //-------------------------------------------------------------------------------------------------
 //      シェーディングします.
 //-------------------------------------------------------------------------------------------------
-Color4 Plastic::ComputeColor( ShadingArg& arg ) const
+Color4 Plastic::Shade( ShadingArg& arg ) const
 {
     // 補正済み法線データ (レイの入出を考慮済み).
     auto cosine = Vector3::Dot( arg.normal, arg.input );
@@ -637,18 +627,5 @@ Color4 Plastic::ComputeColor( ShadingArg& arg ) const
         return specular * dots * ( 1.0f - R ) / ( 1.0f - P );
     }
 }
-
-//-------------------------------------------------------------------------------------------------
-//      アルファテストを行います.
-//-------------------------------------------------------------------------------------------------
-bool Plastic::AlphaTest( const Vector2& texcoord, const f32 value ) const
-{
-    if ( pDiffuseMap == nullptr || pDiffuseSmp == nullptr )
-    { return true; }
-
-    return pDiffuseMap->AlphaTest( (*pDiffuseSmp), texcoord, value );
-}
-
-
 
 } // namespace s3d

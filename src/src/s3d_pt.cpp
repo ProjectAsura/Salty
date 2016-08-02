@@ -53,7 +53,7 @@ s32 GetCPUCoreCount()
     {
         for( u64 i=1; i<32; ++i )
         {
-            if ( processMask & (DWORD_PTR)( 1 << i ) )
+            if ( processMask & (DWORD_PTR)( 1ui64 << i ) )
             {
                 ++numCore;
             }
@@ -281,15 +281,17 @@ Color4 PathTracer::Radiance( const Ray& input )
 Color4 PathTracer::NextEventEstimation( const Ray& ray, const HitRecord& record )
 {
     auto phi = F_2PI * m_Random.GetAsF32();
-    auto x = std::cos( phi );
-    auto y = std::sin( phi );
-    auto dir = Vector3( x, y, std::sqrt( 1.0f - (x * x) - (y * y) ) );
+    auto r  = m_Random.GetAsF32();
+    auto x = r * std::cos( phi );
+    auto y = r * std::sin( phi );
+    auto dir = Vector3( x, y, SafeSqrt( 1.0f - (x * x) - (y * y) ) );
+    dir = Vector3::UnitVector( -dir );
 
     auto shadowRay = Ray( record.position, dir );
 
     HitRecord shadowRecord;
     if ( m_pScene->Intersect(shadowRay, shadowRecord) )
-    { return Color4(0.0f, 0.0f, 0.0f, 1.0f); }
+    { return Color4(0.0f, 0.0f, 0.0f, 0.0f); }
 
     return m_pScene->SampleIBL( shadowRay.dir );
 }

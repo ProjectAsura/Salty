@@ -101,7 +101,7 @@ TestScene::TestScene( const u32 width, const u32 height )
     m_Instances.shrink_to_fit();
 
     m_Shapes.push_back( &g_Table );
-    m_Shapes.push_back( &g_Light );
+    //m_Shapes.push_back( &g_Light );
     m_Shapes.push_back( m_Instances[0] );
     m_Shapes.push_back( m_Instances[1] );
     m_Shapes.push_back( m_Instances[2] );

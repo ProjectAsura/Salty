@@ -32,12 +32,12 @@ int main( int argc, char **argv )
         // アプリケーションの構成設定.
         s3d::PathTracer::Config config;
 
-    #if 0
+    #if 1
         // 本番用.
         config.Width          = 1280;
         config.Height         = 720;
-        config.SampleCount    = 2048;
-        config.SubSampleCount = 1;
+        config.SampleCount    = 128;
+        config.SubSampleCount = 4;
         config.MaxBounceCount = 16;
     #else
         // デバッグ用.

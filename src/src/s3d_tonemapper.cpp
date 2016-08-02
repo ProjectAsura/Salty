@@ -111,6 +111,68 @@ s3d::Vector4 ACESFilm( const s3d::Vector4& color )
         s3d::Saturate((color.GetZ() * (a * color.GetZ() * f / g + b)) / (color.GetZ() * f / g * (c * color.GetZ() * f + d) + e)),
         color.GetW());
 }
+s3d::Color4 median_value(s3d::Color4 c[9])
+{
+    s3d::Color4 buf;
+    
+    for (auto j = 0; j < 8; j++) 
+    {
+        for (auto i = 0; i < 8; i++) 
+        {
+            if (RGBToY(c[i+1]) < RGBToY(c[i]))
+            {
+                buf = c[i+1];
+                c[i+1] = c[i];
+                c[i] = buf;
+            }
+        }
+    }
+    return c[4];
+}
+
+void MedianFilter( const s32 width, const s32 height, const s3d::Color4* pPixels, s3d::Color4* pResult )
+{
+    for(auto i=0; i<height; ++i)
+    {
+        for(auto j=0; j<width; ++j)
+        {
+            auto idx  = i * width + j;
+            auto idx1 = (i-1) * width + j - 1;
+            auto idx2 = (i-1) * width + j;
+            auto idx3 = (i-1) * width + j + 1;
+
+            auto idx4 = i * width + j - 1;
+            auto idx5 = i * width + j + 1;
+
+            auto idx6 = (i+1) * width + j - 1;
+            auto idx7 = (i+1) * width + j;
+            auto idx8 = (i+1) * width + j + 1;
+
+            idx1 = s3d::Clamp(idx1, 0, width * height);
+            idx2 = s3d::Clamp(idx2, 0, width * height);
+            idx3 = s3d::Clamp(idx3, 0, width * height);
+            idx4 = s3d::Clamp(idx4, 0, width * height);
+            idx5 = s3d::Clamp(idx5, 0, width * height);
+            idx6 = s3d::Clamp(idx6, 0, width * height);
+            idx7 = s3d::Clamp(idx7, 0, width * height);
+            idx8 = s3d::Clamp(idx8, 0, width * height);
+
+            s3d::Color4 p[] = {
+                pPixels[idx],
+                pPixels[idx1],
+                pPixels[idx2],
+                pPixels[idx3],
+                pPixels[idx4],
+                pPixels[idx5],
+                pPixels[idx6],
+                pPixels[idx7],
+                pPixels[idx8]
+            };
+
+            pResult[i * width + j] = median_value(p);
+        }
+    }
+}
 
 } // namespace /* anonymous */
 
@@ -133,6 +195,8 @@ void ToneMapper::Map
     Color4*           pResult
 )
 {
+    //MedianFilter( width, height, pPixels, pResult );
+
     switch( type )
     {
         case TONE_MAPPING_REINHARD:

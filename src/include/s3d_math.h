@@ -2445,9 +2445,9 @@ public:
             tmin = _mm_max_ps( tmin, n );
             tmax = _mm_min_ps( tmax, f );
 
-            flag |= _mm_movemask_ps( _mm_cmpge_ps( tmin, tmax ) );
+            flag |= _mm_movemask_ps( _mm_cmpgt_ps( tmin, tmax ) );
 
-            if (flag == 0xf)
+            if ((flag & 0xf) == 0xf)
             {
                 mask = 0;
                 return false;
@@ -2606,8 +2606,8 @@ public:
             tmin = _mm256_max_ps( tmin, n );
             tmax = _mm256_min_ps( tmax, f );
 
-            flag |= _mm256_movemask_ps( _mm256_cmp_ps( tmin, tmax, _CMP_GE_OS ) );
-            if (flag == 0xff)
+            flag |= _mm256_movemask_ps( _mm256_cmp_ps( tmin, tmax, _CMP_GT_OS ) );
+            if ((flag & 0xff) == 0xff)
             {
                 mask = 0;
                 return false;

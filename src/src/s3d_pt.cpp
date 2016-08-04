@@ -235,14 +235,25 @@ Color4 PathTracer::Radiance( const Ray& input )
         assert( shape    != nullptr );
         assert( material != nullptr );
 
+        // 自己発光による放射輝度.
+        L += Color4::Mul( W, material->GetEmissive() );
+
+        // シェーディング引数を設定.
+        arg.input    = ray.dir;
+        arg.normal   = record.normal;
+        arg.texcoord = record.texcoord;
+        arg.prob     = material->GetThreshold();
+
+        // 色を求める.
+        W = Color4::Mul( W, material->Shade( arg ) );
+
         // 直接光をサンプリング.
         if ( !record.pMaterial->HasDelta() )
         { L += Color4::Mul( W, NextEventEstimation( ray, record ) );  }
 
-        // 自己発光による放射輝度.
-        L += Color4::Mul( W, material->GetEmissive() );
-
-        arg.prob = material->GetThreshold();
+        // 重みがゼロになったら以降の更新は無駄なので打ち切りにする.
+        if ( IsZero(W.GetX()) && IsZero(W.GetY()) && IsZero(W.GetZ()) )
+        { break; }
 
         // 最大深度以上になったら，打ち切るために閾値を急激に下げる.
         if ( depth > m_Config.MaxBounceCount )
@@ -252,20 +263,8 @@ Color4 PathTracer::Radiance( const Ray& input )
         if ( arg.random.GetAsF32() >= arg.prob )
         { break; }
 
-        // シェーディング引数を設定.
-        arg.input    = ray.dir;
-        arg.normal   = record.normal;
-        arg.texcoord = record.texcoord;
-
-        // 色を求める.
-        W = Color4::Mul( W, material->Shade( arg ) );
-
         // レイを更新.
         ray.Update( record.position, arg.output );
-
-        // 重みがゼロになったら以降の更新は無駄なので打ち切りにする.
-        if ( IsZero(W.GetX()) && IsZero(W.GetY()) && IsZero(W.GetZ()) )
-        { break; }
     }
 
     // 乱数を更新.
@@ -285,7 +284,7 @@ Color4 PathTracer::NextEventEstimation( const Ray& ray, const HitRecord& record 
     auto x = r * std::cos( phi );
     auto y = r * std::sin( phi );
     auto dir = Vector3( x, y, SafeSqrt( 1.0f - (x * x) - (y * y) ) );
-    dir = Vector3::UnitVector( -dir );
+    dir = Vector3::UnitVector( dir );
 
     auto shadowRay = Ray( record.position, dir );
 

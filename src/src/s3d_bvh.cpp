@@ -428,7 +428,8 @@ bool QBVH::IsHit( const Ray& ray, HitRecord& record ) const
     auto hit = false;
     for( auto i=0; i<4; ++i )
     {
-        if ( mask & ( 0x1 << i ) )
+        auto bit = 0x1 << i;
+        if ( (mask & bit ) == bit )
         { hit |= pShape[i]->IsHit( ray, record ); }
     }
     return hit;

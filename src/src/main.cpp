@@ -32,7 +32,7 @@ int main( int argc, char **argv )
         // アプリケーションの構成設定.
         s3d::PathTracer::Config config;
 
-    #if 1
+    #if 0
         // 本番用.
         config.Width          = 1280;
         config.Height         = 720;

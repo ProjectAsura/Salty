@@ -96,7 +96,7 @@ void WriteBmpInfoHeader( BMP_INFO_HEADER& header, FILE* pFile )
 //-------------------------------------------------------------------------------------------------
 //      BMPファイルに書き出します.
 //-------------------------------------------------------------------------------------------------
-void WriteBmp( FILE* pFile, const s32 width, const s32 height, const f32* pPixel )
+void WriteBmp( FILE* pFile, const s32 width, const s32 height, const Color4* pPixel )
 {
     BMP_FILE_HEADER fileHeader;
     BMP_INFO_HEADER infoHeader;
@@ -126,11 +126,11 @@ void WriteBmp( FILE* pFile, const s32 width, const s32 height, const f32* pPixel
     {
         for( int j=0; j<width; ++j )
         {
-            s32 index = ( i * width * 4 ) + ( j * 4 );
+            s32 index = ( i * width ) + ( j );
 
-            f32 r = pPixel[index + 0];
-            f32 g = pPixel[index + 1];
-            f32 b = pPixel[index + 2];
+            f32 r = pPixel[index].GetX();
+            f32 g = pPixel[index].GetY();
+            f32 b = pPixel[index].GetZ();
 
             if ( r > 1.0f ) { r = 1.0f; }
             if ( g > 1.0f ) { g = 1.0f; }
@@ -156,7 +156,7 @@ void WriteBmp( FILE* pFile, const s32 width, const s32 height, const f32* pPixel
 //-------------------------------------------------------------------------------------------------
 //      BMPファイルに保存します.
 //-------------------------------------------------------------------------------------------------
-bool SaveToBMP( const char* filename, const s32 width, const s32 height, const f32* pPixel )
+bool SaveToBMP( const char* filename, const s32 width, const s32 height, const Vector4* pPixel )
 {
     FILE* pFile;
     errno_t err = fopen_s( &pFile, filename, "wb" );
@@ -172,7 +172,7 @@ bool SaveToBMP( const char* filename, const s32 width, const s32 height, const f
 //-------------------------------------------------------------------------------------------------
 //      BMPファイルから読み込みます.
 //-------------------------------------------------------------------------------------------------
-bool LoadFromBMP( const char* filename, s32& width, s32& height, f32** ppPixels )
+bool LoadFromBMP( const char* filename, s32& width, s32& height, Color4* pPixels )
 {
     FILE* pFile;
     errno_t err = fopen_s( &pFile, filename, "rb" );
@@ -208,13 +208,13 @@ bool LoadFromBMP( const char* filename, s32& width, s32& height, f32** ppPixels 
 
     fclose( pFile );
 
-    (*ppPixels) = new f32 [ width * height * 4 ];
-    for( s32 i=0, j=0; i<size-3; i+=3, j+=4)
+    pPixels = new Color4 [ width * height ];
+    for( s32 i=0, j=0; i<size-3; i+=3, j++)
     {
-        (*ppPixels)[ j + 0 ] = static_cast<f32>( pTexels[ i + 2 ] ) / 255.0f;
-        (*ppPixels)[ j + 1 ] = static_cast<f32>( pTexels[ i + 1 ] ) / 255.0f;
-        (*ppPixels)[ j + 2 ] = static_cast<f32>( pTexels[ i + 0 ] ) / 255.0f;
-        (*ppPixels)[ j + 3 ] = 1.0f;
+        pPixels[j].SetX( static_cast<f32>( pTexels[ i + 2 ] ) / 255.0f );
+        pPixels[j].SetY( static_cast<f32>( pTexels[ i + 1 ] ) / 255.0f );
+        pPixels[j].SetZ( static_cast<f32>( pTexels[ i + 0 ] ) / 255.0f );
+        pPixels[j].SetW( 1.0f );
     }
 
     delete [] pTexels;

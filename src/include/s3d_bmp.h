@@ -9,6 +9,7 @@
 // Includes
 //-------------------------------------------------------------------------------------------------
 #include <s3d_typedef.h>
+#include <s3d_math.h>
 
 
 namespace s3d {
@@ -24,10 +25,10 @@ namespace s3d {
 //! @retval false   保存に失敗.
 //-------------------------------------------------------------------------------------------------
 bool SaveToBMP(
-    const char* filename,
-    const s32   width,
-    const s32   height,
-    const f32*  pPixel );
+    const char*     filename,
+    const s32       width,
+    const s32       height,
+    const Color4*   pPixel );
 
 //-------------------------------------------------------------------------------------------------
 //! @brief      BMPファイルを読み込みます.
@@ -43,7 +44,7 @@ bool LoadFromBMP(
     const char* filename,
     s32&        width,
     s32&        height,
-    f32**       ppPixel );
+    Color4*     ppPixel );
 
 
 } // namespace s3d

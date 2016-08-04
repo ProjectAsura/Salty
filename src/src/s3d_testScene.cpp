@@ -84,7 +84,7 @@ TestScene::TestScene( const u32 width, const u32 height )
         assert(false);
     }
 
-    if ( !m_IBL.Init( "res/ibl/HDR_041_Path.hdr") )
+    if ( !m_IBL.Init( "res/ibl/HDRI_nature003.hdr") )
     {
         ELOG("Error : IBL Load Failed." );
         assert(false);
@@ -126,7 +126,7 @@ TestScene::TestScene( const u32 width, const u32 height )
 #if S3D_IS_AVX
     m_pBVH = OBVH::BuildBranch(&m_Shapes[0], u32(m_Shapes.size()));
 #else
-    m_pBVH = QBVH::BuildBranch(&m_Shapes[0], u32(m_Shapes.size()));
+    m_pBVH = BVH::BuildBranch(&m_Shapes[0], u32(m_Shapes.size()));
 #endif
 }
 

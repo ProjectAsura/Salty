@@ -38,10 +38,16 @@ s32 MedianSplit( s3d::IShape** ppShapes, s32 size, f64 pivotVal, s32 axis )
     for( s32 i=0; i<size; ++i )
     {
         // AABBを取得.
-        bbox = ppShapes[i]->GetBox();
+        auto center = ppShapes[i]->GetBox().center;
 
         // 中心を取得.
-        centroid = ( bbox.mini.a[axis] + bbox.maxi.a[axis] ) / 2.0;
+        switch(axis)
+        {
+        case 0: { centroid = center.GetX(); } break;
+        case 1: { centroid = center.GetY(); } break;
+        case 2: { centroid = center.GetZ(); } break;
+            break;
+        }
 
         // ピボットと比較.
         if ( centroid < pivotVal )
@@ -67,10 +73,10 @@ s32 MedianSplit( s3d::IShape** ppShapes, s32 size, f64 pivotVal, s32 axis )
 s32 GetAxisIndex( s3d::Vector3 size )
 {
     s32 axis = 0;
-    if ( size.x > size.y )
-    { axis = ( size.x > size.z ) ? 0 : 2; }
+    if ( size.GetX() > size.GetY() )
+    { axis = ( size.GetX() > size.GetZ() ) ? 0 : 2; }
     else
-    { axis = ( size.y > size.z ) ? 1 : 2; }
+    { axis = ( size.GetY() > size.GetZ() ) ? 1 : 2; }
 
     return axis;
 }
@@ -100,9 +106,15 @@ bool SahSplit( std::vector<s3d::IShape*> shapes, s32& bestIndex, s32& bestAxis )
             {
                 auto boxL = l->GetBox();
                 auto boxR = r->GetBox();
-                assert( !boxL.empty );
-                assert( !boxR.empty );
-                return boxL.center.a[axis] < boxR.center.a[axis];
+
+                switch(axis)
+                {
+                    case 0: { return boxL.center.GetX() < boxR.center.GetX(); }
+                    case 1: { return boxL.center.GetY() < boxR.center.GetY(); }
+                    case 2: { return boxL.center.GetZ() < boxR.center.GetZ(); }
+                }
+
+                return true;
             }
         );
 
@@ -176,9 +188,15 @@ bool SahSplit( std::vector<s3d::IShape*> shapes, s32& bestIndex, s32& bestAxis )
         {
             auto boxL = l->GetBox();
             auto boxR = r->GetBox();
-            assert( !boxL.empty );
-            assert( !boxR.empty );
-            return boxL.center.a[bestAxis] < boxR.center.a[bestAxis];
+
+            switch(bestAxis)
+            {
+                case 0: { return boxL.center.GetX() < boxR.center.GetX(); }
+                case 1: { return boxL.center.GetY() < boxR.center.GetY(); }
+                case 2: { return boxL.center.GetZ() < boxR.center.GetZ(); }
+            }
+
+            return true;
         }
     );
 
@@ -296,14 +314,22 @@ IShape* BVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     BoundingBox bbox = CreateMergedBox( ppShapes, numShapes );
 
     // ピボットを求める.
-    Vector3 pivot = ( bbox.maxi + bbox.mini ) * 0.5f;
+    Vector3 pivot = bbox.center;
 
     // AABBの各辺の長さを求める.
     Vector3 size  = bbox.maxi - bbox.mini;
     s32 axis = GetAxisIndex( size );
 
     // 中間値.
-    s32 midPoint = MedianSplit( ppShapes, numShapes, pivot.a[axis], axis );
+    f32 val = 0.0f;
+    switch(axis)
+    {
+        case 0 : val = pivot.GetX(); break;
+        case 1 : val = pivot.GetY(); break;
+        case 2 : val = pivot.GetZ(); break;
+    }
+
+    s32 midPoint = MedianSplit( ppShapes, numShapes, val, axis );
 
     s32 idx[2] = {
         0,
@@ -485,7 +511,15 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     s32 axis = GetAxisIndex( size );
 
     // 中間値.
-    s32 midPoint = MedianSplit( ppShapes, numShapes, pivot.a[axis], axis );
+    f32 val = 0.0f;
+    switch(axis)
+    {
+    case 0 : val = pivot.GetX(); break;
+    case 1 : val = pivot.GetY(); break;
+    case 2 : val = pivot.GetZ(); break;
+    }
+
+    s32 midPoint = MedianSplit( ppShapes, numShapes, val, axis );
 
     s32 idx1[2] = {
         0,
@@ -514,9 +548,26 @@ IShape* QBVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
     Vector3 pivotL = ( bboxL.maxi + bboxL.mini ) / 2.0;
     Vector3 pivotR = ( bboxR.maxi + bboxR.mini ) / 2.0;
 
+    f32 valL = 0.0f;
+    f32 valR = 0.0f;
+
+    switch(axisL)
+    {
+        case 0 : valL = pivotL.GetX(); break;
+        case 1 : valL = pivotL.GetY(); break;
+        case 2 : valL = pivotL.GetZ(); break;
+    }
+
+    switch(axisR)
+    {
+        case 0 : valR = pivotR.GetX(); break;
+        case 1 : valR = pivotR.GetY(); break;
+        case 2 : valR = pivotR.GetZ(); break;
+    }
+
     // 分割する.
-    s32 midPointL = MedianSplit( &ppShapes[idx1[0]], num1[0], pivotL.a[axisL], axisL );
-    s32 midPointR = MedianSplit( &ppShapes[idx1[1]], num1[1], pivotR.a[axisR], axisR );
+    s32 midPointL = MedianSplit( &ppShapes[idx1[0]], num1[0], valL, axisL );
+    s32 midPointR = MedianSplit( &ppShapes[idx1[1]], num1[1], valR, axisR );
 
     s32 idx2[4] = {
         idx1[0],
@@ -611,7 +662,7 @@ void QBVH::Dispose()
     _aligned_free( this );
 }
 
-
+#if S3D_IS_AVX
 ////////////////////////////////////////////////////////////////////////////
 // OBVH structure
 ////////////////////////////////////////////////////////////////////////////
@@ -985,6 +1036,6 @@ void OBVH::Dispose()
 
     _aligned_free( this );
 }
-
+#endif //S3D_IS_AVX
 
 } // namespace s3d

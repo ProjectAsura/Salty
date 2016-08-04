@@ -32,6 +32,7 @@
     <ClInclude Include="..\include\s3d_pt.h" />
     <ClInclude Include="..\include\s3d_scene.h" />
     <ClInclude Include="..\include\s3d_shape.h" />
+    <ClInclude Include="..\include\s3d_Simd.h" />
     <ClInclude Include="..\include\s3d_testScene.h" />
     <ClInclude Include="..\include\s3d_texture.h" />
     <ClInclude Include="..\include\s3d_tga.h" />
@@ -51,10 +52,14 @@
     <ClCompile Include="..\src\s3d_onb.cpp" />
     <ClCompile Include="..\src\s3d_pt.cpp" />
     <ClCompile Include="..\src\s3d_shape.cpp" />
+    <ClCompile Include="..\src\s3d_simd.cpp" />
     <ClCompile Include="..\src\s3d_testScene.cpp" />
     <ClCompile Include="..\src\s3d_texture.cpp" />
     <ClCompile Include="..\src\s3d_tga.cpp" />
     <ClCompile Include="..\src\s3d_tonemapper.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\include\s3d_Simd.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{EE16073B-323B-4695-9041-9C08B21626E2}</ProjectGuid>
@@ -172,7 +177,7 @@
       <OpenMPSupport>true</OpenMPSupport>
       <AdditionalIncludeDirectories>$(ProjectDir)..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>S3D_USE_SIMD;NDEBUG;_NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

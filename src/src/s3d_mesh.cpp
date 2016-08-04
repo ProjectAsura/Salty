@@ -60,14 +60,35 @@ struct SMD_FILE_HEADER
     SMD_DATA_HEADER DataHeader;         //!< データヘッダです.
 };
 
+struct SMD_VECTOR2
+{
+    float x;
+    float y;
+};
+
+struct SMD_VECTOR3 
+{
+    float x;
+    float y;
+    float z;
+};
+
+struct SMD_VECTOR4
+{
+    float x;
+    float y;
+    float z;
+    float w;
+};
+
 //////////////////////////////////////////////////////////////////////////////////////////
 // SMD_VERTEX structure
 //////////////////////////////////////////////////////////////////////////////////////////
 struct SMD_VERTEX
 {
-    s3d::Vector3    Position;       //!< 位置座標です.
-    s3d::Vector3    Normal;         //!< 法線ベクトルです.
-    s3d::Vector2    TexCoord;       //!< テクスチャ座標です.
+    SMD_VECTOR3    Position;       //!< 位置座標です.
+    SMD_VECTOR3    Normal;         //!< 法線ベクトルです.
+    SMD_VECTOR2    TexCoord;       //!< テクスチャ座標です.
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -85,9 +106,9 @@ struct SMD_TRIANGLE
 //////////////////////////////////////////////////////////////////////////////////////////
 struct SMD_MATTE
 {
-    s3d::Vector3    Color;
-    s3d::Vector3    Emissive;
-    s32             ColorMap;
+    SMD_VECTOR3    Color;
+    SMD_VECTOR3    Emissive;
+    s32            ColorMap;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -95,9 +116,9 @@ struct SMD_MATTE
 //////////////////////////////////////////////////////////////////////////////////////////
 struct SMD_MIRROR
 {
-    s3d::Vector3    Color;
-    s3d::Vector3    Emissive;
-    s32             ColorMap;
+    SMD_VECTOR3    Color;
+    SMD_VECTOR3    Emissive;
+    s32            ColorMap;
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -105,9 +126,9 @@ struct SMD_MIRROR
 //////////////////////////////////////////////////////////////////////////////////////////
 struct SMD_DIELECTRIC
 {
-    s3d::Vector3    Color;
+    SMD_VECTOR3     Color;
     f32             Ior;
-    s3d::Vector3    Emissive;
+    SMD_VECTOR3     Emissive;
     s32             ColorMap;
 };
 
@@ -116,9 +137,9 @@ struct SMD_DIELECTRIC
 //////////////////////////////////////////////////////////////////////////////////////////
 struct SMD_GLOSSY
 {
-    s3d::Vector3    Color;
+    SMD_VECTOR3     Color;
     f32             Power;
-    s3d::Vector3    Emissive;
+    SMD_VECTOR3     Emissive;
     s32             ColorMap;
 };
 
@@ -127,10 +148,10 @@ struct SMD_GLOSSY
 //////////////////////////////////////////////////////////////////////////////////////////
 struct SMD_PLASTIC
 {
-    s3d::Vector3    Diffuse;
-    s3d::Vector3    Specular;
+    SMD_VECTOR3     Diffuse;
+    SMD_VECTOR3     Specular;
     f32             Power;
-    s3d::Vector3    Emissive;
+    SMD_VECTOR3     Emissive;
     s32             DiffuseMap;
     s32             SpcularMap;
 };
@@ -143,6 +164,31 @@ struct SMD_TEXTURE
 {
     char            FileName[ 256 ];    //!< ファイル名です.
 };
+
+s3d::Vector2 Convert(const SMD_VECTOR2& value)
+{
+    return s3d::Vector2(
+        value.x,
+        value.y);
+}
+
+s3d::Vector3 Convert(const SMD_VECTOR3& value)
+{
+    return s3d::Vector3(
+        value.x,
+        value.y,
+        value.z);
+}
+
+s3d::Vector4 Convert(const SMD_VECTOR4& value)
+{
+    return s3d::Vector4(
+        value.x,
+        value.y,
+        value.z,
+        value.w);
+}
+
 
 } // namespace /* anonymous */
 
@@ -314,7 +360,9 @@ bool Mesh::LoadFromFile( const char* filename )
                 SMD_MATTE value;
                 fread( &value, sizeof(value), 1, pFile );
 
-                auto material = new Matte( Color4(value.Color, 1.0f), Color4(value.Emissive, 1.0f) );
+                auto material = new Matte( 
+                    Color4(value.Color.x, value.Color.y, value.Color.z, 1.0f),
+                    Color4(value.Emissive.x, value.Emissive.y, value.Emissive.z, 1.0f) );
                 if ( value.ColorMap >= 0 )
                 {
                     material->pTexture = &m_Textures[value.ColorMap];
@@ -330,7 +378,9 @@ bool Mesh::LoadFromFile( const char* filename )
                 SMD_MIRROR value;
                 fread( &value, sizeof(value), 1, pFile );
 
-                auto material = new Mirror( Color4(value.Color, 1.0f), Color4(value.Emissive, 1.0f) );
+                auto material = new Mirror(
+                    Color4(value.Color.x, value.Color.y, value.Color.z, 1.0f),
+                    Color4(value.Emissive.x, value.Emissive.y, value.Emissive.z, 1.0f) );
                 if ( value.ColorMap >= 0 )
                 {
                     material->pTexture = &m_Textures[value.ColorMap];
@@ -346,7 +396,10 @@ bool Mesh::LoadFromFile( const char* filename )
                 SMD_DIELECTRIC value;
                 fread( &value, sizeof(value), 1, pFile );
 
-                auto material = new Dielectric( value.Ior, Color4(value.Color, 1.0f), Color4(value.Emissive, 1.0f) );
+                auto material = new Dielectric(
+                    value.Ior,
+                    Color4(value.Color.x, value.Color.y, value.Color.z, 1.0f),
+                    Color4(value.Emissive.x, value.Emissive.y, value.Emissive.z, 1.0f) );
                 if ( value.ColorMap >= 0 )
                 {
                     material->pTexture = &m_Textures[value.ColorMap];
@@ -362,7 +415,10 @@ bool Mesh::LoadFromFile( const char* filename )
                 SMD_GLOSSY value;
                 fread( &value, sizeof(value), 1, pFile );
 
-                auto material = new Glossy( Color4(value.Color, 1.0f), value.Power, Color4(value.Emissive, 1.0f) );
+                auto material = new Glossy(
+                    Color4(value.Color.x, value.Color.y, value.Color.z, 1.0f),
+                    value.Power,
+                    Color4(value.Emissive.x, value.Emissive.y, value.Emissive.z, 1.0f) );
                 if ( value.ColorMap >= 0 )
                 {
                     material->pTexture = &m_Textures[value.ColorMap];
@@ -379,10 +435,10 @@ bool Mesh::LoadFromFile( const char* filename )
                 fread( &value, sizeof(value), 1, pFile );
 
                 auto material = new Plastic( 
-                    Color4(value.Diffuse, 1.0f), 
-                    Color4(value.Specular, 1.0f),
+                    Color4(value.Diffuse.x, value.Diffuse.y, value.Diffuse.z, 1.0f), 
+                    Color4(value.Specular.x, value.Specular.y, value.Specular.z, 1.0f),
                     value.Power,
-                    Color4(value.Emissive, 1.0f) );
+                    Color4(value.Emissive.x, value.Emissive.y, value.Emissive.z, 1.0f) );
                 if ( value.DiffuseMap >= 0 )
                 {
                     material->pDiffuseMap = &m_Textures[value.DiffuseMap];
@@ -412,22 +468,22 @@ bool Mesh::LoadFromFile( const char* filename )
 
         auto tri = new Triangle();
         // 頂点0
-        tri->v0.pos      = triangle.Vertex[ 0 ].Position;
-        tri->v0.texcoord = triangle.Vertex[ 0 ].TexCoord;
-        tri->v0.normal   = triangle.Vertex[ 0 ].Normal;
-        m_Center += triangle.Vertex[ 0 ].Position;
+        tri->v0.pos      = Convert( triangle.Vertex[ 0 ].Position );
+        tri->v0.texcoord = Convert( triangle.Vertex[ 0 ].TexCoord );
+        tri->v0.normal   = Convert( triangle.Vertex[ 0 ].Normal );
+        m_Center += Convert( triangle.Vertex[ 0 ].Position );
 
         // 頂点1
-        tri->v1.pos      = triangle.Vertex[ 1 ].Position;
-        tri->v1.texcoord = triangle.Vertex[ 1 ].TexCoord;
-        tri->v1.normal   = triangle.Vertex[ 1 ].Normal;
-        m_Center += triangle.Vertex[ 1 ].Position;
+        tri->v1.pos      = Convert( triangle.Vertex[ 1 ].Position );
+        tri->v1.texcoord = Convert( triangle.Vertex[ 1 ].TexCoord );
+        tri->v1.normal   = Convert( triangle.Vertex[ 1 ].Normal );
+        m_Center += Convert( triangle.Vertex[ 1 ].Position );
 
         // 頂点2
-        tri->v2.pos      = triangle.Vertex[ 2 ].Position;
-        tri->v2.texcoord = triangle.Vertex[ 2 ].TexCoord;
-        tri->v2.normal   = triangle.Vertex[ 2 ].Normal;
-        m_Center += triangle.Vertex[ 2 ].Position;
+        tri->v2.pos      = Convert( triangle.Vertex[ 2 ].Position );
+        tri->v2.texcoord = Convert( triangle.Vertex[ 2 ].TexCoord );
+        tri->v2.normal   = Convert( triangle.Vertex[ 2 ].Normal );
+        m_Center += Convert( triangle.Vertex[ 2 ].Position );
 
         if ( triangle.MaterialId >= 0 )
         {

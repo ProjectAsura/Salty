@@ -167,7 +167,7 @@ Color4 Matte::Shade( ShadingArg& arg ) const
     // 重み更新 (飛ぶ方向が不定なので確率で割る必要あり).
     if ( pTexture != nullptr && pSampler != nullptr )
     {
-        return Color4::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) ) / arg.prob;
+        return ( color * pTexture->Sample( (*pSampler), arg.texcoord ) ) / arg.prob;
     }
 
     return color / arg.prob;
@@ -238,7 +238,7 @@ Color4 Mirror::Shade( ShadingArg& arg ) const
     // 重み更新 (飛ぶ方向が確定しているので，確率100%).
     if ( pTexture != nullptr && pSampler != nullptr )
     {
-        return Color4::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) );
+        return ( color * pTexture->Sample( (*pSampler), arg.texcoord ) );
     }
 
     return color;
@@ -328,7 +328,7 @@ Color4 Dielectric::Shade( ShadingArg& arg ) const
         // 重み更新 (飛ぶ方向が確定しているので，確率100%).
         if ( pTexture != nullptr && pSampler != nullptr )
         {
-            return Color4::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) );
+            return ( color * pTexture->Sample( (*pSampler), arg.texcoord ) );
         }
 
         return color;
@@ -360,7 +360,7 @@ Color4 Dielectric::Shade( ShadingArg& arg ) const
         // 重み更新.
         if ( pTexture != nullptr && pSampler != nullptr )
         {
-            return Color4::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) ) * Re / ( P * arg.prob );
+            return ( color * pTexture->Sample( (*pSampler), arg.texcoord ) ) * Re / ( P * arg.prob );
         }
 
         return color * Re / ( P * arg.prob );
@@ -374,7 +374,7 @@ Color4 Dielectric::Shade( ShadingArg& arg ) const
         // 重み更新.
         if ( pTexture != nullptr && pSampler != nullptr )
         {
-            return Color4::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) ) * Tr / ( ( 1.0f - P ) * arg.prob );
+            return ( color * pTexture->Sample( (*pSampler), arg.texcoord ) ) * Tr / ( ( 1.0f - P ) * arg.prob );
         }
 
         return color * Tr / ( ( 1.0f - P ) * arg.prob );
@@ -490,7 +490,7 @@ Color4 Glossy::Shade( ShadingArg& arg ) const
     // 重み更新.
     if ( pTexture != nullptr && pSampler != nullptr )
     {
-        return Color4::Mul( specular, pTexture->Sample( (*pSampler), arg.texcoord ) ) * dots;
+        return ( specular * pTexture->Sample( (*pSampler), arg.texcoord ) ) * dots;
     }
 
     return specular * dots;
@@ -592,7 +592,7 @@ Color4 Plastic::Shade( ShadingArg& arg ) const
         // 重み更新 (飛ぶ方向が不定なので確率で割る必要あり).
         Color4 result;
         if ( pDiffuseMap != nullptr )
-        { result = Color4::Mul( diffuse, pDiffuseMap->Sample( ( *pDiffuseSmp ), arg.texcoord ) ) * R / P; }
+        { result = ( diffuse * pDiffuseMap->Sample( ( *pDiffuseSmp ), arg.texcoord ) ) * R / P; }
         else
         { result = diffuse  * R / P; }
 

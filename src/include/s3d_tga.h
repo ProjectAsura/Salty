@@ -9,6 +9,7 @@
 // Includes
 //-------------------------------------------------------------------------------------------------
 #include <s3d_typedef.h>
+#include <s3d_math.h>
 
 
 namespace s3d {
@@ -20,7 +21,7 @@ namespace s3d {
 //! @param [out]    width           画像の横幅です.
 //! @param [out]    height          画像の縦幅です.
 //! @param [out]    component       コンポーネント数(RGB=3, RGBA=4)
-//! @param [out]    ppPixels        ピクセルデータです.
+//! @param [out]    pPixels         ピクセルデータです.
 //! @retval true    読み込みに成功.
 //! @retval false   読み込みに失敗.
 //-------------------------------------------------------------------------------------------------
@@ -29,7 +30,7 @@ bool LoadFromTGA(
     s32&        width,
     s32&        height,
     s32&        component,
-    f32**       ppPixel );
+    Color4*     pPixel );
 
 } // namespace s3d
 

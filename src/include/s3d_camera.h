@@ -214,7 +214,7 @@ public:
         {
             auto diff = Vector3( SampleLens(), 0.0f );
 
-            auto hitDist  = m_FocalDistance / fabs(dir.z);
+            auto hitDist  = m_FocalDistance / fabs(dir.GetZ());
             auto focusPos = m_Position + dir * hitDist;
          
             ray.pos = m_Position + diff;

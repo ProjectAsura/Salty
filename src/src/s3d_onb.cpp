@@ -150,25 +150,5 @@ void OrthonormalBasis::InitFromWV( const Vector3& _w, const Vector3& _v )
     v = Vector3::Cross( w, u );
 }
 
-//----------------------------------------------------------------------------------
-//      等価演算子です.
-//----------------------------------------------------------------------------------
-bool OrthonormalBasis::operator == ( const OrthonormalBasis& value ) const
-{
-    return ( u == value.u )
-        && ( v == value.v )
-        && ( w == value.w );
-}
-
-//----------------------------------------------------------------------------------
-//      非等価演算子です.
-//----------------------------------------------------------------------------------
-bool OrthonormalBasis::operator != ( const OrthonormalBasis& value ) const
-{
-    return ( u != value.u )
-        || ( v != value.v )
-        || ( w != value.w );
-}
-
 } // namespace s3d
 

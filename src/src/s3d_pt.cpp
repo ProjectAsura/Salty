@@ -103,7 +103,7 @@ bool PathTracer::Run( const Config& config )
     // 起動画面.
     ILOG( "//=================================================================" );
     ILOG( "//  Path Tarcer \"Salty\"" );
-    ILOG( "//  Version : Alpha 3.0" );
+    ILOG( "//  Version : Alpha 4.0" );
     ILOG( "//  Author  : Pocol" );
     ILOG( "//=================================================================" );
     ILOG( " Configuration : " );
@@ -112,6 +112,8 @@ bool PathTracer::Run( const Config& config )
     ILOG( "     sample     = %d", config.SampleCount );
     ILOG( "     subsample  = %d", config.SubSampleCount );
     ILOG( "     max bounce = %d", config.MaxBounceCount );
+    ILOG( " Machine Info : ");
+    ILOG( "      CPU Core  = %d", GetCPUCoreCount());
     ILOG( "--------------------------------------------------------------------" );
 
     // 画像出力用ディレクトリ作成.
@@ -139,7 +141,7 @@ void PathTracer::Capture( const char* filename )
     ToneMapper::Map( ToneMappingType, m_Config.Width, m_Config.Height, m_RenderTarget, m_Intermediate );
 
     // BMPに出力する.
-    SaveToBMP( filename, m_Config.Width, m_Config.Height, &m_Intermediate[0].x );
+    SaveToBMP( filename, m_Config.Width, m_Config.Height, m_Intermediate );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -226,7 +228,7 @@ Color4 PathTracer::Radiance( const Ray& input )
         // 交差判定.
         if ( !m_pScene->Intersect( ray, record ) )
         {
-            L += Color4::Mul( W, m_pScene->SampleIBL( ray.dir ) );
+            L += W * m_pScene->SampleIBL( ray.dir );
             break;
         }
 
@@ -236,11 +238,11 @@ Color4 PathTracer::Radiance( const Ray& input )
         assert( material != nullptr );
 
         // 直接光をサンプリング.
-        if ( !record.pMaterial->HasDelta() )
-        { L += Color4::Mul( W, NextEventEstimation( ray, record ) );  }
+        if ( !record.pMaterial->HasDelta() && depth > 0 )
+        { L += W * NextEventEstimation( ray, record );  }
 
         // 自己発光による放射輝度.
-        L += Color4::Mul( W, material->GetEmissive() );
+        L += W * material->GetEmissive();
 
         arg.prob = material->GetThreshold();
 
@@ -258,10 +260,10 @@ Color4 PathTracer::Radiance( const Ray& input )
         arg.texcoord = record.texcoord;
 
         // 色を求める.
-        W = Color4::Mul( W, material->Shade( arg ) );
+        W = W * material->Shade( arg );
 
         // レイを更新.
-        ray.Update( record.position, arg.output );
+        ray = Ray( record.position, arg.output );
 
         // 重みがゼロになったら以降の更新は無駄なので打ち切りにする.
         if ( IsZero(W.GetX()) && IsZero(W.GetY()) && IsZero(W.GetZ()) )
@@ -303,7 +305,6 @@ void PathTracer::TracePath()
 {
     // CPUコア数を取得.
     auto coreCount = GetCPUCoreCount();
-    ILOG( "Info : CPU Core = %d", coreCount );
 
     // 1つは監視用に空けておく.
     if ( coreCount > 1 )

@@ -108,13 +108,13 @@ Color4 IBL::Sample( const Vector3& dir, const TEXTURE_FILTER_MODE filter )
 {
     Vector2 uv;
     uv.x = 0.0f;
-    const auto theta = acosf( dir.y );
+    const auto theta = acosf( dir.GetY() );
     uv.y = theta / F_PI;
 
-    if ( !IsZero(dir.x) && !IsZero(dir.z) )
+    if ( !IsZero(dir.GetX()) && !IsZero(dir.GetZ()) )
     {
-        auto phi = atan2( dir.z, dir.x );
-        if ( dir.z < 0.0f )
+        auto phi = atan2( dir.GetZ(), dir.GetZ() );
+        if ( dir.GetZ() < 0.0f )
             phi += F_2PI;
         uv.x = phi / F_2PI;
     }

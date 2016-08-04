@@ -36,8 +36,8 @@ int main( int argc, char **argv )
         // 本番用.
         config.Width          = 1280;
         config.Height         = 720;
-        config.SampleCount    = 128;
-        config.SubSampleCount = 4;
+        config.SampleCount    = 32;
+        config.SubSampleCount = 2;
         config.MaxBounceCount = 16;
     #else
         // デバッグ用.

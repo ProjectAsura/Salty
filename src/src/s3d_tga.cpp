@@ -424,10 +424,10 @@ bool LoadFromTGA
     s32&        width,
     s32&        height,
     s32&        component,
-    f32**       ppPixel
+    Color4*     pResult
 )
 {
-    if ( filename == nullptr || ppPixel == nullptr )
+    if ( filename == nullptr )
     { return false; }
 
     FILE* pFile;
@@ -520,7 +520,7 @@ bool LoadFromTGA
     // ピクセルサイズを決定してメモリを確保.
     auto size = header.Width * header.Height * bytePerPixel;
     auto pPixels = new u8 [ size ];
-    if ( ppPixel == nullptr )
+    if ( pPixels == nullptr )
     {
         fclose( pFile );
         return false;
@@ -668,30 +668,32 @@ bool LoadFromTGA
 
     // Float に変換.
     auto pixelCount = width * height * component;
-    (*ppPixel) = new f32 [ width * height *4 ];
+    pResult = new Color4 [ width * height ];
 
     switch( component )
     {
         case 1:
             {
-                for( auto i=0, j=0; i<pixelCount; i++, j+=4 )
+                for( auto i=0, j=0; i<pixelCount; i++, j++ )
                 {
-                    (*ppPixel)[j + 0] = static_cast<f32>( pPixels[i] ) / 255.0f;
-                    (*ppPixel)[j + 1] = static_cast<f32>( pPixels[i] ) / 255.0f;
-                    (*ppPixel)[j + 2] = static_cast<f32>( pPixels[i] ) / 255.0f;
-                    (*ppPixel)[j + 3] = 1.0f;
+                    pResult[j] = Color4(
+                        static_cast<f32>( pPixels[i] ) / 255.0f,
+                        static_cast<f32>( pPixels[i] ) / 255.0f,
+                        static_cast<f32>( pPixels[i] ) / 255.0f,
+                        1.0f);
                 }
             }
             break;
 
         case 2:
             {
-                for( auto i=0, j=0; i<pixelCount-2; i+=2, j+=4 )
+                for( auto i=0, j=0; i<pixelCount-2; i+=2, j++ )
                 {
-                    (*ppPixel)[j + 0] = static_cast<f32>( pPixels[i + 0] ) / 255.0f;
-                    (*ppPixel)[j + 1] = static_cast<f32>( pPixels[i + 0] ) / 255.0f;
-                    (*ppPixel)[j + 2] = static_cast<f32>( pPixels[i + 0] ) / 255.0f;
-                    (*ppPixel)[j + 3] = static_cast<f32>( pPixels[i + 1] ) / 255.0f;;
+                    pResult[j] = Color4(
+                        static_cast<f32>( pPixels[i + 0] ) / 255.0f,
+                        static_cast<f32>( pPixels[i + 0] ) / 255.0f,
+                        static_cast<f32>( pPixels[i + 0] ) / 255.0f,
+                        static_cast<f32>( pPixels[i + 1] ) / 255.0f);
                 }
 
             }
@@ -699,24 +701,26 @@ bool LoadFromTGA
 
         case 3:
             {
-                for( auto i=0, j=0; i<pixelCount-3; i+3, j+=4 )
+                for( auto i=0, j=0; i<pixelCount-3; i+3, j++ )
                 {
-                    (*ppPixel)[j + 0] = static_cast<f32>( pPixels[i + 0] ) / 255.0f;
-                    (*ppPixel)[j + 1] = static_cast<f32>( pPixels[i + 1] ) / 255.0f;
-                    (*ppPixel)[j + 2] = static_cast<f32>( pPixels[i + 2] ) / 255.0f;
-                    (*ppPixel)[j + 3] = 1.0f;
+                    pResult[j] = Color4(
+                        static_cast<f32>( pPixels[i + 0] ) / 255.0f,
+                        static_cast<f32>( pPixels[i + 1] ) / 255.0f,
+                        static_cast<f32>( pPixels[i + 2] ) / 255.0f,
+                        1.0f);
                 }
             }
             break;
 
         case 4:
             {
-                for( auto i=0, j=0; i<pixelCount-4; i+=4, j+=4 )
+                for( auto i=0, j=0; i<pixelCount-4; i+=4, j++ )
                 {
-                    (*ppPixel)[j + 0] = static_cast<f32>( pPixels[i + 0] ) / 255.0f;
-                    (*ppPixel)[j + 1] = static_cast<f32>( pPixels[i + 1] ) / 255.0f;
-                    (*ppPixel)[j + 2] = static_cast<f32>( pPixels[i + 2] ) / 255.0f;
-                    (*ppPixel)[j + 3] = static_cast<f32>( pPixels[i + 3] ) / 255.0f;
+                    pResult[j] = Color4(
+                        static_cast<f32>( pPixels[i + 0] ) / 255.0f,
+                        static_cast<f32>( pPixels[i + 1] ) / 255.0f,
+                        static_cast<f32>( pPixels[i + 2] ) / 255.0f,
+                        static_cast<f32>( pPixels[i + 3] ) / 255.0f);
                 }
             }
             break;

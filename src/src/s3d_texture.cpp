@@ -65,7 +65,7 @@ Texture2D::Texture2D( const Texture2D& value )
 , m_Size        ( value.m_Size )
 , m_pPixels     ( nullptr )
 {
-    m_pPixels = new f32 [ m_Size ];
+    m_pPixels = new Color4 [ m_Size ];
     assert( m_pPixels != nullptr );
 
     for( u32 i=0; i<m_Size; ++i )
@@ -104,12 +104,11 @@ bool Texture2D::LoadFromFile( const char* filename )
         fclose( pFile );
 
         // BMP読み込み.
-        if ( LoadFromBMP( filename, w, h, &m_pPixels ) )
+        if ( LoadFromBMP( filename, w, h, m_pPixels ) )
         {
             m_Width  = static_cast<u32>( w ); 
             m_Height = static_cast<u32>( h );
-            m_Size   = m_Width * m_Height * 4;
-            m_ComponentCount = 3;
+            m_Size   = m_Width * m_Height;
 
             // 正常終了.
             return true;
@@ -127,12 +126,11 @@ bool Texture2D::LoadFromFile( const char* filename )
              strcmp( fileTag, "TRUEVISION-TARGA.") == 0 )
         {
             s32 c = 0;
-            if ( LoadFromTGA( filename, w, h, c, &m_pPixels ) )
+            if ( LoadFromTGA( filename, w, h, c, m_pPixels ) )
             {
                 m_Width  = static_cast<u32>( w );
                 m_Height = static_cast<u32>( h );
-                m_Size   = m_Width * m_Height * 4;
-                m_ComponentCount = c;
+                m_Size   = m_Width * m_Height;
                 return true;
             }
         }
@@ -189,14 +187,10 @@ Color4 Texture2D::GetPixel(s32 x, s32 y, const TextureSampler& sampler ) const
         break;
     }
 
-    auto idx = ( m_Width * 4 * y ) + ( x * 4 );
+    auto idx = ( m_Width * y ) + ( x );
     assert( idx < m_Size );
 
-    return Color4(
-        m_pPixels[idx + 0],
-        m_pPixels[idx + 1],
-        m_pPixels[idx + 2],
-        m_pPixels[idx + 3] );
+    return m_pPixels[idx];
 }
 
 
@@ -251,9 +245,6 @@ Color4 Texture2D::Sample( const TextureSampler& sampler, const Vector2& location
 //---------------------------------------------------------------------------------------
 bool Texture2D::AlphaTest( const TextureSampler& sampler, const Vector2& texcoord, const f32 value ) const
 {
-    if ( m_ComponentCount != 4 )
-    { return true; }
-
     if ( m_pPixels == nullptr )
     { return true; }
 

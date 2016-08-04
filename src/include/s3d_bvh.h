@@ -149,7 +149,7 @@ private:
     QBVH( IShape** ppShapes, const BoundingBox4& box, s32 top, s32 left, s32 right );
 };
 
-
+#if S3D_IS_AVX
 ////////////////////////////////////////////////////////////////////////////////
 // OBVH structure
 ////////////////////////////////////////////////////////////////////////////////
@@ -242,6 +242,7 @@ private:
     //--------------------------------------------------------------------------
     OBVH( IShape** ppShapes, const BoundingBox8& octBox );
 };
+#endif//S3D_IS_AVX
 
 } // namespace s3d
 

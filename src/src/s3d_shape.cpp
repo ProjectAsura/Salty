@@ -158,8 +158,8 @@ bool Sphere::IsHit(const Ray &ray, HitRecord& record ) const
     record.pShape    = this;
     record.pMaterial = pMaterial;
 
-    f32 theta = acosf( record.normal.y );
-    f32 phi   = atan2f( record.normal.x, record.normal.z );
+    f32 theta = acosf( record.normal.GetY() );
+    f32 phi   = atan2f( record.normal.GetX(), record.normal.GetZ() );
     if ( phi < 0.0f )
     { phi += F_2PI; }
 
@@ -177,8 +177,8 @@ bool Sphere::IsHit(const Ray &ray, HitRecord& record ) const
 //-------------------------------------------------------------------------------------
 BoundingBox Sphere::GetBox() const
 {
-    Vector3 min( position.x - radius, position.y - radius, position.z - radius );
-    Vector3 max( position.y + radius, position.y + radius, position.z + radius );
+    Vector3 min( position.GetX() - radius, position.GetY() - radius, position.GetZ() - radius );
+    Vector3 max( position.GetX() + radius, position.GetY() + radius, position.GetZ() + radius );
 
     return BoundingBox( min, max );
 }
@@ -269,9 +269,9 @@ bool Triangle::IsHit( const Ray& ray, HitRecord& record ) const
 
     f32 alpha = 1.0f - beta - gamma;
     record.normal = Vector3(
-        v0.normal.x * alpha + v1.normal.x * beta + v2.normal.x * gamma,
-        v0.normal.y * alpha + v1.normal.y * beta + v2.normal.y * gamma,
-        v0.normal.z * alpha + v1.normal.z * beta + v2.normal.z * gamma );
+        v0.normal.GetX() * alpha + v1.normal.GetX() * beta + v2.normal.GetX() * gamma,
+        v0.normal.GetY() * alpha + v1.normal.GetY() * beta + v2.normal.GetY() * gamma,
+        v0.normal.GetZ() * alpha + v1.normal.GetZ() * beta + v2.normal.GetZ() * gamma );
     record.normal.Normalize();
 
     record.texcoord = Vector2(
@@ -393,9 +393,9 @@ bool Quad::IsHitTriangle
 
     f32 alpha = 1.0f - beta - gamma;
     record.normal   = Vector3(
-        a.normal.x * alpha + b.normal.x * beta + c.normal.x * gamma,
-        a.normal.y * alpha + b.normal.y * beta + c.normal.y * gamma,
-        a.normal.z * alpha + b.normal.z * beta + c.normal.z * gamma );
+        a.normal.GetX() * alpha + b.normal.GetX() * beta + c.normal.GetX() * gamma,
+        a.normal.GetY() * alpha + b.normal.GetY() * beta + c.normal.GetY() * gamma,
+        a.normal.GetZ() * alpha + b.normal.GetZ() * beta + c.normal.GetZ() * gamma );
     record.normal.Normalize();
 
     record.texcoord = Vector2(

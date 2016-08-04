@@ -51,15 +51,13 @@ s3d::Vector3 RGBEToVec3( const RGBE& val )
     if ( val.e )
     {
         auto f = ldexp( 1.0, val.e - (int)(128+8) );
-        result.x = static_cast<f32>( val.r * f );
-        result.y = static_cast<f32>( val.g * f );
-        result.z = static_cast<f32>( val.b * f );
+        result.SetX( static_cast<f32>( val.r * f ) );
+        result.SetY( static_cast<f32>( val.g * f ) );
+        result.SetZ( static_cast<f32>( val.b * f ) );
     }
     else 
     {
-        result.x = 0.0f;
-        result.y = 0.0f;
-        result.z = 0.0f;
+        result.v = s3d::Simd4::Zero;
     }
     return result;
 }
@@ -71,7 +69,7 @@ S3D_INLINE
 RGBE Vec3ToRGBE( const s3d::Vector3& val )
 {
     RGBE result;
-    double d = s3d::Max( val.x, s3d::Max( val.y, val.z ) );
+    double d = s3d::Max( val.GetX(), s3d::Max( val.GetY(), val.GetZ() ) );
 
     if ( d <= DBL_EPSILON )
     {
@@ -86,9 +84,9 @@ RGBE Vec3ToRGBE( const s3d::Vector3& val )
     double m = frexp(d, &e); // d = m * 2^e
     d = m * 256.0 / d;
 
-    result.r = (u32)(val.x * d);
-    result.g = (u32)(val.y * d);
-    result.b = (u32)(val.z * d);
+    result.r = (u32)(val.GetX() * d);
+    result.g = (u32)(val.GetY() * d);
+    result.b = (u32)(val.GetZ() * d);
     result.e = (u32)(e + 128);
     return result;
 }
@@ -293,9 +291,9 @@ bool ReadHdrData( FILE* pFile, const s32 width, const s32 height, f32** ppPixels
         {
             auto pix = RGBEToVec3( pLines[x] );
             auto idx = ( x * 3 ) + ( y * width *  3);
-            pixels[idx + 0] = pix.x;
-            pixels[idx + 1] = pix.y;
-            pixels[idx + 2] = pix.z;
+            pixels[idx + 0] = pix.GetX();
+            pixels[idx + 1] = pix.GetY();
+            pixels[idx + 2] = pix.GetZ();
         }
     }
 

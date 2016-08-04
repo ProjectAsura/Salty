@@ -68,6 +68,11 @@ typedef double              f64;
 #endif//S3D_TEMPLATE2
 
 
+#ifndef S3D_VECAPI
+#define S3D_VECAPI                  __vectorcall
+#endif//S3D_VECAPI
+
+
 #if defined(_M_IX86) || defined(_M_AMD64)
     #define S3D_IS_SSE2   (1)     // SSE2有効.
 #else
@@ -287,6 +292,7 @@ typedef __m128i     b128i;
 typedef __m256      b256;
 typedef __m256d     b256d;
 typedef __m256i     b256i;
+//typedef __m512      b512;
 
 #else
 
@@ -360,6 +366,11 @@ typedef union S3D_ALIGN(32) _b256i
     unsigned __int32    m256i_u32[8];
     unsigned __int64    m256i_u64[4];
 } b256i;
+
+typedef union S3D_ALIGN(64) _b512
+{
+    float               m256_f32[16];
+} b512;
 
 #endif//S3D_IS_SIMD
 

@@ -96,14 +96,7 @@ Vector3 Leaf::GetCenter() const
 //-------------------------------------------------------------------------------------------------
 //      生成処理を行います.
 //-------------------------------------------------------------------------------------------------
-bool Leaf::Create(u32 count, IShape** ppShape, IShape** ppResult)
-{
-    auto instance = new(std::nothrow) Leaf(count, ppShape);
-    if ( instance == nullptr )
-    { return false; }
-
-    *ppResult = instance;
-    return true;
-}
+IShape* Leaf::Create(u32 count, IShape** ppShape)
+{ return new(std::nothrow) Leaf(count, ppShape); }
 
 } // namespace s3d

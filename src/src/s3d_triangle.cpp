@@ -128,14 +128,7 @@ Vector3 Triangle::GetCenter() const
 //-------------------------------------------------------------------------------------------------
 //      生成処理を行います.
 //-------------------------------------------------------------------------------------------------
-bool Triangle::Create(Vertex* pVertices, IMaterial* pMaterial, IShape** ppShape)
-{
-    auto instance = new(std::nothrow) Triangle(pVertices, pMaterial);
-    if ( instance == nullptr )
-    { return false; }
-
-    *ppShape = instance;
-    return true;
-}
+IShape* Triangle::Create(Vertex* pVertices, IMaterial* pMaterial)
+{  return new(std::nothrow) Triangle(pVertices, pMaterial); }
 
 } // namespace s3d

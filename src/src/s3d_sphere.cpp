@@ -115,14 +115,7 @@ Vector3 Sphere::GetCenter() const
 //-------------------------------------------------------------------------------------------------
 //      生成処理を行います.
 //-------------------------------------------------------------------------------------------------
-bool Sphere::Create(f32 radius, const Vector3& center, IMaterial* pMaterial, IShape** ppShape)
-{
-    auto instance = new(std::nothrow) Sphere(radius, center, pMaterial);
-    if ( instance == nullptr )
-    { return false; }
-
-    *ppShape = instance;
-    return true;
-}
+IShape* Sphere::Create(f32 radius, const Vector3& center, IMaterial* pMaterial)
+{ return new(std::nothrow) Sphere(radius, center, pMaterial); }
 
 } // namespace s3d

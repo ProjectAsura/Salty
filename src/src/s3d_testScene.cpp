@@ -48,28 +48,17 @@ namespace s3d {
 TestScene::TestScene( const u32 width, const u32 height )
 : Scene()
 {
-    IShape* pCan0;
-    IShape* pCan1;
-    IShape* pCup;
     IShape* pQuad;
 
-    if ( !Mesh::Create( "res/mesh/can/coke_can.smd", &pCan0 ) )
-    {
-        ELOG("Error : Can0 Load Failed." );
-        assert( false );
-    }
+    auto pCan0 = Mesh::Create( "res/mesh/can/coke_can.smd" );
+    assert(pCan0 != nullptr);
 
-    if ( !Mesh::Create( "res/mesh/can/pepsi_can.smd", &pCan1 ) )
-    {
-        ELOG("Error : Can1 Load Failed." );
-        assert( false );
-    }
+    auto pCan1 = Mesh::Create( "res/mesh/can/pepsi_can.smd" );
+    assert(pCan1 != nullptr);
 
-    if ( !Mesh::Create( "res/mesh/paper_cup/paper_cup.smd", &pCup ) )
-    {
-        ELOG("Error : Cup Load Failed." );
-        assert(false);
-    }
+    auto pCup = Mesh::Create( "res/mesh/paper_cup/paper_cup.smd" );
+    assert(pCup != nullptr);
+
 
     if ( !g_TableTexture.LoadFromFile("./res/texture/table.bmp") )
     {
@@ -110,41 +99,25 @@ TestScene::TestScene( const u32 width, const u32 height )
         vertices[5].Normal   = Vector3( 0.0f, 1.0f, 0.0f );
         vertices[5].TexCoord = Vector2( 0.0, 0.0 );
 
-        if ( !Mesh::Create(6, vertices, &g_TableMaterial, &pQuad) )
-        {
-            ELOG( "Error : Table Create Failed." );
-            assert(false);
-        }
+        pQuad = Mesh::Create(6, vertices, &g_TableMaterial);
+        assert(pQuad != nullptr);
     }
 
-    m_Shapes.resize(9);
+    m_Shapes.reserve(9);
 
-    bool success = false;
-    success = Instance::Create( pCan0, Matrix::Translate( 100.0f, 20.0f, 100.0 ), &m_Shapes[0] );
-    assert(success);
+    m_Shapes.push_back( Instance::Create( pCan0, Matrix::Translate( 100.0f, 20.0f, 100.0 ) ) );
+    m_Shapes.push_back( Instance::Create( pCan0, Matrix::RotateY(ToRad(-30.0f)) *Matrix::RotateX(ToRad(90.0)) * Matrix::RotateY(ToRad(-55.0)) * Matrix::Translate( 70.0f, 10.0f, 90.0f) ) );
+    m_Shapes.push_back( Instance::Create( pCan1, Matrix::RotateY(ToRad(59.5f)) * Matrix::Translate( 75.0f, 20.0f, 50.0f) ));
+    m_Shapes.push_back( Instance::Create( pCan1, Matrix::RotateY(ToRad(130.3f)) * Matrix::Translate( 60.0f, 20.0f, 35.0f) ));
+    m_Shapes.push_back( Instance::Create( pCan1, Matrix::RotateY(ToRad(260.0f)) * Matrix::Translate( 90.0f, 20.0f, 35.0f) ));
+    m_Shapes.push_back( Instance::Create( pCan0, Matrix::RotateX(ToRad(90.0f)) * Matrix::RotateY(ToRad(70.0f)) * Matrix::Translate( 10.0f, 10.0f, 10.0f) ));
+    m_Shapes.push_back( Instance::Create( pCup,  Matrix::Translate( 30.0f, 20.0f, -55.0f ) ));
+    m_Shapes.push_back( Instance::Create( pCup,  Matrix::Translate( 70.0f, 20.0f, -70.0f ) ));
+    m_Shapes.push_back( pQuad );
 
-    success = Instance::Create( pCan0, Matrix::RotateY(ToRad(-30.0f)) *Matrix::RotateX(ToRad(90.0)) * Matrix::RotateY(ToRad(-55.0)) * Matrix::Translate( 70.0f, 10.0f, 90.0f), &m_Shapes[1] );
-    assert(success);
-
-    success = Instance::Create( pCan1, Matrix::RotateY(ToRad(59.5f)) * Matrix::Translate( 75.0f, 20.0f, 50.0f), &m_Shapes[2] );
-    assert(success);
-
-    success = Instance::Create( pCan1, Matrix::RotateY(ToRad(130.3f)) * Matrix::Translate( 60.0f, 20.0f, 35.0f), &m_Shapes[3] );
-    assert(success);
-
-    success = Instance::Create( pCan1, Matrix::RotateY(ToRad(260.0f)) * Matrix::Translate( 90.0f, 20.0f, 35.0f), &m_Shapes[4] );
-    assert(success);
-
-    success = Instance::Create( pCan0, Matrix::RotateX(ToRad(90.0f)) * Matrix::RotateY(ToRad(70.0f)) * Matrix::Translate( 10.0f, 10.0f, 10.0f), &m_Shapes[5] );
-    assert(success);
-
-    success = Instance::Create( pCup,  Matrix::Translate( 30.0f, 20.0f, -55.0f ), &m_Shapes[6] );
-    assert(success);
-
-    success = Instance::Create( pCup,  Matrix::Translate( 70.0f, 20.0f, -70.0f ), &m_Shapes[7] );
-    assert(success);
-
-    m_Shapes[8] = pQuad;
+    SafeRelease( pCan0 );
+    SafeRelease( pCan1 );
+    SafeRelease( pCup );
 
     auto camera = new ThinLensCamera();
     camera->Update( 

@@ -93,14 +93,7 @@ Vector3 Instance::GetCenter() const
 //-------------------------------------------------------------------------------------------------
 //      生成処理を行います.
 //-------------------------------------------------------------------------------------------------
-bool Instance::Create(IShape* pShape, const Matrix& world, IShape** ppShape)
-{
-    auto instance = new(std::nothrow) Instance(pShape, world);
-    if ( instance == nullptr )
-    { return false; }
-
-    *ppShape = instance;
-    return true;
-}
+IShape* Instance::Create(IShape* pShape, const Matrix& world)
+{ return new(std::nothrow) Instance(pShape, world); }
 
 } // namespace s3d

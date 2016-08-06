@@ -292,11 +292,7 @@ IShape* BVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 {
     // 左と右を入れたインスタンスを生成.
     if ( numShapes <= 2 )
-    {
-        IShape* pResult;
-        Leaf::Create( numShapes, ppShapes, &pResult );
-        return pResult;
-    }
+    { return Leaf::Create( numShapes, ppShapes ); }
 
     // AABBを求める.
     BoundingBox bbox = CreateMergedBox( ppShapes, numShapes );
@@ -334,20 +330,12 @@ IShape* BVH::BuildBranch( IShape** ppShapes, const u32 numShapes )
 IShape* BVH::Build(std::vector<IShape*>& shapes)
 {
     if ( shapes.size() <= 2 )
-    {
-        IShape* pResult = nullptr;
-        Leaf::Create(shapes.size(), shapes.data(), &pResult);
-        return pResult;
-    }
+    { return Leaf::Create(shapes.size(), shapes.data() ); }
 
     s32 bestIndex = -1;
     s32 bestAxis  = -1;
     if ( !SahSplit( shapes, bestIndex, bestAxis ) )
-    {
-        IShape* pResult = nullptr;
-        Leaf::Create(shapes.size(), shapes.data(), &pResult );
-        return pResult;
-    }
+    { return Leaf::Create(shapes.size(), shapes.data() ); }
 
     std::vector<IShape*> left(shapes.begin(), shapes.begin() + bestIndex);
     std::vector<IShape*> right(shapes.begin() + bestIndex, shapes.end());

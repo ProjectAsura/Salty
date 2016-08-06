@@ -44,7 +44,7 @@ int main( int argc, char **argv )
         // デバッグ用.
         config.Width          = 256;
         config.Height         = 256;
-        config.SampleCount    = 4096;
+        config.SampleCount    = 512;
         config.SubSampleCount = 1;
         config.MaxBounceCount = 4;
     #endif

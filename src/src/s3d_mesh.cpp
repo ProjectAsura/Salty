@@ -172,6 +172,9 @@ Mesh::~Mesh()
     
     for(size_t i=0; i<m_Materials.size(); ++i)
     { SafeDelete(m_Materials[i]); }
+
+    m_Triangles.clear();
+    m_Materials.clear();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -393,10 +396,7 @@ bool Mesh::LoadFromFile( const char* filename )
 
         auto material = (triangle.MaterialId >= 0 ) ? m_Materials[triangle.MaterialId] : nullptr;
 
-        if ( !Triangle::Create( vertex, material, &m_Triangles[i]) )
-        {
-            ILOG( "Warning : Triangle Create Failed. index = %u", i );
-        }
+        m_Triangles[i] = Triangle::Create(vertex, material);
     }
 
     // BVHを構築します.
@@ -416,11 +416,15 @@ bool Mesh::Init(u32 vertexCount, Vertex* pVertices, IMaterial* pMaterial)
     m_Materials.resize(1);
     m_Materials[0] = pMaterial;
 
+    auto triangleCount = vertexCount / 3;
+
     bool failed = false;
-    m_Triangles.resize(vertexCount);
-    for(u32 i=0; i<vertexCount; ++i)
+    m_Triangles.resize(triangleCount);
+
+    for(u32 i=0; i<triangleCount; ++i)
     {
-       if (!Triangle::Create(&pVertices[i * 3], pMaterial, &m_Triangles[i]))
+       m_Triangles[i] = Triangle::Create(&pVertices[i * 3], pMaterial);
+       if (m_Triangles[i] == nullptr)
        { failed = true; }
     }
 
@@ -454,39 +458,37 @@ Vector3 Mesh::GetCenter() const
 //-------------------------------------------------------------------------------------------------
 //      生成処理を行います.
 //-------------------------------------------------------------------------------------------------
-bool Mesh::Create(const char* filename, IShape** ppShape)
+IShape* Mesh::Create(const char* filename)
 {
     auto instance = new (std::nothrow) Mesh();
     if ( instance == nullptr )
-    { return false; }
+    { return nullptr; }
 
     if ( !instance->LoadFromFile(filename) )
     {
         SafeRelease(instance);
-        return false;
+        return nullptr;
     }
 
-    *ppShape = instance;
-    return true;
+    return instance;
 }
 
 //-------------------------------------------------------------------------------------------------
 //      生成処理を行います.
 //-------------------------------------------------------------------------------------------------
-bool Mesh::Create(u32 vertexCount, Vertex* pVertices, IMaterial* pMaterial, IShape** ppShape)
+IShape* Mesh::Create(u32 vertexCount, Vertex* pVertices, IMaterial* pMaterial)
 {
     auto instance = new (std::nothrow) Mesh();
     if ( instance == nullptr )
-    { return false; }
+    { return nullptr; }
 
     if ( !instance->Init(vertexCount, pVertices, pMaterial) )
     {
         SafeRelease(instance);
-        return false;
+        return nullptr;
     }
 
-    *ppShape = instance;
-    return true;
+    return instance;
 }
 
 } // namespace s3d

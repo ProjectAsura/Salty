@@ -21,8 +21,8 @@ public:
     virtual ~TestScene();
 
 private:
-    std::vector<IShape*>    m_Shapes;
-    std::vector<Instance*>   m_Instances;
+    std::vector<IShape*>     m_Shapes;
+    std::vector<IMaterial*>  m_Material;
 };
 
 } // namespace s3d

@@ -21,40 +21,54 @@
   <ItemGroup>
     <ClInclude Include="..\include\s3d_bmp.h" />
     <ClInclude Include="..\include\s3d_bvh.h" />
+    <ClInclude Include="..\include\s3d_bvh4.h" />
+    <ClInclude Include="..\include\s3d_bvh8.h" />
     <ClInclude Include="..\include\s3d_camera.h" />
     <ClInclude Include="..\include\s3d_hdr.h" />
     <ClInclude Include="..\include\s3d_ibl.h" />
     <ClInclude Include="..\include\s3d_idisposable.h" />
+    <ClInclude Include="..\include\s3d_instance.h" />
+    <ClInclude Include="..\include\s3d_leaf.h" />
     <ClInclude Include="..\include\s3d_logger.h" />
     <ClInclude Include="..\include\s3d_material.h" />
     <ClInclude Include="..\include\s3d_math.h" />
     <ClInclude Include="..\include\s3d_mesh.h" />
     <ClInclude Include="..\include\s3d_pt.h" />
+    <ClInclude Include="..\include\s3d_ireference.h" />
     <ClInclude Include="..\include\s3d_scene.h" />
     <ClInclude Include="..\include\s3d_shape.h" />
+    <ClInclude Include="..\include\s3d_bucket.h" />
+    <ClInclude Include="..\include\s3d_sphere.h" />
     <ClInclude Include="..\include\s3d_testScene.h" />
     <ClInclude Include="..\include\s3d_texture.h" />
     <ClInclude Include="..\include\s3d_tga.h" />
     <ClInclude Include="..\include\s3d_timer.h" />
     <ClInclude Include="..\include\s3d_tonemapper.h" />
+    <ClInclude Include="..\include\s3d_triangle.h" />
     <ClInclude Include="..\include\s3d_typedef.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\s3d_bmp.cpp" />
     <ClCompile Include="..\src\s3d_bvh.cpp" />
+    <ClCompile Include="..\src\s3d_bvh4.cpp" />
+    <ClCompile Include="..\src\s3d_bvh8.cpp" />
     <ClCompile Include="..\src\s3d_hdr.cpp" />
     <ClCompile Include="..\src\s3d_ibl.cpp" />
+    <ClCompile Include="..\src\s3d_instance.cpp" />
+    <ClCompile Include="..\src\s3d_leaf.cpp" />
     <ClCompile Include="..\src\s3d_logger.cpp" />
     <ClCompile Include="..\src\s3d_material.cpp" />
     <ClCompile Include="..\src\s3d_mesh.cpp" />
     <ClCompile Include="..\src\s3d_onb.cpp" />
     <ClCompile Include="..\src\s3d_pt.cpp" />
     <ClCompile Include="..\src\s3d_shape.cpp" />
+    <ClCompile Include="..\src\s3d_sphere.cpp" />
     <ClCompile Include="..\src\s3d_testScene.cpp" />
     <ClCompile Include="..\src\s3d_texture.cpp" />
     <ClCompile Include="..\src\s3d_tga.cpp" />
     <ClCompile Include="..\src\s3d_tonemapper.cpp" />
+    <ClCompile Include="..\src\s3d_triangle.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{EE16073B-323B-4695-9041-9C08B21626E2}</ProjectGuid>

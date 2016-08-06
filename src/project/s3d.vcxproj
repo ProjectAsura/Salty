@@ -62,7 +62,6 @@
     <ClCompile Include="..\src\s3d_mesh.cpp" />
     <ClCompile Include="..\src\s3d_onb.cpp" />
     <ClCompile Include="..\src\s3d_pt.cpp" />
-    <ClCompile Include="..\src\s3d_shape.cpp" />
     <ClCompile Include="..\src\s3d_sphere.cpp" />
     <ClCompile Include="..\src\s3d_testScene.cpp" />
     <ClCompile Include="..\src\s3d_texture.cpp" />

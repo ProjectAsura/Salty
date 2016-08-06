@@ -219,7 +219,7 @@ Color4 PathTracer::Radiance( const Ray& input )
     // 乱数設定.
     arg.random = m_Random;
 
-    for( auto depth=0; !m_WatcherEnd ;++depth)
+    for( auto depth=0; depth < m_Config.MaxBounceCount || !m_WatcherEnd ;++depth)
     {
         auto record = HitRecord();
 
@@ -242,7 +242,6 @@ Color4 PathTracer::Radiance( const Ray& input )
         arg.input    = ray.dir;
         arg.normal   = record.normal;
         arg.texcoord = record.texcoord;
-        arg.prob     = material->GetThreshold();
 
         // 色を求める.
         W = Color4::Mul( W, material->Shade( arg ) );
@@ -251,16 +250,12 @@ Color4 PathTracer::Radiance( const Ray& input )
         if ( !record.pMaterial->HasDelta() )
         { L += Color4::Mul( W, NextEventEstimation( ray, record ) );  }
 
-        // 重みがゼロになったら以降の更新は無駄なので打ち切りにする.
-        if ( IsZero(W.GetX()) && IsZero(W.GetY()) && IsZero(W.GetZ()) )
+        // ロシアンルーレットで打ち切るかどうか?
+        if ( arg.dice )
         { break; }
 
-        // 最大深度以上になったら，打ち切るために閾値を急激に下げる.
-        if ( depth > m_Config.MaxBounceCount )
-        { arg.prob *= powf( 0.5f, static_cast<f32>(depth - m_Config.MaxBounceCount ) ); }
-
-        // ロシアンルーレット.
-        if ( arg.random.GetAsF32() >= arg.prob )
+        // 重みがゼロになったら以降の更新は無駄なので打ち切りにする.
+        if ( IsZero(W.GetX()) && IsZero(W.GetY()) && IsZero(W.GetZ()) )
         { break; }
 
         // レイを更新.

@@ -59,7 +59,6 @@ TestScene::TestScene( const u32 width, const u32 height )
     auto pCup = Mesh::Create( "res/mesh/paper_cup/paper_cup.smd" );
     assert(pCup != nullptr);
 
-
     if ( !g_TableTexture.LoadFromFile("./res/texture/table.bmp") )
     {
         ELOG("Error : TableTexture Load Failed." );

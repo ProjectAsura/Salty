@@ -87,12 +87,6 @@ Color4 MaterialBase::GetEmissive() const
 { return emissive; }
 
 //--------------------------------------------------------------------------------
-//      ロシアンルーレットの閾値を取得します.
-//--------------------------------------------------------------------------------
-f32 MaterialBase::GetThreshold() const
-{ return threshold; }
-
-//--------------------------------------------------------------------------------
 //     色を求めます.
 //--------------------------------------------------------------------------------
 Color4 MaterialBase::Shade( ShadingArg& arg ) const
@@ -163,14 +157,15 @@ Color4 Matte::Shade( ShadingArg& arg ) const
     // 出射方向.
     Vector3 dir = Vector3::UnitVector( onb.u * x + onb.v * y + onb.w * z );
     arg.output = dir;
+    arg.dice = ( arg.random.GetAsF32() >= threshold );
 
     // 重み更新 (飛ぶ方向が不定なので確率で割る必要あり).
     if ( pTexture != nullptr && pSampler != nullptr )
     {
-        return Color4::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) ) / arg.prob;
+        return Color4::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) ) / threshold;
     }
 
-    return color / arg.prob;
+    return color / threshold;
 }
 
 
@@ -210,12 +205,6 @@ Mirror::Mirror
 { /* DO_NOTHING */ }
 
 //--------------------------------------------------------------------------------
-//      ロシアンルーレットに使用する閾値です.
-//--------------------------------------------------------------------------------
-float Mirror::GetThreshold() const
-{ return 1.0f; }
-
-//--------------------------------------------------------------------------------
 //      色を求めます.
 //--------------------------------------------------------------------------------
 Color4 Mirror::Shade( ShadingArg& arg ) const
@@ -232,8 +221,8 @@ Color4 Mirror::Shade( ShadingArg& arg ) const
     Vector3 reflect = Vector3::Reflect( arg.input, normalMod );
     reflect.Normalize();
 
-    // 出射方向.
     arg.output = reflect;
+    arg.dice = false;
 
     // 重み更新 (飛ぶ方向が確定しているので，確率100%).
     if ( pTexture != nullptr && pSampler != nullptr )
@@ -285,12 +274,6 @@ Dielectric::Dielectric
 { /* DO_NOTHING */ }
 
 //--------------------------------------------------------------------------------
-//      ロシアンルーレットに使用する閾値です.
-//--------------------------------------------------------------------------------
-float Dielectric::GetThreshold() const 
-{ return 1.0f; }
-
-//--------------------------------------------------------------------------------
 //      色を求めます.
 //--------------------------------------------------------------------------------
 Color4 Dielectric::Shade( ShadingArg& arg ) const
@@ -304,6 +287,9 @@ Color4 Dielectric::Shade( ShadingArg& arg ) const
 
     // レイがオブジェクトから出るのか? 入るのか?
     const bool into = ( Vector3::Dot( arg.normal, normalMod ) > 0.0 );
+
+    arg.dice = false;
+    auto pdf = 1.0f;
 
     // ===============
     // Snellの法則
@@ -360,10 +346,10 @@ Color4 Dielectric::Shade( ShadingArg& arg ) const
         // 重み更新.
         if ( pTexture != nullptr && pSampler != nullptr )
         {
-            return Color4::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) ) * Re / ( P * arg.prob );
+            return Color4::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) ) * Re / ( P * threshold );
         }
 
-        return color * Re / ( P * arg.prob );
+        return color * Re / ( P * threshold );
     }
     // 屈折の場合.
     else
@@ -374,10 +360,10 @@ Color4 Dielectric::Shade( ShadingArg& arg ) const
         // 重み更新.
         if ( pTexture != nullptr && pSampler != nullptr )
         {
-            return Color4::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) ) * Tr / ( ( 1.0f - P ) * arg.prob );
+            return Color4::Mul( color, pTexture->Sample( (*pSampler), arg.texcoord ) ) * Tr / ( ( 1.0f - P ) * threshold );
         }
 
-        return color * Tr / ( ( 1.0f - P ) * arg.prob );
+        return color * Tr / ( ( 1.0f - P ) * threshold );
     }
 }
 
@@ -443,12 +429,6 @@ Glossy::Glossy
 Color4 Glossy::GetEmissive() const
 { return emissive; }
 
-//--------------------------------------------------------------------------------
-//      ロシアンルーレットの閾値を取得します.
-//--------------------------------------------------------------------------------
-f32 Glossy::GetThreshold() const
-{ return threshold; }
-
 //---------------------------------------------------------------------------------
 //      色を取得します.
 //---------------------------------------------------------------------------------
@@ -486,14 +466,15 @@ Color4 Glossy::Shade( ShadingArg& arg ) const
 
     // 出射方向を設定.
     arg.output = dir;
+    arg.dice = (arg.random.GetAsF32() >= threshold);
 
     // 重み更新.
     if ( pTexture != nullptr && pSampler != nullptr )
     {
-        return Color4::Mul( specular, pTexture->Sample( (*pSampler), arg.texcoord ) ) * dots;
+        return Color4::Mul( specular, pTexture->Sample( (*pSampler), arg.texcoord ) ) * dots / threshold;
     }
 
-    return specular * dots;
+    return specular * dots / threshold;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -548,14 +529,6 @@ Color4 Plastic::GetEmissive() const
 }
 
 //-------------------------------------------------------------------------------------------------
-//      ロシアンルーレットの閾値を取得します.
-//-------------------------------------------------------------------------------------------------
-f32 Plastic::GetThreshold() const
-{
-    return threshold;
-}
-
-//-------------------------------------------------------------------------------------------------
 //      シェーディングします.
 //-------------------------------------------------------------------------------------------------
 Color4 Plastic::Shade( ShadingArg& arg ) const
@@ -596,6 +569,12 @@ Color4 Plastic::Shade( ShadingArg& arg ) const
         else
         { result = diffuse  * R / P; }
 
+        auto threshold = diffuse.GetX();
+        threshold = s3d::Max( threshold, diffuse.GetY() );
+        threshold = s3d::Max( threshold, diffuse.GetZ() );
+
+        arg.dice = ( arg.random.GetAsF32() >= threshold );
+
         return result;
     }
     else
@@ -623,6 +602,12 @@ Color4 Plastic::Shade( ShadingArg& arg ) const
         auto dots = Vector3::Dot( dir, normalMod );
 
         arg.output = dir;
+
+        auto threshold = specular.GetX();
+        threshold = s3d::Max( threshold, specular.GetY() );
+        threshold = s3d::Max( threshold, specular.GetZ() );
+
+        arg.dice = ( arg.random.GetAsF32() >= threshold );
 
         return specular * dots * ( 1.0f - R ) / ( 1.0f - P );
     }

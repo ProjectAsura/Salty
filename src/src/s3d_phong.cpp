@@ -1,53 +1,51 @@
 ﻿//-------------------------------------------------------------------------------------------------
-// File : s3d_sphere.cpp
-// Desc : Sphere Shape Module.
+// File : s3d_phong.cpp
+// Desc : Phong Material.
 // Copyright(c) Project Asura. All right reserved.
 //-------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------
 // Includes
 //-------------------------------------------------------------------------------------------------
-#include <s3d_sphere.h>
-#include <s3d_material.h>
+#include <s3d_phong.h>
 
 
 namespace s3d {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// Sphere class
+// Phong class
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 //-------------------------------------------------------------------------------------------------
 //      コンストラクタです.
 //-------------------------------------------------------------------------------------------------
-Sphere::Sphere(f32 radius, const Vector3& center, IMaterial* pMaterial)
-: m_Count       ( 1 )
-, m_Radius      ( radius )
-, m_Center      ( center )
-, m_pMaterial   ( pMaterial )
+Phong::Phong(const Color4& specular, f32 power, const Color4& emissive)
+: m_Count   (1)
+, m_Specular(specular)
+, m_Power   (power)
+, m_Emissive(emissive)
 {
-    Vector3 min( m_Center.x - m_Radius, m_Center.y - m_Radius, m_Center.z - m_Radius );
-    Vector3 max( m_Center.y + m_Radius, m_Center.y + m_Radius, m_Center.z + m_Radius );
-    m_Box = BoundingBox( min, max );
-    m_pMaterial->AddRef();
+    m_Threshold = m_Specular.GetX();
+    m_Threshold = s3d::Max( m_Threshold, m_Specular.GetY() );
+    m_Threshold = s3d::Max( m_Threshold, m_Specular.GetZ() );
 }
 
 //-------------------------------------------------------------------------------------------------
 //      デストラクタです.
 //-------------------------------------------------------------------------------------------------
-Sphere::~Sphere()
-{ SafeRelease(m_pMaterial); }
+Phong::~Phong()
+{ /* DO_NOTHING */}
 
 //-------------------------------------------------------------------------------------------------
 //      参照カウントを増やします.
 //-------------------------------------------------------------------------------------------------
-void Sphere::AddRef()
+void Phong::AddRef()
 { m_Count++; }
 
 //-------------------------------------------------------------------------------------------------
 //      解放処理を行います.
 //-------------------------------------------------------------------------------------------------
-void Sphere::Release()
+void Phong::Release()
 {
     m_Count--;
     if ( m_Count == 0 )
@@ -57,67 +55,72 @@ void Sphere::Release()
 //-------------------------------------------------------------------------------------------------
 //      参照カウントを取得します.
 //-------------------------------------------------------------------------------------------------
-u32 Sphere::GetCount() const
+u32 Phong::GetCount() const
 { return m_Count; }
 
 //-------------------------------------------------------------------------------------------------
-//      交差判定を行います.
+//      シェーディングします.
 //-------------------------------------------------------------------------------------------------
-bool Sphere::IsHit(const Ray &ray, HitRecord& record ) const
+Color4 Phong::Shade( ShadingArg& arg ) const
 {
-    const auto po = m_Center - ray.pos;
-    const auto b  = Vector3::Dot(po, ray.dir);
-    const auto D4 = b * b - Vector3::Dot(po, po) + m_Radius * m_Radius;
+    // 補正済み法線データ (レイの入出を考慮済み).
+    const Vector3 normalMod = ( Vector3::Dot ( arg.normal, arg.input ) < 0.0 ) ? arg.normal : -arg.normal;
 
-    if ( D4 < 0.0f )
-    { return false; }   // 交差しなかった.
+    Vector3 dir;
+    f32 dots = 0.0f;
 
-    const auto sqrt_D4 = sqrt(D4);
-    const auto t1 = b - sqrt_D4;
-    const auto t2 = b + sqrt_D4;
+    {
+        // インポータンスサンプリング.
+        const f32 phi = F_2PI * arg.random.GetAsF32();
+        const f32 cosTheta = powf( 1.0f - arg.random.GetAsF32(), 1.0f / ( m_Power + 1.0f ) );
+        const f32 sinTheta = SafeSqrt( 1.0f - ( cosTheta * cosTheta ) );
+        const f32 x = cosf( phi ) * sinTheta;
+        const f32 y = sinf( phi ) * sinTheta;
+        const f32 z = cosTheta;
 
-    if (t1 < F_HIT_MIN && t2 < F_HIT_MIN)
-    { return false; }   // 交差しなかった.
+        // 反射ベクトル.
+        Vector3 w = Vector3::Reflect( arg.input, normalMod );
+        w.Normalize();
 
-    auto dist = ( t1 > F_HIT_MIN ) ? t1 : t2;
-    if ( dist > record.distance )
-    { return false; }
+        // 基底ベクトルを求める.
+        OrthonormalBasis onb;
+        onb.InitFromW( w );
 
-    record.distance  = dist;
-    record.position  = ray.pos + record.distance * ray.dir;
-    record.pShape    = this;
-    record.pMaterial = m_pMaterial;
+        // 出射方向.
+        dir = Vector3::UnitVector( onb.u * x + onb.v * y + onb.w * z );
 
-    auto theta = acosf( record.normal.y );
-    auto phi   = atan2f( record.normal.x, record.normal.z );
-    if ( phi < 0.0f )
-    { phi += F_2PI; }
+        // 出射方向と法線ベクトルの内積を求める.
+        dots = Vector3::Dot( dir, normalMod );
+    }
 
-    record.texcoord = Vector2( phi * F_1DIV2PI, ( F_PI - theta ) * F_1DIVPI );
+    arg.output = dir;
+    arg.dice = (arg.random.GetAsF32() >= m_Threshold);
 
-    // フラットシェーディング.
-    record.normal   = Vector3::UnitVector(record.position - m_Center);
-
-    // 交差した.
-    return true;
+    return m_Specular * dots / m_Threshold;
 }
 
 //-------------------------------------------------------------------------------------------------
-//      バウンディングボックスを取得します.
+//      エミッシブカラーを取得します.
 //-------------------------------------------------------------------------------------------------
-BoundingBox Sphere::GetBox() const
-{ return m_Box; }
+Color4 Phong::GetEmissive() const
+{ return m_Emissive; }
 
 //-------------------------------------------------------------------------------------------------
-//      中心座標を取得します.
+//      デルタ関数をもつかどうか?
 //-------------------------------------------------------------------------------------------------
-Vector3 Sphere::GetCenter() const
-{ return m_Center; }
+bool Phong::HasDelta() const
+{ return false; }
 
 //-------------------------------------------------------------------------------------------------
-//      生成処理を行います.
+//      生成処理です.
 //-------------------------------------------------------------------------------------------------
-IShape* Sphere::Create(f32 radius, const Vector3& center, IMaterial* pMaterial)
-{ return new(std::nothrow) Sphere(radius, center, pMaterial); }
+IMaterial* Phong::Create(const Color4& specular, f32 power)
+{ return Phong::Create(specular, power, Color4(0.0f, 0.0f, 0.0f, 1.0f)); }
+
+//-------------------------------------------------------------------------------------------------
+//      生成処理です.
+//-------------------------------------------------------------------------------------------------
+IMaterial* Phong::Create(const Color4& specular, f32 power, const Color4& emissive)
+{ return new(std::nothrow) Phong(specular, power, emissive); }
 
 } // namespace s3d

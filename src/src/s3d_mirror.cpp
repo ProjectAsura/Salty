@@ -1,53 +1,46 @@
 ﻿//-------------------------------------------------------------------------------------------------
-// File : s3d_sphere.cpp
-// Desc : Sphere Shape Module.
+// File : s3d_mirror.cpp
+// Desc : Mirror Material.
 // Copyright(c) Project Asura. All right reserved.
 //-------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------
 // Includes
 //-------------------------------------------------------------------------------------------------
-#include <s3d_sphere.h>
-#include <s3d_material.h>
+#include <s3d_mirror.h>
 
 
 namespace s3d {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// Sphere class
+// Mirror class
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 //-------------------------------------------------------------------------------------------------
 //      コンストラクタです.
 //-------------------------------------------------------------------------------------------------
-Sphere::Sphere(f32 radius, const Vector3& center, IMaterial* pMaterial)
-: m_Count       ( 1 )
-, m_Radius      ( radius )
-, m_Center      ( center )
-, m_pMaterial   ( pMaterial )
-{
-    Vector3 min( m_Center.x - m_Radius, m_Center.y - m_Radius, m_Center.z - m_Radius );
-    Vector3 max( m_Center.y + m_Radius, m_Center.y + m_Radius, m_Center.z + m_Radius );
-    m_Box = BoundingBox( min, max );
-    m_pMaterial->AddRef();
-}
+Mirror::Mirror(const Color4& specular, const Color4& emissive)
+: m_Count   (1)
+, m_Specular(specular)
+, m_Emissive(emissive)
+{ /* DO_NOTHING */ }
 
 //-------------------------------------------------------------------------------------------------
 //      デストラクタです.
 //-------------------------------------------------------------------------------------------------
-Sphere::~Sphere()
-{ SafeRelease(m_pMaterial); }
+Mirror::~Mirror()
+{ /* DO_NOTHING */ }
 
 //-------------------------------------------------------------------------------------------------
 //      参照カウントを増やします.
 //-------------------------------------------------------------------------------------------------
-void Sphere::AddRef()
+void Mirror::AddRef() 
 { m_Count++; }
 
 //-------------------------------------------------------------------------------------------------
 //      解放処理を行います.
 //-------------------------------------------------------------------------------------------------
-void Sphere::Release()
+void Mirror::Release()
 {
     m_Count--;
     if ( m_Count == 0 )
@@ -57,67 +50,49 @@ void Sphere::Release()
 //-------------------------------------------------------------------------------------------------
 //      参照カウントを取得します.
 //-------------------------------------------------------------------------------------------------
-u32 Sphere::GetCount() const
+u32 Mirror::GetCount() const
 { return m_Count; }
 
 //-------------------------------------------------------------------------------------------------
-//      交差判定を行います.
+//      シェーディングします.
 //-------------------------------------------------------------------------------------------------
-bool Sphere::IsHit(const Ray &ray, HitRecord& record ) const
+Color4 Mirror::Shade( ShadingArg& arg ) const
 {
-    const auto po = m_Center - ray.pos;
-    const auto b  = Vector3::Dot(po, ray.dir);
-    const auto D4 = b * b - Vector3::Dot(po, po) + m_Radius * m_Radius;
+    // 補正済み法線データ (レイの入出を考慮済み).
+    const Vector3 normalMod = ( Vector3::Dot ( arg.normal, arg.input ) < 0.0 ) ? arg.normal : -arg.normal;
 
-    if ( D4 < 0.0f )
-    { return false; }   // 交差しなかった.
+    // 反射ベクトルを求める.
+    Vector3 reflect = Vector3::Reflect( arg.input, normalMod );
+    reflect.Normalize();
 
-    const auto sqrt_D4 = sqrt(D4);
-    const auto t1 = b - sqrt_D4;
-    const auto t2 = b + sqrt_D4;
+    arg.output = reflect;
+    arg.dice   = false;
 
-    if (t1 < F_HIT_MIN && t2 < F_HIT_MIN)
-    { return false; }   // 交差しなかった.
-
-    auto dist = ( t1 > F_HIT_MIN ) ? t1 : t2;
-    if ( dist > record.distance )
-    { return false; }
-
-    record.distance  = dist;
-    record.position  = ray.pos + record.distance * ray.dir;
-    record.pShape    = this;
-    record.pMaterial = m_pMaterial;
-
-    auto theta = acosf( record.normal.y );
-    auto phi   = atan2f( record.normal.x, record.normal.z );
-    if ( phi < 0.0f )
-    { phi += F_2PI; }
-
-    record.texcoord = Vector2( phi * F_1DIV2PI, ( F_PI - theta ) * F_1DIVPI );
-
-    // フラットシェーディング.
-    record.normal   = Vector3::UnitVector(record.position - m_Center);
-
-    // 交差した.
-    return true;
+    return m_Specular;
 }
 
 //-------------------------------------------------------------------------------------------------
-//      バウンディングボックスを取得します.
+//      エミッシブカラーを取得します.
 //-------------------------------------------------------------------------------------------------
-BoundingBox Sphere::GetBox() const
-{ return m_Box; }
+Color4 Mirror::GetEmissive() const
+{ return m_Emissive; }
 
 //-------------------------------------------------------------------------------------------------
-//      中心座標を取得します.
+//      デルタ関数をもつかどうか?
 //-------------------------------------------------------------------------------------------------
-Vector3 Sphere::GetCenter() const
-{ return m_Center; }
+bool Mirror::HasDelta() const
+{ return true; }
 
 //-------------------------------------------------------------------------------------------------
 //      生成処理を行います.
 //-------------------------------------------------------------------------------------------------
-IShape* Sphere::Create(f32 radius, const Vector3& center, IMaterial* pMaterial)
-{ return new(std::nothrow) Sphere(radius, center, pMaterial); }
+IMaterial* Mirror::Create(const Color4& specular)
+{ return Mirror::Create(specular, Color4(0.0f, 0.0f, 0.0f, 1.0f)); }
+
+//-------------------------------------------------------------------------------------------------
+//      生成処理を行います.
+//-------------------------------------------------------------------------------------------------
+IMaterial* Mirror::Create(const Color4& specular, const Color4& emissive)
+{ return new(std::nothrow) Mirror(specular, emissive); }
 
 } // namespace s3d

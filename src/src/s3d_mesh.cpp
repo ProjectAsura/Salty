@@ -14,6 +14,7 @@
 #include <s3d_bvh.h>
 #include <s3d_logger.h>
 #include <s3d_triangle.h>
+#include <s3d_materialfactory.h>
 
 
 namespace /* anonymous */ {
@@ -299,14 +300,18 @@ bool Mesh::LoadFromFile( const char* filename )
                 SMD_MATTE value;
                 fread( &value, sizeof(value), 1, pFile );
 
-                auto material = new Matte( Color4(value.Color, 1.0f), Color4(value.Emissive, 1.0f) );
+                auto diffuse  = Color4(value.Color, 1.0f);
+                auto emissive = Color4(value.Emissive, 1.0f);
+                Texture2D*      pTexture = nullptr;
+                TextureSampler* pSampler = nullptr;
+
                 if ( value.ColorMap >= 0 )
                 {
-                    material->pTexture = &m_Textures[value.ColorMap];
-                    material->pSampler = &m_DiffuseSmp;
+                    pTexture = &m_Textures[value.ColorMap];
+                    pSampler = &m_DiffuseSmp;
                 }
 
-                m_Materials[i] = material;
+                m_Materials[i] = MaterialFactory::CreateLambert( diffuse, pTexture, pSampler, emissive );
             }
             break;
 
@@ -315,14 +320,18 @@ bool Mesh::LoadFromFile( const char* filename )
                 SMD_MIRROR value;
                 fread( &value, sizeof(value), 1, pFile );
 
-                auto material = new Mirror( Color4(value.Color, 1.0f), Color4(value.Emissive, 1.0f) );
+                auto specular = Color4(value.Color, 1.0f);
+                auto emissive = Color4(value.Emissive, 1.0f);
+                Texture2D*      pTexture = nullptr;
+                TextureSampler* pSampler = nullptr;
+
                 if ( value.ColorMap >= 0 )
                 {
-                    material->pTexture = &m_Textures[value.ColorMap];
-                    material->pSampler = &m_SpecularSmp;
+                    pTexture = &m_Textures[value.ColorMap];
+                    pSampler = &m_SpecularSmp;
                 }
 
-                m_Materials[i] = material;
+                m_Materials[i] = MaterialFactory::CreateMirror( specular, pTexture, pSampler, emissive );
             }
             break;
 
@@ -331,14 +340,19 @@ bool Mesh::LoadFromFile( const char* filename )
                 SMD_DIELECTRIC value;
                 fread( &value, sizeof(value), 1, pFile );
 
-                auto material = new Dielectric( value.Ior, Color4(value.Color, 1.0f), Color4(value.Emissive, 1.0f) );
+                auto specular = Color4(value.Color, 1.0f);
+                auto emissive = Color4(value.Emissive, 1.0f);
+                auto ior      = value.Ior;
+                Texture2D*      pTexture = nullptr;
+                TextureSampler* pSampler = nullptr;
+
                 if ( value.ColorMap >= 0 )
                 {
-                    material->pTexture = &m_Textures[value.ColorMap];
-                    material->pSampler = &m_SpecularSmp;
+                    pTexture = &m_Textures[value.ColorMap];
+                    pSampler = &m_SpecularSmp;
                 }
 
-                m_Materials[i] = material;
+                m_Materials[i] = MaterialFactory::CreateGlass( specular, ior, pTexture, pSampler, emissive );
             }
             break;
 
@@ -347,36 +361,41 @@ bool Mesh::LoadFromFile( const char* filename )
                 SMD_GLOSSY value;
                 fread( &value, sizeof(value), 1, pFile );
 
-                auto material = new Glossy( Color4(value.Color, 1.0f), value.Power, Color4(value.Emissive, 1.0f) );
+                auto specular = Color4(value.Color, 1.0f);
+                auto emissive = Color4(value.Emissive, 1.0f);
+                auto power    = value.Power;
+                Texture2D*      pTexture = nullptr;
+                TextureSampler* pSampler = nullptr;
+
                 if ( value.ColorMap >= 0 )
                 {
-                    material->pTexture = &m_Textures[value.ColorMap];
-                    material->pSampler = &m_SpecularSmp;
+                    pTexture = &m_Textures[value.ColorMap];
+                    pSampler = &m_SpecularSmp;
                 }
 
-                m_Materials[i] = material;
+                m_Materials[i] = MaterialFactory::CreatePhong( specular, power, pTexture, pSampler, emissive );
             }
             break;
 
-        case SMD_MATERIAL_TYPE_PLASTIC:
-            {
-                SMD_PLASTIC value;
-                fread( &value, sizeof(value), 1, pFile );
+        //case SMD_MATERIAL_TYPE_PLASTIC:
+        //    {
+        //        SMD_PLASTIC value;
+        //        fread( &value, sizeof(value), 1, pFile );
 
-                auto material = new Plastic( 
-                    Color4(value.Diffuse, 1.0f), 
-                    Color4(value.Specular, 1.0f),
-                    value.Power,
-                    Color4(value.Emissive, 1.0f) );
-                if ( value.DiffuseMap >= 0 )
-                {
-                    material->pDiffuseMap = &m_Textures[value.DiffuseMap];
-                    material->pDiffuseSmp = &m_DiffuseSmp;
-                }
+        //        auto material = new Plastic( 
+        //            Color4(value.Diffuse, 1.0f), 
+        //            Color4(value.Specular, 1.0f),
+        //            value.Power,
+        //            Color4(value.Emissive, 1.0f) );
+        //        if ( value.DiffuseMap >= 0 )
+        //        {
+        //            material->pDiffuseMap = &m_Textures[value.DiffuseMap];
+        //            material->pDiffuseSmp = &m_DiffuseSmp;
+        //        }
 
-                m_Materials[i] = material;
-            }
-            break;
+        //        m_Materials[i] = material;
+        //    }
+        //    break;
         }
     }
 

@@ -9,7 +9,7 @@
 // Includes
 //-------------------------------------------------------------------------------------------------
 #include <s3d_math.h>
-#include <s3d_ireference.h>
+#include <s3d_reference.h>
 
 
 namespace s3d {
@@ -30,6 +30,7 @@ struct Vertex
     Vector3     Normal;         //!< 法線ベクトルです.
     Vector2     TexCoord;       //!< テクスチャ座標です.
 };
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // HitRecord structure
@@ -56,13 +57,14 @@ struct HitRecord
     { /* DO_NOTHING */ }
 };
 
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // IShape interface
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 struct IShape : IReference
 {
     virtual ~IShape() {}
-    virtual bool        IsHit    ( const Ray&, HitRecord& record ) const = 0;
+    virtual bool        IsHit    ( const Ray&, HitRecord& ) const = 0;
     virtual BoundingBox GetBox   () const = 0;
     virtual Vector3     GetCenter() const = 0;
 };

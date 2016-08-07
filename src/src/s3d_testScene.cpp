@@ -15,6 +15,7 @@
 #include <s3d_logger.h>
 #include <s3d_mesh.h>
 #include <s3d_instance.h>
+#include <s3d_materialfactory.h>
 
 
 namespace /* anonymous */ {
@@ -30,8 +31,8 @@ using namespace s3d;
 Texture2D       g_TableTexture;
 TextureSampler  g_Sampler = TextureSampler();
 
-Matte           g_TableMaterial( Color4( 0.95f, 0.95f, 0.95f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f ), &g_TableTexture, &g_Sampler );
-Matte           g_LightMaterial( Color4( 0.0f,  0.0f,  0.0f,  1.0f ), Color4( 100.0f, 100.0f, 100.0f, 1.0f ) );
+//Matte           g_TableMaterial( Color4( 0.95f, 0.95f, 0.95f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f ), &g_TableTexture, &g_Sampler );
+//Matte           g_LightMaterial( Color4( 0.0f,  0.0f,  0.0f,  1.0f ), Color4( 100.0f, 100.0f, 100.0f, 1.0f ) );
 
 } // namespace /* anonymous */
 
@@ -71,7 +72,9 @@ TestScene::TestScene( const u32 width, const u32 height )
         assert(false);
     }
 
-    
+    m_Material.push_back( MaterialFactory::CreateLambert( Color4( 0.95f, 0.95f, 0.95f, 1.0f ), &g_TableTexture, &g_Sampler ) );
+    m_Material.push_back( MaterialFactory::CreateLambert( Color4( 0.0f, 0.0f, 0.0f, 1.0f ), nullptr, nullptr, Color4( 100.0f, 100.0f, 100.0f, 1.0f ) ) );
+
     {
         Vertex vertices[6];
         vertices[0].Position = Vector3( -50.0f, 0.0f,  250.0f );
@@ -98,7 +101,7 @@ TestScene::TestScene( const u32 width, const u32 height )
         vertices[5].Normal   = Vector3( 0.0f, 1.0f, 0.0f );
         vertices[5].TexCoord = Vector2( 0.0, 0.0 );
 
-        pQuad = Mesh::Create(6, vertices, &g_TableMaterial);
+        pQuad = Mesh::Create(6, vertices, m_Material[0]);
         assert(pQuad != nullptr);
     }
 
@@ -145,7 +148,11 @@ TestScene::~TestScene()
     for(size_t i=0; i<m_Shapes.size(); ++i)
     { SafeRelease(m_Shapes[i]); }
 
-    m_Shapes.clear();
+    for(size_t i=0; i<m_Material.size(); ++i)
+    { SafeRelease(m_Material[i]); }
+
+    m_Shapes  .clear();
+    m_Material.clear();
     g_TableTexture.Release();
 }
 

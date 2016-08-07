@@ -8,7 +8,7 @@
 // Includes
 //-------------------------------------------------------------------------------------------------
 #include <s3d_triangle.h>
-
+#include <s3d_material.h>
 
 namespace s3d {
 
@@ -33,13 +33,14 @@ Triangle::Triangle(Vertex* pVertice, IMaterial* pMaterial)
     max = Vector3::Max( max, m_Vertex[1].Position );
     max = Vector3::Max( max, m_Vertex[2].Position );
     m_BoundingBox = BoundingBox( min, max );
+    m_pMaterial->AddRef();
 }
 
 //-------------------------------------------------------------------------------------------------
 //      デストラクタです.
 //-------------------------------------------------------------------------------------------------
 Triangle::~Triangle()
-{ /* DO_NOTHING */ }
+{ SafeRelease(m_pMaterial); }
 
 //-------------------------------------------------------------------------------------------------
 //      参照カウントを増やします.

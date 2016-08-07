@@ -27,7 +27,6 @@
     <ClInclude Include="..\include\s3d_glass.h" />
     <ClInclude Include="..\include\s3d_hdr.h" />
     <ClInclude Include="..\include\s3d_ibl.h" />
-    <ClInclude Include="..\include\s3d_idisposable.h" />
     <ClInclude Include="..\include\s3d_instance.h" />
     <ClInclude Include="..\include\s3d_lambert.h" />
     <ClInclude Include="..\include\s3d_leaf.h" />
@@ -66,7 +65,6 @@
     <ClCompile Include="..\src\s3d_lambert.cpp" />
     <ClCompile Include="..\src\s3d_leaf.cpp" />
     <ClCompile Include="..\src\s3d_logger.cpp" />
-    <ClCompile Include="..\src\s3d_material.cpp" />
     <ClCompile Include="..\src\s3d_materialfactory.cpp" />
     <ClCompile Include="..\src\s3d_mesh.cpp" />
     <ClCompile Include="..\src\s3d_mirror.cpp" />

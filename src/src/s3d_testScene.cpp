@@ -31,9 +31,6 @@ using namespace s3d;
 Texture2D       g_TableTexture;
 TextureSampler  g_Sampler = TextureSampler();
 
-//Matte           g_TableMaterial( Color4( 0.95f, 0.95f, 0.95f, 1.0f ), Color4( 0.0f, 0.0f, 0.0f, 1.0f ), &g_TableTexture, &g_Sampler );
-//Matte           g_LightMaterial( Color4( 0.0f,  0.0f,  0.0f,  1.0f ), Color4( 100.0f, 100.0f, 100.0f, 1.0f ) );
-
 } // namespace /* anonymous */
 
 

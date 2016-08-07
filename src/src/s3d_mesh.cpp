@@ -124,19 +124,6 @@ struct SMD_GLOSSY
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// SMD_PLASTIC structure
-///////////////////////////////////////////////////////////////////////////////////////////////////
-struct SMD_PLASTIC
-{
-    s3d::Vector3    Diffuse;
-    s3d::Vector3    Specular;
-    f32             Power;
-    s3d::Vector3    Emissive;
-    s32             DiffuseMap;
-    s32             SpcularMap;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 // SMD_TEXTURE structure
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 struct SMD_TEXTURE
@@ -295,7 +282,6 @@ bool Mesh::LoadFromFile( const char* filename )
         switch( materialType )
         {
         case SMD_MATERIAL_TYPE_MATTE:
-        default:
             {
                 SMD_MATTE value;
                 fread( &value, sizeof(value), 1, pFile );
@@ -377,25 +363,9 @@ bool Mesh::LoadFromFile( const char* filename )
             }
             break;
 
-        //case SMD_MATERIAL_TYPE_PLASTIC:
-        //    {
-        //        SMD_PLASTIC value;
-        //        fread( &value, sizeof(value), 1, pFile );
-
-        //        auto material = new Plastic( 
-        //            Color4(value.Diffuse, 1.0f), 
-        //            Color4(value.Specular, 1.0f),
-        //            value.Power,
-        //            Color4(value.Emissive, 1.0f) );
-        //        if ( value.DiffuseMap >= 0 )
-        //        {
-        //            material->pDiffuseMap = &m_Textures[value.DiffuseMap];
-        //            material->pDiffuseSmp = &m_DiffuseSmp;
-        //        }
-
-        //        m_Materials[i] = material;
-        //    }
-        //    break;
+        default:
+            assert(false);
+            break;
         }
     }
 

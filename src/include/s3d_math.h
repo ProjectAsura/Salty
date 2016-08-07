@@ -2401,29 +2401,37 @@ public:
         auto tmin = _mm_set1_ps( -F_HIT_MAX );
         auto tmax = _mm_set1_ps(  F_HIT_MAX );
 
-        auto flag = 0;
+        //-- x
+        auto t0 = _mm_div_ps( _mm_sub_ps( value[ 0 ][ 0 ], ray.pos[ 0 ] ), ray.dir[ 0 ] );
+        auto t1 = _mm_div_ps( _mm_sub_ps( value[ 1 ][ 0 ], ray.pos[ 0 ] ), ray.dir[ 0 ] );
 
-        for( auto i=0; i<3; ++i )
-        {
-            auto t0 = _mm_div_ps( _mm_sub_ps( value[ 0 ][ i ], ray.pos[ i ] ), ray.dir[ i ] );
-            auto t1 = _mm_div_ps( _mm_sub_ps( value[ 1 ][ i ], ray.pos[ i ] ), ray.dir[ i ] );
+        auto n = _mm_min_ps( t0, t1 );
+        auto f = _mm_max_ps( t0, t1 );
 
-            auto n = _mm_min_ps( t0, t1 );
-            auto f = _mm_max_ps( t0, t1 );
+        tmin = _mm_max_ps( tmin, n );
+        tmax = _mm_min_ps( tmax, f );
 
-            tmin = _mm_max_ps( tmin, n );
-            tmax = _mm_min_ps( tmax, f );
+        //-- y
+        t0 = _mm_div_ps( _mm_sub_ps( value[ 0 ][ 1 ], ray.pos[ 1 ] ), ray.dir[ 1 ] );
+        t1 = _mm_div_ps( _mm_sub_ps( value[ 1 ][ 1 ], ray.pos[ 1 ] ), ray.dir[ 1 ] );
 
-            flag |= _mm_movemask_ps( _mm_cmpgt_ps( tmin, tmax ) );
+        n = _mm_min_ps( t0, t1 );
+        f = _mm_max_ps( t0, t1 );
 
-            if ((flag & 0xf) == 0xf)
-            {
-                mask = 0;
-                return false;
-            }
-        }
+        tmin = _mm_max_ps( tmin, n );
+        tmax = _mm_min_ps( tmax, f );
 
-        mask = flag ^ 0xf;
+        //-- z
+        t0 = _mm_div_ps( _mm_sub_ps( value[ 0 ][ 2 ], ray.pos[ 2 ] ), ray.dir[ 2 ] );
+        t1 = _mm_div_ps( _mm_sub_ps( value[ 1 ][ 2 ], ray.pos[ 2 ] ), ray.dir[ 2 ] );
+
+        n = _mm_min_ps( t0, t1 );
+        f = _mm_max_ps( t0, t1 );
+
+        tmin = _mm_max_ps( tmin, n );
+        tmax = _mm_min_ps( tmax, f );
+
+        mask = _mm_movemask_ps( _mm_cmpge_ps( tmax, tmin ) );
         return ( mask > 0 );
     }
 
@@ -2578,28 +2586,37 @@ public:
         auto tmin = _mm256_set1_ps( -F_HIT_MAX );
         auto tmax = _mm256_set1_ps(  F_HIT_MAX );
 
-        auto flag = 0;
+        //-- x
+        auto t0 = _mm256_div_ps( _mm256_sub_ps( value[ 0 ][ 0 ], ray.pos[ 0 ] ), ray.dir[ 0 ] );
+        auto t1 = _mm256_div_ps( _mm256_sub_ps( value[ 1 ][ 0 ], ray.pos[ 0 ] ), ray.dir[ 0 ] );
 
-        for( auto i=0; i<3; ++i )
-        {
-            auto t0 = _mm256_div_ps( _mm256_sub_ps( value[ 0 ][ i ], ray.pos[ i ] ), ray.dir[ i ] );
-            auto t1 = _mm256_div_ps( _mm256_sub_ps( value[ 1 ][ i ], ray.pos[ i ] ), ray.dir[ i ] );
+        auto n = _mm256_min_ps( t0, t1 );
+        auto f = _mm256_max_ps( t0, t1 );
 
-            auto n = _mm256_min_ps( t0, t1 );
-            auto f = _mm256_max_ps( t0, t1 );
+        tmin = _mm256_max_ps( tmin, n );
+        tmax = _mm256_min_ps( tmax, f );
 
-            tmin = _mm256_max_ps( tmin, n );
-            tmax = _mm256_min_ps( tmax, f );
+        //-- y
+        t0 = _mm256_div_ps( _mm256_sub_ps( value[ 0 ][ 1 ], ray.pos[ 1 ] ), ray.dir[ 1 ] );
+        t1 = _mm256_div_ps( _mm256_sub_ps( value[ 1 ][ 1 ], ray.pos[ 1 ] ), ray.dir[ 1 ] );
 
-            flag |= _mm256_movemask_ps( _mm256_cmp_ps( tmin, tmax, _CMP_GT_OS ) );
-            if ((flag & 0xff) == 0xff)
-            {
-                mask = 0;
-                return false;
-            }
-        }
+        n = _mm256_min_ps( t0, t1 );
+        f = _mm256_max_ps( t0, t1 );
 
-        mask = flag ^ 0xff;
+        tmin = _mm256_max_ps( tmin, n );
+        tmax = _mm256_min_ps( tmax, f );
+
+        //-- z
+        t0 = _mm256_div_ps( _mm256_sub_ps( value[ 0 ][ 2 ], ray.pos[ 2 ] ), ray.dir[ 2 ] );
+        t1 = _mm256_div_ps( _mm256_sub_ps( value[ 1 ][ 2 ], ray.pos[ 2 ] ), ray.dir[ 2 ] );
+
+        n = _mm256_min_ps( t0, t1 );
+        f = _mm256_max_ps( t0, t1 );
+
+        tmin = _mm256_max_ps( tmin, n );
+        tmax = _mm256_min_ps( tmax, f );
+
+        mask = _mm256_movemask_ps( _mm256_cmp_ps( tmax, tmin, _CMP_GE_OS ) );
         return ( mask > 0 );
     }
 

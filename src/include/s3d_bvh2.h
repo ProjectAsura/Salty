@@ -11,7 +11,6 @@
 #include <s3d_math.h>
 #include <s3d_shape.h>
 #include <atomic>
-#include <vector>
 
 
 namespace s3d {

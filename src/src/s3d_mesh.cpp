@@ -13,6 +13,7 @@
 #include <s3d_mesh.h>
 #include <s3d_bvh2.h>
 #include <s3d_bvh4.h>
+#include <s3d_bvh8.h>
 #include <s3d_logger.h>
 #include <s3d_triangle.h>
 #include <s3d_materialfactory.h>
@@ -390,7 +391,7 @@ bool Mesh::LoadFromFile( const char* filename )
     }
 
     // BVHを構築します.
-    m_pBVH = BVH4::Create( m_Triangles.size(), m_Triangles.data() );
+    m_pBVH = BVH8::Create( m_Triangles.size(), m_Triangles.data() );
 
     return true;
 }

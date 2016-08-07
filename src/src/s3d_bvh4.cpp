@@ -7,6 +7,7 @@
 //-------------------------------------------------------------------------------------------------
 // Includes
 //-------------------------------------------------------------------------------------------------
+#include <s3d_bvh2.h>
 #include <s3d_bvh4.h>
 #include <s3d_bucket.h>
 #include <s3d_leaf.h>
@@ -87,6 +88,22 @@ s3d::Vector3 CalcOffset( const s3d::BoundingBox& box, const s3d::Vector3& p )
     return offset;
 }
 
+//-------------------------------------------------------------------------------------------------
+//      葉ノードを生成します.
+//-------------------------------------------------------------------------------------------------
+s3d::IShape* CreateNode( size_t count, s3d::IShape** ppShapes )
+{
+#if 0 // 細かすぎると，遅くなる.
+    if ( count <= 4 )
+    { return s3d::Leaf::Create(count, ppShapes); }
+
+    return s3d::BVH2::Create(count, ppShapes);
+#else
+    return s3d::Leaf::Create(count, ppShapes);
+#endif
+}
+
+
 } // namespace /* anonymous */
 
 
@@ -106,7 +123,7 @@ BVH4::BVH4
     IShape* pShape2,
     IShape* pShape3
 )
-: m_Count   ( 1 )
+: m_Count(1)
 {
     m_pNode[0] = pShape0;
     m_pNode[1] = pShape1;
@@ -313,35 +330,36 @@ bool BVH4::Split( size_t count, IShape** ppShapes, size_t& mid )
 IShape* BVH4::Create(size_t count, IShape** ppShapes)
 {
     if ( count <= 16 )
-    { return Leaf::Create(count, ppShapes); }
+    { return CreateNode(count, ppShapes); }
 
     size_t mid = 0;
     if ( !Split( count, ppShapes, mid ) )
-    { return Leaf::Create(count, ppShapes); }
+    { return CreateNode(count, ppShapes); }
+
+    auto idxL = 0;
+    auto idxR = mid;
 
     auto countL = mid;
     auto countR = count - mid;
+
     size_t midL = 0;
     size_t midR = 0;
 
-    if ( !Split( countL, &ppShapes[0], midL ) )
-    { return Leaf::Create(count, ppShapes); }
+    if ( !Split( countL, &ppShapes[idxL], midL ) )
+    { return CreateNode(count, ppShapes); }
 
-    if ( !Split( countR, &ppShapes[mid], midR ) )
-    { return Leaf::Create(count, ppShapes); }
+    if ( !Split( countR, &ppShapes[idxR], midR ) )
+    { return CreateNode(count, ppShapes); }
 
     auto idx0 = 0;
     auto idx1 = midL;
     auto idx2 = mid;
     auto idx3 = mid + midR;
 
-    auto count0 = idx1 - idx0;
-    auto count1 = idx2 - idx1;
-    auto count2 = idx3 - idx2;
+    auto count0 = idx1  - idx0;
+    auto count1 = idx2  - idx1;
+    auto count2 = idx3  - idx2;
     auto count3 = count - idx3;
-
-    auto total = count0 + count1 + count2 + count3;
-    assert(total == count);
 
     return new BVH4(
         BVH4::Create(count0, &ppShapes[idx0]),

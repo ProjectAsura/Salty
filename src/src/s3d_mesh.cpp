@@ -406,7 +406,7 @@ bool Mesh::Init(u32 vertexCount, Vertex* pVertices, IMaterial* pMaterial)
 
     m_Materials.resize(1);
     m_Materials[0] = pMaterial;
-    pMaterial->AddRef();
+    m_Materials[0]->AddRef();
 
     auto triangleCount = vertexCount / 3;
 

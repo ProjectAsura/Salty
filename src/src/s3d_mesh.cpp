@@ -64,14 +64,35 @@ struct SMD_FILE_HEADER
     SMD_DATA_HEADER DataHeader;         //!< データヘッダです.
 };
 
+struct SMD_VECTOR2
+{
+    f32 x;
+    f32 y;
+};
+
+struct SMD_VECTOR3
+{
+    f32 x;
+    f32 y;
+    f32 z;
+};
+
+struct SMD_VECTOR4
+{
+    f32 x;
+    f32 y;
+    f32 z;
+    f32 w;
+};
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // SMD_VERTEX structure
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 struct SMD_VERTEX
 {
-    s3d::Vector3    Position;       //!< 位置座標です.
-    s3d::Vector3    Normal;         //!< 法線ベクトルです.
-    s3d::Vector2    TexCoord;       //!< テクスチャ座標です.
+    SMD_VECTOR3    Position;       //!< 位置座標です.
+    SMD_VECTOR3    Normal;         //!< 法線ベクトルです.
+    SMD_VECTOR2    TexCoord;       //!< テクスチャ座標です.
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -88,9 +109,9 @@ struct SMD_TRIANGLE
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 struct SMD_MATTE
 {
-    s3d::Vector3    Color;
-    s3d::Vector3    Emissive;
-    s32             ColorMap;
+    SMD_VECTOR3    Color;
+    SMD_VECTOR3    Emissive;
+    s32            ColorMap;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -98,9 +119,9 @@ struct SMD_MATTE
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 struct SMD_MIRROR
 {
-    s3d::Vector3    Color;
-    s3d::Vector3    Emissive;
-    s32             ColorMap;
+    SMD_VECTOR3    Color;
+    SMD_VECTOR3    Emissive;
+    s32            ColorMap;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -108,9 +129,9 @@ struct SMD_MIRROR
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 struct SMD_DIELECTRIC
 {
-    s3d::Vector3    Color;
+    SMD_VECTOR3     Color;
     f32             Ior;
-    s3d::Vector3    Emissive;
+    SMD_VECTOR3     Emissive;
     s32             ColorMap;
 };
 
@@ -119,9 +140,9 @@ struct SMD_DIELECTRIC
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 struct SMD_GLOSSY
 {
-    s3d::Vector3    Color;
+    SMD_VECTOR3     Color;
     f32             Power;
-    s3d::Vector3    Emissive;
+    SMD_VECTOR3     Emissive;
     s32             ColorMap;
 };
 
@@ -132,6 +153,12 @@ struct SMD_TEXTURE
 {
     char            FileName[ 256 ];    //!< ファイル名です.
 };
+
+s3d::Vector2 Convert( SMD_VECTOR2& value )
+{ return s3d::Vector2( value.x, value.y ); }
+
+s3d::Vector3 Convert( SMD_VECTOR3& value )
+{ return s3d::Vector3( value.x, value.y, value.z ); }
 
 } // namespace /* anonymous */
 
@@ -288,8 +315,8 @@ bool Mesh::LoadFromFile( const char* filename )
                 SMD_MATTE value;
                 fread( &value, sizeof(value), 1, pFile );
 
-                auto diffuse  = Color4(value.Color, 1.0f);
-                auto emissive = Color4(value.Emissive, 1.0f);
+                auto diffuse  = Color4(value.Color.x, value.Color.y, value.Color.z, 1.0f);
+                auto emissive = Color4(value.Emissive.x, value.Emissive.y, value.Emissive.z, 1.0f);
                 Texture2D*      pTexture = nullptr;
                 TextureSampler* pSampler = nullptr;
 
@@ -308,8 +335,8 @@ bool Mesh::LoadFromFile( const char* filename )
                 SMD_MIRROR value;
                 fread( &value, sizeof(value), 1, pFile );
 
-                auto specular = Color4(value.Color, 1.0f);
-                auto emissive = Color4(value.Emissive, 1.0f);
+                auto specular = Color4(value.Color.x, value.Color.y, value.Color.z, 1.0f);
+                auto emissive = Color4(value.Emissive.x, value.Emissive.y, value.Emissive.z, 1.0f);
                 Texture2D*      pTexture = nullptr;
                 TextureSampler* pSampler = nullptr;
 
@@ -328,8 +355,8 @@ bool Mesh::LoadFromFile( const char* filename )
                 SMD_DIELECTRIC value;
                 fread( &value, sizeof(value), 1, pFile );
 
-                auto specular = Color4(value.Color, 1.0f);
-                auto emissive = Color4(value.Emissive, 1.0f);
+                auto specular = Color4(value.Color.x, value.Color.y, value.Color.z, 1.0f);
+                auto emissive = Color4(value.Emissive.x, value.Emissive.y, value.Emissive.z, 1.0f);
                 auto ior      = value.Ior;
                 Texture2D*      pTexture = nullptr;
                 TextureSampler* pSampler = nullptr;
@@ -349,8 +376,8 @@ bool Mesh::LoadFromFile( const char* filename )
                 SMD_GLOSSY value;
                 fread( &value, sizeof(value), 1, pFile );
 
-                auto specular = Color4(value.Color, 1.0f);
-                auto emissive = Color4(value.Emissive, 1.0f);
+                auto specular = Color4(value.Color.x, value.Color.y, value.Color.z, 1.0f);
+                auto emissive = Color4(value.Emissive.x, value.Emissive.y, value.Emissive.z, 1.0f);
                 auto power    = value.Power;
                 Texture2D*      pTexture = nullptr;
                 TextureSampler* pSampler = nullptr;
@@ -380,9 +407,9 @@ bool Mesh::LoadFromFile( const char* filename )
         Vertex vertex[3];
         for(auto idx=0; idx<3; ++idx)
         {
-            vertex[idx].Position = triangle.Vertex[idx].Position;
-            vertex[idx].Normal   = triangle.Vertex[idx].Normal;
-            vertex[idx].TexCoord = triangle.Vertex[idx].TexCoord;
+            vertex[idx].Position = Convert(triangle.Vertex[idx].Position);
+            vertex[idx].Normal   = Convert(triangle.Vertex[idx].Normal);
+            vertex[idx].TexCoord = Convert(triangle.Vertex[idx].TexCoord);
         }
 
         auto material = (triangle.MaterialId >= 0 ) ? m_Materials[triangle.MaterialId] : nullptr;

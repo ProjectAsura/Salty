@@ -27,7 +27,7 @@ Sphere::Sphere(f32 radius, const Vector3& center, IMaterial* pMaterial)
 , m_pMaterial   ( pMaterial )
 {
     Vector3 min( m_Center.x - m_Radius, m_Center.y - m_Radius, m_Center.z - m_Radius );
-    Vector3 max( m_Center.y + m_Radius, m_Center.y + m_Radius, m_Center.z + m_Radius );
+    Vector3 max( m_Center.x + m_Radius, m_Center.y + m_Radius, m_Center.z + m_Radius );
     m_Box = BoundingBox( min, max );
     m_pMaterial->AddRef();
 }

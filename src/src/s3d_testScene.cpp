@@ -11,7 +11,7 @@
 #include <s3d_material.h>
 #include <s3d_shape.h>
 #include <s3d_mesh.h>
-#include <s3d_bvh.h>
+#include <s3d_bvh2.h>
 #include <s3d_logger.h>
 #include <s3d_mesh.h>
 #include <s3d_instance.h>
@@ -129,7 +129,7 @@ TestScene::TestScene( const u32 width, const u32 height )
         1.5f );
 
     m_pCamera = camera;
-    m_pBVH = BVH::BuildBranch(m_Shapes.data(), m_Shapes.size());
+    m_pBVH = BVH2::Create( m_Shapes.size(), m_Shapes.data() );
 }
 
 //-------------------------------------------------------------------------------------------------

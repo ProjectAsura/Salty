@@ -8,6 +8,12 @@
 // Includes
 //-------------------------------------------------------------------------------------------------
 #include <s3d_bvh4.h>
+#include <s3d_leaf.h>
+
+
+namespace /* anonymous */ {
+
+} // namespace /* anonymous */
 
 
 namespace s3d {
@@ -120,5 +126,6 @@ void BVH4::operator delete (void* ptr)
 //-------------------------------------------------------------------------------------------------
 void BVH4::operator delete[] (void* ptr)
 { _aligned_free(ptr); }
+
 
 } // namespace s3d

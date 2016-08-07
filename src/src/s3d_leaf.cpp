@@ -19,18 +19,18 @@ namespace s3d {
 //-------------------------------------------------------------------------------------------------
 //      コンストラクタです.
 //-------------------------------------------------------------------------------------------------
-Leaf::Leaf( u32 count, IShape** ppShapes )
+Leaf::Leaf( size_t count, IShape** ppShapes )
 : m_Count(1)
 {
     m_pShapes.resize( count );
-    for(u32 i=0; i<count; ++i)
+    for(size_t i=0; i<count; ++i)
     {
         m_pShapes[i] = ppShapes[i];
         m_pShapes[i]->AddRef();
     }
 
     m_Box = ppShapes[ 0 ]->GetBox();
-    for( u32 i=1; i<count; ++i )
+    for( size_t i=1; i<count; ++i )
     { m_Box = BoundingBox::Merge( m_Box, ppShapes[ i ]->GetBox() ); }
 }
 
@@ -96,7 +96,7 @@ Vector3 Leaf::GetCenter() const
 //-------------------------------------------------------------------------------------------------
 //      生成処理を行います.
 //-------------------------------------------------------------------------------------------------
-IShape* Leaf::Create(u32 count, IShape** ppShape)
-{ return new(std::nothrow) Leaf(count, ppShape); }
+IShape* Leaf::Create( size_t count, IShape** ppShape )
+{ return new(std::nothrow) Leaf( count, ppShape ); }
 
 } // namespace s3d

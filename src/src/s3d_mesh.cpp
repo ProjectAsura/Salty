@@ -11,7 +11,7 @@
 #include <cstring>
 #include <string>
 #include <s3d_mesh.h>
-#include <s3d_bvh.h>
+#include <s3d_bvh2.h>
 #include <s3d_logger.h>
 #include <s3d_triangle.h>
 #include <s3d_materialfactory.h>
@@ -389,7 +389,7 @@ bool Mesh::LoadFromFile( const char* filename )
     }
 
     // BVHを構築します.
-    m_pBVH = BVH::BuildBranch( m_Triangles.data(), m_Triangles.size() );
+    m_pBVH = BVH2::Create( m_Triangles.size(), m_Triangles.data() );
 
     return true;
 }
@@ -421,7 +421,7 @@ bool Mesh::Init(u32 vertexCount, Vertex* pVertices, IMaterial* pMaterial)
     { return false; }
 
     // BVHを構築します.
-    m_pBVH = BVH::Build( m_Triangles );
+    m_pBVH = BVH2::Create( m_Triangles.size(), m_Triangles.data() );
 
     return true;
 }

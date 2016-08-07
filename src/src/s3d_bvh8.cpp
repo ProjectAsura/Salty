@@ -93,15 +93,20 @@ s3d::Vector3 CalcOffset( const s3d::BoundingBox& box, const s3d::Vector3& p )
 //-------------------------------------------------------------------------------------------------
 s3d::IShape* CreateNode( size_t count, s3d::IShape** ppShapes )
 {
+#if 0 // 細かすぎると遅くなるので BVH は作らない.
     if ( count <= 4 )
     { return s3d::Leaf::Create(count, ppShapes); }
 
-#if 0   // 細かすぎると遅くなるので BVH は作らない.
     if ( count <= 16 )
     { return s3d::BVH2::Create(count, ppShapes); }
-#endif
 
     return s3d::BVH4::Create(count, ppShapes);
+#else
+    if ( count <= 16 )
+    { return s3d::Leaf::Create(count, ppShapes); }
+
+    return s3d::BVH4::Create(count, ppShapes);
+#endif
 }
 
 } // namespace /* anonymous */

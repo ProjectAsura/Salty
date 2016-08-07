@@ -93,7 +93,7 @@ s3d::Vector3 CalcOffset( const s3d::BoundingBox& box, const s3d::Vector3& p )
 //-------------------------------------------------------------------------------------------------
 s3d::IShape* CreateNode( size_t count, s3d::IShape** ppShapes )
 {
-#if 0 // 細かすぎると，遅くなる.
+#if 0 // 細かすぎると遅くなるので BVHは作らない
     if ( count <= 4 )
     { return s3d::Leaf::Create(count, ppShapes); }
 

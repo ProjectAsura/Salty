@@ -77,6 +77,7 @@ private:
     Vertex              m_Vertex[3];
     BoundingBox         m_BoundingBox;
     IMaterial*          m_pMaterial;
+    Vector3             m_Edge[2];
 
     //=============================================================================================
     // private methods.

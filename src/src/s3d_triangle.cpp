@@ -34,6 +34,9 @@ Triangle::Triangle(Vertex* pVertice, IMaterial* pMaterial)
     max = Vector3::Max( max, m_Vertex[2].Position );
     m_BoundingBox = BoundingBox( min, max );
     m_pMaterial->AddRef();
+
+    m_Edge[0] = m_Vertex[1].Position - m_Vertex[0].Position;
+    m_Edge[1] = m_Vertex[2].Position - m_Vertex[0].Position;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -69,13 +72,10 @@ u32 Triangle::GetCount() const
 //-------------------------------------------------------------------------------------------------
 bool Triangle::IsHit(const Ray& ray, HitRecord& record) const
 {
-    auto e1  = m_Vertex[1].Position - m_Vertex[0].Position;
-    auto e2  = m_Vertex[2].Position - m_Vertex[0].Position;
-    auto dir = ray.dir;
-    auto s1  = Vector3::Cross( dir, e2 );
-    auto div = Vector3::Dot( s1, e1 );
+    auto s1  = Vector3::Cross( ray.dir, m_Edge[1] );
+    auto div = Vector3::Dot( s1, m_Edge[0] );
 
-    if ( -FLT_EPSILON <= div && div <= FLT_EPSILON )
+    if ( abs(div) <= FLT_EPSILON )
     { return false; }
 
     auto d = ray.pos - m_Vertex[0].Position;
@@ -83,16 +83,16 @@ bool Triangle::IsHit(const Ray& ray, HitRecord& record) const
     if ( beta <= 0.0 || beta >= 1.0 )
     { return false; }
 
-    auto s2 = Vector3::Cross( d, e1 );
-    auto gamma = Vector3::Dot( dir, s2 ) / div;
+    auto s2 = Vector3::Cross( d, m_Edge[0] );
+    auto gamma = Vector3::Dot( ray.dir, s2 ) / div;
     if ( gamma <= 0.0 || ( beta + gamma ) >= 1.0 )
     { return false; }
 
-    auto dist = Vector3::Dot( e2, s2 ) / div;
+    auto dist = Vector3::Dot( m_Edge[1], s2 ) / div;
     if ( dist < F_HIT_MIN || dist > F_HIT_MAX )
     { return false; }
 
-    if ( dist > record.distance )
+    if ( dist >= record.distance )
     { return false; }
 
     record.position  = ray.pos + ray.dir * dist;

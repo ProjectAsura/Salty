@@ -1475,8 +1475,6 @@ struct Ray
 {
     Vector3 pos;            //!< 位置座標です.
     Vector3 dir;            //!< 方向ベクトルです.
-    Vector3 invDir;         //!< 方向ベクトルの各成分の逆数です.
-    s32     sign[3];        //!< 方向ベクトルの符号です.
 
     //---------------------------------------------------------------------------------------------
     //! @brief      コンストラクタです.
@@ -1490,12 +1488,7 @@ struct Ray
     Ray( const Ray& value )
     : pos   ( value.pos )
     , dir   ( value.dir )
-    , invDir( value.invDir )
-    {
-        sign[0] = value.sign[0];
-        sign[1] = value.sign[1];
-        sign[2] = value.sign[2];
-    }
+    { /* DO_NOTHING */ }
 
     //---------------------------------------------------------------------------------------------
     //! @brief      レイを更新します.
@@ -1509,14 +1502,6 @@ struct Ray
         dir.x = d.x;
         dir.y = d.y;
         dir.z = d.z;
-
-        invDir.x = 1.0f / dir.x;
-        invDir.y = 1.0f / dir.y;
-        invDir.z = 1.0f / dir.z;
-
-        sign[0] = ( dir.x >= 0.0f ) ? 0 : 1;
-        sign[1] = ( dir.y >= 0.0f ) ? 0 : 1;
-        sign[2] = ( dir.z >= 0.0f ) ? 0 : 1;
     }
 };
 
@@ -1525,9 +1510,8 @@ struct Ray
 ////////////////////////////////////////////////////////////////////////////////////////////
 struct Ray4
 {
-    b128    pos[3];         //!< 位置座標です.
-    b128    invDir[3];      //!< 方向ベクトルの逆数です.
-    s32     sign[3];        //!< 方向ベクトルの符号です.
+    b128    pos[3];     //!< 位置座標です.
+    b128    dir[3];     //!< 方向ベクトルの逆数です.
 
     //-------------------------------------------------------------------------------------
     //! @brief      コンストラクタです.
@@ -1538,13 +1522,9 @@ struct Ray4
         pos[1] = _mm_set1_ps( ray.pos.y );
         pos[2] = _mm_set1_ps( ray.pos.z );
 
-        invDir[0] = _mm_set1_ps( ray.invDir.x );
-        invDir[1] = _mm_set1_ps( ray.invDir.y );
-        invDir[2] = _mm_set1_ps( ray.invDir.z );
-
-        sign[0] = ray.sign[0];
-        sign[1] = ray.sign[1];
-        sign[2] = ray.sign[2];
+        dir[0] = _mm_set1_ps( ray.dir.x );
+        dir[1] = _mm_set1_ps( ray.dir.y );
+        dir[2] = _mm_set1_ps( ray.dir.z );
     }
 
     //-------------------------------------------------------------------------------------
@@ -1556,13 +1536,9 @@ struct Ray4
         pos[1] = rayQuad.pos[1];
         pos[2] = rayQuad.pos[2];
 
-        invDir[0] = rayQuad.invDir[0];
-        invDir[1] = rayQuad.invDir[1];
-        invDir[2] = rayQuad.invDir[2];
-
-        sign[0] = rayQuad.sign[0];
-        sign[1] = rayQuad.sign[1];
-        sign[2] = rayQuad.sign[2];
+        dir[0] = rayQuad.dir[0];
+        dir[1] = rayQuad.dir[1];
+        dir[2] = rayQuad.dir[2];
     }
 };
 
@@ -1572,9 +1548,8 @@ struct Ray4
 ////////////////////////////////////////////////////////////////////////////////////////////
 struct Ray8
 {
-    b256    pos[3];         //!< 位置座標です.
-    b256    invDir[3];      //!< 方向ベクトルの逆数です.
-    s32     sign[3];        //!< 方向ベクトルの符号です.
+    b256    pos[3];     //!< 位置座標です.
+    b256    dir[3];     //!< 方向ベクトルの逆数です.
 
     //-------------------------------------------------------------------------------------
     //! @brief      コンストラクタです.
@@ -1585,13 +1560,9 @@ struct Ray8
         pos[1] = _mm256_set1_ps( ray.pos.y );
         pos[2] = _mm256_set1_ps( ray.pos.z );
 
-        invDir[0] = _mm256_set1_ps( ray.invDir.x );
-        invDir[1] = _mm256_set1_ps( ray.invDir.y );
-        invDir[2] = _mm256_set1_ps( ray.invDir.z );
-
-        sign[0] = ray.sign[0];
-        sign[1] = ray.sign[1];
-        sign[2] = ray.sign[2];
+        dir[0] = _mm256_set1_ps( ray.dir.x );
+        dir[1] = _mm256_set1_ps( ray.dir.y );
+        dir[2] = _mm256_set1_ps( ray.dir.z );
     }
 
     //-------------------------------------------------------------------------------------
@@ -1603,13 +1574,9 @@ struct Ray8
         pos[1] = rayOct.pos[1];
         pos[2] = rayOct.pos[2];
 
-        invDir[0] = rayOct.invDir[0];
-        invDir[1] = rayOct.invDir[1];
-        invDir[2] = rayOct.invDir[2];
-
-        sign[0] = rayOct.sign[0];
-        sign[1] = rayOct.sign[1];
-        sign[2] = rayOct.sign[2];
+        dir[0] = rayOct.dir[0];
+        dir[1] = rayOct.dir[1];
+        dir[2] = rayOct.dir[2];
     }
 };
 
@@ -2277,15 +2244,17 @@ public:
 
         for( auto i=0; i<3; ++i )
         {
-            auto idx0 = ray.sign[i];
-            auto idx1 = 1 - idx0;
+            auto t0 = ( v[0]->a[i] - ray.pos.a[i] ) / ray.dir.a[i];
+            auto t1 = ( v[1]->a[i] - ray.pos.a[i] ) / ray.dir.a[i];
 
-            auto t0 = ( v[idx0]->a[i] - ray.pos.a[i] ) * ray.invDir.a[i];
-            auto t1 = ( v[idx1]->a[i] - ray.pos.a[i] ) * ray.invDir.a[i];
+            auto n = s3d::Min( t0, t1 );
+            auto f = s3d::Max( t0, t1 );
 
-            if ( t0 > tmin )   { tmin = t0; }
-            if ( t1 < tmax )   { tmax = t1; }
-            if ( tmin > tmax ) { return false; }
+            tmin = s3d::Max( tmin, n );
+            tmax = s3d::Min( tmax, f );
+
+            if ( tmin > tmax ) 
+            { return false; }
         }
 
         return true;
@@ -2436,8 +2405,8 @@ public:
 
         for( auto i=0; i<3; ++i )
         {
-            auto t0 = _mm_mul_ps( _mm_sub_ps( value[ 0 ][ i ], ray.pos[ i ] ), ray.invDir[ i ] );
-            auto t1 = _mm_mul_ps( _mm_sub_ps( value[ 1 ][ i ], ray.pos[ i ] ), ray.invDir[ i ] );
+            auto t0 = _mm_div_ps( _mm_sub_ps( value[ 0 ][ i ], ray.pos[ i ] ), ray.dir[ i ] );
+            auto t1 = _mm_div_ps( _mm_sub_ps( value[ 1 ][ i ], ray.pos[ i ] ), ray.dir[ i ] );
 
             auto n = _mm_min_ps( t0, t1 );
             auto f = _mm_max_ps( t0, t1 );
@@ -2464,13 +2433,29 @@ public:
     S3D_INLINE
     BoundingBox GetBox() const
     {
-        Vector3 tmin( value[0][0].m128_f32[0], value[0][1].m128_f32[0], value[0][2].m128_f32[0] );
-        Vector3 tmax( value[1][0].m128_f32[0], value[1][1].m128_f32[0], value[1][2].m128_f32[0] );
+        S3D_ALIGN(16) f32 sx[4];
+        S3D_ALIGN(16) f32 sy[4];
+        S3D_ALIGN(16) f32 sz[4];
+
+        S3D_ALIGN(16) f32 bx[4];
+        S3D_ALIGN(16) f32 by[4];
+        S3D_ALIGN(16) f32 bz[4];
+
+        _mm_store_ps( sx, value[0][0] );
+        _mm_store_ps( sy, value[0][1] );
+        _mm_store_ps( sz, value[0][2] );
+
+        _mm_store_ps( bx, value[1][0] );
+        _mm_store_ps( by, value[1][1] );
+        _mm_store_ps( bz, value[1][2] );
+
+        Vector3 tmin( sx[0], sy[0], sz[0] );
+        Vector3 tmax( bx[0], by[0], bz[0] );
 
         for( u32 i=1; i<4; ++i )
         {
-            tmin = Vector3::Min( tmin, Vector3( value[0][0].m128_f32[i], value[0][1].m128_f32[i], value[0][2].m128_f32[i] ) );
-            tmax = Vector3::Max( tmax, Vector3( value[1][0].m128_f32[i], value[1][1].m128_f32[i], value[1][2].m128_f32[i] ) );
+            tmin = Vector3::Min( tmin, Vector3( sx[i], sy[i], sz[i] ) );
+            tmax = Vector3::Max( tmax, Vector3( bx[i], by[i], bz[i] ) );
         }
 
         return BoundingBox( tmin, tmax );
@@ -2597,8 +2582,8 @@ public:
 
         for( auto i=0; i<3; ++i )
         {
-            auto t0 = _mm256_mul_ps( _mm256_sub_ps( value[ 0 ][ i ], ray.pos[ i ] ), ray.invDir[ i ] );
-            auto t1 = _mm256_mul_ps( _mm256_sub_ps( value[ 1 ][ i ], ray.pos[ i ] ), ray.invDir[ i ] );
+            auto t0 = _mm256_div_ps( _mm256_sub_ps( value[ 0 ][ i ], ray.pos[ i ] ), ray.dir[ i ] );
+            auto t1 = _mm256_div_ps( _mm256_sub_ps( value[ 1 ][ i ], ray.pos[ i ] ), ray.dir[ i ] );
 
             auto n = _mm256_min_ps( t0, t1 );
             auto f = _mm256_max_ps( t0, t1 );
@@ -2624,13 +2609,29 @@ public:
     S3D_INLINE
     BoundingBox GetBox() const
     {
-        Vector3 tmin( value[0][0].m256_f32[0], value[0][1].m256_f32[0], value[0][2].m256_f32[0] );
-        Vector3 tmax( value[1][0].m256_f32[0], value[1][1].m256_f32[0], value[1][2].m256_f32[0] );
+        S3D_ALIGN(32) f32 sx[8];
+        S3D_ALIGN(32) f32 sy[8];
+        S3D_ALIGN(32) f32 sz[8];
+
+        S3D_ALIGN(32) f32 bx[8];
+        S3D_ALIGN(32) f32 by[8];
+        S3D_ALIGN(32) f32 bz[8];
+
+        _mm256_store_ps( sx, value[0][0] );
+        _mm256_store_ps( sy, value[0][1] );
+        _mm256_store_ps( sz, value[0][2] );
+
+        _mm256_store_ps( bx, value[1][0] );
+        _mm256_store_ps( by, value[1][1] );
+        _mm256_store_ps( bz, value[1][2] );
+
+        Vector3 tmin( sx[0], sy[0], sz[0] );
+        Vector3 tmax( bx[0], by[0], bz[0] );
 
         for( u32 i=1; i<8; ++i )
         {
-            tmin = Vector3::Min( tmin, Vector3( value[0][0].m256_f32[i], value[0][1].m256_f32[i], value[0][2].m256_f32[i] ) );
-            tmax = Vector3::Max( tmax, Vector3( value[1][0].m256_f32[i], value[1][1].m256_f32[i], value[1][2].m256_f32[i] ) );
+            tmin = Vector3::Min( tmin, Vector3( sx[i], sy[i], sz[i] ) );
+            tmax = Vector3::Max( tmax, Vector3( bx[i], by[i], bz[i] ) );
         }
 
         return BoundingBox( tmin, tmax );

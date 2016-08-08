@@ -269,10 +269,7 @@ Color4 PathTracer::Radiance( const Ray& input )
     return L;
 }
 
-//-------------------------------------------------------------------------------------------------
-//      直接光ライティングを行います.
-//-------------------------------------------------------------------------------------------------
-Color4 PathTracer::NextEventEstimation( const Ray& ray, const HitRecord& record )
+Ray PathTracer::MakeShadowRay( const Vector3& position )
 {
     auto phi = F_2PI * m_Random.GetAsF32();
     auto r  = m_Random.GetAsF32();
@@ -281,7 +278,15 @@ Color4 PathTracer::NextEventEstimation( const Ray& ray, const HitRecord& record 
     auto dir = Vector3( x, y, SafeSqrt( 1.0f - (x * x) - (y * y) ) );
     dir = Vector3::UnitVector( dir );
 
-    auto shadowRay = Ray( record.position, dir );
+    return Ray( position, dir );
+}
+
+//-------------------------------------------------------------------------------------------------
+//      直接光ライティングを行います.
+//-------------------------------------------------------------------------------------------------
+Color4 PathTracer::NextEventEstimation( const HitRecord& record )
+{
+    auto shadowRay = MakeShadowRay( record.position );
 
     HitRecord shadowRecord;
     if ( m_pScene->Intersect(shadowRay, shadowRecord) )

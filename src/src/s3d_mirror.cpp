@@ -62,8 +62,7 @@ Color4 Mirror::Shade( ShadingArg& arg ) const
     const Vector3 normalMod = ( Vector3::Dot ( arg.normal, arg.input ) < 0.0 ) ? arg.normal : -arg.normal;
 
     // 反射ベクトルを求める.
-    Vector3 reflect = Vector3::Reflect( arg.input, normalMod );
-    reflect.Normalize();
+    Vector3 reflect = Vector3::UnitVector( Vector3::Reflect( arg.input, normalMod ) );
 
     arg.output = reflect;
     arg.dice   = false;

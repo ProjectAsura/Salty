@@ -63,7 +63,7 @@ TestScene::TestScene( const u32 width, const u32 height )
         assert(false);
     }
 
-    if ( !m_IBL.Init( "res/ibl/HDR_041_Path.hdr") )
+    if ( !m_IBL.Init( "res/ibl/Tropical_Beach_3k.hdr") )
     {
         ELOG("Error : IBL Load Failed." );
         assert(false);

@@ -33,6 +33,9 @@ int main( int argc, char **argv )
         // アプリケーションの構成設定.
         s3d::PathTracer::Config config;
 
+        config.MaxRenderingMin    = 14.9f;
+        config.CaptureIntervalSec = 29.9f;
+
     #if 1
         // 本番用.
         config.Width          = 1280;

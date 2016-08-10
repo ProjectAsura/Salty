@@ -28,6 +28,7 @@ Phong::Phong(const Color4& specular, f32 power, const Color4& emissive)
     m_Threshold = m_Specular.GetX();
     m_Threshold = s3d::Max( m_Threshold, m_Specular.GetY() );
     m_Threshold = s3d::Max( m_Threshold, m_Specular.GetZ() );
+    m_Threshold = s3d::Max( m_Threshold, 0.01f);    // Nan対策のため下駄をはかせる.
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -80,14 +81,14 @@ Color4 Phong::Shade( ShadingArg& arg ) const
 
         // 反射ベクトル.
         Vector3 w = Vector3::Reflect( arg.input, normalMod );
-        w.Normalize();
+        w.SafeNormalize();
 
         // 基底ベクトルを求める.
         OrthonormalBasis onb;
         onb.InitFromW( w );
 
         // 出射方向.
-        dir = Vector3::UnitVector( onb.u * x + onb.v * y + onb.w * z );
+        dir = Vector3::SafeUnitVector( onb.u * x + onb.v * y + onb.w * z );
 
         // 出射方向と法線ベクトルの内積を求める.
         dots = Vector3::Dot( dir, normalMod );

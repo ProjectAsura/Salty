@@ -105,7 +105,7 @@ bool Triangle::IsHit(const Ray& ray, HitRecord& record) const
         m_Vertex[0].Normal.x * alpha + m_Vertex[1].Normal.x * beta + m_Vertex[2].Normal.x * gamma,
         m_Vertex[0].Normal.y * alpha + m_Vertex[1].Normal.y * beta + m_Vertex[2].Normal.y * gamma,
         m_Vertex[0].Normal.z * alpha + m_Vertex[1].Normal.z * beta + m_Vertex[2].Normal.z * gamma );
-    record.normal.Normalize();
+    record.normal.SafeNormalize();
 
     record.texcoord = Vector2(
         m_Vertex[0].TexCoord.x * alpha + m_Vertex[1].TexCoord.x * beta + m_Vertex[2].TexCoord.x * gamma,

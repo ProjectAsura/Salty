@@ -27,6 +27,7 @@ Lambert::Lambert(const Color4& diffuse, const Color4& emissive)
     m_Threshold = diffuse.GetX();
     m_Threshold = s3d::Max( m_Threshold, diffuse.GetY() );
     m_Threshold = s3d::Max( m_Threshold, diffuse.GetZ() );
+    m_Threshold = s3d::Max( m_Threshold, 0.01f);    // Nan対策のため下駄をはかせる.
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -78,7 +79,7 @@ Color4 Lambert::Shade( ShadingArg& arg ) const
     const f32 z = SafeSqrt( 1.0f - ( x * x ) - ( y * y ) );
 
     // 出射方向.
-    Vector3 dir = Vector3::UnitVector( onb.u * x + onb.v * y + onb.w * z );
+    Vector3 dir = Vector3::SafeUnitVector( onb.u * x + onb.v * y + onb.w * z );
 
     arg.output = dir;
     arg.dice   = ( arg.random.GetAsF32() >= m_Threshold );

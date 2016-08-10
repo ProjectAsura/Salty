@@ -63,7 +63,7 @@ Color4 Glass::Shade( ShadingArg& arg ) const
     const Vector3 normalMod = ( Vector3::Dot ( arg.normal, arg.input ) < 0.0 ) ? arg.normal : -arg.normal;
 
     // 反射ベクトルを求める.
-    Vector3 reflect = Vector3::UnitVector( Vector3::Reflect( arg.input, normalMod ) );
+    Vector3 reflect = Vector3::SafeUnitVector( Vector3::Reflect( arg.input, normalMod ) );
 
     // レイがオブジェクトから出るのか? 入るのか?
     const bool into = ( Vector3::Dot( arg.normal, normalMod ) > 0.0 );
@@ -93,7 +93,7 @@ Color4 Glass::Shade( ShadingArg& arg ) const
     }
 
     // 屈折ベクトル.
-    Vector3 refract = Vector3::UnitVector(
+    Vector3 refract = Vector3::SafeUnitVector(
         arg.input * nnt - arg.normal * ( ( into ) ? 1.0f : -1.0f ) * ( ddn * nnt + SafeSqrt(cos2t) ) );
 
     // SchlickによるFresnelの反射係数の近似を使う

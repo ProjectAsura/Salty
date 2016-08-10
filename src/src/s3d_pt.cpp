@@ -103,7 +103,7 @@ bool PathTracer::Run( const Config& config )
     // 起動画面.
     ILOG( "//=================================================================" );
     ILOG( "//  Path Tarcer \"Salty\"" );
-    ILOG( "//  Version : Alpha 3.0" );
+    ILOG( "//  Version : Alpha 3.5" );
     ILOG( "//  Author  : Pocol" );
     ILOG( "//=================================================================" );
     ILOG( " Configuration : " );
@@ -145,7 +145,7 @@ void PathTracer::Capture( const char* filename )
 //-------------------------------------------------------------------------------------------------
 //      レンダリング時間を監視します.
 //-------------------------------------------------------------------------------------------------
-void PathTracer::Watcher()
+void PathTracer::Watcher(f32 maxRenderingTimeMin, f32 captureIntervalSec)
 {
     auto counter = 0;
     char filename[256];
@@ -165,8 +165,8 @@ void PathTracer::Watcher()
         renderingTimer.Stop();
         auto min = renderingTimer.GetElapsedTimeMin();
 
-        // 約30秒ごとにレンダリング結果をキャプチャ.
-        if ( sec >= 29.9 )
+        // レンダリング結果をキャプチャ.
+        if ( sec >= captureIntervalSec )
         {
             sprintf_s( filename, "img/%03d.bmp", counter );
             Capture( filename );
@@ -178,8 +178,8 @@ void PathTracer::Watcher()
             captureTimer.Start();
         }
 
-        // 15分の規定時間に達した場合.
-        if ( min > 14.9 )
+        // 規定時間に達した場合.
+        if ( min > maxRenderingTimeMin )
         {
             sprintf_s( filename, "img/%03d.bmp", counter );
             ILOG( "Rendering Imcompleted..." );
@@ -219,7 +219,7 @@ Color4 PathTracer::Radiance( const Ray& input )
     // 乱数設定.
     arg.random = m_Random;
 
-    for( auto depth=0; depth < m_Config.MaxBounceCount || !m_WatcherEnd ;++depth)
+    for( auto depth=0; depth < m_Config.MaxBounceCount && !m_WatcherEnd ;++depth)
     {
         auto record = HitRecord();
 
@@ -246,13 +246,13 @@ Color4 PathTracer::Radiance( const Ray& input )
         // 色を求める.
         W = Color4::Mul( W, material->Shade( arg ) );
 
-        // 直接光をサンプリング.
-        if ( !record.pMaterial->HasDelta() )
-        { L += Color4::Mul( W, NextEventEstimation( ray, record ) );  }
-
         // ロシアンルーレットで打ち切るかどうか?
         if ( arg.dice )
         { break; }
+
+        // 直接光をサンプリング.
+        if ( !record.pMaterial->HasDelta() )
+        { L += Color4::Mul( W, NextEventEstimation( record.position, arg.random ) ); }
 
         // 重みがゼロになったら以降の更新は無駄なので打ち切りにする.
         if ( IsZero(W.GetX()) && IsZero(W.GetY()) && IsZero(W.GetZ()) )
@@ -269,14 +269,17 @@ Color4 PathTracer::Radiance( const Ray& input )
     return L;
 }
 
-Ray PathTracer::MakeShadowRay( const Vector3& position )
+//-------------------------------------------------------------------------------------------------
+//      シャドウレイを生成します.
+//-------------------------------------------------------------------------------------------------
+Ray PathTracer::MakeShadowRay( const Vector3& position, Random& random )
 {
-    auto phi = F_2PI * m_Random.GetAsF32();
-    auto r  = m_Random.GetAsF32();
+    auto phi = F_2PI * random.GetAsF32();
+    auto r  = random.GetAsF32();
     auto x = r * std::cos( phi );
     auto y = r * std::sin( phi );
     auto dir = Vector3( x, y, SafeSqrt( 1.0f - (x * x) - (y * y) ) );
-    dir = Vector3::UnitVector( dir );
+    dir = Vector3::SafeUnitVector( dir );
 
     return Ray( position, dir );
 }
@@ -284,9 +287,9 @@ Ray PathTracer::MakeShadowRay( const Vector3& position )
 //-------------------------------------------------------------------------------------------------
 //      直接光ライティングを行います.
 //-------------------------------------------------------------------------------------------------
-Color4 PathTracer::NextEventEstimation( const HitRecord& record )
+Color4 PathTracer::NextEventEstimation( const Vector3& position, Random& random )
 {
-    auto shadowRay = MakeShadowRay( record.position );
+    auto shadowRay = MakeShadowRay( position, random );
 
     HitRecord shadowRecord;
     if ( m_pScene->Intersect(shadowRay, shadowRecord) )
@@ -294,6 +297,7 @@ Color4 PathTracer::NextEventEstimation( const HitRecord& record )
 
     return m_pScene->SampleIBL( shadowRay.dir );
 }
+
 
 //-------------------------------------------------------------------------------------------------
 //      経路を追跡します.
@@ -307,6 +311,9 @@ void PathTracer::TracePath()
     // 1つは監視用に空けておく.
     if ( coreCount > 1 )
     { coreCount--; }
+
+    // 時間監視スレッドを起動.
+    std::thread thd( &PathTracer::Watcher, this, m_Config.MaxRenderingMin, m_Config.CaptureIntervalSec );
 
     // レンダーターゲットを生成.
     m_RenderTarget = static_cast<Color4*>(_aligned_malloc( sizeof(Color4) * m_Config.Width * m_Config.Height, 16 ));
@@ -323,9 +330,6 @@ void PathTracer::TracePath()
 
     const auto rate     = 1.0f / static_cast<f32>( m_Config.SubSampleCount );
     const auto halfRate = rate * 0.5f;
-
-    // 時間監視スレッドを起動.
-    std::thread thd( &PathTracer::Watcher, this );
 
     // 乱数初期化.
     m_Random.SetSeed( 3141592 );

@@ -15,6 +15,7 @@
 #include <s3d_logger.h>
 #include <s3d_mesh.h>
 #include <s3d_instance.h>
+#include <s3d_sphere.h>
 #include <s3d_materialfactory.h>
 
 
@@ -63,14 +64,15 @@ TestScene::TestScene( const u32 width, const u32 height )
         assert(false);
     }
 
-    if ( !m_IBL.Init( "res/ibl/Tropical_Beach_3k.hdr") )
+    if ( !m_IBL.Init( "res/ibl/HDR_041_Path.hdr") )
     {
         ELOG("Error : IBL Load Failed." );
         assert(false);
     }
 
+
     m_Material.push_back( MaterialFactory::CreateLambert( Color4( 0.95f, 0.95f, 0.95f, 1.0f ), &g_TableTexture, &g_Sampler ) );
-    m_Material.push_back( MaterialFactory::CreateLambert( Color4( 0.0f, 0.0f, 0.0f, 1.0f ), nullptr, nullptr, Color4( 100.0f, 100.0f, 100.0f, 1.0f ) ) );
+    m_Material.push_back( MaterialFactory::CreateLambert( Color4( 0.0f, 0.0f, 0.0f, 1.0f ), nullptr, nullptr, Color4( 1000.0f, 1000.0f, 1000.0f, 1.0f ) ) );
 
     {
         Vertex vertices[6];
@@ -112,6 +114,7 @@ TestScene::TestScene( const u32 width, const u32 height )
     m_Shapes.push_back( Instance::Create( pCan0, Matrix::RotateX(ToRad(90.0f)) * Matrix::RotateY(ToRad(70.0f)) * Matrix::Translate( 10.0f, 10.0f, 10.0f) ));
     m_Shapes.push_back( Instance::Create( pCup,  Matrix::Translate( 30.0f, 20.0f, -55.0f ) ));
     m_Shapes.push_back( Instance::Create( pCup,  Matrix::Translate( 70.0f, 20.0f, -70.0f ) ));
+    m_Shapes.push_back( Sphere::Create( 15.0f, Vector3( 50.0f,  150.0f, 90.0f ), m_Material[1] ) );
     m_Shapes.push_back( pQuad );
 
     SafeRelease( pCan0 );

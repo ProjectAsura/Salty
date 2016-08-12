@@ -33,15 +33,15 @@ int main( int argc, char **argv )
         // アプリケーションの構成設定.
         s3d::PathTracer::Config config;
 
-        config.MaxRenderingMin    = 14.9f;
+        config.MaxRenderingMin    = 4.9f;
         config.CaptureIntervalSec = 29.9f;
 
     #if 1
         // 本番用.
         config.Width          = 1280;
         config.Height         = 720;
-        config.SampleCount    = 128;
-        config.SubSampleCount = 4;
+        config.SampleCount    = 512;
+        config.SubSampleCount = 2;
         config.MaxBounceCount = 16;
     #else
         // デバッグ用.

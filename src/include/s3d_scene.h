@@ -61,8 +61,8 @@ public:
     //! @brief      交差判定を行います.
     //---------------------------------------------------------------------------------------------
     S3D_INLINE
-    bool Intersect( const Ray& ray, HitRecord& record )
-    { return m_pBVH->IsHit( ray, record ); }
+    bool Intersect( const RaySet& raySet, HitRecord& record )
+    { return m_pBVH->IsHit( raySet, record ); }
 
     //---------------------------------------------------------------------------------------------
     //! @brief      IBLテクスチャをフェッチします.

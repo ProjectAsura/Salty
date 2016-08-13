@@ -63,10 +63,10 @@ u32 Sphere::GetCount() const
 //-------------------------------------------------------------------------------------------------
 //      交差判定を行います.
 //-------------------------------------------------------------------------------------------------
-bool Sphere::IsHit(const Ray &ray, HitRecord& record ) const
+bool Sphere::IsHit(const RaySet &raySet, HitRecord& record ) const
 {
-    const auto po = m_Center - ray.pos;
-    const auto b  = Vector3::Dot(po, ray.dir);
+    const auto po = m_Center - raySet.ray.pos;
+    const auto b  = Vector3::Dot(po, raySet.ray.dir);
     const auto D4 = b * b - Vector3::Dot(po, po) + m_Radius * m_Radius;
 
     if ( D4 < 0.0f )
@@ -84,7 +84,7 @@ bool Sphere::IsHit(const Ray &ray, HitRecord& record ) const
     { return false; }
 
     record.distance  = dist;
-    record.position  = ray.pos + record.distance * ray.dir;
+    record.position  = raySet.ray.pos + record.distance * raySet.ray.dir;
     record.pShape    = this;
     record.pMaterial = m_pMaterial;
 

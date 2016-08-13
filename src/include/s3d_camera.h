@@ -96,7 +96,7 @@ public:
     {
         Vector3 pos = ( m_CX * x ) + ( m_CY * y ) + m_CZ;
         Vector3 dir = Vector3::UnitVector( pos - m_Position );
-        return Ray( m_Position, dir );
+        return MakeRay( m_Position, dir );
     }
 
 protected:
@@ -208,7 +208,7 @@ public:
     {
         Vector3 pos = ( m_CX * x ) + ( m_CY * y ) + m_CZ;
         Vector3 dir = Vector3::UnitVector( pos - m_Position );
-        auto ray = Ray( m_Position, dir );
+        auto ray = MakeRay( m_Position, dir );
 
         if ( m_LensRadius > 0.0f )
         {

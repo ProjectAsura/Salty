@@ -140,14 +140,14 @@ u32 BVH2::GetCount() const
 //-------------------------------------------------------------------------------------------------
 //      交差判定を行います.
 //-------------------------------------------------------------------------------------------------
-bool BVH2::IsHit( const Ray& ray, HitRecord& record ) const
+bool BVH2::IsHit( const RaySet& raySet, HitRecord& record ) const
 {
-    if ( !m_Box.IsHit( ray ) )
+    if ( !m_Box.IsHit( raySet.ray ) )
     { return false; }
 
     auto hit = false;
     for ( auto i=0; i<2; ++i )
-    { hit |= m_pNode[i]->IsHit( ray, record ); }
+    { hit |= m_pNode[i]->IsHit( raySet, record ); }
 
     return hit;
 }

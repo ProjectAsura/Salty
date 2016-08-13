@@ -171,10 +171,10 @@ u32 BVH4::GetCount() const
 //-------------------------------------------------------------------------------------------------
 //      交差判定を行います.
 //-------------------------------------------------------------------------------------------------
-bool BVH4::IsHit( const Ray& ray, HitRecord& record ) const
+bool BVH4::IsHit( const RaySet& raySet, HitRecord& record ) const
 {
     s32 mask = 0;
-    if ( !m_Box.IsHit( Ray4(ray), mask ) )
+    if ( !m_Box.IsHit( raySet.ray4, mask ) )
     { return false; }
 
     auto hit = false;
@@ -182,7 +182,7 @@ bool BVH4::IsHit( const Ray& ray, HitRecord& record ) const
     {
         auto bit = 0x1 << i;
         if ( (mask & bit) == bit )
-        { hit |= m_pNode[i]->IsHit( ray, record ); }
+        { hit |= m_pNode[i]->IsHit( raySet, record ); }
     }
 
     return hit;

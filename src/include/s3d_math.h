@@ -1435,6 +1435,18 @@ public:
     //! @brief      指定行列で変換します.
     //----------------------------------------------------------------------------------------------
     static Vector4 Transform( const Vector4& value, const Matrix& matrix );
+
+    void* operator new (size_t size)
+    { return _aligned_malloc(size, 16); }
+
+    void* operator new[] (size_t size)
+    { return _aligned_malloc(size, 16); }
+
+    void operator delete (void* ptr)
+    { _aligned_free(ptr); }
+
+    void operator delete[] (void* ptr)
+    { _aligned_free(ptr); }
 };
 
 //------------------------------------------------------------------------------------------
@@ -1475,34 +1487,6 @@ struct Ray
 {
     Vector3 pos;            //!< 位置座標です.
     Vector3 dir;            //!< 方向ベクトルです.
-
-    //---------------------------------------------------------------------------------------------
-    //! @brief      コンストラクタです.
-    //---------------------------------------------------------------------------------------------
-    Ray( const Vector3& p, const Vector3& d )
-    { Update( p, d ); }
-
-    //---------------------------------------------------------------------------------------------
-    //! @brief      コピーコンストラクタです.
-    //---------------------------------------------------------------------------------------------
-    Ray( const Ray& value )
-    : pos   ( value.pos )
-    , dir   ( value.dir )
-    { /* DO_NOTHING */ }
-
-    //---------------------------------------------------------------------------------------------
-    //! @brief      レイを更新します.
-    //---------------------------------------------------------------------------------------------
-    void Update( const Vector3& p, const Vector3& d )
-    {
-        pos.x = p.x;
-        pos.y = p.y;
-        pos.z = p.z;
-
-        dir.x = d.x;
-        dir.y = d.y;
-        dir.z = d.z;
-    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -1512,36 +1496,7 @@ struct Ray4
 {
     b128    pos[3];     //!< 位置座標です.
     b128    dir[3];     //!< 方向ベクトルの逆数です.
-
-    //-------------------------------------------------------------------------------------
-    //! @brief      コンストラクタです.
-    //-------------------------------------------------------------------------------------
-    Ray4( const Ray& ray )
-    {
-        pos[0] = _mm_set1_ps( ray.pos.x );
-        pos[1] = _mm_set1_ps( ray.pos.y );
-        pos[2] = _mm_set1_ps( ray.pos.z );
-
-        dir[0] = _mm_set1_ps( ray.dir.x );
-        dir[1] = _mm_set1_ps( ray.dir.y );
-        dir[2] = _mm_set1_ps( ray.dir.z );
-    }
-
-    //-------------------------------------------------------------------------------------
-    //! @brief      コピーコンストラクタです.
-    //-------------------------------------------------------------------------------------
-    Ray4( const Ray4& rayQuad )
-    {
-        pos[0] = rayQuad.pos[0];
-        pos[1] = rayQuad.pos[1];
-        pos[2] = rayQuad.pos[2];
-
-        dir[0] = rayQuad.dir[0];
-        dir[1] = rayQuad.dir[1];
-        dir[2] = rayQuad.dir[2];
-    }
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Ray4 structure
@@ -1550,36 +1505,93 @@ struct Ray8
 {
     b256    pos[3];     //!< 位置座標です.
     b256    dir[3];     //!< 方向ベクトルの逆数です.
-
-    //-------------------------------------------------------------------------------------
-    //! @brief      コンストラクタです.
-    //-------------------------------------------------------------------------------------
-    Ray8( const Ray& ray )
-    {
-        pos[0] = _mm256_set1_ps( ray.pos.x );
-        pos[1] = _mm256_set1_ps( ray.pos.y );
-        pos[2] = _mm256_set1_ps( ray.pos.z );
-
-        dir[0] = _mm256_set1_ps( ray.dir.x );
-        dir[1] = _mm256_set1_ps( ray.dir.y );
-        dir[2] = _mm256_set1_ps( ray.dir.z );
-    }
-
-    //-------------------------------------------------------------------------------------
-    //! @brief      コピーコンストラクタです.
-    //-------------------------------------------------------------------------------------
-    Ray8( const Ray8& rayOct )
-    {
-        pos[0] = rayOct.pos[0];
-        pos[1] = rayOct.pos[1];
-        pos[2] = rayOct.pos[2];
-
-        dir[0] = rayOct.dir[0];
-        dir[1] = rayOct.dir[1];
-        dir[2] = rayOct.dir[2];
-    }
 };
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// RaySet structure
+///////////////////////////////////////////////////////////////////////////////////////////////////
+struct RaySet
+{
+    Ray     ray;
+    Ray4    ray4;
+    Ray8    ray8;
+};
+
+//-------------------------------------------------------------------------------------------------
+//      レイを生成します.
+//-------------------------------------------------------------------------------------------------
+S3D_INLINE
+Ray MakeRay(const Vector3& position, const Vector3& direction)
+{
+    Ray result = {};
+    result.pos = position;
+    result.dir = direction;
+    return result;
+}
+
+//-------------------------------------------------------------------------------------------------
+//      4つにパッキングされたレイを生成します.
+//-------------------------------------------------------------------------------------------------
+S3D_INLINE
+Ray4 MakeRay4(const Vector3& position, const Vector3& direction)
+{
+    Ray4 result = {};
+    result.pos[0] = _mm_set1_ps( position.x );
+    result.pos[1] = _mm_set1_ps( position.y );
+    result.pos[2] = _mm_set1_ps( position.z );
+
+    result.dir[0] = _mm_set1_ps( direction.x );
+    result.dir[1] = _mm_set1_ps( direction.y );
+    result.dir[2] = _mm_set1_ps( direction.z );
+
+    return result;
+}
+
+//-------------------------------------------------------------------------------------------------
+//      8つにパッキングされたレイを生成します.
+//-------------------------------------------------------------------------------------------------
+S3D_INLINE
+Ray8 MakeRay8(const Vector3& position, const Vector3& direction)
+{
+    Ray8 result = {};
+    result.pos[0] = _mm256_set1_ps( position.x );
+    result.pos[1] = _mm256_set1_ps( position.y );
+    result.pos[2] = _mm256_set1_ps( position.z );
+
+    result.dir[0] = _mm256_set1_ps( direction.x );
+    result.dir[1] = _mm256_set1_ps( direction.y );
+    result.dir[2] = _mm256_set1_ps( direction.z );
+    return result;
+}
+
+//-------------------------------------------------------------------------------------------------
+//      レイセットを生成します.
+//-------------------------------------------------------------------------------------------------
+S3D_INLINE
+RaySet MakeRaySet(const Vector3& position, const Vector3& direction)
+{
+    RaySet result = {};
+    result.ray.pos = position;
+    result.ray.dir = direction;
+
+    result.ray4.pos[0] = _mm_set1_ps( position.x );
+    result.ray4.pos[1] = _mm_set1_ps( position.y );
+    result.ray4.pos[2] = _mm_set1_ps( position.z );
+
+    result.ray4.dir[0] = _mm_set1_ps( direction.x );
+    result.ray4.dir[1] = _mm_set1_ps( direction.y );
+    result.ray4.dir[2] = _mm_set1_ps( direction.z );
+
+    result.ray8.pos[0] = _mm256_set1_ps( position.x );
+    result.ray8.pos[1] = _mm256_set1_ps( position.y );
+    result.ray8.pos[2] = _mm256_set1_ps( position.z );
+
+    result.ray8.dir[0] = _mm256_set1_ps( direction.x );
+    result.ray8.dir[1] = _mm256_set1_ps( direction.y );
+    result.ray8.dir[2] = _mm256_set1_ps( direction.z );
+
+    return result;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////

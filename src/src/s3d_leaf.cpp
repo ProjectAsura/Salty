@@ -71,12 +71,15 @@ u32 Leaf::GetCount() const
 //-------------------------------------------------------------------------------------------------
 //      交差判定を行います.
 //-------------------------------------------------------------------------------------------------
-bool Leaf::IsHit( const Ray& ray, HitRecord& record ) const
+bool Leaf::IsHit( const RaySet& raySet, HitRecord& record ) const
 {
     auto hit = false;
 
+    if (!m_Box.IsHit(raySet.ray))
+    { return false; }
+
     for( size_t i=0; i<m_pShapes.size(); ++i )
-    { hit |= m_pShapes[ i ]->IsHit( ray, record ); }
+    { hit |= m_pShapes[ i ]->IsHit( raySet, record ); }
 
     return hit;
 }

@@ -72,7 +72,7 @@ bool PathTracer::Run( const Config& config )
 {
     // 起動画面.
     ILOG( "//=================================================================" );
-    ILOG( "//  Path Tarcer \"Salty\"" );
+    ILOG( "//  Renderer \"Salty\"" );
     ILOG( "//  Version : Alpha 3.5" );
     ILOG( "//  Author  : Pocol" );
     ILOG( "//=================================================================" );

@@ -466,7 +466,7 @@ bool Mesh::Init(u32 vertexCount, Vertex* pVertices, IMaterial* pMaterial)
     { return false; }
 
     // BVHを構築します.
-    m_pBVH = BVH4::Create( m_Triangles.size(), m_Triangles.data() );
+    m_pBVH = BVH8::Create( m_Triangles.size(), m_Triangles.data() );
 
     return true;
 }

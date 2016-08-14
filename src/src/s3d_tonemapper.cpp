@@ -9,6 +9,7 @@
 //------------------------------------------------------------------------------------------------
 #include <s3d_tonemapper.h>
 #include <s3d_math.h>
+#include <s3d_logger.h>
 
 
 namespace /* anonymous */ {
@@ -54,6 +55,9 @@ void ComputeLogarithmicAverage
 
             // 輝度値に変換.
             auto Lw = RGBToY( pPixels[idx] );
+
+            if (s3d::IsNan(Lw))
+            { continue; }
 
             // 最大輝度値を求める.
             if ( !init )
@@ -317,7 +321,7 @@ void ToneMapper::ACESFilmicToneMapping
 )
 {
     assert(pPixels != nullptr);
-    auto a = 0.18f;
+    auto a = 0.27f;
     auto aveLw = 0.0f;
     auto maxLw = 0.0f;
 

@@ -80,14 +80,14 @@ void OrthonormalBasis::InitFromW( const Vector3& value )
     Vector3 n ( 1.0, 0.0, 0.0 );
     Vector3 m ( 0.0, 1.0, 0.0 );
 
-    w = Vector3::UnitVector( value );
+    w = value;
     u = Vector3::Cross( w, n );
     if ( u.Length() < ONB_EPSILON )
     { u = Vector3::Cross( w, m ); }
-    u.Normalize();
+    u.SafeNormalize();
 
     v = Vector3::Cross( w, u );
-    v.Normalize();
+    v.SafeNormalize();
 }
 
 //----------------------------------------------------------------------------------

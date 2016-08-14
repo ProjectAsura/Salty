@@ -250,13 +250,13 @@ Color4 PathTracer::Radiance( const Ray& input )
         // 色を求める.
         W = Color4::Mul( W, material->Shade( arg ) );
 
-        // ロシアンルーレットで打ち切るかどうか?
-        if ( arg.dice )
-        { break; }
-
         // 直接光をサンプリング.
         if ( !record.pMaterial->HasDelta() )
         { L += Color4::Mul( W, NextEventEstimation( record.position, arg.random ) ); }
+
+        // ロシアンルーレットで打ち切るかどうか?
+        if ( arg.dice )
+        { break; }
 
         // 重みがゼロになったら以降の更新は無駄なので打ち切りにする.
         if ( IsZero(W.GetX()) && IsZero(W.GetY()) && IsZero(W.GetZ()) )

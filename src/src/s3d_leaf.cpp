@@ -75,8 +75,10 @@ bool Leaf::IsHit( const RaySet& raySet, HitRecord& record ) const
 {
     auto hit = false;
 
-    if (!m_Box.IsHit(raySet.ray))
-    { return false; }
+#if 0 // 判定しない方が速くなる.
+    //if (!m_Box.IsHit(raySet.ray))
+    //{ return false; }
+#endif
 
     for( size_t i=0; i<m_pShapes.size(); ++i )
     { hit |= m_pShapes[ i ]->IsHit( raySet, record ); }

@@ -47,6 +47,7 @@ namespace s3d {
 TestScene::TestScene( const u32 width, const u32 height )
 : Scene()
 {
+#if 0
     IShape* pQuad;
 
     auto pCan0 = Mesh::Create( "res/mesh/can/coke_can.smd" );
@@ -123,6 +124,25 @@ TestScene::TestScene( const u32 width, const u32 height )
 
     auto camera = new ThinLensCamera();
     camera->Update( 
+        Vector3( 0.0f, 1.0f, 20.0f ),
+        Vector3( 0.0f, 5.0f, 0.0f ),
+        Vector3( 0.0f, 1.0f, 0.0f ),
+        ToRad(39.6f),
+        static_cast<f32>(width) / static_cast<f32>(height),
+        1.0f, 
+        1.5f );
+#else
+    if ( !m_IBL.Init("res/ibl/HDRI_nature003.hdr") )
+    {
+        ELOG( "Error : IBL Not Found." );
+        assert(false);
+    }
+
+    auto pSceneMesh = Mesh::Create( "res/mesh/rt-camp4/rt-camp4_scene.smd" );
+    assert(pSceneMesh != nullptr);
+
+    auto camera = new ThinLensCamera();
+    camera->Update( 
         Vector3( 80.0f, 50.0f, 250.0f ),
         Vector3( 50.0f, 40.0f, 100.0f ),
         Vector3( 0.0f, 1.0f, 0.0f ),
@@ -130,6 +150,15 @@ TestScene::TestScene( const u32 width, const u32 height )
         static_cast<f32>(width) / static_cast<f32>(height),
         1.0f, 
         1.5f );
+
+    m_Material.push_back( MaterialFactory::CreateLambert( Color4( 0.0f, 0.0f, 0.0f, 1.0f ), nullptr, nullptr, Color4( 1000.0f, 1000.0f, 1000.0f, 1.0f ) ) );
+
+    m_Shapes.reserve(2);
+    m_Shapes.push_back( pSceneMesh );
+    m_Shapes.push_back( Sphere::Create( 10.0f, Vector3( 50.0f, 150.0f, 90.0f ), m_Material[0] ) );
+
+    SafeRelease(pSceneMesh);
+#endif
 
     m_pCamera = camera;
     m_pBVH = BVH4::Create( m_Shapes.size(), m_Shapes.data() );

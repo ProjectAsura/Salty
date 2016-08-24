@@ -155,27 +155,27 @@ TestScene::TestScene( const u32 width, const u32 height )
     IShape* pQuad = nullptr;
     {
         Vertex vertices[6];
-        vertices[0].Position = Vector3( -50.0f, -7.0f,  250.0f );
+        vertices[0].Position = Vector3( -15.0f, -7.0f,  25.0f );
         vertices[0].Normal   = Vector3( 0.0f, 1.0f, 0.0f );
         vertices[0].TexCoord = Vector2( 0.0, 0.0 );
 
-        vertices[1].Position = Vector3( -50, -7.0f, -150.0 );
+        vertices[1].Position = Vector3( -15, -7.0f, -25.0 );
         vertices[1].Normal   = Vector3( 0.0f, 1.0f, 0.0f );
-        vertices[1].TexCoord = Vector2( 0.0, 10.0 );
+        vertices[1].TexCoord = Vector2( 0.0, 5.0 );
 
-        vertices[2].Position = Vector3( 150, -7.0f, -150.0 );
+        vertices[2].Position = Vector3( 15, -7.0f, -25.0 );
         vertices[2].Normal   = Vector3( 0.0f, 1.0f, 0.0f );
-        vertices[2].TexCoord = Vector2( 10.0, 10.0 );
+        vertices[2].TexCoord = Vector2( 5.0, 5.0 );
 
-        vertices[3].Position = Vector3( 150, -7.0f, -150.0 );
+        vertices[3].Position = Vector3( 15, -7.0f, -25.0 );
         vertices[3].Normal   = Vector3( 0.0f, 1.0f, 0.0f );
-        vertices[3].TexCoord = Vector2( 10.0, 10.0 );
+        vertices[3].TexCoord = Vector2( 5.0, 5.0 );
 
-        vertices[4].Position = Vector3( 150, -7.0f,  250.0 );
+        vertices[4].Position = Vector3( 15, -7.0f,  25.0 );
         vertices[4].Normal   = Vector3( 0.0f, 1.0f, 0.0f );
-        vertices[4].TexCoord = Vector2( 10.0, 0.0 );
+        vertices[4].TexCoord = Vector2( 5.0, 0.0 );
 
-        vertices[5].Position = Vector3( -50.0f, -7.0f,  250.0f );
+        vertices[5].Position = Vector3( -15.0f, -7.0f, 25.0f );
         vertices[5].Normal   = Vector3( 0.0f, 1.0f, 0.0f );
         vertices[5].TexCoord = Vector2( 0.0, 0.0 );
 
@@ -183,9 +183,9 @@ TestScene::TestScene( const u32 width, const u32 height )
         assert(pQuad != nullptr);
     }
 
-    m_Shapes.reserve(2);
+    m_Shapes.reserve(3);
     m_Shapes.push_back( pSceneMesh );
-    m_Shapes.push_back( Sphere::Create( 10.0f, Vector3( 0.0f, 150.0f, 90.0f ), m_Material[0] ) );
+    //m_Shapes.push_back( Sphere::Create( 10.0f, Vector3( 0.0f, 150.0f, 90.0f ), m_Material[0] ) );
     m_Shapes.push_back( pQuad );
 
 
@@ -205,7 +205,7 @@ TestScene::TestScene( const u32 width, const u32 height )
         ToRad(39.6f),
         static_cast<f32>(width) / static_cast<f32>(height),
         1.0f, 
-        0.75f );
+        0.25f );
 
 #endif
 

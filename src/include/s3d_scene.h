@@ -69,7 +69,7 @@ public:
     //---------------------------------------------------------------------------------------------
     S3D_INLINE
     Color4 SampleIBL( const Vector3& dir )
-    { return m_IBL.Sample( dir, m_Filter ); }
+    { return m_IBL.Sample( dir, m_Filter ) * Color4( 10.0f, 10.0f, 10.0f, 1.0f ); }
 
 protected:
     //=============================================================================================

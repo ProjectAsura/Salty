@@ -33,7 +33,7 @@ namespace /* anonymous */ {
 // Global Variables.
 //-------------------------------------------------------------------------------------------------
 std::mutex      g_Mutex;
-const s3d::TONE_MAPPING_TYPE  ToneMappingType = s3d::TONE_MAPPING_UNCHARTED2_FILMIC;
+const s3d::TONE_MAPPING_TYPE  ToneMappingType = s3d::TONE_MAPPING_ACES_FILMIC;
 
 } // namespace /* anonymous */
 
@@ -246,6 +246,10 @@ Color4 PathTracer::Radiance( const Ray& input )
         // 自己発光による放射輝度.
         L += Color4::Mul( W, material->GetEmissive() );
 
+        // 直接光をサンプリング.
+        if ( !record.pMaterial->HasDelta() )
+        { L += Color4::Mul( W, NextEventEstimation( record.position, arg.random ) ); }
+
         // シェーディング引数を設定.
         arg.input    = raySet.ray.dir;
         arg.normal   = record.normal;
@@ -253,10 +257,6 @@ Color4 PathTracer::Radiance( const Ray& input )
 
         // 色を求める.
         W = Color4::Mul( W, material->Shade( arg ) );
-
-        // 直接光をサンプリング.
-        if ( !record.pMaterial->HasDelta() )
-        { L += Color4::Mul( W, NextEventEstimation( record.position, arg.random ) ); }
 
         // ロシアンルーレットで打ち切るかどうか?
         if ( arg.dice )

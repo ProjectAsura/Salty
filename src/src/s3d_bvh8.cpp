@@ -102,7 +102,7 @@ s3d::IShape* CreateNode( size_t count, s3d::IShape** ppShapes )
 
     return s3d::BVH4::Create(count, ppShapes);
 #else
-    if ( count <= 16 )
+    if ( count <= 8 )
     { return s3d::Leaf::Create(count, ppShapes); }
 
     return s3d::BVH4::Create(count, ppShapes);
@@ -188,10 +188,10 @@ u32 BVH8::GetCount() const
 //-------------------------------------------------------------------------------------------------
 //      交差判定を行います.
 //-------------------------------------------------------------------------------------------------
-bool BVH8::IsHit( const Ray& ray, HitRecord& record ) const
+bool BVH8::IsHit( const RaySet& raySet, HitRecord& record ) const
 {
     s32 mask = 0;
-    if ( !m_Box.IsHit( Ray8(ray), mask ) )
+    if ( !m_Box.IsHit( raySet.ray8, mask ) )
     { return false; }
 
     auto hit = false;
@@ -199,7 +199,7 @@ bool BVH8::IsHit( const Ray& ray, HitRecord& record ) const
     {
         auto bit = 0x1 << i;
         if ( (mask & bit) == bit )
-        { hit |= m_pNode[i]->IsHit( ray, record ); }
+        { hit |= m_pNode[i]->IsHit( raySet, record ); }
     }
 
     return hit;
@@ -253,7 +253,7 @@ void BVH8::operator delete[] (void* ptr)
 //-------------------------------------------------------------------------------------------------
 bool BVH8::SplitSAH( size_t count, IShape** ppShapes, size_t& mid )
 {
-    // 最小要素に満たないものは葉ノードとして生成.  2つのノードがそれぞれ子供をもつので 2 * 2 = 4 が最小.
+    // 最小要素に満たないものは葉ノードとして生成
     if ( count <= 8 )
     { return false; }
 

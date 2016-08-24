@@ -64,40 +64,30 @@ u32 Phong::GetCount() const
 //-------------------------------------------------------------------------------------------------
 Color4 Phong::Shade( ShadingArg& arg ) const
 {
-    // 補正済み法線データ (レイの入出を考慮済み).
-    const Vector3 normalMod = ( Vector3::Dot ( arg.normal, arg.input ) < 0.0 ) ? arg.normal : -arg.normal;
+    // インポータンスサンプリング.
+    const f32 phi = F_2PI * arg.random.GetAsF32();
+    const f32 cosTheta = powf( 1.0f - arg.random.GetAsF32(), 1.0f / ( m_Power + 1.0f ) );
+    const f32 sinTheta = SafeSqrt( 1.0f - ( cosTheta * cosTheta ) );
+    const f32 x = cosf( phi ) * sinTheta;
+    const f32 y = sinf( phi ) * sinTheta;
+    const f32 z = cosTheta;
 
-    Vector3 dir;
-    f32 dots = 0.0f;
+    // 反射ベクトル.
+    Vector3 w = Vector3::Reflect( arg.input, arg.normal );
+    w.SafeNormalize();
 
-    {
-        // インポータンスサンプリング.
-        const f32 phi = F_2PI * arg.random.GetAsF32();
-        const f32 cosTheta = powf( 1.0f - arg.random.GetAsF32(), 1.0f / ( m_Power + 1.0f ) );
-        const f32 sinTheta = SafeSqrt( 1.0f - ( cosTheta * cosTheta ) );
-        const f32 x = cosf( phi ) * sinTheta;
-        const f32 y = sinf( phi ) * sinTheta;
-        const f32 z = cosTheta;
+    // 基底ベクトルを求める.
+    OrthonormalBasis onb;
+    onb.InitFromW( w );
 
-        // 反射ベクトル.
-        Vector3 w = Vector3::Reflect( arg.input, normalMod );
-        w.SafeNormalize();
-
-        // 基底ベクトルを求める.
-        OrthonormalBasis onb;
-        onb.InitFromW( w );
-
-        // 出射方向.
-        dir = Vector3::SafeUnitVector( onb.u * x + onb.v * y + onb.w * z );
-
-        // 出射方向と法線ベクトルの内積を求める.
-        dots = Vector3::Dot( dir, normalMod );
-    }
+    // 出射方向.
+    auto dir = Vector3::SafeUnitVector( onb.u * x + onb.v * y + onb.w * z );
+    auto cosine = Vector3::Dot( dir, arg.normal );
 
     arg.output = dir;
     arg.dice = (arg.random.GetAsF32() >= m_Threshold);
 
-    return m_Specular * dots / m_Threshold;
+    return m_Specular * cosine * ((m_Power + 2.0f) / (m_Power + 1.0f));
 }
 
 //-------------------------------------------------------------------------------------------------

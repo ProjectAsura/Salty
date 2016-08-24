@@ -62,13 +62,13 @@ u32 Instance::GetCount() const
 //-------------------------------------------------------------------------------------------------
 //      交差判定を行います.
 //-------------------------------------------------------------------------------------------------
-bool Instance::IsHit( const Ray& ray, HitRecord& record ) const
+bool Instance::IsHit( const RaySet& raySet, HitRecord& record ) const
 {
-    auto pos = Vector3::TransformCoord ( ray.pos, m_InvWorld );
-    auto dir = Vector3::TransformNormal( ray.dir, m_InvWorld );
-    Ray localRay( pos, Vector3::UnitVector( dir ) );
+    auto pos = Vector3::TransformCoord ( raySet.ray.pos, m_InvWorld );
+    auto dir = Vector3::TransformNormal( raySet.ray.dir, m_InvWorld );
+    auto localRaySet = MakeRaySet( pos, Vector3::UnitVector( dir ) );
 
-    if ( m_pShape->IsHit( localRay, record ) )
+    if ( m_pShape->IsHit( localRaySet, record ) )
     {
         record.position = Vector3::Transform( record.position, m_World );
         record.normal   = Vector3::TransformNormal( record.normal, Matrix::Transpose( m_InvWorld ) );

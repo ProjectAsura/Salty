@@ -64,7 +64,7 @@ struct HitRecord
 struct IShape : IReference
 {
     virtual ~IShape() {}
-    virtual bool        IsHit    ( const Ray&, HitRecord& ) const = 0;
+    virtual bool        IsHit    ( const RaySet&, HitRecord& ) const = 0;
     virtual BoundingBox GetBox   () const = 0;
     virtual Vector3     GetCenter() const = 0;
 };

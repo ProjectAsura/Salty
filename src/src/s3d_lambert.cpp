@@ -63,13 +63,10 @@ u32 Lambert::GetCount() const
 //-------------------------------------------------------------------------------------------------
 Color4 Lambert::Shade( ShadingArg& arg ) const
 {
-    // 補正済み法線データ (レイの入出を考慮済み).
-    const Vector3 normalMod = ( Vector3::Dot ( arg.normal, arg.input ) < 0.0 ) ? arg.normal : -arg.normal;
-
     // normalModの方向を基準とした正規直交基底(w, u, v)を作る。
     // この基底に対する半球内で次のレイを飛ばす。
     OrthonormalBasis onb;
-    onb.InitFromW( normalMod );
+    onb.InitFromW( arg.normal );
 
     // インポータンスサンプリング.
     const f32 phi = F_2PI * arg.random.GetAsF32();
@@ -78,13 +75,15 @@ Color4 Lambert::Shade( ShadingArg& arg ) const
     const f32 y = r * sinf( phi );
     const f32 z = SafeSqrt( 1.0f - ( x * x ) - ( y * y ) );
 
-    // 出射方向.
-    Vector3 dir = Vector3::SafeUnitVector( onb.u * x + onb.v * y + onb.w * z );
-
-    arg.output = dir;
+    arg.output = Vector3::SafeUnitVector( onb.u * x + onb.v * y + onb.w * z );
     arg.dice   = ( arg.random.GetAsF32() >= m_Threshold );
 
-    return m_Diffuse / m_Threshold;
+    // 以下の処理の省略.
+    //      pdf = cosine * F_1DIVPI;
+    //      sample = m_Diffuse * cosine * F_1DIVPI;
+    //      weight = sample / pdf;
+
+    return m_Diffuse;
 }
 
 //-------------------------------------------------------------------------------------------------

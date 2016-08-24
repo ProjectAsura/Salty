@@ -70,21 +70,21 @@ u32 Triangle::GetCount() const
 //-------------------------------------------------------------------------------------------------
 //      交差判定を行います.
 //-------------------------------------------------------------------------------------------------
-bool Triangle::IsHit(const Ray& ray, HitRecord& record) const
+bool Triangle::IsHit(const RaySet& raySet, HitRecord& record) const
 {
-    auto s1  = Vector3::Cross( ray.dir, m_Edge[1] );
+    auto s1  = Vector3::Cross( raySet.ray.dir, m_Edge[1] );
     auto div = Vector3::Dot( s1, m_Edge[0] );
 
     if ( abs(div) <= FLT_EPSILON )
     { return false; }
 
-    auto d = ray.pos - m_Vertex[0].Position;
+    auto d = raySet.ray.pos - m_Vertex[0].Position;
     auto beta = Vector3::Dot( d, s1 ) / div;
     if ( beta <= 0.0 || beta >= 1.0 )
     { return false; }
 
     auto s2 = Vector3::Cross( d, m_Edge[0] );
-    auto gamma = Vector3::Dot( ray.dir, s2 ) / div;
+    auto gamma = Vector3::Dot( raySet.ray.dir, s2 ) / div;
     if ( gamma <= 0.0 || ( beta + gamma ) >= 1.0 )
     { return false; }
 
@@ -95,7 +95,7 @@ bool Triangle::IsHit(const Ray& ray, HitRecord& record) const
     if ( dist >= record.distance )
     { return false; }
 
-    record.position  = ray.pos + ray.dir * dist;
+    record.position  = raySet.ray.pos + raySet.ray.dir * dist;
     record.distance  = dist;
     record.pShape    = this;
     record.pMaterial = m_pMaterial;

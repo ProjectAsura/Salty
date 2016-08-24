@@ -37,6 +37,7 @@
     <ClInclude Include="..\include\s3d_mesh.h" />
     <ClInclude Include="..\include\s3d_mirror.h" />
     <ClInclude Include="..\include\s3d_phong.h" />
+    <ClInclude Include="..\include\s3d_plastic.h" />
     <ClInclude Include="..\include\s3d_pt.h" />
     <ClInclude Include="..\include\s3d_reference.h" />
     <ClInclude Include="..\include\s3d_scene.h" />
@@ -70,6 +71,7 @@
     <ClCompile Include="..\src\s3d_mirror.cpp" />
     <ClCompile Include="..\src\s3d_onb.cpp" />
     <ClCompile Include="..\src\s3d_phong.cpp" />
+    <ClCompile Include="..\src\s3d_plastic.cpp" />
     <ClCompile Include="..\src\s3d_pt.cpp" />
     <ClCompile Include="..\src\s3d_sphere.cpp" />
     <ClCompile Include="..\src\s3d_testScene.cpp" />

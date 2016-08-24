@@ -44,6 +44,14 @@ public:
         const Texture2D*        pTexture = nullptr,
         const TextureSampler*   pSampler = nullptr,
         const Color4&           emissive = Color4(0.0f, 0.0f, 0.0f, 1.0f));
+
+    static IMaterial* CreatePlastic(
+        const Color4&           diffuse,
+        const Color4&           specular,
+        f32                     power,
+        const Texture2D*        pTexture = nullptr,
+        const TextureSampler*   pSampler = nullptr,
+        const Color4&           emissive = Color4(0.0f, 0.0f, 0.0f, 1.0f));
 };
 
 } // namespace s3d

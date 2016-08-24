@@ -156,6 +156,19 @@ struct SMD_GLOSSY
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+// SMD_PLASTIC structure
+///////////////////////////////////////////////////////////////////////////////////////////////////
+struct SMD_PLASTIC
+{
+    SMD_VECTOR3     Diffuse;
+    SMD_VECTOR3     Specular;
+    f32             Power;
+    SMD_VECTOR3     Emissive;
+    s32             DiffuseMap;
+    s32             SpecularMap;
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 // SMD_TEXTURE structure
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 struct SMD_TEXTURE
@@ -404,6 +417,29 @@ bool Mesh::LoadFromFile( const char* filename )
                 }
 
                 m_Materials[i] = MaterialFactory::CreatePhong( specular, power, pTexture, pSampler, emissive );
+            }
+            break;
+
+        case SMD_MATERIAL_TYPE_PLASTIC:
+            {
+                SMD_PLASTIC value;
+                fread( &value, sizeof(value), 1, pFile);
+
+                auto diffuse  = Color4(value.Diffuse.x, value.Diffuse.y, value.Diffuse.z, 1.0f);
+                auto specular = Color4(value.Specular.x, value.Specular.y, value.Specular.z, 1.0f);
+                auto power    = value.Power;
+                auto emissive = Color4(value.Emissive.x, value.Emissive.y, value.Emissive.z, 1.0f);
+
+                Texture2D*      pTexture = nullptr;
+                TextureSampler* pSampler = nullptr;
+
+                if ( value.DiffuseMap >= 0 )
+                {
+                    pTexture = &m_Textures[value.DiffuseMap];
+                    pSampler = &m_SpecularSmp;
+                }
+
+                m_Materials[i] = MaterialFactory::CreatePlastic( diffuse, specular, power, pTexture, pSampler, emissive );
             }
             break;
 

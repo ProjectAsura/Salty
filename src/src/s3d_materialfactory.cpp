@@ -12,6 +12,7 @@
 #include <s3d_phong.h>
 #include <s3d_mirror.h>
 #include <s3d_glass.h>
+#include <s3d_plastic.h>
 #include <s3d_texturedmaterial.h>
 
 
@@ -101,6 +102,30 @@ IMaterial* MaterialFactory::CreateGlass
 )
 {
     auto instance = Glass::Create(specular, ior, emissive);
+
+    if (pTexture == nullptr || pSampler == nullptr)
+    { return instance; }
+
+    auto wrapper = TexturedMaterial::Create(pTexture, pSampler, instance);
+    SafeRelease(instance);
+
+    return wrapper;
+}
+
+//-------------------------------------------------------------------------------------------------
+//      Plasticマテリアルを生成します.
+//-------------------------------------------------------------------------------------------------
+IMaterial* MaterialFactory::CreatePlastic
+(
+    const Color4&           diffuse,
+    const Color4&           specular,
+    f32                     power,
+    const Texture2D*        pTexture,
+    const TextureSampler*   pSampler,
+    const Color4&           emissive
+)
+{
+    auto instance = Plastic::Create(diffuse, specular, power, emissive);
 
     if (pTexture == nullptr || pSampler == nullptr)
     { return instance; }

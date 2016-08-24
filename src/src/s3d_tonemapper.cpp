@@ -57,7 +57,15 @@ void ComputeLogarithmicAverage
             auto Lw = RGBToY( pPixels[idx] );
 
             if (s3d::IsNan(Lw))
-            { continue; }
+            {
+                ELOG( "Nan!");
+                Lw = epsilon;
+            }
+
+            if (Lw < FLT_EPSILON)
+            {
+                Lw = epsilon;
+            }
 
             // 最大輝度値を求める.
             if ( !init )
@@ -71,6 +79,12 @@ void ComputeLogarithmicAverage
             // 輝度値の対数総和を求める.
             aveLw += logf( epsilon + Lw );
         }
+    }
+
+    if (s3d::IsNan(aveLw))
+    {
+        ELOG( "Nan!");
+        aveLw = epsilon;
     }
 
     // ピクセル数で除算.

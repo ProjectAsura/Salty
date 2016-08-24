@@ -65,7 +65,7 @@ TestScene::TestScene( const u32 width, const u32 height )
         assert(false);
     }
 
-    if ( !m_IBL.Init( "res/ibl/HDR_041_Path.hdr") )
+    if ( !m_IBL.Init( "res/ibl/HDRI_nature003.hdr") )
     {
         ELOG("Error : IBL Load Failed." );
         assert(false);
@@ -124,8 +124,8 @@ TestScene::TestScene( const u32 width, const u32 height )
 
     auto camera = new ThinLensCamera();
     camera->Update( 
-        Vector3( 0.0f, 1.0f, 20.0f ),
-        Vector3( 0.0f, 5.0f, 0.0f ),
+        Vector3( 80.0f, 50.0f, 250.0f ),
+        Vector3( 50.0f, 40.0f, 100.0f ),
         Vector3( 0.0f, 1.0f, 0.0f ),
         ToRad(39.6f),
         static_cast<f32>(width) / static_cast<f32>(height),
@@ -138,26 +138,72 @@ TestScene::TestScene( const u32 width, const u32 height )
         assert(false);
     }
 
-    auto pSceneMesh = Mesh::Create( "res/mesh/rt-camp4/rt-camp4_scene.smd" );
+    auto pSceneMesh = Mesh::Create( "res/mesh/sv98/sv98.smd" );
+//    auto pSceneMesh = Mesh::Create( "res/mesh/test/test.smd" );
     assert(pSceneMesh != nullptr);
 
+    if ( !g_TableTexture.LoadFromFile("./res/texture/table.bmp") )
+    {
+        ELOG("Error : TableTexture Load Failed." );
+        assert(false);
+    }
+
+
+    m_Material.push_back( MaterialFactory::CreateLambert( Color4( 0.0f, 0.0f, 0.0f, 1.0f ), nullptr, nullptr, Color4( 1000.0f, 1000.0f, 1000.0f, 1.0f ) ) );
+    m_Material.push_back( MaterialFactory::CreateLambert( Color4( 0.95f, 0.95f, 0.95f, 1.0f ), &g_TableTexture, &g_Sampler ) );
+
+    IShape* pQuad = nullptr;
+    {
+        Vertex vertices[6];
+        vertices[0].Position = Vector3( -50.0f, -6.5f,  250.0f );
+        vertices[0].Normal   = Vector3( 0.0f, 1.0f, 0.0f );
+        vertices[0].TexCoord = Vector2( 0.0, 0.0 );
+
+        vertices[1].Position = Vector3( -50, -6.5, -150.0 );
+        vertices[1].Normal   = Vector3( 0.0f, 1.0f, 0.0f );
+        vertices[1].TexCoord = Vector2( 0.0, 10.0 );
+
+        vertices[2].Position = Vector3( 150, -6.5, -150.0 );
+        vertices[2].Normal   = Vector3( 0.0f, 1.0f, 0.0f );
+        vertices[2].TexCoord = Vector2( 10.0, 10.0 );
+
+        vertices[3].Position = Vector3( 150, -6.5, -150.0 );
+        vertices[3].Normal   = Vector3( 0.0f, 1.0f, 0.0f );
+        vertices[3].TexCoord = Vector2( 10.0, 10.0 );
+
+        vertices[4].Position = Vector3( 150, -6.5,  250.0 );
+        vertices[4].Normal   = Vector3( 0.0f, 1.0f, 0.0f );
+        vertices[4].TexCoord = Vector2( 10.0, 0.0 );
+
+        vertices[5].Position = Vector3( -50.0f, -6.5f,  250.0f );
+        vertices[5].Normal   = Vector3( 0.0f, 1.0f, 0.0f );
+        vertices[5].TexCoord = Vector2( 0.0, 0.0 );
+
+        pQuad = Mesh::Create(6, vertices, m_Material[1]);
+        assert(pQuad != nullptr);
+    }
+
+    m_Shapes.reserve(2);
+    m_Shapes.push_back( pSceneMesh );
+    m_Shapes.push_back( Sphere::Create( 10.0f, Vector3( 0.0f, 150.0f, 90.0f ), m_Material[0] ) );
+    m_Shapes.push_back( pQuad );
+
+    auto dir = Vector3( 0.0f, 1.0f, 0.0f ) - Vector3( 8.0f, 0.0f, 25.0f );
+    dir.Normalize();
+
+    auto target = Vector3( 8.0f, 0.0f, 25.0f ) + dir * 20.0f;
+
+//    SafeRelease(pSceneMesh);
     auto camera = new ThinLensCamera();
     camera->Update( 
-        Vector3( 80.0f, 50.0f, 250.0f ),
-        Vector3( 50.0f, 40.0f, 100.0f ),
+        Vector3( 8.0f, 0.0f, 25.0f ),
+        target,
         Vector3( 0.0f, 1.0f, 0.0f ),
         ToRad(39.6f),
         static_cast<f32>(width) / static_cast<f32>(height),
         1.0f, 
-        1.5f );
+        0.75f );
 
-    m_Material.push_back( MaterialFactory::CreateLambert( Color4( 0.0f, 0.0f, 0.0f, 1.0f ), nullptr, nullptr, Color4( 1000.0f, 1000.0f, 1000.0f, 1.0f ) ) );
-
-    m_Shapes.reserve(2);
-    m_Shapes.push_back( pSceneMesh );
-    m_Shapes.push_back( Sphere::Create( 10.0f, Vector3( 50.0f, 150.0f, 90.0f ), m_Material[0] ) );
-
-    SafeRelease(pSceneMesh);
 #endif
 
     m_pCamera = camera;

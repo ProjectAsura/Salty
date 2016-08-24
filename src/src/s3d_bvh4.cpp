@@ -329,7 +329,7 @@ bool BVH4::Split( size_t count, IShape** ppShapes, size_t& mid )
 //-------------------------------------------------------------------------------------------------
 IShape* BVH4::Create(size_t count, IShape** ppShapes)
 {
-    if ( count <= 16 )
+    if ( count <= 4 )
     { return CreateNode(count, ppShapes); }
 
     size_t mid = 0;

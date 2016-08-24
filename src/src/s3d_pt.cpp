@@ -33,7 +33,7 @@ namespace /* anonymous */ {
 // Global Variables.
 //-------------------------------------------------------------------------------------------------
 std::mutex      g_Mutex;
-const s3d::TONE_MAPPING_TYPE  ToneMappingType = s3d::TONE_MAPPING_REINHARD;
+const s3d::TONE_MAPPING_TYPE  ToneMappingType = s3d::TONE_MAPPING_UNCHARTED2_FILMIC;
 
 } // namespace /* anonymous */
 
@@ -132,11 +132,15 @@ bool PathTracer::Run( const Config& config )
 //-------------------------------------------------------------------------------------------------
 void PathTracer::Capture( const char* filename )
 {
+#if 1
     // トーンマッピングを実行.
     ToneMapper::Map( ToneMappingType, m_Config.Width, m_Config.Height, m_RenderTarget, m_Intermediate );
 
     // BMPに出力する.
     SaveToBMP( filename, m_Config.Width, m_Config.Height, &m_Intermediate[0].x );
+#else
+    SaveToBMP( filename, m_Config.Width, m_Config.Height, &m_RenderTarget[0].x);
+#endif
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -259,7 +263,9 @@ Color4 PathTracer::Radiance( const Ray& input )
         { break; }
 
         // 重みがゼロになったら以降の更新は無駄なので打ち切りにする.
-        if ( IsZero(W.GetX()) && IsZero(W.GetY()) && IsZero(W.GetZ()) )
+        if ( (W.GetX() < FLT_EPSILON) &&
+             (W.GetY() < FLT_EPSILON) &&
+             (W.GetZ() < FLT_EPSILON) )
         { break; }
 
         // レイを更新.

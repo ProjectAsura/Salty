@@ -102,7 +102,7 @@ s3d::IShape* CreateNode( size_t count, s3d::IShape** ppShapes )
 
     return s3d::BVH4::Create(count, ppShapes);
 #else
-    if ( count <= 16 )
+    if ( count <= 8 )
     { return s3d::Leaf::Create(count, ppShapes); }
 
     return s3d::BVH4::Create(count, ppShapes);
@@ -253,8 +253,8 @@ void BVH8::operator delete[] (void* ptr)
 //-------------------------------------------------------------------------------------------------
 bool BVH8::Split( size_t count, IShape** ppShapes, size_t& mid )
 {
-    // 最小要素に満たないものは葉ノードとして生成.  2つのノードがそれぞれ子供をもつので 2 * 2 = 4 が最小.
-    if ( count <= 4 )
+    // 最小要素に満たないものは葉ノードとして生成
+    if ( count <= 8 )
     { return false; }
 
     auto bound = CreateMergedBox( count, ppShapes );
@@ -346,7 +346,7 @@ bool BVH8::Split( size_t count, IShape** ppShapes, size_t& mid )
 //-------------------------------------------------------------------------------------------------
 IShape* BVH8::Create(size_t count, IShape** ppShapes)
 {
-    if ( count <= 64 )
+    if ( count <= 8 )
     { return CreateNode( count, ppShapes ); }
 
     size_t mid = 0;

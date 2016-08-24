@@ -132,7 +132,7 @@ TestScene::TestScene( const u32 width, const u32 height )
         1.0f, 
         1.5f );
 #else
-    if ( !m_IBL.Init("res/ibl/HDRI_nature003.hdr") )
+    if ( !m_IBL.Init("res/ibl/HDR_029_Sky_Cloudy_Ref.hdr") )
     {
         ELOG( "Error : IBL Not Found." );
         assert(false);
@@ -155,27 +155,27 @@ TestScene::TestScene( const u32 width, const u32 height )
     IShape* pQuad = nullptr;
     {
         Vertex vertices[6];
-        vertices[0].Position = Vector3( -50.0f, -6.5f,  250.0f );
+        vertices[0].Position = Vector3( -50.0f, -7.0f,  250.0f );
         vertices[0].Normal   = Vector3( 0.0f, 1.0f, 0.0f );
         vertices[0].TexCoord = Vector2( 0.0, 0.0 );
 
-        vertices[1].Position = Vector3( -50, -6.5, -150.0 );
+        vertices[1].Position = Vector3( -50, -7.0f, -150.0 );
         vertices[1].Normal   = Vector3( 0.0f, 1.0f, 0.0f );
         vertices[1].TexCoord = Vector2( 0.0, 10.0 );
 
-        vertices[2].Position = Vector3( 150, -6.5, -150.0 );
+        vertices[2].Position = Vector3( 150, -7.0f, -150.0 );
         vertices[2].Normal   = Vector3( 0.0f, 1.0f, 0.0f );
         vertices[2].TexCoord = Vector2( 10.0, 10.0 );
 
-        vertices[3].Position = Vector3( 150, -6.5, -150.0 );
+        vertices[3].Position = Vector3( 150, -7.0f, -150.0 );
         vertices[3].Normal   = Vector3( 0.0f, 1.0f, 0.0f );
         vertices[3].TexCoord = Vector2( 10.0, 10.0 );
 
-        vertices[4].Position = Vector3( 150, -6.5,  250.0 );
+        vertices[4].Position = Vector3( 150, -7.0f,  250.0 );
         vertices[4].Normal   = Vector3( 0.0f, 1.0f, 0.0f );
         vertices[4].TexCoord = Vector2( 10.0, 0.0 );
 
-        vertices[5].Position = Vector3( -50.0f, -6.5f,  250.0f );
+        vertices[5].Position = Vector3( -50.0f, -7.0f,  250.0f );
         vertices[5].Normal   = Vector3( 0.0f, 1.0f, 0.0f );
         vertices[5].TexCoord = Vector2( 0.0, 0.0 );
 
@@ -188,15 +188,18 @@ TestScene::TestScene( const u32 width, const u32 height )
     m_Shapes.push_back( Sphere::Create( 10.0f, Vector3( 0.0f, 150.0f, 90.0f ), m_Material[0] ) );
     m_Shapes.push_back( pQuad );
 
-    auto dir = Vector3( 0.0f, 1.0f, 0.0f ) - Vector3( 8.0f, 0.0f, 25.0f );
+
+    auto pos = Vector3( 8.0f, 0.0f, 25.0f );
+    auto dst = Vector3( 0.0f, 1.0f, 0.0f );
+    auto dir = dst - pos;
     dir.Normalize();
 
-    auto target = Vector3( 8.0f, 0.0f, 25.0f ) + dir * 20.0f;
+    auto target = pos + dir * 20.0f;
 
 //    SafeRelease(pSceneMesh);
     auto camera = new ThinLensCamera();
     camera->Update( 
-        Vector3( 8.0f, 0.0f, 25.0f ),
+        pos,
         target,
         Vector3( 0.0f, 1.0f, 0.0f ),
         ToRad(39.6f),

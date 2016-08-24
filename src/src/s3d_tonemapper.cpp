@@ -58,7 +58,7 @@ void ComputeLogarithmicAverage
 
             if (s3d::IsNan(Lw))
             {
-                ELOG( "Nan!");
+                DLOG( "Nan!");
                 Lw = epsilon;
             }
 
@@ -83,7 +83,7 @@ void ComputeLogarithmicAverage
 
     if (s3d::IsNan(aveLw))
     {
-        ELOG( "Nan!");
+        DLOG( "Nan!");
         aveLw = epsilon;
     }
 

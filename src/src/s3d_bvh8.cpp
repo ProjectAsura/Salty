@@ -251,10 +251,10 @@ void BVH8::operator delete[] (void* ptr)
 //-------------------------------------------------------------------------------------------------
 //      SAH分割します.
 //-------------------------------------------------------------------------------------------------
-bool BVH8::Split( size_t count, IShape** ppShapes, size_t& mid )
+bool BVH8::SplitSAH( size_t count, IShape** ppShapes, size_t& mid )
 {
     // 最小要素に満たないものは葉ノードとして生成.  2つのノードがそれぞれ子供をもつので 2 * 2 = 4 が最小.
-    if ( count <= 4 )
+    if ( count <= 8 )
     { return false; }
 
     auto bound = CreateMergedBox( count, ppShapes );
@@ -342,11 +342,65 @@ bool BVH8::Split( size_t count, IShape** ppShapes, size_t& mid )
 }
 
 //-------------------------------------------------------------------------------------------------
+//      中間分割します.
+//-------------------------------------------------------------------------------------------------
+bool BVH8::SplitMid( size_t count, IShape** ppShapes, size_t& mid )
+{
+    // 最小要素に満たないものは葉ノードとして生成.  2つのノードがそれぞれ子供をもつので 2 * 2 = 4 が最小.
+    if ( count <= 2 )
+    { return false; }
+
+    auto bound = CreateMergedBox( count, ppShapes );
+
+    // バウンディングボックスを生成.
+    auto centroid = CreateCentroidBox( count, ppShapes );
+
+    // 分割軸を決めるためバウンディングボックスの最長軸を取得.
+    auto axis = GetLongestAxis( centroid );
+
+    if (centroid.maxi.a[axis] == centroid.mini.a[axis])
+    { return false; }
+
+    mid = 0;
+    for (size_t i=0; i<count; ++i)
+    {
+        auto center = ppShapes[i]->GetBox().center;
+
+        if (center.a[axis] < centroid.center.a[axis])
+        {
+            auto pTemp = ppShapes[i];
+            ppShapes[i] = ppShapes[mid];
+            ppShapes[mid] = pTemp;
+            mid++;
+        }
+    }
+
+    if ( mid == 0 || mid == count )
+    { mid = count / 2; }
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------
+//      分割します.
+//------------------------------------------------------------------------------------------------
+bool BVH8::Split( size_t count, IShape** ppShapes, size_t& mid )
+{
+#if 0
+    // SAHによる分割.
+    return SplitSAH( count, ppShapes, mid );
+#else
+    // 中間値による分割.
+    return SplitMid( count, ppShapes, mid );
+#endif
+}
+
+//-------------------------------------------------------------------------------------------------
 //      生成処理を行います.
 //-------------------------------------------------------------------------------------------------
 IShape* BVH8::Create(size_t count, IShape** ppShapes)
 {
-    if ( count <= 64 )
+    if ( count <= 8 )
     { return CreateNode( count, ppShapes ); }
 
     size_t mid = 0;

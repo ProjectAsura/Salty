@@ -264,8 +264,7 @@ Color4 PathTracer::Radiance( const Ray& input )
         // 直接光をサンプリング.
         if ( !record.pMaterial->HasDelta() )
         {
-            auto color = material->GetBaseColor(arg.texcoord);
-            L += Color4::Mul( W, Color4::Mul(NextEventEstimation( pos, arg.normal, arg.random ), color) );
+            L += Color4::Mul( W, NextEventEstimation( pos, arg.normal, arg.texcoord, material, arg.random ) );
         }
 
         // 色を求める.
@@ -294,27 +293,34 @@ Color4 PathTracer::Radiance( const Ray& input )
     return L;
 }
 
-//-------------------------------------------------------------------------------------------------
-//      シャドウレイを生成します.
-//-------------------------------------------------------------------------------------------------
-RaySet PathTracer::MakeShadowRaySet( const Vector3& position, Random& random )
-{
-    //auto phi = F_2PI * random.GetAsF32();
-    //auto r  = random.GetAsF32();
-    //auto x = r * std::cos( phi );
-    //auto y = r * std::sin( phi );
-    //auto dir = Vector3( x, y, SafeSqrt( 1.0f - (x * x) - (y * y) ) );
-    //dir = Vector3::SafeUnitVector( dir );
-    auto light = m_pScene->GetLight(random);
-    auto dir = Vector3::SafeUnitVector(light->GetCenter() - position);
-
-    return MakeRaySet( position, dir );
-}
+////-------------------------------------------------------------------------------------------------
+////      シャドウレイを生成します.
+////-------------------------------------------------------------------------------------------------
+//RaySet PathTracer::MakeShadowRaySet( const Vector3& position, Random& random )
+//{
+//    //auto phi = F_2PI * random.GetAsF32();
+//    //auto r  = random.GetAsF32();
+//    //auto x = r * std::cos( phi );
+//    //auto y = r * std::sin( phi );
+//    //auto dir = Vector3( x, y, SafeSqrt( 1.0f - (x * x) - (y * y) ) );
+//    //dir = Vector3::SafeUnitVector( dir );
+//    auto light = m_pScene->GetLight(random);
+//    auto dir = Vector3::SafeUnitVector(light->GetCenter() - position);
+//
+//    return MakeRaySet( position, dir );
+//}
 
 //-------------------------------------------------------------------------------------------------
 //      直接光ライティングを行います.
 //-------------------------------------------------------------------------------------------------
-Color4 PathTracer::NextEventEstimation( const Vector3& position, const Vector3& normal, Random& random )
+Color4 PathTracer::NextEventEstimation
+(
+    const Vector3& position,
+    const Vector3& normal,
+    const Vector2& texcoord,
+    const IMaterial* pMaterial,
+    Random& random
+)
 {
     //auto shadowRay = MakeShadowRaySet( position, random );
     auto light = m_pScene->GetLight(random);
@@ -337,12 +343,15 @@ Color4 PathTracer::NextEventEstimation( const Vector3& position, const Vector3& 
         Vector3 light_normal;
         Vector2 light_texcoord;
         light->CalcParam(p, shadowRecord.barycentric, &light_normal, &light_texcoord);
-        auto dot0 = abs(Vector3::Dot(normal, light_dir));
-        auto dot1 = abs(Vector3::Dot(light_normal, -light_dir));
-        auto brdf_pdf = 1.0f / F_PI;
+        auto cosShadow = abs(Vector3::Dot(normal, light_dir));
+        auto cosLight = abs(Vector3::Dot(light_normal, -light_dir));
+        auto fs = pMaterial->GetBaseColor(texcoord) / F_PI;
+        auto G = (cosShadow * cosLight) / light_dist2;
 
-        auto G = (dot0 * dot1) / light_dist2;
-        return shadowRecord.pMaterial->GetEmissive() * brdf_pdf * (G / light_pdf);
+        auto brdf_pdf = abs(shadowRay.ray.dir.z / F_PI ) * cosLight / light_dist2;
+        auto mis_weight = light_pdf / (brdf_pdf + light_pdf);
+
+        return shadowRecord.pMaterial->GetEmissive() * fs * mis_weight * (G / light_pdf);
     }
 
     return Color4(0.0f, 0.0f, 0.0f, 0.0f);

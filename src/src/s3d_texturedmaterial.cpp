@@ -81,6 +81,13 @@ Color4 TexturedMaterial::GetEmissive() const
 bool TexturedMaterial::HasDelta() const
 { return m_pMaterial->HasDelta(); }
 
+Color4 TexturedMaterial::GetBaseColor(const Vector2& texcoord) const
+{
+    return Color4::Mul(
+        m_pMaterial->GetBaseColor(texcoord),
+        m_pTexture->Sample(*m_pSampler, texcoord));
+}
+
 //-------------------------------------------------------------------------------------------------
 //      生成処理です.
 //-------------------------------------------------------------------------------------------------

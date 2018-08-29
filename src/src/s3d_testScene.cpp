@@ -73,7 +73,7 @@ TestScene::TestScene( const u32 width, const u32 height )
 
 
     m_Material.push_back( MaterialFactory::CreateLambert( Color4( 0.95f, 0.95f, 0.95f, 1.0f ), &g_TableTexture, &g_Sampler ) );
-    m_Material.push_back( MaterialFactory::CreateLambert( Color4( 0.0f, 0.0f, 0.0f, 1.0f ), nullptr, nullptr, Color4( 10.0f, 10.0f, 10.0f, 1.0f ) ) );
+    m_Material.push_back( MaterialFactory::CreateLambert( Color4( 0.0f, 0.0f, 0.0f, 1.0f ), nullptr, nullptr, Color4( 1000.0f, 1000.0f, 1000.0f, 1.0f ) ) );
 
     {
         Vertex vertices[6];

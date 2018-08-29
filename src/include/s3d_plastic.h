@@ -50,6 +50,9 @@ public:
 
     bool HasDelta() const override;
 
+    Color4 GetBaseColor(const Vector2&) const override
+    { return m_Diffuse; }
+
 private:
     //=============================================================================================
     // private variables.

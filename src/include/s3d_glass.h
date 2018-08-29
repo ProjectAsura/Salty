@@ -74,6 +74,9 @@ public:
     //---------------------------------------------------------------------------------------------
     bool HasDelta() const override;
 
+    Color4 GetBaseColor(const Vector2&) const override
+    { return m_Specular; }
+
 private:
     //=============================================================================================
     // private variables.

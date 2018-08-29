@@ -73,6 +73,8 @@ public:
     //---------------------------------------------------------------------------------------------
     bool HasDelta() const override;
 
+    Color4 GetBaseColor(const Vector2& texcoord) const override;
+
 private:
     //=============================================================================================
     // private variables.

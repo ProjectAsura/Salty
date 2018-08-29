@@ -257,13 +257,16 @@ Color4 PathTracer::Radiance( const Ray& input )
         // 自己発光による放射輝度.
         L += Color4::Mul( W, material->GetEmissive() );
 
-        //// 直接光をサンプリング.
-        //if ( !record.pMaterial->HasDelta() )
-        //{ L += Color4::Mul( W, NextEventEstimation( pos, arg.random ) ); }
-
         // シェーディング引数を設定.
-        arg.input    = raySet.ray.dir;
+        arg.input = raySet.ray.dir;
         shape->CalcParam(pos, record.barycentric, &arg.normal, &arg.texcoord);
+
+        // 直接光をサンプリング.
+        if ( !record.pMaterial->HasDelta() )
+        {
+            auto color = material->GetBaseColor(arg.texcoord);
+            L += Color4::Mul( W, Color4::Mul(NextEventEstimation( pos, arg.normal, arg.random ), color) );
+        }
 
         // 色を求める.
         W = Color4::Mul( W, material->Shade( arg ) );
@@ -311,19 +314,35 @@ RaySet PathTracer::MakeShadowRaySet( const Vector3& position, Random& random )
 //-------------------------------------------------------------------------------------------------
 //      直接光ライティングを行います.
 //-------------------------------------------------------------------------------------------------
-Color4 PathTracer::NextEventEstimation( const Vector3& position, Random& random )
+Color4 PathTracer::NextEventEstimation( const Vector3& position, const Vector3& normal, Random& random )
 {
     //auto shadowRay = MakeShadowRaySet( position, random );
     auto light = m_pScene->GetLight(random);
-    auto dir = Vector3::SafeUnitVector(light->GetCenter() - position);
+    Vector3 light_pos;
+    float   light_pdf;
+    light->Sample(random, &light_pos, &light_pdf);
 
-    auto shadowRay = MakeRaySet( position, dir );
+    auto light_dir  = light_pos - position;
+    auto light_dist2 = Vector3::Dot(light_dir, light_dir);
+    light_dir = Vector3::SafeUnitVector(light_dir);
+
+    auto shadowRay = MakeRaySet( position, light_dir );
 
     HitRecord shadowRecord;
-    if ( m_pScene->Intersect(shadowRay, shadowRecord) )
+
+    // ライトにヒットした場合.
+    if ( m_pScene->Intersect(shadowRay, shadowRecord) && light == shadowRecord.pShape )
     {
-        if (light == shadowRecord.pShape)
-        { return shadowRecord.pMaterial->GetEmissive(); }
+        auto p = shadowRay.ray.pos + shadowRay.ray.dir * shadowRecord.distance;
+        Vector3 light_normal;
+        Vector2 light_texcoord;
+        light->CalcParam(p, shadowRecord.barycentric, &light_normal, &light_texcoord);
+        auto dot0 = abs(Vector3::Dot(normal, light_dir));
+        auto dot1 = abs(Vector3::Dot(light_normal, -light_dir));
+        auto brdf_pdf = 1.0f / F_PI;
+
+        auto G = (dot0 * dot1) / light_dist2;
+        return shadowRecord.pMaterial->GetEmissive() * brdf_pdf * (G / light_pdf);
     }
 
     return Color4(0.0f, 0.0f, 0.0f, 0.0f);

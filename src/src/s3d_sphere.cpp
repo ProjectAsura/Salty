@@ -103,6 +103,17 @@ void Sphere::CalcParam(const Vector3& pos, const Vector2& barycentric, Vector3* 
     *pTexCoord = Vector2( phi * F_1DIV2PI, ( F_PI - theta ) * F_1DIVPI );
 }
 
+void Sphere::Sample(Random& random, Vector3* pPosition, float* pdf)
+{
+    const auto r1 = F_2PI * random.GetAsF32();
+    const auto r2 = 1.0 - 2.0 * random.GetAsF32();
+    const auto r3 = sqrt(1.0 - r2 * r2);
+    const auto light_pos = m_Center + (m_Radius + 1e-1) * Vector3::SafeUnitVector(Vector3(r3 * cos(r1), r3 * sin(r1), r2));
+
+    *pPosition = light_pos;
+    *pdf = 1.0f / (4.0f * F_PI * m_Radius * m_Radius);
+}
+
 //-------------------------------------------------------------------------------------------------
 //      バウンディングボックスを取得します.
 //-------------------------------------------------------------------------------------------------

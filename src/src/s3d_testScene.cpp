@@ -47,7 +47,7 @@ namespace s3d {
 TestScene::TestScene( const u32 width, const u32 height )
 : Scene()
 {
-#if 0
+#if 1
     IShape* pQuad;
 
     auto pCan0 = Mesh::Create( "res/mesh/can/coke_can.smd" );

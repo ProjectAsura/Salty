@@ -1582,6 +1582,7 @@ RaySet MakeRaySet(const Vector3& position, const Vector3& direction)
     result.ray4.dir[1] = _mm_set1_ps( direction.y );
     result.ray4.dir[2] = _mm_set1_ps( direction.z );
 
+#if S3D_IS_AVX
     result.ray8.pos[0] = _mm256_set1_ps( position.x );
     result.ray8.pos[1] = _mm256_set1_ps( position.y );
     result.ray8.pos[2] = _mm256_set1_ps( position.z );
@@ -1589,6 +1590,7 @@ RaySet MakeRaySet(const Vector3& position, const Vector3& direction)
     result.ray8.dir[0] = _mm256_set1_ps( direction.x );
     result.ray8.dir[1] = _mm256_set1_ps( direction.y );
     result.ray8.dir[2] = _mm256_set1_ps( direction.z );
+#endif
 
     return result;
 }

@@ -66,7 +66,7 @@ int main( int argc, char **argv )
         config.MaxRenderingMin    = 4.9f;
         config.CaptureIntervalSec = 29.9f;
 
-    #if 0
+    #if 1
         // 本番用.
         config.Width          = 1280;
         config.Height         = 720;

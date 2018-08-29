@@ -69,6 +69,8 @@ public:
     //---------------------------------------------------------------------------------------------
     Vector3 GetCenter() const override;
 
+    void CalcParam(const Vector3&, const Vector2&, Vector3*, Vector2*) const override;
+
 private:
     //=============================================================================================
     // private variables.

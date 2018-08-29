@@ -39,9 +39,6 @@ struct HitRecord
 {
     f32                 distance;       //!< 衝突点までの距離.
     Vector2             barycentric;    //!< 重心座標.
-    //Vector3             position;       //!< 衝突点の位置座標.
-    //Vector3             normal;         //!< 法線ベクトル.
-    //Vector2             texcoord;       //!< 衝突点のテクスチャ座標です.
     const IShape*       pShape;         //!< オブジェクトへのポインタ.
     const IMaterial*    pMaterial;      //!< マテリアルへのポインタ.
 
@@ -51,9 +48,6 @@ struct HitRecord
     HitRecord()
     : distance   ( F_MAX )
     , barycentric( 0.0f, 0.0f )
-    //, position   ( 0.0f, 0.0f, 0.0f )
-    //, normal     ( 0.0f, 0.0f, 0.0f )
-    //, texcoord   ( 0.0f, 0.0f )
     , pShape     ( nullptr )
     , pMaterial  ( nullptr )
     { /* DO_NOTHING */ }

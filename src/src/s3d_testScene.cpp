@@ -65,7 +65,7 @@ TestScene::TestScene( const u32 width, const u32 height )
         assert(false);
     }
 
-    if ( !m_IBL.Init( "res/ibl/HDRI_nature003.hdr") )
+    if ( !m_IBL.Init( "res/ibl/Ridgecrest_Road_Ref.hdr") )
     {
         ELOG("Error : IBL Load Failed." );
         assert(false);
@@ -73,7 +73,7 @@ TestScene::TestScene( const u32 width, const u32 height )
 
 
     m_Material.push_back( MaterialFactory::CreateLambert( Color4( 0.95f, 0.95f, 0.95f, 1.0f ), &g_TableTexture, &g_Sampler ) );
-    m_Material.push_back( MaterialFactory::CreateLambert( Color4( 0.0f, 0.0f, 0.0f, 1.0f ), nullptr, nullptr, Color4( 1000.0f, 1000.0f, 1000.0f, 1.0f ) ) );
+    m_Material.push_back( MaterialFactory::CreateLambert( Color4( 0.0f, 0.0f, 0.0f, 1.0f ), nullptr, nullptr, Color4( 10.0f, 10.0f, 10.0f, 1.0f ) ) );
 
     {
         Vertex vertices[6];
@@ -117,6 +117,8 @@ TestScene::TestScene( const u32 width, const u32 height )
     m_Shapes.push_back( Instance::Create( pCup,  Matrix::Translate( 70.0f, 20.0f, -70.0f ) ));
     m_Shapes.push_back( Sphere::Create( 15.0f, Vector3( 50.0f,  150.0f, 90.0f ), m_Material[1] ) );
     m_Shapes.push_back( pQuad );
+
+    m_pLightList.push_back( m_Shapes[8] );
 
     SafeRelease( pCan0 );
     SafeRelease( pCan1 );
@@ -231,6 +233,7 @@ TestScene::~TestScene()
 
     m_Shapes  .clear();
     m_Material.clear();
+    m_pLightList.clear();
     g_TableTexture.Release();
 }
 

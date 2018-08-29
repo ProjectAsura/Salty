@@ -68,14 +68,7 @@ bool Instance::IsHit( const RaySet& raySet, HitRecord& record ) const
     auto dir = Vector3::TransformNormal( raySet.ray.dir, m_InvWorld );
     auto localRaySet = MakeRaySet( pos, Vector3::UnitVector( dir ) );
 
-    if ( m_pShape->IsHit( localRaySet, record ) )
-    {
-        //record.position = Vector3::Transform( record.position, m_World );
-        //record.normal   = Vector3::TransformNormal( record.normal, Matrix::Transpose( m_InvWorld ) );
-        return true;
-    }
-
-    return false;
+    return m_pShape->IsHit( localRaySet, record );
 }
 
 void Instance::CalcParam(const Vector3& pos, const Vector2& barycentric, Vector3* normal, Vector2* texcoord) const

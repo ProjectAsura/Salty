@@ -84,7 +84,7 @@ Color4 Phong::Shade( ShadingArg& arg ) const
 
     // 出射方向.
     auto dir = Vector3::SafeUnitVector( onb.u * x + onb.v * y + onb.w * z );
-    auto cosine = Vector3::Dot( dir, n );
+    auto cosine = abs(Vector3::Dot( dir, n ));
 
     arg.output = dir;
     arg.dice = (arg.random.GetAsF32() >= m_Threshold);

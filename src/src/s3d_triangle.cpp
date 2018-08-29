@@ -95,30 +95,18 @@ bool Triangle::IsHit(const RaySet& raySet, HitRecord& record) const
     if ( dist >= record.distance )
     { return false; }
 
-//    record.position  = raySet.ray.pos + raySet.ray.dir * dist;
-    record.distance  = dist;
-    record.pShape    = this;
-    record.pMaterial = m_pMaterial;
-    record.barycentric.x = beta;
-    record.barycentric.y = gamma;
-
-    //auto alpha = 1.0f - beta - gamma;
-    //record.normal = Vector3(
-    //    m_Vertex[0].Normal.x * alpha + m_Vertex[1].Normal.x * beta + m_Vertex[2].Normal.x * gamma,
-    //    m_Vertex[0].Normal.y * alpha + m_Vertex[1].Normal.y * beta + m_Vertex[2].Normal.y * gamma,
-    //    m_Vertex[0].Normal.z * alpha + m_Vertex[1].Normal.z * beta + m_Vertex[2].Normal.z * gamma );
-    //record.normal.SafeNormalize();
-
-    //record.texcoord = Vector2(
-    //    m_Vertex[0].TexCoord.x * alpha + m_Vertex[1].TexCoord.x * beta + m_Vertex[2].TexCoord.x * gamma,
-    //    m_Vertex[0].TexCoord.y * alpha + m_Vertex[1].TexCoord.y * beta + m_Vertex[2].TexCoord.y * gamma );
+    record.distance         = dist;
+    record.pShape           = this;
+    record.pMaterial        = m_pMaterial;
+    record.barycentric.x    = beta;
+    record.barycentric.y    = gamma;
 
     return true;
 }
 
 void Triangle::CalcParam(const Vector3& position, const Vector2& barycentric, Vector3* pOutNormal, Vector2* pOutTexCoord) const
 {
-    auto beta = barycentric.x;
+    auto beta  = barycentric.x;
     auto gamma = barycentric.y;
     auto alpha = 1.0f - beta - gamma;
     *pOutNormal = Vector3(

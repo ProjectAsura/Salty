@@ -263,8 +263,6 @@ Color4 PathTracer::Radiance( const Ray& input )
 
         // シェーディング引数を設定.
         arg.input    = raySet.ray.dir;
-//        arg.normal   = record.normal;
-//        arg.texcoord = record.texcoord;
         shape->CalcParam(pos, record.barycentric, &arg.normal, &arg.texcoord);
 
         // 色を求める.
@@ -282,14 +280,6 @@ Color4 PathTracer::Radiance( const Ray& input )
              (W.GetZ() < FLT_EPSILON) )
         { break; }
 
-        if (std::isnan(W.GetX()) ||
-            std::isnan(W.GetY()) ||
-            std::isnan(W.GetZ()))
-        { 
-            ILOG("Nan.");
-            break;
-        }
-
         // レイを更新.
         raySet = MakeRaySet( pos, arg.output );
     }
@@ -306,12 +296,14 @@ Color4 PathTracer::Radiance( const Ray& input )
 //-------------------------------------------------------------------------------------------------
 RaySet PathTracer::MakeShadowRaySet( const Vector3& position, Random& random )
 {
-    auto phi = F_2PI * random.GetAsF32();
-    auto r  = random.GetAsF32();
-    auto x = r * std::cos( phi );
-    auto y = r * std::sin( phi );
-    auto dir = Vector3( x, y, SafeSqrt( 1.0f - (x * x) - (y * y) ) );
-    dir = Vector3::SafeUnitVector( dir );
+    //auto phi = F_2PI * random.GetAsF32();
+    //auto r  = random.GetAsF32();
+    //auto x = r * std::cos( phi );
+    //auto y = r * std::sin( phi );
+    //auto dir = Vector3( x, y, SafeSqrt( 1.0f - (x * x) - (y * y) ) );
+    //dir = Vector3::SafeUnitVector( dir );
+    auto light = m_pScene->GetLight(random);
+    auto dir = Vector3::SafeUnitVector(light->GetCenter() - position);
 
     return MakeRaySet( position, dir );
 }
@@ -321,13 +313,21 @@ RaySet PathTracer::MakeShadowRaySet( const Vector3& position, Random& random )
 //-------------------------------------------------------------------------------------------------
 Color4 PathTracer::NextEventEstimation( const Vector3& position, Random& random )
 {
-    auto shadowRay = MakeShadowRaySet( position, random );
+    //auto shadowRay = MakeShadowRaySet( position, random );
+    auto light = m_pScene->GetLight(random);
+    auto dir = Vector3::SafeUnitVector(light->GetCenter() - position);
+
+    auto shadowRay = MakeRaySet( position, dir );
 
     HitRecord shadowRecord;
     if ( m_pScene->Intersect(shadowRay, shadowRecord) )
-    { return Color4(0.0f, 0.0f, 0.0f, 0.0f); }
+    {
+        if (light == shadowRecord.pShape)
+        { return shadowRecord.pMaterial->GetEmissive(); }
+    }
 
-    return m_pScene->SampleIBL( shadowRay.ray.dir );
+    return Color4(0.0f, 0.0f, 0.0f, 0.0f);
+    //return m_pScene->SampleIBL( shadowRay.ray.dir );
 }
 
 //-------------------------------------------------------------------------------------------------

@@ -84,22 +84,23 @@ bool Sphere::IsHit(const RaySet &raySet, HitRecord& record ) const
     { return false; }
 
     record.distance  = dist;
-    //record.position  = raySet.ray.pos + record.distance * raySet.ray.dir;
     record.pShape    = this;
     record.pMaterial = m_pMaterial;
 
-    //// フラットシェーディング.
-    //record.normal   = Vector3::UnitVector(record.position - m_Center);
-
-    //auto theta = acosf( record.normal.y );
-    //auto phi   = atan2f( record.normal.x, record.normal.z );
-    //if ( phi < 0.0f )
-    //{ phi += F_2PI; }
-
-    //record.texcoord = Vector2( phi * F_1DIV2PI, ( F_PI - theta ) * F_1DIVPI );
-
     // 交差した.
     return true;
+}
+
+void Sphere::CalcParam(const Vector3& pos, const Vector2& barycentric, Vector3* pNormal, Vector2* pTexCoord) const
+{
+    *pNormal = Vector3::UnitVector(pos - m_Center);
+
+    auto theta = acosf( pNormal->y );
+    auto phi   = atan2f( pNormal->x, pNormal->z );
+    if ( phi < 0.0f )
+    { phi += F_2PI; }
+
+    *pTexCoord = Vector2( phi * F_1DIV2PI, ( F_PI - theta ) * F_1DIVPI );
 }
 
 //-------------------------------------------------------------------------------------------------

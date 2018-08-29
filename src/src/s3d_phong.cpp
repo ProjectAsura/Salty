@@ -72,8 +72,10 @@ Color4 Phong::Shade( ShadingArg& arg ) const
     const f32 y = sinf( phi ) * sinTheta;
     const f32 z = cosTheta;
 
+    auto n = (Vector3::Dot(arg.input, arg.normal) < 0.0f) ? arg.normal : -arg.normal;
+
     // 反射ベクトル.
-    Vector3 w = Vector3::Reflect( -arg.input, arg.normal );
+    Vector3 w = Vector3::Reflect( arg.input, n );
     w.SafeNormalize();
 
     // 基底ベクトルを求める.
@@ -82,7 +84,7 @@ Color4 Phong::Shade( ShadingArg& arg ) const
 
     // 出射方向.
     auto dir = Vector3::SafeUnitVector( onb.u * x + onb.v * y + onb.w * z );
-    auto cosine = abs(Vector3::Dot( dir, arg.normal ));
+    auto cosine = Vector3::Dot( dir, n );
 
     arg.output = dir;
     arg.dice = (arg.random.GetAsF32() >= m_Threshold);

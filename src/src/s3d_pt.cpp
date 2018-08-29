@@ -34,6 +34,8 @@ namespace /* anonymous */ {
 //-------------------------------------------------------------------------------------------------
 std::mutex      g_Mutex;
 const s3d::TONE_MAPPING_TYPE  ToneMappingType = s3d::TONE_MAPPING_ACES_FILMIC;
+float time1 = 0.0f;
+float time2 = 0.0f;
 
 } // namespace /* anonymous */
 
@@ -231,32 +233,44 @@ Color4 PathTracer::Radiance( const Ray& input )
     {
         auto record = HitRecord();
 
+        Timer timer;
+
+        timer.Start();
         // 交差判定.
         if ( !m_pScene->Intersect( raySet, record ) )
         {
             L += Color4::Mul( W, m_pScene->SampleIBL( raySet.ray.dir ) );
             break;
         }
+        timer.Stop();
+        time1 += timer.GetElapsedTimeMsec();
+
+        auto pos = raySet.ray.pos + raySet.ray.dir * record.distance;
 
         const auto shape    = record.pShape;
         const auto material = record.pMaterial;
         assert( shape    != nullptr );
         assert( material != nullptr );
 
+        timer.Start();
+
         // 自己発光による放射輝度.
         L += Color4::Mul( W, material->GetEmissive() );
 
-        // 直接光をサンプリング.
-        if ( !record.pMaterial->HasDelta() )
-        { L += Color4::Mul( W, NextEventEstimation( record.position, arg.random ) ); }
+        //// 直接光をサンプリング.
+        //if ( !record.pMaterial->HasDelta() )
+        //{ L += Color4::Mul( W, NextEventEstimation( pos, arg.random ) ); }
 
         // シェーディング引数を設定.
         arg.input    = raySet.ray.dir;
-        arg.normal   = record.normal;
-        arg.texcoord = record.texcoord;
+//        arg.normal   = record.normal;
+//        arg.texcoord = record.texcoord;
+        shape->CalcParam(pos, record.barycentric, &arg.normal, &arg.texcoord);
 
         // 色を求める.
         W = Color4::Mul( W, material->Shade( arg ) );
+        timer.Stop();
+        time2 += timer.GetElapsedTimeMsec();
 
         // ロシアンルーレットで打ち切るかどうか?
         if ( arg.dice )
@@ -268,8 +282,16 @@ Color4 PathTracer::Radiance( const Ray& input )
              (W.GetZ() < FLT_EPSILON) )
         { break; }
 
+        if (std::isnan(W.GetX()) ||
+            std::isnan(W.GetY()) ||
+            std::isnan(W.GetZ()))
+        { 
+            ILOG("Nan.");
+            break;
+        }
+
         // レイを更新.
-        raySet = MakeRaySet( record.position, arg.output );
+        raySet = MakeRaySet( pos, arg.output );
     }
 
     // 乱数を更新.
@@ -354,6 +376,9 @@ void PathTracer::TracePath()
     g_Mutex.lock();
     m_IsFinish = true;
     g_Mutex.unlock();
+
+    printf_s("time1 %f\n", time1);
+    printf_s("time2 %f\n", time2);
 
     ILOG( "\nPathTrace End.");
 }

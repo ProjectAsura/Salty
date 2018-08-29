@@ -70,12 +70,18 @@ bool Instance::IsHit( const RaySet& raySet, HitRecord& record ) const
 
     if ( m_pShape->IsHit( localRaySet, record ) )
     {
-        record.position = Vector3::Transform( record.position, m_World );
-        record.normal   = Vector3::TransformNormal( record.normal, Matrix::Transpose( m_InvWorld ) );
+        //record.position = Vector3::Transform( record.position, m_World );
+        //record.normal   = Vector3::TransformNormal( record.normal, Matrix::Transpose( m_InvWorld ) );
         return true;
     }
 
     return false;
+}
+
+void Instance::CalcParam(const Vector3& pos, const Vector2& barycentric, Vector3* normal, Vector2* texcoord) const
+{
+    m_pShape->CalcParam(pos, barycentric, normal, texcoord);
+    *normal = Vector3::TransformNormal(*normal, Matrix::Transpose(m_InvWorld));
 }
 
 //-------------------------------------------------------------------------------------------------

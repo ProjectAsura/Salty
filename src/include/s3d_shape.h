@@ -38,9 +38,10 @@ struct Vertex
 struct HitRecord
 {
     f32                 distance;       //!< 衝突点までの距離.
-    Vector3             position;       //!< 衝突点の位置座標.
-    Vector3             normal;         //!< 法線ベクトル.
-    Vector2             texcoord;       //!< 衝突点のテクスチャ座標です.
+    Vector2             barycentric;    //!< 重心座標.
+    //Vector3             position;       //!< 衝突点の位置座標.
+    //Vector3             normal;         //!< 法線ベクトル.
+    //Vector2             texcoord;       //!< 衝突点のテクスチャ座標です.
     const IShape*       pShape;         //!< オブジェクトへのポインタ.
     const IMaterial*    pMaterial;      //!< マテリアルへのポインタ.
 
@@ -49,9 +50,10 @@ struct HitRecord
     //---------------------------------------------------------------------------------------------
     HitRecord()
     : distance   ( F_MAX )
-    , position   ( 0.0f, 0.0f, 0.0f )
-    , normal     ( 0.0f, 0.0f, 0.0f )
-    , texcoord   ( 0.0f, 0.0f )
+    , barycentric( 0.0f, 0.0f )
+    //, position   ( 0.0f, 0.0f, 0.0f )
+    //, normal     ( 0.0f, 0.0f, 0.0f )
+    //, texcoord   ( 0.0f, 0.0f )
     , pShape     ( nullptr )
     , pMaterial  ( nullptr )
     { /* DO_NOTHING */ }
@@ -67,6 +69,7 @@ struct IShape : IReference
     virtual bool        IsHit    ( const RaySet&, HitRecord& ) const = 0;
     virtual BoundingBox GetBox   () const = 0;
     virtual Vector3     GetCenter() const = 0;
+    virtual void        CalcParam( const Vector3&, const Vector2&, Vector3*, Vector2*) const {}
 };
 
 } // namespace s3d

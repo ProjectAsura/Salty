@@ -63,7 +63,17 @@ public:
     //---------------------------------------------------------------------------------------------
     S3D_INLINE
     bool Intersect( const RaySet& raySet, HitRecord& record )
-    { return m_pBVH->IsHit( raySet, record ); }
+    {
+#if 0
+        return m_pBVH->IsHit( raySet, record );
+#else
+        auto flag = false;
+        for (size_t i = 0; i < m_Shapes.size(); ++i)
+        { flag |= m_Shapes[i]->IsHit(raySet, record); }
+
+        return flag;
+#endif
+    }
 
     //---------------------------------------------------------------------------------------------
     //! @brief      IBLテクスチャをフェッチします.
@@ -80,6 +90,8 @@ public:
         return m_pLightList[idx];
     }
 
+    virtual void Update(float time) {}
+
 protected:
     //=============================================================================================
     // protected variables.
@@ -89,6 +101,8 @@ protected:
     IBL                     m_IBL;
     TEXTURE_FILTER_MODE     m_Filter;
     std::vector<IShape*>    m_pLightList;
+    std::vector<IShape*>     m_Shapes;
+    std::vector<IMaterial*>  m_Material;
 
     //=============================================================================================
     // protected methods.

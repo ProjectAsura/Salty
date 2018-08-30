@@ -90,6 +90,17 @@ Vector3 Instance::GetCenter() const
 { return m_WorldCenter; }
 
 //-------------------------------------------------------------------------------------------------
+//      ワールド行列を更新します.
+//-------------------------------------------------------------------------------------------------
+void Instance::UpdateMatrix(const Matrix& matrix)
+{
+    m_World         = matrix;
+    m_InvWorld      = Matrix::Invert( matrix );
+    m_WorldBox      = BoundingBox::Transform( m_pShape->GetBox(), matrix );
+    m_WorldCenter   = Vector3::Transform( m_pShape->GetCenter(), matrix );
+}
+
+//-------------------------------------------------------------------------------------------------
 //      生成処理を行います.
 //-------------------------------------------------------------------------------------------------
 IShape* Instance::Create(IShape* pShape, const Matrix& world)

@@ -140,6 +140,11 @@ void WriteBmp( FILE* pFile, const s32 width, const s32 height, const f32* pPixel
             if ( g < 0.0f ) { g = 0.0f; }
             if ( b < 0.0f ) { b = 0.0f; }
 
+            // sRGB OETF
+            r = (r <= 0.0031308f) ? 12.92f * r : std::pow(1.055f * r, 1.0f / 2.4f) - 0.055f;
+            g = (g <= 0.0031308f) ? 12.92f * g : std::pow(1.055f * g, 1.0f / 2.4f) - 0.055f;
+            b = (b <= 0.0031308f) ? 12.92f * b : std::pow(1.055f * b, 1.0f / 2.4f) - 0.055f;
+
             u8 R = static_cast<u8>( r * 255.0f + 0.5f );
             u8 G = static_cast<u8>( g * 255.0f + 0.5f );
             u8 B = static_cast<u8>( b * 255.0f + 0.5f );

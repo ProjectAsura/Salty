@@ -270,11 +270,7 @@ void ToneMapper::ReinhardToneMapping
             auto Ld  = L * ( 1.0f + ( L / maxLw2 ) ) / ( 1.0f + L );
 
             // トーンマッピングした結果を格納.
-            pResult[idx] = Color4(
-                pow( Ld.GetX(), 1.0f / 2.2f ),
-                pow( Ld.GetY(), 1.0f / 2.2f ),
-                pow( Ld.GetZ(), 1.0f / 2.2f ),
-                pPixels[idx].GetW() );
+            pResult[idx] = Ld;
         }
     }
 }
@@ -314,11 +310,7 @@ void ToneMapper::Uncharted2FilmicToneMapping
             auto color = Uncharted2Tonemap( 2.0f * texelColor ) / Uncharted2Tonemap( LinearWhite );
 
             // トーンマッピングした結果を格納.
-            pResult[idx] = Color4(
-                pow( color.GetX(), 1.0f / 2.2f ),
-                pow( color.GetY(), 1.0f / 2.2f ),
-                pow( color.GetZ(), 1.0f / 2.2f ),
-                pPixels[idx].GetW() );
+            pResult[idx] = color;
         }
     }
 }
@@ -356,11 +348,7 @@ void ToneMapper::ACESFilmicToneMapping
             auto color = ACESFilm(texelColor);
 
             // トーンマッピングした結果を格納.
-            pResult[idx] = Color4(
-                pow(color.GetX(), 1.0f / 2.2f),
-                pow(color.GetY(), 1.0f / 2.2f),
-                pow(color.GetZ(), 1.0f / 2.2f),
-                pPixels[idx].GetW());
+            pResult[idx] = color;
         }
     }
 }

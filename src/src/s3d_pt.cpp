@@ -22,7 +22,16 @@
 #include <s3d_shape.h>
 #include <s3d_material.h>
 #include <s3d_testScene.h> // for Debug.
+#include <s3d_denoiser.h>
 
+#if _OPENMP
+#include <omp.h>
+#endif
+
+#define CPU_COUNT   (4 - 1)     // ローカル環境.
+//#define CPU_COUNT   (72 - 1)    // 本番環境.
+
+//#define DEBUG_MODE
 
 #undef min
 #undef max
@@ -32,10 +41,10 @@ namespace /* anonymous */ {
 //-------------------------------------------------------------------------------------------------
 // Global Variables.
 //-------------------------------------------------------------------------------------------------
-std::mutex      g_Mutex;
+//std::mutex      g_Mutex;
 const s3d::TONE_MAPPING_TYPE  ToneMappingType = s3d::TONE_MAPPING_ACES_FILMIC;
-float time1 = 0.0f;
-float time2 = 0.0f;
+//float time1 = 0.0f;
+//float time2 = 0.0f;
 
 } // namespace /* anonymous */
 
@@ -50,19 +59,22 @@ namespace s3d {
 //      コンストラクタです.
 //-------------------------------------------------------------------------------------------------
 PathTracer::PathTracer()
-: m_RenderTarget( nullptr )
-, m_Intermediate( nullptr )
+: m_Intermediate( nullptr )
 , m_pScene      ( nullptr )
 , m_IsFinish    ( false )
 , m_WatcherEnd  ( false )
-{ /* DO_NOTHING */ }
+{
+    m_RenderTarget[0] = nullptr;
+    m_RenderTarget[1] = nullptr;
+}
 
 //-------------------------------------------------------------------------------------------------
 //      デストラクタです.
 //-------------------------------------------------------------------------------------------------
 PathTracer::~PathTracer()
 {
-    SafeDeleteArray( m_RenderTarget );
+    SafeDeleteArray( m_RenderTarget[0] );
+    SafeDeleteArray( m_RenderTarget[0] );
     SafeDeleteArray( m_Intermediate );
     SafeDelete( m_pScene );
 }
@@ -75,40 +87,45 @@ bool PathTracer::Run( const Config& config )
     // 起動画面.
     ILOG( "//=================================================================" );
     ILOG( "//  Renderer \"Salty\"" );
-    ILOG( "//  Version : Alpha 3.5" );
+    ILOG( "//  Version : Alpha 4.0" );
     ILOG( "//  Author  : Pocol" );
     ILOG( "//=================================================================" );
     ILOG( " Configuration : " );
     ILOG( "     width      = %d", config.Width );
     ILOG( "     height     = %d", config.Height );
-    ILOG( "     sample     = %d", config.SampleCount );
-    ILOG( "     subsample  = %d", config.SubSampleCount );
+    //ILOG( "     sample     = %d", config.SampleCount );
+    //ILOG( "     subsample  = %d", config.SubSampleCount );
     ILOG( "     max bounce = %d", config.MaxBounceCount );
-    ILOG( "     CPU Core   = %d", config.CpuCoreCount );
+    //ILOG( "     CPU Core   = %d", config.CpuCoreCount );
     ILOG( "--------------------------------------------------------------------" );
 
     // コンフィグ設定.
     m_Config = config;
     
-    // 1つは監視用に空けておく.
-    if ( m_Config.CpuCoreCount > 1 )
-    { m_Config.CpuCoreCount; }
+    //// 1つは監視用に空けておく.
+    //if ( m_Config.CpuCoreCount > 1 )
+    //{ m_Config.CpuCoreCount; }
 
     // レンダーターゲットを生成.
-    m_RenderTarget = new Color4 [m_Config.Width * m_Config.Height];
-    m_Intermediate = new Color4 [m_Config.Width * m_Config.Height];
-
-    for( auto i=0; i<m_Config.Width * m_Config.Height; ++i )
-    {
-        m_RenderTarget[i] = Color4(0.0f, 0.0f, 0.0f, 0.0f);
-        m_Intermediate[i] = Color4(0.0f, 0.0f, 0.0f, 0.0f);
-    }
+    m_RenderTarget[0] = new Color4 [m_Config.Width * m_Config.Height];
+    m_RenderTarget[1] = new Color4 [m_Config.Width * m_Config.Height];
+    m_Intermediate    = new Color4 [m_Config.Width * m_Config.Height];
 
     // 時間監視スレッドを起動.
     std::thread thd( &PathTracer::Watcher, this, m_Config.MaxRenderingMin, m_Config.CaptureIntervalSec );
 
+    // レンダーターゲットをクリア.
+    for( auto i=0; i<m_Config.Width * m_Config.Height; ++i )
+    {
+        m_RenderTarget[0][i] = Color4(0.0f, 0.0f, 0.0f, 0.0f);
+        m_RenderTarget[1][i] = Color4(0.0f, 0.0f, 0.0f, 0.0f);
+        m_Intermediate[i]    = Color4(0.0f, 0.0f, 0.0f, 0.0f);
+    }
+
     // 画像出力用ディレクトリ作成.
+#ifdef DEBUG_MODE
     _mkdir( "./img" );
+#endif
 
     // シーン生成.
     m_pScene = new TestScene( m_Config.Width, m_Config.Height );
@@ -123,7 +140,8 @@ bool PathTracer::Run( const Config& config )
     SafeDelete( m_pScene );
 
     // レンダーターゲット解放.
-    SafeDeleteArray(m_RenderTarget);
+    SafeDeleteArray(m_RenderTarget[0]);
+    SafeDeleteArray(m_RenderTarget[1]);
     SafeDeleteArray(m_Intermediate);
 
     return m_IsFinish;
@@ -135,11 +153,22 @@ bool PathTracer::Run( const Config& config )
 void PathTracer::Capture( const char* filename )
 {
 #if 1
+    // ノイズ除去.
+    //FilterNLM(m_Config.Width, m_Config.Height, 0.3f, m_RenderTarget, m_DenoisedTarget);
+    int idx = m_PrevBufferIndex;
+
+    // バッファ番号交換.
+    //m_BufferIndex = (m_BufferIndex + 1) % 2;
+
+    // シーン更新可能フラグを立てる.
+    m_Updatable = true;
+
     // トーンマッピングを実行.
-    ToneMapper::Map( ToneMappingType, m_Config.Width, m_Config.Height, m_RenderTarget, m_Intermediate );
+    ToneMapper::Map( ToneMappingType, m_Config.Width, m_Config.Height, m_RenderTarget[idx], m_Intermediate );
 
     // BMPに出力する.
     SaveToBMP( filename, m_Config.Width, m_Config.Height, &m_Intermediate[0].x );
+
 #else
     SaveToBMP( filename, m_Config.Width, m_Config.Height, &m_RenderTarget[0].x);
 #endif
@@ -175,7 +204,11 @@ void PathTracer::Watcher(f32 maxRenderingTimeMin, f32 captureIntervalSec)
             captureTimer.Start();
 
             // ファイル保存.
+#ifdef DEBUG_MODE
             sprintf_s( filename, "img/%03d.bmp", counter );
+#else
+            sprintf_s( filename, "%03d.bmp", counter );
+#endif
             Capture( filename );
 
             counter++;
@@ -192,7 +225,11 @@ void PathTracer::Watcher(f32 maxRenderingTimeMin, f32 captureIntervalSec)
         // 規定時間に達した場合.
         if ( min >= maxRenderingTimeMin )
         {
+#ifdef DEBUG_MODE
             sprintf_s( filename, "img/%03d.bmp", counter );
+#else
+            sprintf_s( filename, "%03d.bmp", counter );
+#endif
             ILOG( "Rendering Imcompleted..." );
             break;
         }
@@ -200,17 +237,25 @@ void PathTracer::Watcher(f32 maxRenderingTimeMin, f32 captureIntervalSec)
         // レンダリングが正常終了した場合.
         if ( m_IsFinish )
         {
+#ifdef DEBUG_MODE
             sprintf_s( filename, "img/%03d.bmp", counter );
+#else
+            sprintf_s( filename, "%03d.bmp", counter );
+#endif
             ILOG( "Rendering Completed !!!" );
             ILOG( "Rendering Time %lf min", min );
             break;
         }
 
-        // 1 sec 寝かせる.
-        Sleep( 1000 );
+        // 0.1 sec 寝かせる.
+        Sleep( 100 );
     }
 
+#ifdef DEBUG_MODE
     Capture( "img/final.bmp" );
+#else
+    Capture( "final.bmp" );
+#endif
 
     m_WatcherEnd = true;
 }
@@ -233,17 +278,12 @@ Color4 PathTracer::Radiance( const Ray& input )
     {
         auto record = HitRecord();
 
-        Timer timer;
-
-        timer.Start();
         // 交差判定.
         if ( !m_pScene->Intersect( raySet, record ) )
         {
             L += Color4::Mul( W, m_pScene->SampleIBL( raySet.ray.dir ) );
             break;
         }
-        timer.Stop();
-        time1 += timer.GetElapsedTimeMsec();
 
         auto pos = raySet.ray.pos + raySet.ray.dir * record.distance;
 
@@ -251,8 +291,6 @@ Color4 PathTracer::Radiance( const Ray& input )
         const auto material = record.pMaterial;
         assert( shape    != nullptr );
         assert( material != nullptr );
-
-        timer.Start();
 
         // 自己発光による放射輝度.
         L += Color4::Mul( W, material->GetEmissive() );
@@ -269,8 +307,6 @@ Color4 PathTracer::Radiance( const Ray& input )
 
         // 色を求める.
         W = Color4::Mul( W, material->Shade( arg ) );
-        timer.Stop();
-        time2 += timer.GetElapsedTimeMsec();
 
         // ロシアンルーレットで打ち切るかどうか?
         if ( arg.dice )
@@ -293,23 +329,6 @@ Color4 PathTracer::Radiance( const Ray& input )
     return L;
 }
 
-////-------------------------------------------------------------------------------------------------
-////      シャドウレイを生成します.
-////-------------------------------------------------------------------------------------------------
-//RaySet PathTracer::MakeShadowRaySet( const Vector3& position, Random& random )
-//{
-//    //auto phi = F_2PI * random.GetAsF32();
-//    //auto r  = random.GetAsF32();
-//    //auto x = r * std::cos( phi );
-//    //auto y = r * std::sin( phi );
-//    //auto dir = Vector3( x, y, SafeSqrt( 1.0f - (x * x) - (y * y) ) );
-//    //dir = Vector3::SafeUnitVector( dir );
-//    auto light = m_pScene->GetLight(random);
-//    auto dir = Vector3::SafeUnitVector(light->GetCenter() - position);
-//
-//    return MakeRaySet( position, dir );
-//}
-
 //-------------------------------------------------------------------------------------------------
 //      直接光ライティングを行います.
 //-------------------------------------------------------------------------------------------------
@@ -322,7 +341,6 @@ Color4 PathTracer::NextEventEstimation
     Random& random
 )
 {
-    //auto shadowRay = MakeShadowRaySet( position, random );
     auto light = m_pScene->GetLight(random);
     Vector3 light_pos;
     float   light_pdf;
@@ -355,7 +373,6 @@ Color4 PathTracer::NextEventEstimation
     }
 
     return Color4(0.0f, 0.0f, 0.0f, 0.0f);
-    //return m_pScene->SampleIBL( shadowRay.ray.dir );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -364,51 +381,96 @@ Color4 PathTracer::NextEventEstimation
 void PathTracer::TracePath()
 {
     ILOG( "\nPathTrace Start.");
+    Timer timer;
+    timer.Start();
 
-    const auto sampleCount    = m_Config.SampleCount * m_Config.SubSampleCount  * m_Config.SubSampleCount;
-    const auto invSampleCount = 1.0f / static_cast<f32>( sampleCount );
+    //const auto sampleCount    = m_Config.SampleCount * m_Config.SubSampleCount  * m_Config.SubSampleCount;
+    //const auto invSampleCount = 1.0f / static_cast<f32>( sampleCount );
 
-    const auto rate     = 1.0f / static_cast<f32>( m_Config.SubSampleCount );
-    const auto halfRate = rate * 0.5f;
+    //const auto rate     = 1.0f / static_cast<f32>( m_Config.SubSampleCount );
+    const auto halfRate = 0.5f;
 
     // 乱数初期化.
     m_Random.SetSeed( 3141592 );
 
-    for ( auto sy=0; sy<m_Config.SubSampleCount && !m_WatcherEnd; ++sy )
-    for ( auto sx=0; sx<m_Config.SubSampleCount && !m_WatcherEnd; ++sx )
-    {
-        const auto r1 = sx * rate + halfRate;
-        const auto r2 = sy * rate + halfRate;
+    std::atomic<uint64_t> sampleCounter = 0;
+    m_SamplingCount = 0;
+    //m_BufferIndex = 0;
 
-        for( auto s=0; s<m_Config.SampleCount && !m_WatcherEnd; ++s )
+    //for ( auto sy=0; sy<m_Config.SubSampleCount && !m_WatcherEnd; ++sy )
+    //for ( auto sx=0; sx<m_Config.SubSampleCount && !m_WatcherEnd; ++sx )
+    while(!m_WatcherEnd)
+    {
+        //const auto r1 = sx * rate + halfRate;
+        //const auto r2 = sy * rate + halfRate;
+
+        // 1フレーム相当.
+        //for( auto s=0; s<m_Config.SampleCount && !m_WatcherEnd; ++s )
         {
-            printf_s( "\r%5.2f%% Completed.", 100.f * ( sy * m_Config.SubSampleCount * m_Config.SampleCount + sx * m_Config.SampleCount + s ) / sampleCount );
+            //printf_s( "\r%5.2f%% Completed.", 100.f * ( m_Config.SubSampleCount * m_Config.SampleCount + sx * m_Config.SampleCount + s ) / sampleCount );
+
+            if (m_Updatable)
+            {
+                auto deltaTime = 1.0f / 60.0f;
+                m_pScene->Update(deltaTime);
+
+                auto size = m_Config.Width * m_Config.Height;
+
+                float invSampleCount = 1.0f / float(m_SamplingCount);
+                for(auto i=0; i<size; ++i)
+                { m_RenderTarget[m_CurrentBufferIndex][i] *= invSampleCount; }
+
+                m_PrevBufferIndex = m_CurrentBufferIndex;
+                m_CurrentBufferIndex = (m_CurrentBufferIndex + 1) % 2;
+
+                // レンダーターゲットをクリア.
+                 for (auto i = 0; i < size; ++i)
+                { m_RenderTarget[m_CurrentBufferIndex][i] = Color4(0.0f, 0.0f, 0.0f, 0.0f); }
+
+                m_Updatable = false;
+                m_SamplingCount = 0;
+            }
 
         #if _OPENMP
-            #pragma omp parallel for schedule(dynamic, 1) num_threads(m_Config.CpuCoreCount)
+            #pragma omp parallel for schedule(dynamic, 1) num_threads(CPU_COUNT)
         #endif
             for( auto y=0; y<m_Config.Height; ++y )
-            for( auto x=0; x<m_Config.Width ; ++x )
             {
-                auto ray = m_pScene->GetRay(
-                    ( r1 + x ) / m_Config.Width  - 0.5f,
-                    ( r2 + y ) / m_Config.Height - 0.5f );
+            #if _OPENMP
+                auto thread_id = omp_get_thread_num();
+                auto group = thread_id % 2; // 0, 1でプロセッサグループを指定
+                GROUP_AFFINITY mask;
+                if (GetNumaNodeProcessorMaskEx(group, &mask))
+                { SetThreadGroupAffinity(GetCurrentThread(), &mask, nullptr); }
+            #endif
 
-                const auto idx = y * m_Config.Width + x;
-                m_RenderTarget[ idx ] += Radiance( ray ) * invSampleCount;
+                for( auto x=0; x<m_Config.Width ; ++x )
+                {
+                    auto ray = m_pScene->GetRay(
+                        ( halfRate + x ) / m_Config.Width  - 0.5f,
+                        ( halfRate + y ) / m_Config.Height - 0.5f );
+                        //( r1 + x ) / m_Config.Width  - 0.5f,
+                        //( r2 + y ) / m_Config.Height - 0.5f );
+
+                    const auto idx = y * m_Config.Width + x;
+                    m_RenderTarget[m_CurrentBufferIndex][ idx ] += Radiance( ray );
+                    sampleCounter++;
+                }
             }
+            m_SamplingCount++;
+
         }
+
     }
 
     // 正常終了フラグを立てる.
-    g_Mutex.lock();
     m_IsFinish = true;
-    g_Mutex.unlock();
-
-    printf_s("time1 %f\n", time1);
-    printf_s("time2 %f\n", time2);
-
     ILOG( "\nPathTrace End.");
+
+    timer.Stop();
+    auto sample_rate = sampleCounter / timer.GetElapsedTimeSec();
+    ILOG( "%lf [sample/sec]", sample_rate);
+
 }
 
 } // namespace s3d

@@ -71,6 +71,8 @@ public:
 
     void CalcParam(const Vector3&, const Vector2&, Vector3*, Vector2*) const override;
 
+    void UpdateMatrix(const Matrix& matrix);
+
 private:
     //=============================================================================================
     // private variables.

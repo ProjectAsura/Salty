@@ -24,6 +24,7 @@
     <ClInclude Include="..\include\s3d_bvh4.h" />
     <ClInclude Include="..\include\s3d_bvh8.h" />
     <ClInclude Include="..\include\s3d_camera.h" />
+    <ClInclude Include="..\include\s3d_denoiser.h" />
     <ClInclude Include="..\include\s3d_glass.h" />
     <ClInclude Include="..\include\s3d_hdr.h" />
     <ClInclude Include="..\include\s3d_ibl.h" />
@@ -59,6 +60,7 @@
     <ClCompile Include="..\src\s3d_bvh2.cpp" />
     <ClCompile Include="..\src\s3d_bvh4.cpp" />
     <ClCompile Include="..\src\s3d_bvh8.cpp" />
+    <ClCompile Include="..\src\s3d_denoiser.cpp" />
     <ClCompile Include="..\src\s3d_glass.cpp" />
     <ClCompile Include="..\src\s3d_hdr.cpp" />
     <ClCompile Include="..\src\s3d_ibl.cpp" />
@@ -198,7 +200,7 @@
       <OpenMPSupport>true</OpenMPSupport>
       <AdditionalIncludeDirectories>$(ProjectDir)..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>S3D_USE_SIMD;NDEBUG;_NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

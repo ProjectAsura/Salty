@@ -17,6 +17,7 @@
 #include <s3d_instance.h>
 #include <s3d_sphere.h>
 #include <s3d_materialfactory.h>
+#include <s3d_timer.h>
 
 
 namespace /* anonymous */ {
@@ -107,18 +108,28 @@ TestScene::TestScene( const u32 width, const u32 height )
 
     m_Shapes.reserve(9);
 
-    m_Shapes.push_back( Instance::Create( pCan0, Matrix::Translate( 100.0f, 20.0f, 100.0 ) ) );
-    m_Shapes.push_back( Instance::Create( pCan0, Matrix::RotateY(ToRad(-30.0f)) *Matrix::RotateX(ToRad(90.0)) * Matrix::RotateY(ToRad(-55.0)) * Matrix::Translate( 70.0f, 10.0f, 90.0f) ) );
-    m_Shapes.push_back( Instance::Create( pCan1, Matrix::RotateY(ToRad(59.5f)) * Matrix::Translate( 75.0f, 20.0f, 50.0f) ));
-    m_Shapes.push_back( Instance::Create( pCan1, Matrix::RotateY(ToRad(130.3f)) * Matrix::Translate( 60.0f, 20.0f, 35.0f) ));
-    m_Shapes.push_back( Instance::Create( pCan1, Matrix::RotateY(ToRad(260.0f)) * Matrix::Translate( 90.0f, 20.0f, 35.0f) ));
-    m_Shapes.push_back( Instance::Create( pCan0, Matrix::RotateX(ToRad(90.0f)) * Matrix::RotateY(ToRad(70.0f)) * Matrix::Translate( 10.0f, 10.0f, 10.0f) ));
-    m_Shapes.push_back( Instance::Create( pCup,  Matrix::Translate( 30.0f, 20.0f, -55.0f ) ));
-    m_Shapes.push_back( Instance::Create( pCup,  Matrix::Translate( 70.0f, 20.0f, -70.0f ) ));
+    m_CanRotateZ0 = 0.0f;
+    m_CanRotateZ1 = 0.0f;
+    m_CupRotate = 0.0f;
+    m_CanPos0 = Vector3(55.0f, 10.0f, 90.0f);
+    m_CanPos1 = Vector3(10.0f, 10.0f, 10.0f);
+    m_CupPos  = Vector3(30.0f, 20.0f, -55.0f);
+    m_pCan0 = static_cast<Instance*>(Instance::Create( pCan1, Matrix::RotateY(ToRad(-30.0f)) * Matrix::RotateX(ToRad(90.0)) * Matrix::RotateY(ToRad(-65.0)) * Matrix::Translate(m_CanPos0.x, m_CanPos0.y, m_CanPos0.z) ));
+    m_pCan1 = static_cast<Instance*>(Instance::Create( pCan0, Matrix::RotateY(m_CanRotateZ1) * Matrix::RotateX(ToRad(90.0f)) * Matrix::RotateY(ToRad(70.0f)) * Matrix::Translate(m_CanPos1.x, m_CanPos1.y, m_CanPos1.z) ));
+    m_pCup  = static_cast<Instance*>(Instance::Create( pCup,  Matrix::Translate(m_CupPos.x, m_CupPos.y, m_CupPos.z)));
+ 
     m_Shapes.push_back( Sphere::Create( 15.0f, Vector3( 50.0f,  150.0f, 90.0f ), m_Material[1] ) );
+    m_Shapes.push_back( Instance::Create( pCan0, Matrix::Translate( 100.0f, 20.0f, 100.0 ) ) );
+    m_Shapes.push_back( m_pCan0 );
+    m_Shapes.push_back( Instance::Create( pCan1, Matrix::RotateY(ToRad(59.5f)) * Matrix::Translate( 75.0f, 20.0f, 50.0f) ));
+    //m_Shapes.push_back( Instance::Create( pCan1, Matrix::RotateY(ToRad(130.3f)) * Matrix::Translate( 60.0f, 20.0f, 35.0f) ));
+//    m_Shapes.push_back( Instance::Create( pCan1, Matrix::RotateY(ToRad(260.0f)) * Matrix::Translate( 90.0f, 20.0f, 35.0f) ));
+    m_Shapes.push_back( m_pCan1 );
+    m_Shapes.push_back( m_pCup );
+    //m_Shapes.push_back( Instance::Create( pCup,  Matrix::Translate( 70.0f, 20.0f, -70.0f ) ));
     m_Shapes.push_back( pQuad );
 
-    m_pLightList.push_back( m_Shapes[8] );
+    m_pLightList.push_back( m_Shapes[0] );
 
     SafeRelease( pCan0 );
     SafeRelease( pCan1 );
@@ -212,7 +223,8 @@ TestScene::TestScene( const u32 width, const u32 height )
 #endif
 
     m_pCamera = camera;
-    m_pBVH = BVH4::Create( m_Shapes.size(), m_Shapes.data() );
+    m_FrameCount = 0;
+    //m_pBVH = BVH4::Create( m_Shapes.size(), m_Shapes.data() );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -222,8 +234,12 @@ TestScene::~TestScene()
 {
     m_IBL.Term();
 
-    SafeRelease( m_pBVH );
+    //SafeRelease( m_pBVH );
     SafeDelete( m_pCamera );
+
+    m_pCan0 = nullptr;
+    m_pCan1 = nullptr;
+    m_pCup  = nullptr;
 
     for(size_t i=0; i<m_Shapes.size(); ++i)
     { SafeRelease(m_Shapes[i]); }
@@ -235,6 +251,37 @@ TestScene::~TestScene()
     m_Material.clear();
     m_pLightList.clear();
     g_TableTexture.Release();
+}
+
+//-------------------------------------------------------------------------------------------------
+//      シーンを更新します.
+//-------------------------------------------------------------------------------------------------
+void TestScene::Update(float deltaTime)
+{
+    m_CanRotateZ0 -= 2.5f;
+    m_CanRotateZ1 += 4.0f;
+//    auto dir0 = Vector3(cos(-65.0f) * sin(-65.0f), 0.0f, cos(-65.0f));
+//    m_CanPos0 += dir0 * deltaTime * 0.5f;
+    m_CanPos0.z += 0.5f;
+    m_CanPos0.x += 0.1f;
+    m_CanPos1.z += 1.5f;
+    auto mat0 = Matrix::RotateY(ToRad(-30.0f + m_CanRotateZ0)) * Matrix::RotateX(ToRad(90.0)) * Matrix::RotateY(ToRad(-65.0)) * Matrix::Translate(m_CanPos0.x, m_CanPos0.y, m_CanPos0.z);
+    auto mat1 = Matrix::RotateY(ToRad(m_CanRotateZ1)) * Matrix::RotateX(ToRad(90.0f)) * Matrix::RotateY(ToRad(70.0f)) * Matrix::Translate(m_CanPos1.x, m_CanPos1.y, m_CanPos1.z);
+
+    m_pCan0->UpdateMatrix(mat0);
+    m_pCan1->UpdateMatrix(mat1);
+
+    if (m_FrameCount >= 43)
+    {
+        m_CupRotate += 3.75f;
+        if (m_CupRotate >= 90.0f)
+        { m_CupRotate = 90.0f; }
+
+        auto mat3 = Matrix::RotateX(ToRad(m_CupRotate)) * Matrix::Translate(m_CupPos.x, m_CupPos.y, m_CupPos.z);
+        m_pCup->UpdateMatrix(mat3);
+    }
+
+    m_FrameCount++;
 }
 
 } 

@@ -369,7 +369,7 @@ bool BVH4::SplitMid( size_t count, IShape** ppShapes, size_t& mid )
 //-------------------------------------------------------------------------------------------------
 bool BVH4::Split(size_t count, IShape** ppShapes, size_t& mid)
 {
-#if 0
+#if 1
     // SAHによる分割.
     return SplitSAH(count, ppShapes, mid);
 #else

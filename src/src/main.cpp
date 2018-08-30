@@ -63,25 +63,25 @@ int main( int argc, char **argv )
         // アプリケーションの構成設定.
         s3d::PathTracer::Config config;
 
-        config.MaxRenderingMin    = 4.9f;
-        config.CaptureIntervalSec = 29.9f;
+        config.MaxRenderingMin    = 14.9f;
+        config.CaptureIntervalSec = 11.9f;
 
     #if 1
         // 本番用.
-        config.Width          = 1280;
-        config.Height         = 720;
-        config.SampleCount    = 512;
-        config.SubSampleCount = 2;
-        config.MaxBounceCount = 16;
-        config.CpuCoreCount   = GetCPUCoreCount();
+        config.Width          = 960;
+        config.Height         = 540;
+//        config.SampleCount    = int(5.6);// * 18); // ローカル環境は1ピクセル1秒間に0.48レイなので12秒では5.6サンプル程度. 本番環境では72コアなので 18倍CPUがあるので18倍している.
+        //config.SubSampleCount = 1;
+        config.MaxBounceCount = 8;
+        //config.CpuCoreCount   = GetCPUCoreCount();
     #else
         // デバッグ用.
         config.Width          = 256;
         config.Height         = 256;
-        config.SampleCount    = 512;
-        config.SubSampleCount = 1;
+        //config.SampleCount    = 512;
+        //config.SubSampleCount = 1;
         config.MaxBounceCount = 4;
-        config.CpuCoreCount   = GetCPUCoreCount();
+        //config.CpuCoreCount   = GetCPUCoreCount();
     #endif
 
         s3d::PathTracer renderer;

@@ -10,6 +10,7 @@
 //-------------------------------------------------------------------------------------------------
 #include <s3d_math.h>
 #include <s3d_scene.h>
+#include <atomic>
 
 namespace s3d {
 
@@ -31,12 +32,12 @@ public:
     {
         s32     Width;              //!< レンダーターゲットの横幅です.
         s32     Height;             //!< レンダーターゲットの縦幅です.
-        s32     SampleCount;        //!< 1ピクセルあたりのサンプリング数です.
-        s32     SubSampleCount;     //!< 1ピクセルあたりのサブサンプリング数です.
+        //s32     SampleCount;        //!< 1ピクセルあたりのサンプリング数です.
+        //s32     SubSampleCount;     //!< 1ピクセルあたりのサブサンプリング数です.
         s32     MaxBounceCount;     //!< 打ち切りバウンス数です.
         f32     MaxRenderingMin;    //!< 最大レンダリング可能時間(分単位)です.
         f32     CaptureIntervalSec; //!< キャプチャー間隔です(秒単位).
-        s32     CpuCoreCount;       //!< CPUコア数です.
+        //s32     CpuCoreCount;       //!< CPUコア数です.
     };
 
     //=============================================================================================
@@ -67,13 +68,17 @@ private:
     //=============================================================================================
     // private variables.
     //=============================================================================================
-    Config          m_Config;           //!< コンフィグです.
-    Color4*         m_RenderTarget;     //!< レンダーターゲットです.
-    Color4*         m_Intermediate;     //!< 中間出力用ターゲット.
-    Random          m_Random;           //!< 乱数.
-    Scene*          m_pScene;           //!< シーンデータ.
-    volatile bool   m_IsFinish;         //!< 正常終了したかどうか？
-    volatile bool   m_WatcherEnd;       //!< 時間監視を終了したかどうか.
+    Config              m_Config;           //!< コンフィグです.
+    Color4*             m_RenderTarget[2];  //!< レンダーターゲットです.
+    Color4*             m_Intermediate;     //!< 中間出力用ターゲット.
+    Random              m_Random;           //!< 乱数.
+    Scene*              m_pScene;           //!< シーンデータ.
+    std::atomic<bool>   m_IsFinish;         //!< 正常終了したかどうか？
+    std::atomic<bool>   m_WatcherEnd;       //!< 時間監視を終了したかどうか.
+    std::atomic<bool>   m_Updatable;
+    int    m_CurrentBufferIndex = 0;
+    std::atomic<int>    m_PrevBufferIndex = 1;
+    std::atomic<int>    m_SamplingCount;
 
     //=============================================================================================
     // private methods.
@@ -93,11 +98,6 @@ private:
         const Vector2& texcoord,
         const IMaterial* pMaterial,
         Random& random );
-
-    ////---------------------------------------------------------------------------------------------
-    ////! @brief      シャドウレイを生成します.
-    ////---------------------------------------------------------------------------------------------
-    //RaySet MakeShadowRaySet( const Vector3& position, Random& random );
 
     //---------------------------------------------------------------------------------------------
     //! @brief      経路を追跡します.

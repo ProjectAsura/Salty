@@ -28,8 +28,8 @@
 #include <omp.h>
 #endif
 
-#define CPU_COUNT   (4 - 1)     // ローカル環境.
-//#define CPU_COUNT   (72 - 1)    // 本番環境.
+//#define CPU_COUNT   (4 - 1)     // ローカル環境.
+#define CPU_COUNT   (72 - 1)    // 本番環境.
 
 //#define DEBUG_MODE
 

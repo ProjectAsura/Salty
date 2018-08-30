@@ -66,7 +66,7 @@ TestScene::TestScene( const u32 width, const u32 height )
         assert(false);
     }
 
-    if ( !m_IBL.Init( "res/ibl/Ridgecrest_Road_Ref.hdr") )
+    if ( !m_IBL.Init( "res/ibl/nagoya_wall_path_4k.hdr") )
     {
         ELOG("Error : IBL Load Failed." );
         assert(false);
@@ -145,7 +145,7 @@ TestScene::TestScene( const u32 width, const u32 height )
         1.0f, 
         1.5f );
 #else
-    if ( !m_IBL.Init("res/ibl/HDR_029_Sky_Cloudy_Ref.hdr") )
+    if ( !m_IBL.Init("res/ibl/skukuza_golf_4k.hdr") )
     {
         ELOG( "Error : IBL Not Found." );
         assert(false);

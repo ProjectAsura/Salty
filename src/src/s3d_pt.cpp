@@ -28,8 +28,6 @@
 #include <omp.h>
 #endif
 
-//#define CPU_COUNT   (4 - 1)     // ローカル環境.
-#define CPU_COUNT   (72 - 1)    // 本番環境.
 
 //#define DEBUG_MODE
 
@@ -96,7 +94,7 @@ bool PathTracer::Run( const Config& config )
     //ILOG( "     sample     = %d", config.SampleCount );
     //ILOG( "     subsample  = %d", config.SubSampleCount );
     ILOG( "     max bounce = %d", config.MaxBounceCount );
-    //ILOG( "     CPU Core   = %d", config.CpuCoreCount );
+    ILOG( "     CPU Core   = %d", config.CpuCoreCount );
     ILOG( "--------------------------------------------------------------------" );
 
     // コンフィグ設定.
@@ -381,8 +379,8 @@ Color4 PathTracer::NextEventEstimation
 void PathTracer::TracePath()
 {
     ILOG( "\nPathTrace Start.");
-    Timer timer;
-    timer.Start();
+    //Timer timer;
+    //timer.Start();
 
     //const auto sampleCount    = m_Config.SampleCount * m_Config.SubSampleCount  * m_Config.SubSampleCount;
     //const auto invSampleCount = 1.0f / static_cast<f32>( sampleCount );
@@ -393,7 +391,7 @@ void PathTracer::TracePath()
     // 乱数初期化.
     m_Random.SetSeed( 3141592 );
 
-    std::atomic<uint64_t> sampleCounter = 0;
+    //std::atomic<uint64_t> sampleCounter = 0;
     m_SamplingCount = 0;
     //m_BufferIndex = 0;
 
@@ -432,7 +430,7 @@ void PathTracer::TracePath()
             }
 
         #if _OPENMP
-            #pragma omp parallel for schedule(dynamic, 1) num_threads(CPU_COUNT)
+            #pragma omp parallel for schedule(dynamic) num_threads(72)
         #endif
             for( auto y=0; y<m_Config.Height; ++y )
             {
@@ -454,9 +452,10 @@ void PathTracer::TracePath()
 
                     const auto idx = y * m_Config.Width + x;
                     m_RenderTarget[m_CurrentBufferIndex][ idx ] += Radiance( ray );
-                    sampleCounter++;
+                    //sampleCounter++;
                 }
             }
+
             m_SamplingCount++;
 
         }
@@ -467,9 +466,9 @@ void PathTracer::TracePath()
     m_IsFinish = true;
     ILOG( "\nPathTrace End.");
 
-    timer.Stop();
-    auto sample_rate = sampleCounter / timer.GetElapsedTimeSec();
-    ILOG( "%lf [sample/sec]", sample_rate);
+    //timer.Stop();
+    //auto sample_rate = sampleCounter / timer.GetElapsedTimeSec();
+    //ILOG( "%lf [sample/sec]", sample_rate);
 
 }
 

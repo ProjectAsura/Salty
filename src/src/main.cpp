@@ -73,7 +73,7 @@ int main( int argc, char **argv )
 //        config.SampleCount    = int(5.6);// * 18); // ローカル環境は1ピクセル1秒間に0.48レイなので12秒では5.6サンプル程度. 本番環境では72コアなので 18倍CPUがあるので18倍している.
         //config.SubSampleCount = 1;
         config.MaxBounceCount = 8;
-        //config.CpuCoreCount   = GetCPUCoreCount();
+        config.CpuCoreCount   = GetCPUCoreCount();
     #else
         // デバッグ用.
         config.Width          = 256;
@@ -81,7 +81,7 @@ int main( int argc, char **argv )
         //config.SampleCount    = 512;
         //config.SubSampleCount = 1;
         config.MaxBounceCount = 4;
-        //config.CpuCoreCount   = GetCPUCoreCount();
+        config.CpuCoreCount   = GetCPUCoreCount();
     #endif
 
         s3d::PathTracer renderer;

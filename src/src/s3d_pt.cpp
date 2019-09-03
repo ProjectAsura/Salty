@@ -24,6 +24,7 @@
 #include <s3d_testScene.h> // for Debug.
 #include <s3d_denoiser.h>
 #include <ppl.h>
+#include <stb_image_write.h>
 
 #if _OPENMP
 #include <omp.h>
@@ -42,10 +43,7 @@ namespace /* anonymous */ {
 //-------------------------------------------------------------------------------------------------
 // Global Variables.
 //-------------------------------------------------------------------------------------------------
-//std::mutex      g_Mutex;
 const s3d::TONE_MAPPING_TYPE  ToneMappingType = s3d::TONE_MAPPING_ACES_FILMIC;
-//float time1 = 0.0f;
-//float time2 = 0.0f;
 
 } // namespace /* anonymous */
 
@@ -62,8 +60,6 @@ namespace s3d {
 PathTracer::PathTracer()
 : m_Intermediate( nullptr )
 , m_pScene      ( nullptr )
-//, m_IsFinish    ( false )
-//, m_WatcherEnd  ( false )
 {
     m_RenderTarget = nullptr;
 }
@@ -86,14 +82,12 @@ bool PathTracer::Run( const Config& config )
     // 起動画面.
     ILOG( "//=================================================================" );
     ILOG( "//  Renderer \"Salty\"" );
-    ILOG( "//  Version : Alpha 4.0" );
+    ILOG( "//  Version : Alpha 5.0" );
     ILOG( "//  Author  : Pocol" );
     ILOG( "//=================================================================" );
     ILOG( " Configuration : " );
     ILOG( "     width      = %d", config.Width );
     ILOG( "     height     = %d", config.Height );
-    //ILOG( "     sample     = %d", config.SampleCount );
-    //ILOG( "     subsample  = %d", config.SubSampleCount );
     ILOG( "     max bounce = %d", config.MaxBounceCount );
     ILOG( "     CPU Core   = %d", config.CpuCoreCount );
     ILOG( "--------------------------------------------------------------------" );
@@ -101,39 +95,23 @@ bool PathTracer::Run( const Config& config )
     // コンフィグ設定.
     m_Config = config;
     
-    //// 1つは監視用に空けておく.
-    //if ( m_Config.CpuCoreCount > 1 )
-    //{ m_Config.CpuCoreCount; }
-
     // レンダーターゲットを生成.
     auto size = m_Config.Width * m_Config.Height;
     m_RenderTarget = new Color4 [size];
     m_Intermediate = new Color4 [size];
 
-    // 時間監視スレッドを起動.
-    //std::thread thd( &PathTracer::Watcher, this, m_Config.MaxRenderingMin, m_Config.CaptureIntervalSec );
-
     // レンダーターゲットをクリア.
-    //for( auto i=0; i<m_Config.Width * m_Config.Height; ++i )
     parallel_for<size_t>(0, size, [&](size_t i)
     {
         m_RenderTarget[i] = Color4(0.0f, 0.0f, 0.0f, 0.0f);
         m_Intermediate[i] = Color4(0.0f, 0.0f, 0.0f, 0.0f);
     });
 
-    // 画像出力用ディレクトリ作成.
-#ifdef DEBUG_MODE
-    _mkdir( "./img" );
-#endif
-
     // シーン生成.
     m_pScene = new TestScene( m_Config.Width, m_Config.Height );
 
     // 経路追跡を実行.
     TracePath();
-
-    // 時間監視スレッドを終了.
-    //thd.join();
 
     // シーンを破棄.
     SafeDelete( m_pScene );
@@ -154,112 +132,50 @@ void PathTracer::Capture( const char* filename )
 #if 1
     // ノイズ除去.
     //FilterNLM(m_Config.Width, m_Config.Height, 0.3f, m_RenderTarget, m_DenoisedTarget);
-    //int idx = m_PrevBufferIndex;
-
-    // バッファ番号交換.
-    //m_BufferIndex = (m_BufferIndex + 1) % 2;
-
-    // シーン更新可能フラグを立てる.
-    m_Updatable = true;
 
     // トーンマッピングを実行.
     ToneMapper::Map( ToneMappingType, m_Config.Width, m_Config.Height, m_RenderTarget, m_Intermediate );
 
-    // BMPに出力する.
-    SaveToBMP( filename, m_Config.Width, m_Config.Height, &m_Intermediate[0].x );
+    auto size = m_Config.Width * m_Config.Height;
+    std::vector<uint8_t> outputs;
+    outputs.resize(size * 3);
+    parallel_for<size_t>(0, size, [&](size_t i)
+    {
+        auto r = m_Intermediate[i].x;
+        auto g = m_Intermediate[i].y;
+        auto b = m_Intermediate[i].z;
+
+        if ( r > 1.0f ) { r = 1.0f; }
+        if ( g > 1.0f ) { g = 1.0f; }
+        if ( b > 1.0f ) { b = 1.0f; }
+
+        if ( r < 0.0f ) { r = 0.0f; }
+        if ( g < 0.0f ) { g = 0.0f; }
+        if ( b < 0.0f ) { b = 0.0f; }
+
+        // sRGB OETF
+        r = (r <= 0.0031308f) ? 12.92f * r : std::pow(1.055f * r, 1.0f / 2.4f) - 0.055f;
+        g = (g <= 0.0031308f) ? 12.92f * g : std::pow(1.055f * g, 1.0f / 2.4f) - 0.055f;
+        b = (b <= 0.0031308f) ? 12.92f * b : std::pow(1.055f * b, 1.0f / 2.4f) - 0.055f;
+
+        u8 R = static_cast<u8>( r * 255.0f + 0.5f );
+        u8 G = static_cast<u8>( g * 255.0f + 0.5f );
+        u8 B = static_cast<u8>( b * 255.0f + 0.5f );
+
+        outputs[i * 3 + 0] = R;
+        outputs[i * 3 + 1] = G;
+        outputs[i * 3 + 2] = B;
+    });
+
+    // PNG出力.
+    void* ptr = outputs.data();
+    stbi_write_png(filename, m_Config.Width, m_Config.Height, 3, ptr, 0);
 
 #else
     SaveToBMP( filename, m_Config.Width, m_Config.Height, &m_RenderTarget[0].x);
 #endif
 }
 
-#if 0
-//-------------------------------------------------------------------------------------------------
-//      レンダリング時間を監視します.
-//-------------------------------------------------------------------------------------------------
-void PathTracer::Watcher(f32 maxRenderingTimeMin, f32 captureIntervalSec)
-{
-    auto counter = 0;
-    char filename[256];
-    memset( filename, 0, 256 );
-
-    Timer renderingTimer;
-    renderingTimer.Start();
-
-    Timer captureTimer;
-    captureTimer.Start();
-
-    while( true )
-    {
-        captureTimer.Stop();
-        auto sec = captureTimer.GetElapsedTimeSec();
-
-        renderingTimer.Stop();
-        auto min = renderingTimer.GetElapsedTimeMin();
-
-        // レンダリング結果をキャプチャ.
-        if ( sec >= captureIntervalSec )
-        {
-            // タイマー再スタート.
-            captureTimer.Start();
-
-            // ファイル保存.
-#ifdef DEBUG_MODE
-            sprintf_s( filename, "img/%03d.bmp", counter );
-#else
-            sprintf_s( filename, "%03d.bmp", counter );
-#endif
-            Capture( filename );
-
-            counter++;
-
-            ILOG( "Captured. %5.2lf min", min );
-        }
-
-        // シーン生成待ち.
-        if (m_pScene == nullptr)
-        {
-            printf_s( "\rWaiting for create scene. min = %5.2lf min", min );
-        }
-
-        // 規定時間に達した場合.
-        if ( min >= maxRenderingTimeMin )
-        {
-#ifdef DEBUG_MODE
-            sprintf_s( filename, "img/%03d.bmp", counter );
-#else
-            sprintf_s( filename, "%03d.bmp", counter );
-#endif
-            ILOG( "Rendering Imcompleted..." );
-            break;
-        }
-
-        // レンダリングが正常終了した場合.
-        if ( m_IsFinish )
-        {
-#ifdef DEBUG_MODE
-            sprintf_s( filename, "img/%03d.bmp", counter );
-#else
-            sprintf_s( filename, "%03d.bmp", counter );
-#endif
-            ILOG( "Rendering Completed !!!" );
-            ILOG( "Rendering Time %lf min", min );
-            break;
-        }
-
-        // 0.1 sec 寝かせる.
-        Sleep( 100 );
-    }
-
-#ifdef DEBUG_MODE
-    Capture( "img/final.bmp" );
-#else
-    Capture( "final.bmp" );
-#endif
-
-    m_WatcherEnd = true;
-}
-#endif
 
 //-------------------------------------------------------------------------------------------------
 //      指定方向からの放射輝度推定を行います.
@@ -381,7 +297,7 @@ Color4 PathTracer::NextEventEstimation
 //-------------------------------------------------------------------------------------------------
 void PathTracer::TracePath()
 {
-    ILOG( "\nPathTrace Start.");
+    ILOG( "PathTrace Start.");
     Timer timer;
     timer.Start();
 
@@ -434,9 +350,9 @@ void PathTracer::TracePath()
     ILOG( "Rendering Time %lf msec", timer.GetElapsedTimeMsec()); 
     ILOG( "%lf [sample/sec]", sample_rate);
 
-    Capture("final.bmp");
+    Capture("final.png");
 
-    ILOG( "\nPathTrace End.");
+    ILOG( "PathTrace End.");
 
 
 }

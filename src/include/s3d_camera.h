@@ -83,7 +83,7 @@ public:
 
         // スクリーンを張るベクトル.
         m_CX = Vector3::UnitVector( Vector3::Cross( m_Direction, m_Upward ) ) * m_Fov * m_AspectRatio;
-        m_CY = Vector3::UnitVector( Vector3::Cross( m_CX, m_Direction ) ) * m_Fov;
+        m_CY = Vector3::UnitVector( Vector3::Cross( m_Direction, m_CX ) ) * m_Fov;
 
         // スクリーンの中心へのベクトル.
         m_CZ = m_Position + ( m_Direction * m_NearClip );
@@ -195,7 +195,7 @@ public:
 
         // スクリーンを張るベクトル.
         m_CX = Vector3::UnitVector( Vector3::Cross( m_Direction, m_Upward ) ) * m_Fov * m_AspectRatio;
-        m_CY = Vector3::UnitVector( Vector3::Cross( m_CX, m_Direction ) ) * m_Fov;
+        m_CY = Vector3::UnitVector( Vector3::Cross( m_Direction, m_CX ) ) * m_Fov;
 
         // スクリーンの中心へのベクトル.
         m_CZ = m_Position + ( m_Direction * m_NearClip );

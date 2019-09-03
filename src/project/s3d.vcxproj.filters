@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="ヘッダー ファイル\external">
+      <UniqueIdentifier>{d616880d-2b66-4dc0-8bea-3b9c9bb6fae0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\external\stb">
+      <UniqueIdentifier>{9077504b-2631-4521-8f5c-333a28e0d208}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\s3d_bmp.h">
@@ -116,6 +122,9 @@
     </ClInclude>
     <ClInclude Include="..\include\s3d_denoiser.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\stb\stb_image_write.h">
+      <Filter>ヘッダー ファイル\external\stb</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

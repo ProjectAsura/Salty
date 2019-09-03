@@ -71,7 +71,6 @@
     <ClCompile Include="..\src\s3d_materialfactory.cpp" />
     <ClCompile Include="..\src\s3d_mesh.cpp" />
     <ClCompile Include="..\src\s3d_mirror.cpp" />
-    <ClCompile Include="..\src\s3d_onb.cpp" />
     <ClCompile Include="..\src\s3d_phong.cpp" />
     <ClCompile Include="..\src\s3d_plastic.cpp" />
     <ClCompile Include="..\src\s3d_pt.cpp" />

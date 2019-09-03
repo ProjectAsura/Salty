@@ -79,11 +79,11 @@ Color4 Phong::Shade( ShadingArg& arg ) const
     w.SafeNormalize();
 
     // 基底ベクトルを求める.
-    OrthonormalBasis onb;
-    onb.InitFromW( w );
+    Vector3 T, B;
+    TangentSpace( w, T, B );
 
     // 出射方向.
-    auto dir = Vector3::SafeUnitVector( onb.u * x + onb.v * y + onb.w * z );
+    auto dir = Vector3::SafeUnitVector( T * x + B * y + w * z );
     auto cosine = abs(Vector3::Dot( dir, n ));
 
     arg.output = dir;

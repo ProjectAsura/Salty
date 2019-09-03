@@ -125,9 +125,6 @@
     <ClCompile Include="..\src\s3d_bmp.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\s3d_onb.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\s3d_texture.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>

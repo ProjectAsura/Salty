@@ -60,8 +60,8 @@ Color4 Plastic::Shade( ShadingArg& arg ) const
     {
         // normalModの方向を基準とした正規直交基底(w, u, v)を作る。
         // この基底に対する半球内で次のレイを飛ばす。
-        OrthonormalBasis onb;
-        onb.InitFromW( normalMod );
+        Vector3 T, B;
+        TangentSpace(normalMod, T, B);
 
         // インポータンスサンプリング.
         const f32 phi = F_2PI * arg.random.GetAsF32( );
@@ -71,7 +71,7 @@ Color4 Plastic::Shade( ShadingArg& arg ) const
         const f32 z = SafeSqrt( 1.0f - ( x * x ) - ( y * y ) );
 
         // 出射方向.
-        Vector3 dir = Vector3::UnitVector( onb.u * x + onb.v * y + onb.w * z );
+        Vector3 dir = Vector3::UnitVector( T * x + B * y + normalMod * z );
         arg.output = dir;
 
         // 重み更新 (飛ぶ方向が不定なので確率で割る必要あり).
@@ -95,11 +95,11 @@ Color4 Plastic::Shade( ShadingArg& arg ) const
         w.Normalize();
 
         // 基底ベクトルを求める.
-        OrthonormalBasis onb;
-        onb.InitFromW( w );
+        Vector3 T, B;
+        TangentSpace( w, T, B);
 
         // 出射方向.
-        auto dir = Vector3::UnitVector( onb.u * x + onb.v * y + onb.w * z );
+        auto dir = Vector3::UnitVector( T * x + B * y + w * z );
 
         // 出射方向と法線ベクトルの内積を求める.
         auto dots = Vector3::Dot( dir, normalMod );

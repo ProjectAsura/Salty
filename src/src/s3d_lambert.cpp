@@ -65,8 +65,8 @@ Color4 Lambert::Shade( ShadingArg& arg ) const
 {
     // normalModの方向を基準とした正規直交基底(w, u, v)を作る。
     // この基底に対する半球内で次のレイを飛ばす。
-    OrthonormalBasis onb;
-    onb.InitFromW( arg.normal );
+    Vector3 T, B;
+    TangentSpace(arg.normal, T, B);
 
     // インポータンスサンプリング.
     const f32 phi = F_2PI * arg.random.GetAsF32();
@@ -75,7 +75,7 @@ Color4 Lambert::Shade( ShadingArg& arg ) const
     const f32 y = r * sinf( phi );
     const f32 z = SafeSqrt( 1.0f - ( x * x ) - ( y * y ) );
 
-    arg.output = Vector3::SafeUnitVector( onb.u * x + onb.v * y + onb.w * z );
+    arg.output = Vector3::SafeUnitVector( T * x + B * y + arg.normal * z );
     arg.dice   = ( arg.random.GetAsF32() >= m_Threshold );
 
     // 以下の処理の省略.

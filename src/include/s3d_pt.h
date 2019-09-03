@@ -32,11 +32,8 @@ public:
     {
         s32     Width;              //!< レンダーターゲットの横幅です.
         s32     Height;             //!< レンダーターゲットの縦幅です.
-        //s32     SampleCount;        //!< 1ピクセルあたりのサンプリング数です.
-        //s32     SubSampleCount;     //!< 1ピクセルあたりのサブサンプリング数です.
         s32     MaxBounceCount;     //!< 打ち切りバウンス数です.
-        f32     MaxRenderingMin;    //!< 最大レンダリング可能時間(分単位)です.
-        f32     CaptureIntervalSec; //!< キャプチャー間隔です(秒単位).
+        f32     MaxRenderingSec;    //!< 最大レンダリング可能時間(秒単位)です.
         s32     CpuCoreCount;       //!< CPUコア数です.
     };
 
@@ -69,16 +66,11 @@ private:
     // private variables.
     //=============================================================================================
     Config              m_Config;           //!< コンフィグです.
-    Color4*             m_RenderTarget[2];  //!< レンダーターゲットです.
-    Color4*             m_Intermediate;     //!< 中間出力用ターゲット.
+    Color4*             m_RenderTarget;     //!< レンダーターゲットです.
+    Color4*             m_Intermediate;     //!< 中間レンダーターゲットです.
     Random              m_Random;           //!< 乱数.
     Scene*              m_pScene;           //!< シーンデータ.
-    std::atomic<bool>   m_IsFinish;         //!< 正常終了したかどうか？
-    std::atomic<bool>   m_WatcherEnd;       //!< 時間監視を終了したかどうか.
-    std::atomic<bool>   m_Updatable;
-    int    m_CurrentBufferIndex = 0;
-    std::atomic<int>    m_PrevBufferIndex = 1;
-    std::atomic<int>    m_SamplingCount;
+    std::atomic<bool>   m_Updatable;        //!< 更新可能かどうか?
 
     //=============================================================================================
     // private methods.
@@ -93,11 +85,11 @@ private:
     //! @brief      直接光ライティングをします.
     //---------------------------------------------------------------------------------------------
     Color4 NextEventEstimation(
-        const Vector3& position,
-        const Vector3& normal,
-        const Vector2& texcoord,
-        const IMaterial* pMaterial,
-        Random& random );
+        const Vector3&      position,
+        const Vector3&      normal,
+        const Vector2&      texcoord,
+        const IMaterial*    pMaterial,
+        Random&             random );
 
     //---------------------------------------------------------------------------------------------
     //! @brief      経路を追跡します.
@@ -107,7 +99,7 @@ private:
     //---------------------------------------------------------------------------------------------
     //! @brief      レンダリング時間を監視します.
     //---------------------------------------------------------------------------------------------
-    void  Watcher(f32 maxRenderingTime, f32 captureInterval);
+    //void  Watcher(f32 maxRenderingTime, f32 captureInterval);
 
     //---------------------------------------------------------------------------------------------
     //! @brief      レンダリング結果をキャプチャーします.

@@ -64,7 +64,6 @@ int main( int argc, char **argv )
         s3d::PathTracer::Config config;
 
         config.MaxRenderingSec    = 59.9f;
-        //config.CaptureIntervalSec = 11.9f;
 
     #if 1
         // 本番用.
@@ -72,7 +71,7 @@ int main( int argc, char **argv )
         config.Height         = 540;
 //        config.SampleCount    = int(5.6);// * 18); // ローカル環境は1ピクセル1秒間に0.48レイなので12秒では5.6サンプル程度. 本番環境では72コアなので 18倍CPUがあるので18倍している.
         //config.SubSampleCount = 1;
-        config.MaxBounceCount = 8;
+        config.MaxBounceCount = 32;
         config.CpuCoreCount   = GetCPUCoreCount();
     #else
         // デバッグ用.

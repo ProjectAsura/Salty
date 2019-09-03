@@ -335,11 +335,11 @@ Color4 PathTracer::Radiance( const Ray& input )
 //-------------------------------------------------------------------------------------------------
 Color4 PathTracer::NextEventEstimation
 (
-    const Vector3& position,
-    const Vector3& normal,
-    const Vector2& texcoord,
-    const IMaterial* pMaterial,
-    Random& random
+    const Vector3&      position,
+    const Vector3&      normal,
+    const Vector2&      texcoord,
+    const IMaterial*    pMaterial,
+    Random&             random
 )
 {
     auto light = m_pScene->GetLight(random);
@@ -363,7 +363,7 @@ Color4 PathTracer::NextEventEstimation
         Vector2 light_texcoord;
         light->CalcParam(p, shadowRecord.barycentric, &light_normal, &light_texcoord);
         auto cosShadow = abs(Vector3::Dot(normal, light_dir));
-        auto cosLight = abs(Vector3::Dot(light_normal, -light_dir));
+        auto cosLight  = abs(Vector3::Dot(light_normal, -light_dir));
         auto fs = pMaterial->GetBaseColor(texcoord) / F_PI;
         auto G = (cosShadow * cosLight) / light_dist2;
 
@@ -385,92 +385,48 @@ void PathTracer::TracePath()
     Timer timer;
     timer.Start();
 
-    //const auto sampleCount    = m_Config.SampleCount * m_Config.SubSampleCount  * m_Config.SubSampleCount;
-    //const auto invSampleCount = 1.0f / static_cast<f32>( sampleCount );
-
-    //const auto rate     = 1.0f / static_cast<f32>( m_Config.SubSampleCount );
     const auto halfRate = 0.5f;
 
     // 乱数初期化.
     m_Random.SetSeed( 3141592 );
 
-    //std::atomic<uint64_t> sampleCounter = 0;
-    //m_SamplingCount = 0;
-    //m_BufferIndex = 0;
-
     auto sampleCount = 0;
 
-    //for ( auto sy=0; sy<m_Config.SubSampleCount && !m_WatcherEnd; ++sy )
-    //for ( auto sx=0; sx<m_Config.SubSampleCount && !m_WatcherEnd; ++sx )
     while(m_Updatable)
     {
-        //const auto r1 = sx * rate + halfRate;
-        //const auto r2 = sy * rate + halfRate;
-
-        // 1フレーム相当.
-        //for( auto s=0; s<m_Config.SampleCount && !m_WatcherEnd; ++s )
+    #if _OPENMP
+        #pragma omp parallel for schedule(dynamic) num_threads(72)
+    #endif
+        for( auto y=0; y<m_Config.Height; ++y )
         {
-            //printf_s( "\r%5.2f%% Completed.", 100.f * ( m_Config.SubSampleCount * m_Config.SampleCount + sx * m_Config.SampleCount + s ) / sampleCount );
-
-            //if (m_Updatable)
-            //{
-            //    auto deltaTime = 1.0f / 60.0f;
-            //    m_pScene->Update(deltaTime);
-
-            //    auto size = m_Config.Width * m_Config.Height;
-
-            //    float invSampleCount = 1.0f / float(m_SamplingCount);
-            //    for(auto i=0; i<size; ++i)
-            //    { m_RenderTarget[m_CurrentBufferIndex][i] *= invSampleCount; }
-
-            //    //m_PrevBufferIndex = m_CurrentBufferIndex;
-            //    //m_CurrentBufferIndex = (m_CurrentBufferIndex + 1) % 2;
-
-            //    // レンダーターゲットをクリア.
-            //     for (auto i = 0; i < size; ++i)
-            //    { m_RenderTarget[m_CurrentBufferIndex][i] = Color4(0.0f, 0.0f, 0.0f, 0.0f); }
-
-            //    m_Updatable = false;
-            //    m_SamplingCount = 0;
-            //}
-
+            Random random(y * 1234);
         #if _OPENMP
-            #pragma omp parallel for schedule(dynamic) num_threads(72)
+            auto thread_id = omp_get_thread_num();
+            auto group = thread_id % 2; // 0, 1でプロセッサグループを指定
+            GROUP_AFFINITY mask;
+            if (GetNumaNodeProcessorMaskEx(group, &mask))
+            { SetThreadGroupAffinity(GetCurrentThread(), &mask, nullptr); }
         #endif
-            for( auto y=0; y<m_Config.Height; ++y )
+
+            for( auto x=0; x<m_Config.Width ; ++x )
             {
-            #if _OPENMP
-                auto thread_id = omp_get_thread_num();
-                auto group = thread_id % 2; // 0, 1でプロセッサグループを指定
-                GROUP_AFFINITY mask;
-                if (GetNumaNodeProcessorMaskEx(group, &mask))
-                { SetThreadGroupAffinity(GetCurrentThread(), &mask, nullptr); }
-            #endif
+                auto ray = m_pScene->GetRay(
+                    ( halfRate + x ) / m_Config.Width  - 0.5f,
+                    ( halfRate + y ) / m_Config.Height - 0.5f );
 
-                for( auto x=0; x<m_Config.Width ; ++x )
-                {
-                    auto ray = m_pScene->GetRay(
-                        ( halfRate + x ) / m_Config.Width  - 0.5f,
-                        ( halfRate + y ) / m_Config.Height - 0.5f );
-                        //( r1 + x ) / m_Config.Width  - 0.5f,
-                        //( r2 + y ) / m_Config.Height - 0.5f );
-
-                    const auto idx = y * m_Config.Width + x;
-                    m_RenderTarget[ idx ] += Radiance( ray );
-                    //sampleCounter++;
-                }
+                const auto idx = y * m_Config.Width + x;
+                m_RenderTarget[ idx ] += Radiance( ray );
             }
-
-            //m_SamplingCount++;
-
-            sampleCount++;
-
-
-            //timer.Stop();
-            //if (timer.GetElapsedTimeSec() >= m_Config.MaxRenderingSec)
-            { break; }
         }
 
+        sampleCount++;
+
+        timer.Stop();
+        if (timer.GetElapsedTimeSec() >= m_Config.MaxRenderingSec)
+        {
+            m_Updatable = false;
+            break;
+        }
     }
 
     timer.Stop();
@@ -479,8 +435,7 @@ void PathTracer::TracePath()
     ILOG( "%lf [sample/sec]", sample_rate);
 
     Capture("final.bmp");
-    // 正常終了フラグを立てる.
-    //m_IsFinish = true;
+
     ILOG( "\nPathTrace End.");
 
 

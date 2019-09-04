@@ -83,7 +83,7 @@ public:
     { return m_IBL.Sample( dir, m_Filter ) * Color4( 10.0f, 10.0f, 10.0f, 1.0f ); }
 
     S3D_INLINE
-    IShape* GetLight(Random& rand)
+    IShape* GetLight(PCG& rand)
     {
         auto idx = rand.GetAsU32();
         idx = idx % m_pLightList.size();
@@ -101,8 +101,8 @@ protected:
     IBL                     m_IBL;
     TEXTURE_FILTER_MODE     m_Filter;
     std::vector<IShape*>    m_pLightList;
-    std::vector<IShape*>     m_Shapes;
-    std::vector<IMaterial*>  m_Material;
+    std::vector<IShape*>    m_Shapes;
+    std::vector<IMaterial*> m_Material;
 
     //=============================================================================================
     // protected methods.

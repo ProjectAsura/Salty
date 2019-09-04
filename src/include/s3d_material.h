@@ -24,7 +24,7 @@ struct ShadingArg
     Vector3     output;         //!< 出射方向.
     Vector3     normal;         //!< 法線ベクトル.
     Vector2     texcoord;       //!< テクスチャ座標.
-    Random      random;         //!< 乱数.
+    PCG         random;         //!< 乱数.
     bool        dice;           //!< 打ち切りかどうか?
 };
 

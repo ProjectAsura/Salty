@@ -14,7 +14,6 @@
 
 #include <s3d_pt.h>
 #include <s3d_logger.h>
-#include <s3d_timer.h>
 #include <s3d_tonemapper.h>
 #include <s3d_bmp.h>
 #include <s3d_hdr.h>
@@ -79,6 +78,8 @@ PathTracer::~PathTracer()
 //-------------------------------------------------------------------------------------------------
 bool PathTracer::Run( const Config& config )
 {
+    m_Timer.Start();
+
     // 起動画面.
     ILOG( "//=================================================================" );
     ILOG( "//  Renderer \"Salty\"" );
@@ -94,7 +95,10 @@ bool PathTracer::Run( const Config& config )
 
     // コンフィグ設定.
     m_Config = config;
-    
+
+    Timer timer;
+    timer.Start();
+
     // レンダーターゲットを生成.
     auto size = m_Config.Width * m_Config.Height;
     m_RenderTarget = new Color4 [size];
@@ -109,6 +113,9 @@ bool PathTracer::Run( const Config& config )
 
     // シーン生成.
     m_pScene = new TestScene( m_Config.Width, m_Config.Height );
+
+    timer.Stop();
+    ILOG("Scene Construct : %lf [msec]", timer.GetElapsedTimeMsec());
 
     // 経路追跡を実行.
     TracePath();
@@ -255,7 +262,7 @@ Color4 PathTracer::NextEventEstimation
     const Vector3&      normal,
     const Vector2&      texcoord,
     const IMaterial*    pMaterial,
-    Random&             random
+    PCG&                random
 )
 {
     auto light = m_pScene->GetLight(random);
@@ -298,8 +305,6 @@ Color4 PathTracer::NextEventEstimation
 void PathTracer::TracePath()
 {
     ILOG( "PathTrace Start.");
-    Timer timer;
-    timer.Start();
 
     const auto halfRate = 0.5f;
 
@@ -307,6 +312,7 @@ void PathTracer::TracePath()
     m_Random.SetSeed( 3141592 );
 
     auto sampleCount = 0;
+    auto rayCount    = m_Config.Width * m_Config.Height;
 
     while(m_Updatable)
     {
@@ -315,7 +321,6 @@ void PathTracer::TracePath()
     #endif
         for( auto y=0; y<m_Config.Height; ++y )
         {
-            Random random(y * 1234);
         #if _OPENMP
             auto thread_id = omp_get_thread_num();
             auto group = thread_id % 2; // 0, 1でプロセッサグループを指定
@@ -335,26 +340,24 @@ void PathTracer::TracePath()
             }
         }
 
-        sampleCount++;
+        sampleCount += rayCount;
 
-        timer.Stop();
-        if (timer.GetElapsedTimeSec() >= m_Config.MaxRenderingSec)
+        m_Timer.Stop();
+        if (m_Timer.GetElapsedTimeSec() >= m_Config.MaxRenderingSec)
         {
             m_Updatable = false;
             break;
         }
     }
 
-    timer.Stop();
-    auto sample_rate = sampleCount / timer.GetElapsedTimeSec();
-    ILOG( "Rendering Time %lf msec", timer.GetElapsedTimeMsec()); 
-    ILOG( "%lf [sample/sec]", sample_rate);
+    m_Timer.Stop();
+    auto sample_rate = (sampleCount / 1000.0) / m_Timer.GetElapsedTimeSec();
+    ILOG( "Rendering Time %lf sec", m_Timer.GetElapsedTimeSec()); 
+    ILOG( "%lf [Mrays/sec]", sample_rate);
 
     Capture("final.png");
 
     ILOG( "PathTrace End.");
-
-
 }
 
 } // namespace s3d

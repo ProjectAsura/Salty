@@ -10,7 +10,9 @@
 //-------------------------------------------------------------------------------------------------
 #include <s3d_math.h>
 #include <s3d_scene.h>
+#include <s3d_timer.h>
 #include <atomic>
+
 
 namespace s3d {
 
@@ -68,9 +70,10 @@ private:
     Config              m_Config;           //!< コンフィグです.
     Color4*             m_RenderTarget;     //!< レンダーターゲットです.
     Color4*             m_Intermediate;     //!< 中間レンダーターゲットです.
-    Random              m_Random;           //!< 乱数.
+    PCG                 m_Random;           //!< 乱数.
     Scene*              m_pScene;           //!< シーンデータ.
     std::atomic<bool>   m_Updatable;        //!< 更新可能かどうか?
+    Timer               m_Timer;
 
     //=============================================================================================
     // private methods.
@@ -89,7 +92,7 @@ private:
         const Vector3&      normal,
         const Vector2&      texcoord,
         const IMaterial*    pMaterial,
-        Random&             random );
+        PCG&                random );
 
     //---------------------------------------------------------------------------------------------
     //! @brief      経路を追跡します.

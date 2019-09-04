@@ -71,7 +71,7 @@ public:
 
     void CalcParam(const Vector3&, const Vector2&, Vector3*, Vector2*) const override;
 
-    void Sample( Random&, Vector3*, float* ) override;
+    void Sample( PCG&, Vector3*, float* ) override;
 
 private:
     //=============================================================================================

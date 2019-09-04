@@ -58,21 +58,21 @@ const f32   F_MIN       = 1.175494351e-38F;                       //!< f32型の
 //! @brief      符号を求めます.
 //-------------------------------------------------------------------------------------------------
 template< typename T > S3D_INLINE
-s32 Sign( const T val )
+s32 Sign( const T val ) noexcept
 { return ( val > T(0) ) ? 1 : (( val < T(0) ) ? -1 : 0 ); }
 
 //-------------------------------------------------------------------------------------------------
 //! @brief      最大値を求めます.
 //-------------------------------------------------------------------------------------------------
 template< typename T > S3D_INLINE
-T Max( const T a, const T b )
+T Max( const T a, const T b ) noexcept
 { return ( a > b ) ? a : b; }
 
 //-------------------------------------------------------------------------------------------------
 //! @brief      最小値を求めます.
 //-------------------------------------------------------------------------------------------------
 template< typename T > S3D_INLINE
-T Min( const T a, const T b )
+T Min( const T a, const T b ) noexcept
 { return ( a < b ) ? a : b; }
 
 //--------------------------------------------------------------------------------------------------
@@ -84,7 +84,7 @@ T Min( const T a, const T b )
 //! @return     値をaからbの範囲内に収めた結果を返却します.
 //--------------------------------------------------------------------------------------------------
 template< typename T > S3D_INLINE
-T Clamp( T value, T mini, T maxi )
+T Clamp( T value, T mini, T maxi ) noexcept
 { return Max( mini, Min( maxi, value ) ); }
 
 //--------------------------------------------------------------------------------------------------
@@ -94,42 +94,42 @@ T Clamp( T value, T mini, T maxi )
 //! @return     値を0から1の範囲内に収めた結果を返却します.
 //--------------------------------------------------------------------------------------------------
 template< typename T > S3D_INLINE
-T Saturate( T value )
+T Saturate( T value ) noexcept
 { return Clamp( value, T(0), T(1) ); }
 
 //-------------------------------------------------------------------------------------------------
 //! @brief      ラジアンに変換します.
 //-------------------------------------------------------------------------------------------------
 S3D_INLINE
-f32 ToRad( const f32 deg )
+f32 ToRad( const f32 deg ) noexcept
 { return deg * ( F_PI / 180.0f ); }
 
 //-------------------------------------------------------------------------------------------------
 //! @brief      度に変換します.
 //-------------------------------------------------------------------------------------------------
 S3D_INLINE
-f32 ToDeg( const f32 rad )
+f32 ToDeg( const f32 rad ) noexcept
 { return rad * ( 180.0f / F_PI ); }
 
 //-------------------------------------------------------------------------------------------------
 //! @brief      非数であるかチェックします.
 //-------------------------------------------------------------------------------------------------
 S3D_INLINE
-bool IsNan( const f32 value )
+bool IsNan( const f32 value ) noexcept
 { return ( value != value ); }
 
 //-------------------------------------------------------------------------------------------------
 //! @brief      ゼロであるかチェックします.
 //-------------------------------------------------------------------------------------------------
 S3D_INLINE
-bool IsZero( const f32 value )
+bool IsZero( const f32 value ) noexcept
 { return ( fabs( value ) <= FLT_EPSILON ); }
 
 //-------------------------------------------------------------------------------------------------
 //! @brief      安全に平方根を求めます.
 //-------------------------------------------------------------------------------------------------
 S3D_INLINE
-f32 SafeSqrt( const f32 value )
+f32 SafeSqrt( const f32 value ) noexcept
 {
     if ( value > FLT_EPSILON )
     { return sqrtf( value ); }
@@ -141,7 +141,7 @@ f32 SafeSqrt( const f32 value )
 //! @brief      安全に平方根を求めます.
 //-------------------------------------------------------------------------------------------------
 S3D_INLINE
-f64 SafeSqrt( const f64 value )
+f64 SafeSqrt( const f64 value ) noexcept
 {
     if ( value > DBL_EPSILON )
     { return sqrt( value ); }
@@ -149,75 +149,26 @@ f64 SafeSqrt( const f64 value )
     return 0.0;
 }
 
-//-------------------------------------------------------------------------------------------------
-//! @brief      入力のうち下位16ビットを1つのビットごとに分離します
-//-------------------------------------------------------------------------------------------------
 S3D_INLINE
-u32 Part1By1( u32 n )
+u32 ExpandBits(u32 v) noexcept
 {
-    /* ゲームプログラミングのためのリアルタイム衝突判定 p.323参照 */
-
-    // 入力のうち低いほうの16ビットを1つのビットごとに分離する.
-    // n = ----------------fedcba9876543210 : 最初のビットの状態.
-    // n = --------fedcba98--------76543210 : (1)の後.
-    // n = ----fedc----ba98----7654----3210 : (2)の後.
-    // n = --fe--dc--ba--98--76--54--32--10 : (3)の後.
-    // n = -f-e-d-c-b-a-9-8-7-6-5-4-3-2-1-0 : (4)の後.
-    n = ( n ^ ( n << 8 ) ) & 0x00ff00ff;    // (1)
-    n = ( n ^ ( n << 4 ) ) & 0x0f0f0f0f;    // (2)
-    n = ( n ^ ( n << 2 ) ) & 0x33333333;    // (3)
-    n = ( n ^ ( n << 1 ) ) & 0x55555555;    // (4)
-
-    return n;
+    v = (v * 0x00010001u) & 0xFF0000FFu;
+    v = (v * 0x00000101u) & 0x0F00F00Fu;
+    v = (v * 0x00000011u) & 0xC30C30C3u;
+    v = (v * 0x00000005u) & 0x49249249u;
+    return v;
 }
 
-//-------------------------------------------------------------------------------------------------
-//! @brief      入力のうち下位10ビットを2つのビットごとに分離します
-//-------------------------------------------------------------------------------------------------
 S3D_INLINE
-u32 Part1By2( u32 n )
+u32 Morton3D(float x, float y, float z) noexcept
 {
-    /* ゲームプログラミングのためのリアルタイム衝突判定 p.322参照 */
-
-    // 入力のうち低いほうの10ビットを2つのビットごとに分離する.
-    // n = ----------------------9876543210 : 最初のビットの状態.
-    // n = ------98----------------76543210 : (1)の後.
-    // n = ------98--------7654--------3210 : (2)の後.
-    // n = ------98----76----54----32----10 : (3)の後.
-    // n = ----9--8--7--6--5--4--3--2--1--0 : (4)の後.
-    n = ( n ^ ( n << 16 ) ) & 0xff0000ff;   // (1)
-    n = ( n ^ ( n <<  8 ) ) & 0x0300f00f;   // (2)
-    n = ( n ^ ( n <<  4 ) ) & 0x030c30c3;   // (3)
-    n = ( n ^ ( n <<  2 ) ) & 0x09249249;   // (4)
-
-    return n;
-}
-
-//-------------------------------------------------------------------------------------------------
-//! @brief      2次元を表すモートンコードを求めます.
-//-------------------------------------------------------------------------------------------------
-S3D_INLINE
-u32 Morton2( u32 x, u32 y )
-{
-    /* ゲームプログラミングのためのリアルタイム衝突判定 p.323参照 */
-
-    // 2つの16ビットの数字を入力として，それらの間にビットを挟み込んで1つの数字にする.
-    return ( Part1By1( y ) << 1 )
-         + ( Part1By1( x ) << 0 );
-}
-
-//-------------------------------------------------------------------------------------------------
-//! @brief      3次元を表すモートンコードを求めます.
-//-------------------------------------------------------------------------------------------------
-S3D_INLINE
-u32 Morton3( u32 x, u32 y, u32 z )
-{
-    /* ゲームプログラミングのためのリアルタイム衝突判定 p.322参照 */
-
-    // 3つの10ビットの数字を入力として，それらをビットとして挟み込んで1つの数字にする.
-    return ( Part1By2( z ) << 2 ) 
-         + ( Part1By2( y ) << 1 )
-         + ( Part1By2( x ) << 0 );
+    x = s3d::Clamp(x * 1024.0f, 0.0f, 1023.0f);
+    y = s3d::Clamp(y * 1024.0f, 0.0f, 1023.0f);
+    z = s3d::Clamp(z * 1024.0f, 0.0f, 1023.0f);
+    u32 xx = ExpandBits((u32)x);
+    u32 yy = ExpandBits((u32)y);
+    u32 zz = ExpandBits((u32)z);
+    return (xx << 2) + (yy << 1) + zz;
 }
 
 
@@ -2812,6 +2763,111 @@ private:
     /* NOTHING */
 };
 
+///////////////////////////////////////////////////////////////////////////////
+// PCG class
+///////////////////////////////////////////////////////////////////////////////
+class PCG
+{
+public:
+    S3D_INLINE
+    PCG() noexcept
+    { SetSeed( 123456789 ); }
+
+    S3D_INLINE
+    PCG(u64 seed) noexcept
+    { SetSeed(seed); }
+
+    S3D_INLINE
+    PCG(const PCG& value) noexcept
+    : m_State(value.m_State)
+    { /* DO_NOTHING */ }
+
+    S3D_INLINE
+    void SetSeed(u64 seed) noexcept
+    {
+        m_State = seed + kIncrement;
+        GetAsU32();
+    }
+
+    S3D_INLINE
+    u32 GetAsU32() noexcept
+    {
+        auto old_state = m_State;
+        m_State = old_state * kMultiplier + kIncrement;
+        auto xorshifted = u32(((old_state >> 18) ^ old_state) >> 27);
+        auto rot        = u32(old_state >> 59);
+        return u32((xorshifted >> rot) | (xorshifted << ((~rot +1) & 31)));
+    }
+
+    S3D_INLINE
+    f32 GetAsF32() noexcept
+    { return static_cast<float>( GetAsU32() ) / 0xffffffffui32; }
+
+    S3D_INLINE
+    PCG& operator = (const PCG& value) noexcept
+    {
+        m_State = value.m_State;
+        return *this;
+    }
+
+private:
+    static const u64   kMultiplier = 6364136223846793005u;
+    static const u64   kIncrement  = 1442695040888963407u;
+    u64                m_State     = 0x4d595df4d0f33173;
+};
+
+S3D_INLINE 
+f32 Max2(const Vector2& value) noexcept
+{ return s3d::Max(value.x, value.y); }
+
+S3D_INLINE
+f32 Min2(const Vector2& value) noexcept
+{ return s3d::Min(value.x, value.y); }
+
+S3D_INLINE
+f32 Max3(const Vector3& value) noexcept
+{ return s3d::Max( s3d::Max(value.x, value.y), value.z ); }
+
+S3D_INLINE
+f32 Min3(const Vector3& value) noexcept
+{ return s3d::Min( s3d::Min(value.x, value.y), value.z ); }
+
+S3D_INLINE
+f32 Max4(const Vector4& value) noexcept
+{ return s3d::Max( s3d::Max(value.x, value.y), s3d::Max(value.z, value.w) ); }
+
+S3D_INLINE
+f32 Min4(const Vector4& value) noexcept
+{ return s3d::Min( s3d::Min(value.x, value.y), s3d::Min(value.z, value.w) ); }
+
+
+//-----------------------------------------------------------------------------
+//      AABBとレイの交差判定を行います.
+//-----------------------------------------------------------------------------
+S3D_INLINE
+bool Intersect
+(
+    const BoundingBox&  box,
+    const Vector3&      rayPos,
+    const Vector3&      invRayDir,
+    const float         length
+) noexcept
+{
+    Vector3 v;
+    v.x = ((0 < invRayDir.x ? box.mini.x : box.maxi.x) - rayPos.x) * invRayDir.x;
+    v.y = ((0 < invRayDir.y ? box.mini.y : box.maxi.y) - rayPos.y) * invRayDir.y;
+    v.z = ((0 < invRayDir.z ? box.mini.z : box.maxi.z) - rayPos.z) * invRayDir.z;
+
+    const auto tmin = Max3(v);
+
+    v.x = ((0 < invRayDir.x ? box.maxi.x : box.mini.x) - rayPos.x) * invRayDir.x;
+    v.y = ((0 < invRayDir.y ? box.maxi.y : box.mini.y) - rayPos.y) * invRayDir.y;
+    v.z = ((0 < invRayDir.z ? box.maxi.z : box.mini.z) - rayPos.z) * invRayDir.z;
+
+    const auto tmax = Min3(v);
+    return (tmin <= tmax) && (0.0f < tmax) && (tmin < length);
+}
+
 //-----------------------------------------------------------------------------
 //      正規直交基底を求めます.
 //-----------------------------------------------------------------------------
@@ -2830,7 +2886,7 @@ void TangentSpace(const Vector3& N, Vector3& T, Vector3& B)
 }
 
 //------------------------------------------------------------------------------------------
-//! @brief      三角形の表面積を求めます.
+//      三角形の表面積を求めます.
 //------------------------------------------------------------------------------------------
 S3D_INLINE
 f32 SurfaceArea( const Vector3& a, const Vector3& b, const Vector3& c )
@@ -2842,7 +2898,7 @@ f32 SurfaceArea( const Vector3& a, const Vector3& b, const Vector3& c )
 }
 
 //------------------------------------------------------------------------------------------
-//! @brief      バウンディングボックスの表面積を求めます.
+//      バウンディングボックスの表面積を求めます.
 //------------------------------------------------------------------------------------------
 S3D_INLINE
 f32 SurfaceArea( const BoundingBox& box )
@@ -2854,12 +2910,58 @@ f32 SurfaceArea( const BoundingBox& box )
 }
 
 //------------------------------------------------------------------------------------------
-//! @brief      バウンディングスフィアの表面積を求めます.
+//      バウンディングスフィアの表面積を求めます.
 //------------------------------------------------------------------------------------------
 S3D_INLINE
 f32 SurfaceArea( const f32 radius )
 {
     return 4.0f * F_PI * ( radius * radius );
+}
+
+//-----------------------------------------------------------------------------
+//      三角形とレイの交差判定を行います.
+//-----------------------------------------------------------------------------
+S3D_INLINE
+bool IntersectTriangle
+(
+    const Vector3&  rayPos,
+    const Vector3&  rayDir,
+    const Vector3&  v0,
+    const Vector3&  v1,
+    const Vector3&  v2,
+    const float     tmin,
+    const float     tmax,
+    float&          dist,
+    float&          u,
+    float&          v
+)
+{
+    const auto e1  = v1 - v0;
+    const auto e2  = v2 - v0;
+    auto P   = Vector3::Cross(rayDir, e2);
+    auto det = Vector3::Dot(e1, P);
+    if (det == 0.0f)
+    { return false; }
+
+    auto inv_det = 1.0f / det;
+    auto T  = rayPos - v0;
+    auto fu = Vector3::Dot(T, P) * inv_det;
+    if (fu < 0.0f || fu > 1.0f)
+    { return false; }
+
+    auto Q  = Vector3::Cross(T, e1);
+    auto fv = Vector3::Dot(rayDir, Q) * inv_det;
+    if (fv < 0.0f || (fu + fv) > 1.0f)
+    { return false; }
+
+    auto t = Vector3::Dot(e2, Q) * inv_det;
+    if (t < tmin || tmax <= t || t > dist)
+    { return false; }
+
+    dist = t;
+    u    = fu;
+    v    = fv;
+    return true;
 }
 
 } // namespace s3d

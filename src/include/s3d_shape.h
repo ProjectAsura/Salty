@@ -64,7 +64,7 @@ struct IShape : IReference
     virtual BoundingBox GetBox   () const = 0;
     virtual Vector3     GetCenter() const = 0;
     virtual void        CalcParam( const Vector3&, const Vector2&, Vector3*, Vector2*) const {}
-    virtual void        Sample   ( Random&, Vector3*, float* ) {}
+    virtual void        Sample   ( PCG&, Vector3*, float* ) {}
 };
 
 } // namespace s3d

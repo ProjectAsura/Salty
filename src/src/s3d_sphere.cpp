@@ -103,7 +103,7 @@ void Sphere::CalcParam(const Vector3& pos, const Vector2& barycentric, Vector3* 
     *pTexCoord = Vector2( phi * F_1DIV2PI, ( F_PI - theta ) * F_1DIVPI );
 }
 
-void Sphere::Sample(Random& random, Vector3* pPosition, float* pdf)
+void Sphere::Sample(PCG& random, Vector3* pPosition, float* pdf)
 {
     const auto r1 = F_2PI * random.GetAsF32();
     const auto r2 = 1.0f - 2.0f * random.GetAsF32();

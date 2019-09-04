@@ -63,7 +63,7 @@ int main( int argc, char **argv )
         // アプリケーションの構成設定.
         s3d::PathTracer::Config config;
 
-        config.MaxRenderingSec    = 59.9f;
+        config.MaxRenderingSec    = 59.5f; // デノイズ時間を考慮してあとで調整.
 
     #if 1
         // 本番用.

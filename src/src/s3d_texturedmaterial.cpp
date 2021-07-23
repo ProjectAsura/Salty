@@ -22,12 +22,10 @@ namespace s3d {
 TexturedMaterial::TexturedMaterial
 (
     const Texture2D*        pTexture,
-    const TextureSampler*   pSampler,
     IMaterial*              pMaterial
 )
 : m_Count       (1)
 , m_pTexture    (pTexture)
-, m_pSampler    (pSampler)
 , m_pMaterial   (pMaterial)
 { m_pMaterial->AddRef(); }
 
@@ -66,7 +64,7 @@ Color4 TexturedMaterial::Shade( ShadingArg& arg ) const
 {
     return Color4::Mul(
         m_pMaterial->Shade( arg ),
-        m_pTexture->Sample( *m_pSampler, arg.texcoord ) );
+        m_pTexture->Sample( arg.texcoord ) );
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -85,7 +83,7 @@ Color4 TexturedMaterial::GetBaseColor(const Vector2& texcoord) const
 {
     return Color4::Mul(
         m_pMaterial->GetBaseColor(texcoord),
-        m_pTexture->Sample(*m_pSampler, texcoord));
+        m_pTexture->Sample( texcoord));
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -94,9 +92,8 @@ Color4 TexturedMaterial::GetBaseColor(const Vector2& texcoord) const
 IMaterial* TexturedMaterial::Create
 (
     const Texture2D*        pTexture,
-    const TextureSampler*   pSampler,
     IMaterial*              pMaterial
 )
-{ return new(std::nothrow) TexturedMaterial(pTexture, pSampler, pMaterial); }
+{ return new(std::nothrow) TexturedMaterial(pTexture, pMaterial); }
 
 } // namespace s3d

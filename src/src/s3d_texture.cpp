@@ -157,99 +157,40 @@ void Texture2D::Release()
 }
 
 //---------------------------------------------------------------------------------------
-//      指定されたピクセルを取得します.
-//---------------------------------------------------------------------------------------
-Color4 Texture2D::GetPixel(s32 x, s32 y, const TextureSampler& sampler ) const
-{ 
-    auto w = static_cast<s32>(m_Width);
-    auto h = static_cast<s32>(m_Height);
-
-    switch( sampler.address )
-    {
-    case TEXTURE_ADDRESS_WRAP:
-        {
-            x = abs( x % w );
-            y = abs( y % h );
-        }
-        break;
-
-    case TEXTURE_ADDRESS_BORADER:
-        {
-            if ( x >= w || y >= h || x < 0 || y < 0 )
-            { return sampler.boarderColor; }
-        }
-        break;
-
-    case TEXTURE_ADDRESS_CLAMP:
-    default:
-        {
-            x = Clamp( x, 0, w - 1 );
-            y = Clamp( y, 0, h - 1 );
-        }
-        break;
-    }
-
-    auto idx = ( m_Width * 4 * y ) + ( x * 4 );
-    assert( idx < m_Size );
-
-    return Color4(
-        m_pPixels[idx + 0],
-        m_pPixels[idx + 1],
-        m_pPixels[idx + 2],
-        m_pPixels[idx + 3] );
-}
-
-
-//---------------------------------------------------------------------------------------
-//      最近傍補間を適用してサンプリングします.
-//---------------------------------------------------------------------------------------
-Color4 Texture2D::NearestSample(const TextureSampler& sampler, const Vector2& texcoord) const
-{
-    auto x = static_cast<s32>( texcoord.x * m_Width  + 0.5f );
-    auto y = static_cast<s32>( texcoord.y * m_Height + 0.5f );
-
-    return GetPixel(x, y, sampler);
-}
-
-//---------------------------------------------------------------------------------------
 //      バイリニア補間を適用してサンプリングします.
 //---------------------------------------------------------------------------------------
-Color4 Texture2D::BilinearSample(const TextureSampler& sampler, const Vector2& texcoord) const
+Color4 Texture2D::Sample(const Vector2& texcoord) const
 {
     // 浮動小数点形式で画像サイズにスケーリング.
-    auto fx = texcoord.x * m_Width;
-    auto fy = texcoord.y * m_Height;
+    auto fx = texcoord.x * (m_Width - 1);
+    auto fy = texcoord.y * (m_Height - 1);
 
     // 小数点以下を切り捨て.
     auto x0 = static_cast<s32>( floor( fx ) );
     auto y0 = static_cast<s32>( floor( fy ) );
 
-    auto x1 = x0 + 1;
-    auto y1 = y0 + 1;
+    auto x1 = (x0 + 1);
+    auto y1 = (y0 + 1);
 
-    return ( x1 - fx ) * ( ( y1 - fy ) * GetPixel( x0, y0, sampler ) + ( fy - y0 ) * GetPixel( x0, y1, sampler ) )
-         + ( fx - x0 ) * ( ( y1 - fy ) * GetPixel( x1, y0, sampler ) + ( fy - y0 ) * GetPixel( x1, y1, sampler ) );    
-}
+    // 先に重み計算.
+    auto x_w0 = x1 - fx;
+    auto x_w1 = fx - x0;
+    auto y_w0 = y1 - fy;
+    auto y_w1 = fy - y0;
 
-//--------------------------------------------------------------------------------------
-//      テクスチャフェッチします.
-//--------------------------------------------------------------------------------------
-Color4 Texture2D::Sample( const TextureSampler& sampler, const Vector2& location ) const
-{
-    // テクスチャが無ければ(1.0, 1.0, 1.0)を返しておく.
-    if ( m_pPixels == nullptr )
-    { return Color4( 1.0f, 1.0f, 1.0f, 1.0f ); }
+    x0 = abs(x0 % m_Width);
+    x1 = abs(x1 % m_Width);
+    y0 = abs(y0 % m_Height);
+    y1 = abs(y1 % m_Height);
 
-    if ( sampler.filter == TEXTURE_FILTER_BILINEAR )
-    { return BilinearSample( sampler, location ); }
-
-    return NearestSample( sampler, location );
+    return x_w0 * ( y_w0 * GetPixel( x0, y0 ) + y_w1 * GetPixel( x0, y1 ) )
+         + x_w1 * ( y_w0 * GetPixel( x1, y0 ) + y_w1 * GetPixel( x1, y1 ) );
 }
 
 //---------------------------------------------------------------------------------------
 //      アルファテストを行います.
 //---------------------------------------------------------------------------------------
-bool Texture2D::AlphaTest( const TextureSampler& sampler, const Vector2& texcoord, const f32 value ) const
+bool Texture2D::AlphaTest(const Vector2& texcoord, const f32 value ) const
 {
     if ( m_ComponentCount != 4 )
     { return true; }
@@ -257,12 +198,7 @@ bool Texture2D::AlphaTest( const TextureSampler& sampler, const Vector2& texcoor
     if ( m_pPixels == nullptr )
     { return true; }
 
-    Color4 result;
-    if ( sampler.filter == TEXTURE_FILTER_BILINEAR )
-    { result = BilinearSample( sampler, texcoord ); }
-    else
-    { result = NearestSample( sampler, texcoord ); }
-
+    Color4 result = Sample(texcoord);
     return ( result.GetW() >= value );
 }
 

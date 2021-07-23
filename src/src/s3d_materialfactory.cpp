@@ -29,16 +29,15 @@ IMaterial* MaterialFactory::CreateLambert
 (
     const Color4&           diffuse,
     const Texture2D*        pTexture,
-    const TextureSampler*   pSampler,
     const Color4&           emissive
 )
 {
     auto instance = Lambert::Create(diffuse, emissive);
 
-    if (pTexture == nullptr || pSampler == nullptr)
+    if (pTexture == nullptr)
     { return instance; }
 
-    auto wrapper = TexturedMaterial::Create(pTexture, pSampler, instance);
+    auto wrapper = TexturedMaterial::Create(pTexture, instance);
     SafeRelease(instance);
 
     return wrapper;
@@ -52,16 +51,15 @@ IMaterial* MaterialFactory::CreatePhong
     const Color4&           specular,
     f32                     power,
     const Texture2D*        pTexture,
-    const TextureSampler*   pSampler,
     const Color4&           emissive
 )
 {
     auto instance = Phong::Create(specular, power, emissive);
 
-    if (pTexture == nullptr || pSampler == nullptr)
+    if (pTexture == nullptr)
     { return instance; }
 
-    auto wrapper = TexturedMaterial::Create(pTexture, pSampler, instance);
+    auto wrapper = TexturedMaterial::Create(pTexture, instance);
     SafeRelease(instance);
 
     return wrapper;
@@ -74,16 +72,15 @@ IMaterial* MaterialFactory::CreateMirror
 (
     const Color4&           specular,
     const Texture2D*        pTexture,
-    const TextureSampler*   pSampler,
     const Color4&           emissive
 )
 {
     auto instance = Mirror::Create(specular, emissive);
 
-    if (pTexture == nullptr || pSampler == nullptr)
+    if (pTexture == nullptr)
     { return instance; }
 
-    auto wrapper = TexturedMaterial::Create(pTexture, pSampler, instance);
+    auto wrapper = TexturedMaterial::Create(pTexture, instance);
     SafeRelease(instance);
 
     return wrapper;
@@ -97,16 +94,15 @@ IMaterial* MaterialFactory::CreateGlass
     const Color4&           specular,
     f32                     ior,
     const Texture2D*        pTexture,
-    const TextureSampler*   pSampler,
     const Color4&           emissive
 )
 {
     auto instance = Glass::Create(specular, ior, emissive);
 
-    if (pTexture == nullptr || pSampler == nullptr)
+    if (pTexture == nullptr)
     { return instance; }
 
-    auto wrapper = TexturedMaterial::Create(pTexture, pSampler, instance);
+    auto wrapper = TexturedMaterial::Create(pTexture, instance);
     SafeRelease(instance);
 
     return wrapper;
@@ -121,16 +117,15 @@ IMaterial* MaterialFactory::CreatePlastic
     const Color4&           specular,
     f32                     power,
     const Texture2D*        pTexture,
-    const TextureSampler*   pSampler,
     const Color4&           emissive
 )
 {
     auto instance = Plastic::Create(diffuse, specular, power, emissive);
 
-    if (pTexture == nullptr || pSampler == nullptr)
+    if (pTexture == nullptr)
     { return instance; }
 
-    auto wrapper = TexturedMaterial::Create(pTexture, pSampler, instance);
+    auto wrapper = TexturedMaterial::Create(pTexture, instance);
     SafeRelease(instance);
 
     return wrapper;

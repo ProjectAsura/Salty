@@ -31,7 +31,6 @@ using namespace s3d;
 // Global Varaibles.
 //-------------------------------------------------------------------------------------------------
 Texture2D       g_TableTexture;
-TextureSampler  g_Sampler = TextureSampler();
 
 } // namespace /* anonymous */
 
@@ -66,15 +65,15 @@ TestScene::TestScene( const u32 width, const u32 height )
         assert(false);
     }
 
-    if ( !m_IBL.Init( "res/ibl/nagoya_wall_path_4k.hdr") )
+    if ( !m_IBL.Init( "res/ibl/lauter_waterfall_4k.hdr") )
     {
         ELOG("Error : IBL Load Failed." );
         assert(false);
     }
 
 
-    m_Material.push_back( MaterialFactory::CreateLambert( Color4( 0.95f, 0.95f, 0.95f, 1.0f ), &g_TableTexture, &g_Sampler ) );
-    m_Material.push_back( MaterialFactory::CreateLambert( Color4( 0.0f, 0.0f, 0.0f, 1.0f ), nullptr, nullptr, Color4( 1000.0f, 1000.0f, 1000.0f, 1.0f ) ) );
+    m_Material.push_back( MaterialFactory::CreateLambert( Color4( 0.95f, 0.95f, 0.95f, 1.0f ), &g_TableTexture ) );
+    m_Material.push_back( MaterialFactory::CreateLambert( Color4( 0.0f, 0.0f, 0.0f, 1.0f ), nullptr, Color4( 1000.0f, 1000.0f, 1000.0f, 1.0f ) ) );
 
     {
         Vertex vertices[6];

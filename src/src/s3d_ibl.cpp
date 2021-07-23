@@ -55,40 +55,25 @@ void IBL::Term()
 }
 
 //--------------------------------------------------------------------------------------------
-//      指定したピクセルを取得します.
-//--------------------------------------------------------------------------------------------
-Color4 IBL::GetPixel(s32 x, s32 y) const
-{
-    x = abs(x % m_Width);
-    y = abs(y % m_Height);
-
-    auto idx = y * m_Width * 3 + x * 3;
-    return Color4(
-        m_pPixels[idx + 0],
-        m_pPixels[idx + 1],
-        m_pPixels[idx + 2],
-        1.0f );
-}
-
-//--------------------------------------------------------------------------------------------
-//      最近傍フィルタを適用してサンプリングします.
-//--------------------------------------------------------------------------------------------
-Color4 IBL::NearestSample(const Vector2& uv) const
-{
-    auto x = static_cast<s32>(uv.x * m_Width  + 0.5f);
-    auto y = static_cast<s32>(uv.y * m_Height + 0.5f);
-
-    return GetPixel(x, y);
-}
-
-//--------------------------------------------------------------------------------------------
 //      バイリニアフィルタを適用してサンプリングします.
 //--------------------------------------------------------------------------------------------
-Color4 IBL::BilinearSample(const Vector2& uv) const
+Color4 IBL::Sample(const Vector3& dir) const
 {
+    Vector2 uv;
+    uv.x = 0.0f;
+    const auto theta = acosf( dir.y );
+    uv.y = theta * F_1DIVPI;
+
+    if ( !IsZero(dir.x) && !IsZero(dir.z) )
+    {
+        const auto phi = atan2( dir.z, dir.x );
+        uv.x = (dir.z < 0.0f) ? (phi + F_2PI) : phi;
+        uv.x *= F_1DIV2PI;
+    }
+
     // 浮動小数点形式で画像サイズにスケーリング.
-    auto fx = uv.x * m_Width;
-    auto fy = uv.y * m_Height;
+    auto fx = uv.x * (m_Width - 1);
+    auto fy = uv.y * (m_Height - 1);
 
     // 小数点以下を切り捨て.
     auto x0 = static_cast<s32>( floor( fx ) );
@@ -97,34 +82,19 @@ Color4 IBL::BilinearSample(const Vector2& uv) const
     auto x1 = x0 + 1;
     auto y1 = y0 + 1;
 
-    return ( x1 - fx ) * ( ( y1 - fy ) * GetPixel( x0, y0 ) + ( fy - y0 ) * GetPixel( x0, y1 ) )
-         + ( fx - x0 ) * ( ( y1 - fy ) * GetPixel( x1, y0 ) + ( fy - y0 ) * GetPixel( x1, y1 ) );
-}
+    // 先に重み計算.
+    auto x_w0 = x1 - fx;
+    auto x_w1 = fx - x0;
+    auto y_w0 = y1 - fy;
+    auto y_w1 = fy - y0;
 
-//-------------------------------------------------------------------------------------------
-//      フェッチします.
-//-------------------------------------------------------------------------------------------
-Color4 IBL::Sample( const Vector3& dir, const TEXTURE_FILTER_MODE filter )
-{
-    Vector2 uv;
-    uv.x = 0.0f;
-    const auto theta = acosf( dir.y );
-    uv.y = theta / F_PI;
+    x0 = abs(x0 % m_Width);
+    x1 = abs(x1 % m_Height);
+    y0 = abs(y0 % m_Height);
+    y1 = abs(y1 % m_Height);
 
-    if ( !IsZero(dir.x) && !IsZero(dir.z) )
-    {
-        auto phi = atan2( dir.z, dir.x );
-        if ( dir.z < 0.0f )
-            phi += F_2PI;
-        uv.x = phi / F_2PI;
-    }
-
-    if ( filter == TEXTURE_FILTER_BILINEAR )
-    {
-        return BilinearSample( uv );
-    }
-
-    return NearestSample( uv );
+    return x_w0 * ( y_w0 * GetPixel( x0, y0 ) + y_w1 * GetPixel( x0, y1 ) )
+         + x_w1 * ( y_w0 * GetPixel( x1, y0 ) + y_w1 * GetPixel( x1, y1 ) );
 }
 
 } // namespace s3d

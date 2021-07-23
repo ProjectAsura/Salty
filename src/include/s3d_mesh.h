@@ -84,8 +84,6 @@ private:
     std::vector<IShape*>        m_Triangles;        //!< 三角形です.
     std::vector<IMaterial*>     m_Materials;        //!< マテリアルです.
     std::vector<Texture2D>      m_Textures;         //!< テクスチャです.
-    TextureSampler              m_DiffuseSmp;       //!< ディフューズマップのサンプラーです.
-    TextureSampler              m_SpecularSmp;      //!< スペキュラーマップのサンプラーです.
     IShape*                     m_pBVH;             //!< BVHです.
 
     //=============================================================================================

@@ -114,6 +114,8 @@ bool PathTracer::Run( const Config& config )
     // シーン生成.
     m_pScene = new TestScene( m_Config.Width, m_Config.Height );
 
+    m_Updatable = true;
+
     timer.Stop();
     ILOG("Scene Construct : %lf [msec]", timer.GetElapsedTimeMsec());
 

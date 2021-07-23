@@ -346,15 +346,13 @@ bool Mesh::LoadFromFile( const char* filename )
                 auto diffuse  = Color4(value.Color.x, value.Color.y, value.Color.z, 1.0f);
                 auto emissive = Color4(value.Emissive.x, value.Emissive.y, value.Emissive.z, 1.0f);
                 Texture2D*      pTexture = nullptr;
-                TextureSampler* pSampler = nullptr;
 
                 if ( value.ColorMap >= 0 )
                 {
                     pTexture = &m_Textures[value.ColorMap];
-                    pSampler = &m_DiffuseSmp;
                 }
 
-                m_Materials[i] = MaterialFactory::CreateLambert( diffuse, pTexture, pSampler, emissive );
+                m_Materials[i] = MaterialFactory::CreateLambert( diffuse, pTexture, emissive );
             }
             break;
 
@@ -366,15 +364,13 @@ bool Mesh::LoadFromFile( const char* filename )
                 auto specular = Color4(value.Color.x, value.Color.y, value.Color.z, 1.0f);
                 auto emissive = Color4(value.Emissive.x, value.Emissive.y, value.Emissive.z, 1.0f);
                 Texture2D*      pTexture = nullptr;
-                TextureSampler* pSampler = nullptr;
 
                 if ( value.ColorMap >= 0 )
                 {
                     pTexture = &m_Textures[value.ColorMap];
-                    pSampler = &m_SpecularSmp;
                 }
 
-                m_Materials[i] = MaterialFactory::CreateMirror( specular, pTexture, pSampler, emissive );
+                m_Materials[i] = MaterialFactory::CreateMirror( specular, pTexture, emissive );
             }
             break;
 
@@ -387,15 +383,13 @@ bool Mesh::LoadFromFile( const char* filename )
                 auto emissive = Color4(value.Emissive.x, value.Emissive.y, value.Emissive.z, 1.0f);
                 auto ior      = value.Ior;
                 Texture2D*      pTexture = nullptr;
-                TextureSampler* pSampler = nullptr;
 
                 if ( value.ColorMap >= 0 )
                 {
                     pTexture = &m_Textures[value.ColorMap];
-                    pSampler = &m_SpecularSmp;
                 }
 
-                m_Materials[i] = MaterialFactory::CreateGlass( specular, ior, pTexture, pSampler, emissive );
+                m_Materials[i] = MaterialFactory::CreateGlass( specular, ior, pTexture, emissive );
             }
             break;
 
@@ -408,15 +402,13 @@ bool Mesh::LoadFromFile( const char* filename )
                 auto emissive = Color4(value.Emissive.x, value.Emissive.y, value.Emissive.z, 1.0f);
                 auto power    = value.Power;
                 Texture2D*      pTexture = nullptr;
-                TextureSampler* pSampler = nullptr;
 
                 if ( value.ColorMap >= 0 )
                 {
                     pTexture = &m_Textures[value.ColorMap];
-                    pSampler = &m_SpecularSmp;
                 }
 
-                m_Materials[i] = MaterialFactory::CreatePhong( specular, power, pTexture, pSampler, emissive );
+                m_Materials[i] = MaterialFactory::CreatePhong( specular, power, pTexture, emissive );
             }
             break;
 
@@ -431,15 +423,13 @@ bool Mesh::LoadFromFile( const char* filename )
                 auto emissive = Color4(value.Emissive.x, value.Emissive.y, value.Emissive.z, 1.0f);
 
                 Texture2D*      pTexture = nullptr;
-                TextureSampler* pSampler = nullptr;
 
                 if ( value.DiffuseMap >= 0 )
                 {
                     pTexture = &m_Textures[value.DiffuseMap];
-                    pSampler = &m_SpecularSmp;
                 }
 
-                m_Materials[i] = MaterialFactory::CreatePlastic( diffuse, specular, power, pTexture, pSampler, emissive );
+                m_Materials[i] = MaterialFactory::CreatePlastic( diffuse, specular, power, pTexture, emissive );
             }
             break;
 

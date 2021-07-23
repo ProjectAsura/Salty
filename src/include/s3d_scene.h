@@ -42,7 +42,6 @@ public:
     Scene()
     : m_pBVH   ( nullptr )
     , m_pCamera( nullptr )
-    , m_Filter ( TEXTURE_FILTER_BILINEAR )
     { /* DO_NOTHING */ }
 
     //---------------------------------------------------------------------------------------------
@@ -80,7 +79,7 @@ public:
     //---------------------------------------------------------------------------------------------
     S3D_INLINE
     Color4 SampleIBL( const Vector3& dir )
-    { return m_IBL.Sample( dir, m_Filter ) * Color4( 10.0f, 10.0f, 10.0f, 1.0f ); }
+    { return m_IBL.Sample( dir ) * Color4( 10.0f, 10.0f, 10.0f, 1.0f ); }
 
     S3D_INLINE
     IShape* GetLight(PCG& rand)
@@ -99,7 +98,6 @@ protected:
     IShape*                 m_pBVH;
     ICamera*                m_pCamera;
     IBL                     m_IBL;
-    TEXTURE_FILTER_MODE     m_Filter;
     std::vector<IShape*>    m_pLightList;
     std::vector<IShape*>    m_Shapes;
     std::vector<IMaterial*> m_Material;

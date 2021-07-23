@@ -15,8 +15,6 @@
 #include <s3d_pt.h>
 #include <s3d_logger.h>
 #include <s3d_tonemapper.h>
-#include <s3d_bmp.h>
-#include <s3d_hdr.h>
 #include <s3d_camera.h>
 #include <s3d_shape.h>
 #include <s3d_material.h>
@@ -101,14 +99,14 @@ bool PathTracer::Run( const Config& config )
 
     // レンダーターゲットを生成.
     auto size = m_Config.Width * m_Config.Height;
-    m_RenderTarget = new Color4 [size];
-    m_Intermediate = new Color4 [size];
+    m_RenderTarget = new Color3 [size];
+    m_Intermediate = new Color3 [size];
 
     // レンダーターゲットをクリア.
     parallel_for<size_t>(0, size, [&](size_t i)
     {
-        m_RenderTarget[i] = Color4(0.0f, 0.0f, 0.0f, 0.0f);
-        m_Intermediate[i] = Color4(0.0f, 0.0f, 0.0f, 0.0f);
+        m_RenderTarget[i] = Color3(0.0f, 0.0f, 0.0f);
+        m_Intermediate[i] = Color3(0.0f, 0.0f, 0.0f);
     });
 
     // シーン生成.
@@ -138,10 +136,6 @@ bool PathTracer::Run( const Config& config )
 //-------------------------------------------------------------------------------------------------
 void PathTracer::Capture( const char* filename )
 {
-#if 1
-    // ノイズ除去.
-    //FilterNLM(m_Config.Width, m_Config.Height, 0.3f, m_RenderTarget, m_DenoisedTarget);
-
     // トーンマッピングを実行.
     ToneMapper::Map( ToneMappingType, m_Config.Width, m_Config.Height, m_RenderTarget, m_Intermediate );
 
@@ -179,23 +173,19 @@ void PathTracer::Capture( const char* filename )
     // PNG出力.
     void* ptr = outputs.data();
     stbi_write_png(filename, m_Config.Width, m_Config.Height, 3, ptr, 0);
-
-#else
-    SaveToBMP( filename, m_Config.Width, m_Config.Height, &m_RenderTarget[0].x);
-#endif
 }
 
 
 //-------------------------------------------------------------------------------------------------
 //      指定方向からの放射輝度推定を行います.
 //-------------------------------------------------------------------------------------------------
-Color4 PathTracer::Radiance( const Ray& input )
+Color3 PathTracer::Radiance( const Ray& input )
 {
     auto arg    = ShadingArg();
     auto raySet = MakeRaySet( input.pos, input.dir );
 
-    Color4 W( 1.0f, 1.0f, 1.0f, 1.0f );
-    Color4 L( 0.0f, 0.0f, 0.0f, 0.0f );
+    Color3 W( 1.0f, 1.0f, 1.0f );
+    Color3 L( 0.0f, 0.0f, 0.0f );
 
     // 乱数設定.
     arg.random = m_Random;
@@ -207,7 +197,7 @@ Color4 PathTracer::Radiance( const Ray& input )
         // 交差判定.
         if ( !m_pScene->Intersect( raySet, record ) )
         {
-            L += Color4::Mul( W, m_pScene->SampleIBL( raySet.ray.dir ) );
+            L += Color3::Mul( W, m_pScene->SampleIBL( raySet.ray.dir ) );
             break;
         }
 
@@ -219,7 +209,7 @@ Color4 PathTracer::Radiance( const Ray& input )
         assert( material != nullptr );
 
         // 自己発光による放射輝度.
-        L += Color4::Mul( W, material->GetEmissive() );
+        L += Color3::Mul( W, material->GetEmissive() );
 
         // シェーディング引数を設定.
         arg.input = raySet.ray.dir;
@@ -228,20 +218,20 @@ Color4 PathTracer::Radiance( const Ray& input )
         // 直接光をサンプリング.
         if ( !record.pMaterial->HasDelta() )
         {
-            L += Color4::Mul( W, NextEventEstimation( pos, arg.normal, arg.texcoord, material, arg.random ) );
+            L += Color3::Mul( W, NextEventEstimation( pos, arg.normal, arg.texcoord, material, arg.random ) );
         }
 
         // 色を求める.
-        W = Color4::Mul( W, material->Shade( arg ) );
+        W = Color3::Mul( W, material->Shade( arg ) );
 
         // ロシアンルーレットで打ち切るかどうか?
         if ( arg.dice )
         { break; }
 
         // 重みがゼロになったら以降の更新は無駄なので打ち切りにする.
-        if ( (W.GetX() < FLT_EPSILON) &&
-             (W.GetY() < FLT_EPSILON) &&
-             (W.GetZ() < FLT_EPSILON) )
+        if ( (W.x < FLT_EPSILON) &&
+             (W.y < FLT_EPSILON) &&
+             (W.z < FLT_EPSILON) )
         { break; }
 
         // レイを更新.
@@ -258,7 +248,7 @@ Color4 PathTracer::Radiance( const Ray& input )
 //-------------------------------------------------------------------------------------------------
 //      直接光ライティングを行います.
 //-------------------------------------------------------------------------------------------------
-Color4 PathTracer::NextEventEstimation
+Color3 PathTracer::NextEventEstimation
 (
     const Vector3&      position,
     const Vector3&      normal,
@@ -298,7 +288,7 @@ Color4 PathTracer::NextEventEstimation
         return shadowRecord.pMaterial->GetEmissive() * fs * mis_weight * (G / light_pdf);
     }
 
-    return Color4(0.0f, 0.0f, 0.0f, 0.0f);
+    return Color3(0.0f, 0.0f, 0.0f);
 }
 
 //-------------------------------------------------------------------------------------------------

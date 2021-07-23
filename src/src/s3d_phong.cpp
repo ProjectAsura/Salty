@@ -19,15 +19,15 @@ namespace s3d {
 //-------------------------------------------------------------------------------------------------
 //      コンストラクタです.
 //-------------------------------------------------------------------------------------------------
-Phong::Phong(const Color4& specular, f32 power, const Color4& emissive)
+Phong::Phong(const Color3& specular, f32 power, const Color3& emissive)
 : m_Count   (1)
 , m_Specular(specular)
 , m_Power   (power)
 , m_Emissive(emissive)
 {
-    m_Threshold = m_Specular.GetX();
-    m_Threshold = s3d::Max( m_Threshold, m_Specular.GetY() );
-    m_Threshold = s3d::Max( m_Threshold, m_Specular.GetZ() );
+    m_Threshold = m_Specular.x;
+    m_Threshold = s3d::Max( m_Threshold, m_Specular.y );
+    m_Threshold = s3d::Max( m_Threshold, m_Specular.z );
     m_Threshold = s3d::Max( m_Threshold, 0.01f);    // Nan対策のため下駄をはかせる.
 }
 
@@ -62,15 +62,10 @@ u32 Phong::GetCount() const
 //-------------------------------------------------------------------------------------------------
 //      シェーディングします.
 //-------------------------------------------------------------------------------------------------
-Color4 Phong::Shade( ShadingArg& arg ) const
+Color3 Phong::Shade( ShadingArg& arg ) const
 {
     // インポータンスサンプリング.
-    const f32 phi = F_2PI * arg.random.GetAsF32();
-    const f32 cosTheta = powf( 1.0f - arg.random.GetAsF32(), 1.0f / ( m_Power + 1.0f ) );
-    const f32 sinTheta = SafeSqrt( 1.0f - ( cosTheta * cosTheta ) );
-    const f32 x = cosf( phi ) * sinTheta;
-    const f32 y = sinf( phi ) * sinTheta;
-    const f32 z = cosTheta;
+    auto s = SamplePhong(arg.random.GetAsF32(), arg.random.GetAsF32(), m_Power);
 
     auto n = (Vector3::Dot(arg.input, arg.normal) < 0.0f) ? arg.normal : -arg.normal;
 
@@ -83,7 +78,7 @@ Color4 Phong::Shade( ShadingArg& arg ) const
     TangentSpace( w, T, B );
 
     // 出射方向.
-    auto dir = Vector3::SafeUnitVector( T * x + B * y + w * z );
+    auto dir = Vector3::SafeUnitVector( T * s.x + B * s.y + w * s.z );
     auto cosine = abs(Vector3::Dot( dir, n ));
 
     arg.output = dir;
@@ -95,7 +90,7 @@ Color4 Phong::Shade( ShadingArg& arg ) const
 //-------------------------------------------------------------------------------------------------
 //      エミッシブカラーを取得します.
 //-------------------------------------------------------------------------------------------------
-Color4 Phong::GetEmissive() const
+Color3 Phong::GetEmissive() const
 { return m_Emissive; }
 
 //-------------------------------------------------------------------------------------------------
@@ -107,13 +102,13 @@ bool Phong::HasDelta() const
 //-------------------------------------------------------------------------------------------------
 //      生成処理です.
 //-------------------------------------------------------------------------------------------------
-IMaterial* Phong::Create(const Color4& specular, f32 power)
-{ return Phong::Create(specular, power, Color4(0.0f, 0.0f, 0.0f, 1.0f)); }
+IMaterial* Phong::Create(const Color3& specular, f32 power)
+{ return Phong::Create(specular, power, Color3(0.0f, 0.0f, 0.0f)); }
 
 //-------------------------------------------------------------------------------------------------
 //      生成処理です.
 //-------------------------------------------------------------------------------------------------
-IMaterial* Phong::Create(const Color4& specular, f32 power, const Color4& emissive)
+IMaterial* Phong::Create(const Color3& specular, f32 power, const Color3& emissive)
 { return new(std::nothrow) Phong(specular, power, emissive); }
 
 } // namespace s3d

@@ -2964,5 +2964,33 @@ bool IntersectTriangle
     return true;
 }
 
+S3D_INLINE
+Vector3 SampleLambert(f32 u, f32 v)
+{
+    auto r = sqrtf(1.0f - u * u);
+    auto p = F_2PI * v;
+    return Vector3(r * cosf(p), r * sinf(p), u);
+}
+
+S3D_INLINE
+Vector3 SamplePhong(f32 u, f32 v, f32 shininess)
+{
+    auto p = F_2PI * u;
+    auto ct = powf(1.0f - v, 1.0f / (shininess + 1.0f));
+    auto st = sqrtf(1.0f - ct * ct);
+    return Vector3(st * cosf(p), st * sinf(p), ct); 
+}
+
+S3D_INLINE
+Vector3 SampleGGX(f32 u, f32 v, f32 roughness)
+{
+    auto a = roughness * roughness;
+
+    auto p = F_2PI * u;
+    auto ct = sqrtf((1.0f - v) / Max(v * (a * a - 1.0f) + 1.0f, 1e-8f));
+    auto st = sqrtf( 1.0f - ct * ct );
+    return Vector3(st * cosf(p), st * sinf(p), ct);
+}
+
 } // namespace s3d
 

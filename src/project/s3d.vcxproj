@@ -20,15 +20,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\external\stb\stb_image_write.h" />
-    <ClInclude Include="..\include\s3d_bmp.h" />
     <ClInclude Include="..\include\s3d_bvh2.h" />
     <ClInclude Include="..\include\s3d_bvh4.h" />
     <ClInclude Include="..\include\s3d_bvh8.h" />
     <ClInclude Include="..\include\s3d_camera.h" />
     <ClInclude Include="..\include\s3d_denoiser.h" />
     <ClInclude Include="..\include\s3d_glass.h" />
-    <ClInclude Include="..\include\s3d_hdr.h" />
-    <ClInclude Include="..\include\s3d_ibl.h" />
     <ClInclude Include="..\include\s3d_instance.h" />
     <ClInclude Include="..\include\s3d_lambert.h" />
     <ClInclude Include="..\include\s3d_leaf.h" />
@@ -49,7 +46,6 @@
     <ClInclude Include="..\include\s3d_testScene.h" />
     <ClInclude Include="..\include\s3d_texture.h" />
     <ClInclude Include="..\include\s3d_texturedmaterial.h" />
-    <ClInclude Include="..\include\s3d_tga.h" />
     <ClInclude Include="..\include\s3d_timer.h" />
     <ClInclude Include="..\include\s3d_tonemapper.h" />
     <ClInclude Include="..\include\s3d_triangle.h" />
@@ -57,14 +53,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\main.cpp" />
-    <ClCompile Include="..\src\s3d_bmp.cpp" />
     <ClCompile Include="..\src\s3d_bvh2.cpp" />
     <ClCompile Include="..\src\s3d_bvh4.cpp" />
     <ClCompile Include="..\src\s3d_bvh8.cpp" />
     <ClCompile Include="..\src\s3d_denoiser.cpp" />
     <ClCompile Include="..\src\s3d_glass.cpp" />
-    <ClCompile Include="..\src\s3d_hdr.cpp" />
-    <ClCompile Include="..\src\s3d_ibl.cpp" />
     <ClCompile Include="..\src\s3d_instance.cpp" />
     <ClCompile Include="..\src\s3d_lambert.cpp" />
     <ClCompile Include="..\src\s3d_leaf.cpp" />
@@ -79,7 +72,6 @@
     <ClCompile Include="..\src\s3d_testScene.cpp" />
     <ClCompile Include="..\src\s3d_texture.cpp" />
     <ClCompile Include="..\src\s3d_texturedmaterial.cpp" />
-    <ClCompile Include="..\src\s3d_tga.cpp" />
     <ClCompile Include="..\src\s3d_tonemapper.cpp" />
     <ClCompile Include="..\src\s3d_triangle.cpp" />
   </ItemGroup>

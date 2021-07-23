@@ -322,7 +322,7 @@ bool Mesh::LoadFromFile( const char* filename )
             fread( &texture, sizeof( SMD_TEXTURE ), 1, pFile );
 
             std::string path = dirPath + "/" + texture.FileName;
-            if ( !m_Textures[ i ].LoadFromFile( path.c_str() ) )
+            if ( !m_Textures[ i ].Init( path.c_str(), TFF_BMP ) )
             {
                 ILOG( "Warning : Texture Load Failed. filename = %s", path.c_str() );
             }
@@ -343,9 +343,9 @@ bool Mesh::LoadFromFile( const char* filename )
                 SMD_MATTE value;
                 fread( &value, sizeof(value), 1, pFile );
 
-                auto diffuse  = Color4(value.Color.x, value.Color.y, value.Color.z, 1.0f);
-                auto emissive = Color4(value.Emissive.x, value.Emissive.y, value.Emissive.z, 1.0f);
-                Texture2D*      pTexture = nullptr;
+                auto diffuse  = Color3(value.Color.x, value.Color.y, value.Color.z);
+                auto emissive = Color3(value.Emissive.x, value.Emissive.y, value.Emissive.z);
+                Texture*      pTexture = nullptr;
 
                 if ( value.ColorMap >= 0 )
                 {
@@ -361,9 +361,9 @@ bool Mesh::LoadFromFile( const char* filename )
                 SMD_MIRROR value;
                 fread( &value, sizeof(value), 1, pFile );
 
-                auto specular = Color4(value.Color.x, value.Color.y, value.Color.z, 1.0f);
-                auto emissive = Color4(value.Emissive.x, value.Emissive.y, value.Emissive.z, 1.0f);
-                Texture2D*      pTexture = nullptr;
+                auto specular = Color3(value.Color.x, value.Color.y, value.Color.z);
+                auto emissive = Color3(value.Emissive.x, value.Emissive.y, value.Emissive.z);
+                Texture*      pTexture = nullptr;
 
                 if ( value.ColorMap >= 0 )
                 {
@@ -379,10 +379,10 @@ bool Mesh::LoadFromFile( const char* filename )
                 SMD_DIELECTRIC value;
                 fread( &value, sizeof(value), 1, pFile );
 
-                auto specular = Color4(value.Color.x, value.Color.y, value.Color.z, 1.0f);
-                auto emissive = Color4(value.Emissive.x, value.Emissive.y, value.Emissive.z, 1.0f);
+                auto specular = Color3(value.Color.x, value.Color.y, value.Color.z);
+                auto emissive = Color3(value.Emissive.x, value.Emissive.y, value.Emissive.z);
                 auto ior      = value.Ior;
-                Texture2D*      pTexture = nullptr;
+                Texture*      pTexture = nullptr;
 
                 if ( value.ColorMap >= 0 )
                 {
@@ -398,10 +398,10 @@ bool Mesh::LoadFromFile( const char* filename )
                 SMD_GLOSSY value;
                 fread( &value, sizeof(value), 1, pFile );
 
-                auto specular = Color4(value.Color.x, value.Color.y, value.Color.z, 1.0f);
-                auto emissive = Color4(value.Emissive.x, value.Emissive.y, value.Emissive.z, 1.0f);
+                auto specular = Color3(value.Color.x, value.Color.y, value.Color.z);
+                auto emissive = Color3(value.Emissive.x, value.Emissive.y, value.Emissive.z);
                 auto power    = value.Power;
-                Texture2D*      pTexture = nullptr;
+                Texture*      pTexture = nullptr;
 
                 if ( value.ColorMap >= 0 )
                 {
@@ -417,12 +417,12 @@ bool Mesh::LoadFromFile( const char* filename )
                 SMD_PLASTIC value;
                 fread( &value, sizeof(value), 1, pFile);
 
-                auto diffuse  = Color4(value.Diffuse.x, value.Diffuse.y, value.Diffuse.z, 1.0f);
-                auto specular = Color4(value.Specular.x, value.Specular.y, value.Specular.z, 1.0f);
+                auto diffuse  = Color3(value.Diffuse.x, value.Diffuse.y, value.Diffuse.z);
+                auto specular = Color3(value.Specular.x, value.Specular.y, value.Specular.z);
                 auto power    = value.Power;
-                auto emissive = Color4(value.Emissive.x, value.Emissive.y, value.Emissive.z, 1.0f);
+                auto emissive = Color3(value.Emissive.x, value.Emissive.y, value.Emissive.z);
 
-                Texture2D*      pTexture = nullptr;
+                Texture*      pTexture = nullptr;
 
                 if ( value.DiffuseMap >= 0 )
                 {

@@ -21,7 +21,7 @@ namespace s3d {
 //-------------------------------------------------------------------------------------------------
 TexturedMaterial::TexturedMaterial
 (
-    const Texture2D*        pTexture,
+    const Texture*        pTexture,
     IMaterial*              pMaterial
 )
 : m_Count       (1)
@@ -60,17 +60,17 @@ u32 TexturedMaterial::GetCount() const
 //-------------------------------------------------------------------------------------------------
 //      シェーディングします.
 //-------------------------------------------------------------------------------------------------
-Color4 TexturedMaterial::Shade( ShadingArg& arg ) const
+Color3 TexturedMaterial::Shade( ShadingArg& arg ) const
 {
-    return Color4::Mul(
+    return Color3::Mul(
         m_pMaterial->Shade( arg ),
-        m_pTexture->Sample( arg.texcoord ) );
+        m_pTexture->SampleColor( arg.texcoord ) );
 }
 
 //-------------------------------------------------------------------------------------------------
 //      エミッシブカラーを取得します.
 //-------------------------------------------------------------------------------------------------
-Color4 TexturedMaterial::GetEmissive() const
+Color3 TexturedMaterial::GetEmissive() const
 { return m_pMaterial->GetEmissive(); }
 
 //-------------------------------------------------------------------------------------------------
@@ -79,11 +79,11 @@ Color4 TexturedMaterial::GetEmissive() const
 bool TexturedMaterial::HasDelta() const
 { return m_pMaterial->HasDelta(); }
 
-Color4 TexturedMaterial::GetBaseColor(const Vector2& texcoord) const
+Color3 TexturedMaterial::GetBaseColor(const Vector2& texcoord) const
 {
-    return Color4::Mul(
+    return Color3::Mul(
         m_pMaterial->GetBaseColor(texcoord),
-        m_pTexture->Sample( texcoord));
+        m_pTexture->SampleColor( texcoord));
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -91,7 +91,7 @@ Color4 TexturedMaterial::GetBaseColor(const Vector2& texcoord) const
 //-------------------------------------------------------------------------------------------------
 IMaterial* TexturedMaterial::Create
 (
-    const Texture2D*        pTexture,
+    const Texture*        pTexture,
     IMaterial*              pMaterial
 )
 { return new(std::nothrow) TexturedMaterial(pTexture, pMaterial); }

@@ -35,9 +35,9 @@ struct ShadingArg
 struct IMaterial : IReference
 {
     virtual ~IMaterial() {}
-    virtual Color4  Shade      ( ShadingArg& ) const = 0;
-    virtual Color4  GetEmissive() const = 0;
-    virtual Color4  GetBaseColor(const Vector2& texcoord) const = 0;
+    virtual Color3  Shade      ( ShadingArg& ) const = 0;
+    virtual Color3  GetEmissive() const = 0;
+    virtual Color3  GetBaseColor(const Vector2& texcoord) const = 0;
     virtual bool    HasDelta   () const = 0;
 };
 

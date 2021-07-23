@@ -34,9 +34,9 @@ public:
     // public methods.
     //=============================================================================================
 
-    static IMaterial* Create(const Color4& diffuse, const Color4& specular, f32 power);
+    static IMaterial* Create(const Color3& diffuse, const Color3& specular, f32 power);
 
-    static IMaterial* Create(const Color4& diffuse, const Color4& specular, f32 power, const Color4& emissive);
+    static IMaterial* Create(const Color3& diffuse, const Color3& specular, f32 power, const Color3& emissive);
 
     void AddRef() override;
 
@@ -44,13 +44,13 @@ public:
 
     u32 GetCount() const override;
 
-    Color4 Shade( ShadingArg& arg ) const override;
+    Color3 Shade( ShadingArg& arg ) const override;
 
-    Color4 GetEmissive() const override;
+    Color3 GetEmissive() const override;
 
     bool HasDelta() const override;
 
-    Color4 GetBaseColor(const Vector2&) const override
+    Color3 GetBaseColor(const Vector2&) const override
     { return m_Diffuse; }
 
 private:
@@ -58,16 +58,16 @@ private:
     // private variables.
     //=============================================================================================
     std::atomic<u32>    m_Count;
-    Color4              m_Diffuse;
-    Color4              m_Specular;
+    Color3              m_Diffuse;
+    Color3              m_Specular;
     f32                 m_Power;
-    Color4              m_Emissive;
+    Color3              m_Emissive;
     f32                 m_Threshold[2];
 
     //=============================================================================================
     // private methods.
     //=============================================================================================
-    Plastic(const Color4& diffuse, const Color4& specular, f32 power, const Color4& emissive);
+    Plastic(const Color3& diffuse, const Color3& specular, f32 power, const Color3& emissive);
 
     ~Plastic();
 };

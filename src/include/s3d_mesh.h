@@ -83,7 +83,7 @@ private:
     std::atomic<u32>            m_Count;            //!< 参照カウントです.
     std::vector<IShape*>        m_Triangles;        //!< 三角形です.
     std::vector<IMaterial*>     m_Materials;        //!< マテリアルです.
-    std::vector<Texture2D>      m_Textures;         //!< テクスチャです.
+    std::vector<Texture>      m_Textures;         //!< テクスチャです.
     IShape*                     m_pBVH;             //!< BVHです.
 
     //=============================================================================================

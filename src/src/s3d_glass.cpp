@@ -19,7 +19,7 @@ namespace s3d {
 //-------------------------------------------------------------------------------------------------
 //      コンストラクタです.
 //-------------------------------------------------------------------------------------------------
-Glass::Glass(const Color4& specular, f32 ior, const Color4& emissive)
+Glass::Glass(const Color3& specular, f32 ior, const Color3& emissive)
 : m_Count   (1)
 , m_Specular(specular)
 , m_Ior     (ior)
@@ -57,7 +57,7 @@ u32 Glass::GetCount() const
 //-------------------------------------------------------------------------------------------------
 //      シェーディングします.
 //-------------------------------------------------------------------------------------------------
-Color4 Glass::Shade( ShadingArg& arg ) const
+Color3 Glass::Shade( ShadingArg& arg ) const
 {
     // 補正済み法線データ (レイの入出を考慮済み).
     const Vector3 normalMod = ( Vector3::Dot ( arg.normal, arg.input ) < 0.0 ) ? arg.normal : -arg.normal;
@@ -130,7 +130,7 @@ Color4 Glass::Shade( ShadingArg& arg ) const
 //-------------------------------------------------------------------------------------------------
 //      エミッシブカラーを取得します.
 //-------------------------------------------------------------------------------------------------
-Color4 Glass::GetEmissive() const
+Color3 Glass::GetEmissive() const
 { return m_Emissive; }
 
 //-------------------------------------------------------------------------------------------------
@@ -142,13 +142,13 @@ bool Glass::HasDelta() const
 //-------------------------------------------------------------------------------------------------
 //      生成処理.
 //-------------------------------------------------------------------------------------------------
-IMaterial* Glass::Create(const Color4& specular, f32 ior)
-{ return Glass::Create(specular, ior, Color4(0.0f, 0.0f, 0.0f, 1.0f)); }
+IMaterial* Glass::Create(const Color3& specular, f32 ior)
+{ return Glass::Create(specular, ior, Color3(0.0f, 0.0f, 0.0f)); }
 
 //-------------------------------------------------------------------------------------------------
 //      生成処理.
 //-------------------------------------------------------------------------------------------------
-IMaterial* Glass::Create(const Color4& specular, f32 ior, const Color4& emissive)
+IMaterial* Glass::Create(const Color3& specular, f32 ior, const Color3& emissive)
 { return new(std::nothrow) Glass(specular, ior, emissive); }
 
 } // namespace s3d

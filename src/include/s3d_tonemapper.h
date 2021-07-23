@@ -30,12 +30,12 @@ enum TONE_MAPPING_TYPE
 class ToneMapper
 {
 public:
-    static void Map( TONE_MAPPING_TYPE type, const s32 width, const s32 height, const Color4* pPixels, Color4* pResult );
+    static void Map( TONE_MAPPING_TYPE type, const s32 width, const s32 height, const Color3* pPixels, Color3* pResult );
 
 private:
-    static void ReinhardToneMapping         ( const s32 width, const s32 height, const Color4* pPixels, Color4* pResult );
-    static void Uncharted2FilmicToneMapping ( const s32 width, const s32 height, const Color4* pPixels, Color4* pResult );
-    static void ACESFilmicToneMapping       ( const s32 width, const s32 height, const Color4* pPixels, Color4* pResult );
+    static void ReinhardToneMapping         ( const s32 width, const s32 height, const Color3* pPixels, Color3* pResult );
+    static void Uncharted2FilmicToneMapping ( const s32 width, const s32 height, const Color3* pPixels, Color3* pResult );
+    static void ACESFilmicToneMapping       ( const s32 width, const s32 height, const Color3* pPixels, Color3* pResult );
 };
 
 

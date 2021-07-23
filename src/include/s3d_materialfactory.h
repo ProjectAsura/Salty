@@ -20,33 +20,33 @@ class MaterialFactory
 {
 public:
     static IMaterial* CreateLambert(
-        const Color4&           diffuse,
-        const Texture2D*        pTexture = nullptr,
-        const Color4&           emissive = Color4(0.0f, 0.0f, 0.0f, 1.0f));
+        const Color3&   diffuse,
+        const Texture*  pTexture = nullptr,
+        const Color3&   emissive = Color3(0.0f, 0.0f, 0.0f));
 
     static IMaterial* CreatePhong(
-        const Color4&           specular,
-        f32                     power,
-        const Texture2D*        pTexture = nullptr,
-        const Color4&           emissive = Color4(0.0f, 0.0f, 0.0f, 1.0f));
+        const Color3&   specular,
+        f32             power,
+        const Texture*  pTexture = nullptr,
+        const Color3&   emissive = Color3(0.0f, 0.0f, 0.0f));
 
     static IMaterial* CreateMirror(
-        const Color4&           specular,
-        const Texture2D*        pTexture = nullptr,
-        const Color4&           emissive = Color4(0.0f, 0.0f, 0.0f, 1.0f));
+        const Color3&   specular,
+        const Texture*  pTexture = nullptr,
+        const Color3&   emissive = Color3(0.0f, 0.0f, 0.0f));
 
     static IMaterial* CreateGlass(
-        const Color4&           specuar,
-        f32                     ior,
-        const Texture2D*        pTexture = nullptr,
-        const Color4&           emissive = Color4(0.0f, 0.0f, 0.0f, 1.0f));
+        const Color3&   specuar,
+        f32             ior,
+        const Texture*  pTexture = nullptr,
+        const Color3&   emissive = Color3(0.0f, 0.0f, 0.0f));
 
     static IMaterial* CreatePlastic(
-        const Color4&           diffuse,
-        const Color4&           specular,
-        f32                     power,
-        const Texture2D*        pTexture = nullptr,
-        const Color4&           emissive = Color4(0.0f, 0.0f, 0.0f, 1.0f));
+        const Color3&   diffuse,
+        const Color3&   specular,
+        f32             power,
+        const Texture*  pTexture = nullptr,
+        const Color3&   emissive = Color3(0.0f, 0.0f, 0.0f));
 };
 
 } // namespace s3d

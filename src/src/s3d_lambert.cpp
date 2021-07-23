@@ -19,14 +19,14 @@ namespace s3d {
 //-------------------------------------------------------------------------------------------------
 //      コンストラクタです.
 //-------------------------------------------------------------------------------------------------
-Lambert::Lambert(const Color4& diffuse, const Color4& emissive)
+Lambert::Lambert(const Color3& diffuse, const Color3& emissive)
 : m_Count   (1)
 , m_Diffuse (diffuse)
 , m_Emissive(emissive)
 {
-    m_Threshold = diffuse.GetX();
-    m_Threshold = s3d::Max( m_Threshold, diffuse.GetY() );
-    m_Threshold = s3d::Max( m_Threshold, diffuse.GetZ() );
+    m_Threshold = diffuse.x;
+    m_Threshold = s3d::Max( m_Threshold, diffuse.y );
+    m_Threshold = s3d::Max( m_Threshold, diffuse.z );
     m_Threshold = s3d::Max( m_Threshold, 0.01f);    // Nan対策のため下駄をはかせる.
 }
 
@@ -61,21 +61,20 @@ u32 Lambert::GetCount() const
 //-------------------------------------------------------------------------------------------------
 //      シェーディングします.
 //-------------------------------------------------------------------------------------------------
-Color4 Lambert::Shade( ShadingArg& arg ) const
+Color3 Lambert::Shade( ShadingArg& arg ) const
 {
+    // 補正済み法線データ (レイの入出を考慮済み).
+    const Vector3 N = ( Vector3::Dot ( arg.normal, arg.input ) < 0.0 ) ? arg.normal : -arg.normal;
+
     // normalModの方向を基準とした正規直交基底(w, u, v)を作る。
     // この基底に対する半球内で次のレイを飛ばす。
     Vector3 T, B;
-    TangentSpace(arg.normal, T, B);
+    TangentSpace(N, T, B);
 
     // インポータンスサンプリング.
-    const f32 phi = F_2PI * arg.random.GetAsF32();
-    const f32 r = SafeSqrt( arg.random.GetAsF32() );
-    const f32 x = r * cosf( phi );
-    const f32 y = r * sinf( phi );
-    const f32 z = SafeSqrt( 1.0f - ( x * x ) - ( y * y ) );
+    auto s = SampleLambert(arg.random.GetAsF32(), arg.random.GetAsF32());
 
-    arg.output = Vector3::SafeUnitVector( T * x + B * y + arg.normal * z );
+    arg.output = Vector3::SafeUnitVector( T * s.x + B * s.y + N * s.z );
     arg.dice   = ( arg.random.GetAsF32() >= m_Threshold );
 
     // 以下の処理の省略.
@@ -89,7 +88,7 @@ Color4 Lambert::Shade( ShadingArg& arg ) const
 //-------------------------------------------------------------------------------------------------
 //      エミッシブカラーを取得します.
 //-------------------------------------------------------------------------------------------------
-Color4 Lambert::GetEmissive() const
+Color3 Lambert::GetEmissive() const
 { return m_Emissive; }
 
 //-------------------------------------------------------------------------------------------------
@@ -101,13 +100,13 @@ bool Lambert::HasDelta() const
 //-------------------------------------------------------------------------------------------------
 //      生成処理です.
 //-------------------------------------------------------------------------------------------------
-IMaterial* Lambert::Create(const Color4& diffuse)
-{ return Lambert::Create(diffuse, Color4(0.0f, 0.0f, 0.0f, 1.0f)); }
+IMaterial* Lambert::Create(const Color3& diffuse)
+{ return Lambert::Create(diffuse, Color3(0.0f, 0.0f, 0.0f)); }
 
 //-------------------------------------------------------------------------------------------------
 //      生成処理です.
 //-------------------------------------------------------------------------------------------------
-IMaterial* Lambert::Create(const Color4& diffuse, const Color4& emissive)
+IMaterial* Lambert::Create(const Color3& diffuse, const Color3& emissive)
 { return new (std::nothrow) Lambert(diffuse, emissive); }
 
 } // namespace s3d

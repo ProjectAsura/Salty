@@ -9,8 +9,8 @@
 // Includes
 //-------------------------------------------------------------------------------------------------
 #include <s3d_shape.h>
+#include <s3d_texture.h>
 #include <s3d_camera.h>
-#include <s3d_ibl.h>
 #include <vector>
 
 
@@ -78,8 +78,8 @@ public:
     //! @brief      IBLテクスチャをフェッチします.
     //---------------------------------------------------------------------------------------------
     S3D_INLINE
-    Color4 SampleIBL( const Vector3& dir )
-    { return m_IBL.Sample( dir ) * Color4( 10.0f, 10.0f, 10.0f, 1.0f ); }
+    Color3 SampleIBL( const Vector3& dir )
+    { return m_IBL.SampleColor( dir ) * Color3( 10.0f, 10.0f, 10.0f ); }
 
     S3D_INLINE
     IShape* GetLight(PCG& rand)
@@ -97,7 +97,7 @@ protected:
     //=============================================================================================
     IShape*                 m_pBVH;
     ICamera*                m_pCamera;
-    IBL                     m_IBL;
+    Texture                 m_IBL;
     std::vector<IShape*>    m_pLightList;
     std::vector<IShape*>    m_Shapes;
     std::vector<IMaterial*> m_Material;

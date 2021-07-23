@@ -68,8 +68,8 @@ private:
     // private variables.
     //=============================================================================================
     Config              m_Config;           //!< コンフィグです.
-    Color4*             m_RenderTarget;     //!< レンダーターゲットです.
-    Color4*             m_Intermediate;     //!< 中間レンダーターゲットです.
+    Color3*             m_RenderTarget;     //!< レンダーターゲットです.
+    Color3*             m_Intermediate;     //!< 中間レンダーターゲットです.
     PCG                 m_Random;           //!< 乱数.
     Scene*              m_pScene;           //!< シーンデータ.
     std::atomic<bool>   m_Updatable;        //!< 更新可能かどうか?
@@ -82,12 +82,12 @@ private:
     //---------------------------------------------------------------------------------------------
     //! @brief      指定方向からの放射輝度を求めます.
     //---------------------------------------------------------------------------------------------
-    Color4 Radiance( const Ray& input );
+    Color3 Radiance( const Ray& input );
 
     //---------------------------------------------------------------------------------------------
     //! @brief      直接光ライティングをします.
     //---------------------------------------------------------------------------------------------
-    Color4 NextEventEstimation(
+    Color3 NextEventEstimation(
         const Vector3&      position,
         const Vector3&      normal,
         const Vector2&      texcoord,

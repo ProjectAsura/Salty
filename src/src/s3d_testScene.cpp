@@ -30,7 +30,7 @@ using namespace s3d;
 //-------------------------------------------------------------------------------------------------
 // Global Varaibles.
 //-------------------------------------------------------------------------------------------------
-Texture2D       g_TableTexture;
+Texture       g_TableTexture;
 
 } // namespace /* anonymous */
 
@@ -59,21 +59,21 @@ TestScene::TestScene( const u32 width, const u32 height )
     auto pCup = Mesh::Create( "res/mesh/paper_cup/paper_cup.smd" );
     assert(pCup != nullptr);
 
-    if ( !g_TableTexture.LoadFromFile("./res/texture/table.bmp") )
+    if ( !g_TableTexture.Init("./res/texture/table.bmp", TFF_BMP) )
     {
         ELOG("Error : TableTexture Load Failed." );
         assert(false);
     }
 
-    if ( !m_IBL.Init( "res/ibl/lauter_waterfall_4k.hdr") )
+    if ( !m_IBL.Init( "res/ibl/lauter_waterfall_4k.hdr", TFF_HDR) )
     {
         ELOG("Error : IBL Load Failed." );
         assert(false);
     }
 
 
-    m_Material.push_back( MaterialFactory::CreateLambert( Color4( 0.95f, 0.95f, 0.95f, 1.0f ), &g_TableTexture ) );
-    m_Material.push_back( MaterialFactory::CreateLambert( Color4( 0.0f, 0.0f, 0.0f, 1.0f ), nullptr, Color4( 1000.0f, 1000.0f, 1000.0f, 1.0f ) ) );
+    m_Material.push_back( MaterialFactory::CreateLambert( Color3( 0.95f, 0.95f, 0.95f ), &g_TableTexture ) );
+    m_Material.push_back( MaterialFactory::CreateLambert( Color3( 0.0f, 0.0f, 0.0f ), nullptr, Color3( 1000.0f, 1000.0f, 1000.0f ) ) );
 
     {
         Vertex vertices[6];
@@ -249,7 +249,7 @@ TestScene::~TestScene()
     m_Shapes  .clear();
     m_Material.clear();
     m_pLightList.clear();
-    g_TableTexture.Release();
+    g_TableTexture.Term();
 }
 
 //-------------------------------------------------------------------------------------------------

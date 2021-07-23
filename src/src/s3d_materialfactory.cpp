@@ -27,9 +27,9 @@ namespace s3d {
 //-------------------------------------------------------------------------------------------------
 IMaterial* MaterialFactory::CreateLambert
 (
-    const Color4&           diffuse,
-    const Texture2D*        pTexture,
-    const Color4&           emissive
+    const Color3&           diffuse,
+    const Texture*        pTexture,
+    const Color3&           emissive
 )
 {
     auto instance = Lambert::Create(diffuse, emissive);
@@ -48,10 +48,10 @@ IMaterial* MaterialFactory::CreateLambert
 //-------------------------------------------------------------------------------------------------
 IMaterial* MaterialFactory::CreatePhong
 (
-    const Color4&           specular,
+    const Color3&           specular,
     f32                     power,
-    const Texture2D*        pTexture,
-    const Color4&           emissive
+    const Texture*        pTexture,
+    const Color3&           emissive
 )
 {
     auto instance = Phong::Create(specular, power, emissive);
@@ -70,9 +70,9 @@ IMaterial* MaterialFactory::CreatePhong
 //-------------------------------------------------------------------------------------------------
 IMaterial* MaterialFactory::CreateMirror
 (
-    const Color4&           specular,
-    const Texture2D*        pTexture,
-    const Color4&           emissive
+    const Color3&           specular,
+    const Texture*        pTexture,
+    const Color3&           emissive
 )
 {
     auto instance = Mirror::Create(specular, emissive);
@@ -91,10 +91,10 @@ IMaterial* MaterialFactory::CreateMirror
 //-------------------------------------------------------------------------------------------------
 IMaterial* MaterialFactory::CreateGlass
 (
-    const Color4&           specular,
+    const Color3&           specular,
     f32                     ior,
-    const Texture2D*        pTexture,
-    const Color4&           emissive
+    const Texture*        pTexture,
+    const Color3&           emissive
 )
 {
     auto instance = Glass::Create(specular, ior, emissive);
@@ -113,11 +113,11 @@ IMaterial* MaterialFactory::CreateGlass
 //-------------------------------------------------------------------------------------------------
 IMaterial* MaterialFactory::CreatePlastic
 (
-    const Color4&           diffuse,
-    const Color4&           specular,
+    const Color3&           diffuse,
+    const Color3&           specular,
     f32                     power,
-    const Texture2D*        pTexture,
-    const Color4&           emissive
+    const Texture*        pTexture,
+    const Color3&           emissive
 )
 {
     auto instance = Plastic::Create(diffuse, specular, power, emissive);

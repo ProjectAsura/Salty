@@ -17,7 +17,6 @@
 #include <crtdbg.h>
 #endif
 #include <s3d_pt.h>
-#include <s3d_hdr.h>
 #include <Windows.h>
 
 //-------------------------------------------------------------------------------------------------

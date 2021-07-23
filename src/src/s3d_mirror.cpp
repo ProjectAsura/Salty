@@ -19,7 +19,7 @@ namespace s3d {
 //-------------------------------------------------------------------------------------------------
 //      コンストラクタです.
 //-------------------------------------------------------------------------------------------------
-Mirror::Mirror(const Color4& specular, const Color4& emissive)
+Mirror::Mirror(const Color3& specular, const Color3& emissive)
 : m_Count   (1)
 , m_Specular(specular)
 , m_Emissive(emissive)
@@ -56,7 +56,7 @@ u32 Mirror::GetCount() const
 //-------------------------------------------------------------------------------------------------
 //      シェーディングします.
 //-------------------------------------------------------------------------------------------------
-Color4 Mirror::Shade( ShadingArg& arg ) const
+Color3 Mirror::Shade( ShadingArg& arg ) const
 {
     // 補正済み法線データ (レイの入出を考慮済み).
     const Vector3 normalMod = ( Vector3::Dot ( arg.normal, arg.input ) < 0.0 ) ? arg.normal : -arg.normal;
@@ -73,7 +73,7 @@ Color4 Mirror::Shade( ShadingArg& arg ) const
 //-------------------------------------------------------------------------------------------------
 //      エミッシブカラーを取得します.
 //-------------------------------------------------------------------------------------------------
-Color4 Mirror::GetEmissive() const
+Color3 Mirror::GetEmissive() const
 { return m_Emissive; }
 
 //-------------------------------------------------------------------------------------------------
@@ -85,13 +85,13 @@ bool Mirror::HasDelta() const
 //-------------------------------------------------------------------------------------------------
 //      生成処理を行います.
 //-------------------------------------------------------------------------------------------------
-IMaterial* Mirror::Create(const Color4& specular)
-{ return Mirror::Create(specular, Color4(0.0f, 0.0f, 0.0f, 1.0f)); }
+IMaterial* Mirror::Create(const Color3& specular)
+{ return Mirror::Create(specular, Color3(0.0f, 0.0f, 0.0f)); }
 
 //-------------------------------------------------------------------------------------------------
 //      生成処理を行います.
 //-------------------------------------------------------------------------------------------------
-IMaterial* Mirror::Create(const Color4& specular, const Color4& emissive)
+IMaterial* Mirror::Create(const Color3& specular, const Color3& emissive)
 { return new(std::nothrow) Mirror(specular, emissive); }
 
 } // namespace s3d

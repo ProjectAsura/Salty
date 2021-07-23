@@ -17,20 +17,20 @@ namespace /* anonymous */ {
 //------------------------------------------------------------------------------------------------
 // Constant Values
 //------------------------------------------------------------------------------------------------
-const s3d::Vector4 RGB2Y  (  0.29900f,  0.58700f,  0.11400f, 0.0f );
-const s3d::Vector4 RGB2Cb ( -0.16874f, -0.33126f,  0.50000f, 0.0f );
-const s3d::Vector4 RGB2Cr (  0.50000f, -0.41869f, -0.08131f, 0.0f );
-const s3d::Vector4 YCbCr2R(  1.00000f,  0.00000f,  1.40200f, 0.0f );
-const s3d::Vector4 YCbCr2G(  1.00000f, -0.34414f, -0.71414f, 0.0f );
-const s3d::Vector4 YCbCr2B(  1.00000f,  1.77200f,  0.00000f, 0.0f );
+const s3d::Vector3 RGB2Y  (  0.29900f,  0.58700f,  0.11400f );
+const s3d::Vector3 RGB2Cb ( -0.16874f, -0.33126f,  0.50000f );
+const s3d::Vector3 RGB2Cr (  0.50000f, -0.41869f, -0.08131f );
+const s3d::Vector3 YCbCr2R(  1.00000f,  0.00000f,  1.40200f );
+const s3d::Vector3 YCbCr2G(  1.00000f, -0.34414f, -0.71414f );
+const s3d::Vector3 YCbCr2B(  1.00000f,  1.77200f,  0.00000f );
 
 
 //------------------------------------------------------------------------------------------------
 //      輝度値を取得します.
 //------------------------------------------------------------------------------------------------
 S3D_INLINE
-f32 RGBToY( const s3d::Vector4& value )
-{ return s3d::Vector4::Dot( RGB2Y, value ); }
+f32 RGBToY( const s3d::Vector3& value )
+{ return s3d::Vector3::Dot( RGB2Y, value ); }
 
 //------------------------------------------------------------------------------------------------
 //      対数平均と最大輝度値を求めます.
@@ -39,7 +39,7 @@ void ComputeLogarithmicAverage
 (
     const s32           width,
     const s32           height,
-    const s3d::Color4*  pPixels,
+    const s3d::Color3*  pPixels,
     const f32           epsilon,
     f32&                aveLw,
     f32&                maxLw
@@ -114,7 +114,7 @@ T Uncharted2Tonemap( const T& color )
 //------------------------------------------------------------------------------------------------
 //      ACES Film
 //------------------------------------------------------------------------------------------------
-s3d::Vector4 ACESFilm( const s3d::Vector4& color )
+s3d::Vector3 ACESFilm( const s3d::Vector3& color )
 {
     const auto a = 2.51f;
     const auto b = 0.03f;
@@ -123,15 +123,14 @@ s3d::Vector4 ACESFilm( const s3d::Vector4& color )
     const auto e = 0.14f;
     const auto f = 0.665406f;
     const auto g = 12.0f;
-    return s3d::Vector4(
-        s3d::Saturate((color.GetX() * (a * color.GetX() * f / g + b)) / (color.GetX() * f / g * (c * color.GetX() * f + d) + e)),
-        s3d::Saturate((color.GetY() * (a * color.GetY() * f / g + b)) / (color.GetY() * f / g * (c * color.GetY() * f + d) + e)),
-        s3d::Saturate((color.GetZ() * (a * color.GetZ() * f / g + b)) / (color.GetZ() * f / g * (c * color.GetZ() * f + d) + e)),
-        color.GetW());
+    return s3d::Vector3(
+        s3d::Saturate((color.x * (a * color.x * f / g + b)) / (color.x * f / g * (c * color.x * f + d) + e)),
+        s3d::Saturate((color.y * (a * color.y * f / g + b)) / (color.y * f / g * (c * color.y * f + d) + e)),
+        s3d::Saturate((color.z * (a * color.z * f / g + b)) / (color.z * f / g * (c * color.z * f + d) + e)));
 }
-s3d::Color4 median_value(s3d::Color4 c[9])
+s3d::Color3 median_value(s3d::Color3 c[9])
 {
-    s3d::Color4 buf;
+    s3d::Color3 buf;
     
     for (auto j = 0; j < 8; j++) 
     {
@@ -148,7 +147,7 @@ s3d::Color4 median_value(s3d::Color4 c[9])
     return c[4];
 }
 
-void MedianFilter( const s32 width, const s32 height, const s3d::Color4* pPixels, s3d::Color4* pResult )
+void MedianFilter( const s32 width, const s32 height, const s3d::Color3* pPixels, s3d::Color3* pResult )
 {
     for(auto i=0; i<height; ++i)
     {
@@ -175,7 +174,7 @@ void MedianFilter( const s32 width, const s32 height, const s3d::Color4* pPixels
             idx7 = s3d::Clamp(idx7, 0, width * height);
             idx8 = s3d::Clamp(idx8, 0, width * height);
 
-            s3d::Color4 p[] = {
+            s3d::Color3 p[] = {
                 pPixels[idx],
                 pPixels[idx1],
                 pPixels[idx2],
@@ -209,8 +208,8 @@ void ToneMapper::Map
     TONE_MAPPING_TYPE type,
     const s32         width, 
     const s32         height,
-    const Color4*     pPixels,
-    Color4*           pResult
+    const Color3*     pPixels,
+    Color3*           pResult
 )
 {
     //MedianFilter( width, height, pPixels, pResult );
@@ -239,8 +238,8 @@ void ToneMapper::ReinhardToneMapping
 (
     const s32     width, 
     const s32     height,
-    const Color4* pPixels,
-    Color4*        pResult
+    const Color3* pPixels,
+    Color3*        pResult
 )
 {
     assert( pPixels != nullptr );
@@ -282,8 +281,8 @@ void ToneMapper::Uncharted2FilmicToneMapping
 (
     const s32     width,
     const s32     height,
-    const Color4* pPixels,
-    Color4*       pResult
+    const Color3* pPixels,
+    Color3*       pResult
 )
 {
     assert( pPixels != nullptr );
@@ -322,8 +321,8 @@ void ToneMapper::ACESFilmicToneMapping
 (
     const s32     width,
     const s32     height,
-    const Color4* pPixels,
-    Color4*       pResult
+    const Color3* pPixels,
+    Color3*       pResult
 )
 {
     assert(pPixels != nullptr);
